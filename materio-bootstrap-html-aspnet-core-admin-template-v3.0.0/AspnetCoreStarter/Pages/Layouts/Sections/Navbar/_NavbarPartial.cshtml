@@ -1,0 +1,124 @@
+@* ! Brand demo (display only for navbar-full and hide on below xl) *@
+@if (ViewData["navbarFull"] != null)
+{
+  <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
+    <a asp-page="/Index" class="app-brand-link gap-2">
+      <span class="app-brand-logo demo">
+        @await Html.PartialAsync("../_Partials/_Macros")
+      </span>
+      <span class="app-brand-text demo menu-text fw-bold">@TempData.Peek("appName")</span>
+    </a>
+
+    @* ! Display menu close icon only for horizontal-menu with navbar-full *@
+    @if (Convert.ToBoolean(@TempData.Peek("menuHorizontal")).ToString() == "True")
+    {
+      <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
+        <i class="icon-base ri ri-close-line icon-sm"></i>
+      </a>
+    }
+  </div>
+}
+
+@* ! Not required for layout-without-menu *@
+@if (ViewData["navbarHideToggle"] == null)
+{
+  <div class='layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0  @((Convert.ToBoolean(@TempData.Peek("menuHorizontal")).ToString() == "True") ? "d-xl-none" : "") @((@ViewData["contentNavbar"] != null && Convert.ToBoolean(@ViewData["contentNavbar"])) ? "" : "d-xl-none")'>
+    <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+      <i class="icon-base ri ri-menu-line icon-md"></i>
+    </a>
+  </div>
+}
+
+<div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+
+  <!-- Style Switcher -->
+  <div class="navbar-nav align-items-center">
+    <div class="nav-item dropdown me-2 me-xl-0">
+      <a class="nav-link dropdown-toggle hide-arrow" id="nav-theme" href="javascript:void(0);" data-bs-toggle="dropdown">
+        <i class="icon-base ri ri-sun-line icon-md theme-icon-active"></i>
+        <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="nav-theme-text">
+        <li>
+          <button type="button" class="dropdown-item align-items-center active" data-bs-theme-value="light" aria-pressed="false">
+            <span> <i class="icon-base ri ri-sun-line icon-md me-3" data-icon="sun-line"></i>Light</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="dropdown-item align-items-center" data-bs-theme-value="dark" aria-pressed="true">
+            <span> <i class="icon-base ri ri-moon-clear-line icon-md me-3" data-icon="moon-clear-line"></i>Dark</span>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="dropdown-item align-items-center" data-bs-theme-value="system" aria-pressed="false">
+            <span> <i class="icon-base ri ri-computer-line icon-md me-3" data-icon="computer-line"></i>System</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <!-- / Style Switcher-->
+
+
+  <ul class="navbar-nav flex-row align-items-center ms-auto">
+    <!-- User -->
+    <li class="nav-item navbar-dropdown dropdown-user dropdown">
+      <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+        <div class="avatar avatar-online">
+          <img src="~/img/avatars/1.png" alt="alt" class="rounded-circle" />
+        </div>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
+        <li>
+          <a class="dropdown-item" asp-page="javascript:void(0);">
+            <div class="d-flex align-items-center">
+              <div class="flex-shrink-0 me-2">
+                <div class="avatar avatar-online">
+                  <img src="~/img/avatars/1.png" alt="alt" class="w-px-40 h-auto rounded-circle" />
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h6 class="mb-0 small">John Doe</h6>
+                <small class="text-body-secondary">Admin</small>
+              </div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <div class="dropdown-divider"></div>
+        </li>
+        <li>
+          <a class="dropdown-item" asp-page="javascript:void(0);">
+            <i class="icon-base ri ri-user-3-line icon-22px me-2"></i>
+            <span class="align-middle">My Profile</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" asp-page="javascript:void(0);">
+            <i class="icon-base ri ri-settings-4-line icon-22px me-2"></i>
+            <span class="align-middle">Settings</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" asp-page="javascript:void(0);">
+            <span class="d-flex align-items-center align-middle">
+              <i class="flex-shrink-0 icon-base ri ri-file-text-line icon-22px me-2"></i>
+              <span class="flex-grow-1 align-middle">Billing</span>
+              <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger h-px-20 d-flex align-items-center justify-content-center">4</span>
+            </span>
+          </a>
+        </li>
+        <li>
+          <div class="d-grid px-4 pt-2 pb-1">
+            <a class="btn btn-danger d-flex" asp-page="javascript:void(0);">
+              <small class="align-middle">Logout</small>
+              <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
+            </a>
+          </div>
+        </li>
+      </ul>
+    </li>
+    <!--/ User -->
+
+  </ul>
+</div>

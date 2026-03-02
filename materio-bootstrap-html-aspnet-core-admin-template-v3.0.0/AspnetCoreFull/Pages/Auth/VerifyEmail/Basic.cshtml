@@ -1,0 +1,43 @@
+@page
+@model AspnetCoreFull.Pages.Auth.VerifyEmail.BasicModel
+@{
+  Layout = "Layouts/_BlankLayout";
+  ViewData["Title"] = "Verify Email Basic - Pages";
+}
+
+@section PageStyles {
+  <link rel="stylesheet" href="~/vendor/css/pages/page-auth.dist.css">
+}
+
+@* ************** Content ************** *@
+<div class="position-relative">
+  <div class="authentication-wrapper authentication-basic container-p-y">
+    <div class="authentication-inner py-6 mx-4">
+      <div class="card p-sm-7 p-2">
+        <!-- Logo -->
+        <div class="app-brand justify-content-center mt-5">
+          <a href="/" class="app-brand-link gap-3">
+            <span class="app-brand-logo demo">@await Html.PartialAsync("../_Partials/_Macros")</span>
+            <span class="app-brand-text demo text-heading fw-semibold">@TempData.Peek("appName")</span>
+          </a>
+        </div>
+        <!-- /Logo -->
+
+        <!-- Verify Email -->
+        <div class="card-body mt-1">
+          <h4 class="mb-1">Verify your email ✉️</h4>
+          <p class="text-start mb-0">Account activation link sent to your email address: <span class="h6">hello&#64;example.com</span> Please follow the link inside to continue.</p>
+          <a class="btn btn-primary w-100 my-5" href="/"> Skip for now </a>
+          <p class="text-center mb-0">
+            Didn't get the mail?
+            <a href="javascript:void(0);"> Resend </a>
+          </p>
+        </div>
+      </div>
+      <img src="~/img/illustrations/tree-3.png" alt="auth-tree" class="authentication-image-object-left d-none d-lg-block" />
+      <img src="~/img/illustrations/auth-basic-mask-light.png" class="authentication-image d-none d-lg-block" height="172" alt="triangle-bg" data-app-light-img="illustrations/auth-basic-mask-light.png" data-app-dark-img="illustrations/auth-basic-mask-dark.png" />
+      <img src="~/img/illustrations/tree.png" alt="auth-tree" class="authentication-image-object-right d-none d-lg-block" />
+      <!-- /Verify Email -->
+    </div>
+  </div>
+</div>

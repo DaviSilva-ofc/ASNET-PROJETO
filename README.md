@@ -4,24 +4,24 @@ Gestão de Equipamentos Escolares
 Projeto desenvolvido pela ASNET – Soluções de Informática e Comunicações
 Localização: Braga, Portugal
 
-📌 Estado do Projeto
+# Estado do Projeto
 
-🚧 Em desenvolvimento
+# Em desenvolvimento
 Este projeto encontra-se em fase de implementação inicial. Algumas funcionalidades descritas ainda podem não estar totalmente concluídas ou sujeitas a alterações.
 
-📝 Descrição do Projeto
+# Descrição do Projeto
 
 Este projeto consiste no desenvolvimento de uma aplicação web para gestão de equipamentos escolares, permitindo o controlo do inventário, estados dos equipamentos, localização hierárquica e pedidos de reparação.
 
 A aplicação foi desenvolvida em C#, seguindo o padrão de arquitetura MVC (Model-View-Controller), com foco na organização do código, segurança, integridade dos dados e facilidade de manutenção.
 
-👥 Equipa de Desenvolvimento
+# Equipa de Desenvolvimento
 
 Davi Silva
 
 Rúben Ferreira
 
-🎯 Objetivos Principais
+# Objetivos Principais
 
 Gerir equipamentos escolares de forma organizada
 
@@ -31,7 +31,7 @@ Facilitar a comunicação entre empresa, técnicos e clientes
 
 Disponibilizar estatísticas para apoio à decisão
 
-🔑 Funcionalidades (Planeadas / em Desenvolvimento)
+# Funcionalidades (Planeadas / em Desenvolvimento)
 
 Autenticação de utilizadores
 
@@ -53,7 +53,7 @@ Controlo de permissões por perfil
 
 Visualização de estatísticas e gráficos
 
-🧱 Arquitetura
+# Arquitetura
 
 O projeto segue o padrão MVC (Model-View-Controller):
 
@@ -63,7 +63,7 @@ View: Interface gráfica
 
 Controller: Regras de negócio e comunicação entre Model e View
 
-🛠 Tecnologias Utilizadas
+# Tecnologias Utilizadas
 
 C#
 
@@ -77,7 +77,7 @@ SQL Server
 
 Bibliotecas de gráficos (ex.: Chart.js ou equivalentes)
 
-📊 Funcionalidades de Estatística (Planeadas)
+# Funcionalidades de Estatística (Planeadas)
 
 Número de equipamentos ativos e avariados
 
@@ -87,7 +87,7 @@ Custos e ganhos da empresa
 
 Relatórios mensais e anuais
 
-📌 Observações Finais
+# Observações Finais
 
 Este projeto foi concebido com foco na escalabilidade, permitindo futuras expansões como:
 
@@ -97,7 +97,7 @@ Integração com outros sistemas
 
 Novos perfis de utilizador
 
-📧 Contacto:
+# Contacto:
 Telefone: 253 690 535
 Website: https://asnet.pt
 

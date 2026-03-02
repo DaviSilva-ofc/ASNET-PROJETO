@@ -1,0 +1,43 @@
+@{
+  TempData.Keep();
+  string? currentPage = Convert.ToString(ViewContext.RouteData.Values["Page"])!;
+}
+
+<!-- Menu -->
+@* ! Do this simple *@
+<aside id="layout-menu" class="layout-menu menu-vertical menu">
+
+  @* ! Hide app brand if navbar-full *@
+  <div class='app-brand demo @((@ViewData["navbarFull"] != null && Convert.ToBoolean(@ViewData["navbarFull"])) ? "d-xl-none" : "")'>
+    <a asp-page="/Index" class="app-brand-link gap-xl-0 gap-2">
+      <span class="app-brand-logo demo me-1">
+        @await Html.PartialAsync("../_Partials/_Macros")
+      </span>
+      <span class="app-brand-text demo menu-text fw-semibold ms-2">@TempData.Peek("appName")</span>
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+      <i class="menu-toggle-icon d-xl-inline-block align-middle"></i>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  @* ! Starter Kit menu-items *@
+  <ul class="menu-inner py-1">
+    <li class='menu-item@(currentPage == "/Index" ? " active" : "")'>
+      <a asp-page="/Index" class="menu-link">
+        <i class="menu-icon icon-base ri ri-home-smile-line"></i>
+        <div data-i18n="Home">Home</div>
+      </a>
+    </li>
+    <li class='menu-item@(currentPage == "/Page2" ? " active" : "")'>
+      <a asp-page="/Page2" class="menu-link">
+        <i class="menu-icon icon-base ri ri-file-3-line"></i>
+        <div data-i18n="Page2">Page2</div>
+      </a>
+    </li>
+  </ul>
+
+</aside>
+<!-- / Menu -->

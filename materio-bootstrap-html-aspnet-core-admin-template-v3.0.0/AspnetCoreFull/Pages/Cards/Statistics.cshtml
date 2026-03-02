@@ -1,0 +1,712 @@
+@page
+@model AspnetCoreFull.Pages.Cards.StatisticsModel
+@{
+  ViewData["Title"] = "Cards Statistics - UI elements";
+}
+
+@section VendorStyles {
+<link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.dist.css">
+<link rel="stylesheet" href="~/vendor/libs/swiper/swiper.dist.css" />
+}
+
+@section VendorScripts {
+<script src="~/vendor/libs/apex-charts/apexcharts.dist.js"></script>
+<script src="~/vendor/libs/swiper/swiper.dist.js"></script>
+}
+
+@section PageStyles{
+<link rel="stylesheet" href="~/vendor/css/pages/cards-statistics.dist.css" />
+}
+@section PageScripts {
+<script src="~/js/cards-statistics.dist.js"></script>
+}
+
+@* ************** Content ************** *@
+<div class="row g-6">
+  <!-- Cards with few info -->
+  <div class="col-lg-3 col-sm-6">
+    <div class="card transparent-card bg-transparent shadow-none border-1">
+      <div class="card-body">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <div class="avatar me-2">
+            <div class="avatar-initial rounded shadow-xs">
+              <i class="icon-base ri ri-group-line icon-24px text-primary"></i>
+            </div>
+          </div>
+          <div class="card-info">
+            <p class="mb-0">New Customers</p>
+            <div class="d-flex align-items-center">
+              <h5 class="mb-0">2,856</h5>
+              <i class="icon-base ri ri-arrow-down-s-line icon-24px text-danger"></i>
+              <small class="text-danger">10.2%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-sm-6">
+    <div class="card transparent-card bg-transparent shadow-none border-1">
+      <div class="card-body">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <div class="avatar me-2">
+            <div class="avatar-initial rounded shadow-xs">
+              <i class="icon-base ri ri-money-dollar-circle-line icon-24px text-success"></i>
+            </div>
+          </div>
+          <div class="card-info">
+            <p class="mb-0">Total Revenue</p>
+            <div class="d-flex align-items-center">
+              <h5 class="mb-0">28.6K</h5>
+              <i class="icon-base ri ri-arrow-up-s-line icon-24px text-success"></i>
+              <small class="text-success">25.8%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-sm-6">
+    <div class="card transparent-card bg-transparent shadow-none border-1">
+      <div class="card-body">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <div class="avatar me-2">
+            <div class="avatar-initial rounded shadow-xs">
+              <i class="icon-base ri ri-pie-chart-2-line icon-24px text-info"></i>
+            </div>
+          </div>
+          <div class="card-info">
+            <p class="mb-0">New Transactions</p>
+            <div class="d-flex align-items-center">
+              <h5 class="mb-0">16.6k</h5>
+              <i class="icon-base ri ri-arrow-down-s-line icon-24px text-danger"></i>
+              <small class="text-danger">12.1%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-3 col-sm-6">
+    <div class="card transparent-card bg-transparent shadow-none border-1">
+      <div class="card-body">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <div class="avatar me-2">
+            <div class="avatar-initial rounded shadow-xs">
+              <i class="icon-base ri ri-pie-chart-2-line icon-24px text-warning"></i>
+            </div>
+          </div>
+          <div class="card-info">
+            <p class="mb-0">Total Profit</p>
+            <div class="d-flex align-items-center">
+              <h5 class="mb-0">2,856</h5>
+              <i class="icon-base ri ri-arrow-up-s-line icon-24px text-success"></i>
+              <small class="text-success">54.6%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Cards with few info -->
+
+  <!-- Cards with separator -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-widget-separator-wrapper">
+        <div class="card-body card-widget-separator">
+          <div class="row gy-4 gy-sm-1">
+            <div class="col-sm-6 col-lg-3">
+              <div class="d-flex justify-content-between align-items-start card-widget-1 border-end pb-4 pb-sm-0">
+                <div>
+                  <h4 class="mb-0">24</h4>
+                  <p class="mb-0">Clients</p>
+                </div>
+                <div class="avatar me-sm-6">
+                  <span class="avatar-initial rounded bg-label-secondary">
+                    <i class="icon-base ri ri-user-line text-heading icon-26px"></i>
+                  </span>
+                </div>
+              </div>
+              <hr class="d-none d-sm-block d-lg-none me-6" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="d-flex justify-content-between align-items-start card-widget-2 border-end pb-4 pb-sm-0">
+                <div>
+                  <h4 class="mb-0">165</h4>
+                  <p class="mb-0">Invoices</p>
+                </div>
+                <div class="avatar me-lg-6">
+                  <span class="avatar-initial rounded bg-label-secondary">
+                    <i class="icon-base ri ri-pages-line text-heading icon-26px"></i>
+                  </span>
+                </div>
+              </div>
+              <hr class="d-none d-sm-block d-lg-none" />
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="d-flex justify-content-between align-items-start border-end pb-4 pb-sm-0 card-widget-3">
+                <div>
+                  <h4 class="mb-0">$2.46k</h4>
+                  <p class="mb-0">Paid</p>
+                </div>
+                <div class="avatar me-sm-6">
+                  <span class="avatar-initial rounded bg-label-secondary">
+                    <i class="icon-base ri ri-wallet-line text-heading icon-26px"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h4 class="mb-0">$876</h4>
+                  <p class="mb-0">Unpaid</p>
+                </div>
+                <div class="avatar">
+                  <span class="avatar-initial rounded bg-label-secondary">
+                    <i class="icon-base ri ri-money-dollar-circle-line text-heading icon-26px"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Cards with separator -->
+
+  <!-- Card Border Shadow -->
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-border-shadow-primary h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="avatar me-4">
+            <span class="avatar-initial rounded bg-label-primary"><i class="icon-base ri ri-car-line icon-24px"></i></span>
+          </div>
+          <h4 class="mb-0">42</h4>
+        </div>
+        <h6 class="mb-0 fw-normal">On route vehicles</h6>
+        <p class="mb-0">
+          <span class="me-1 fw-medium">+18.2%</span>
+          <small class="text-body-secondary">than last week</small>
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-border-shadow-warning h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="avatar me-4">
+            <span class="avatar-initial rounded bg-label-warning"><i class="icon-base ri ri-alert-line icon-24px"></i></span>
+          </div>
+          <h4 class="mb-0">8</h4>
+        </div>
+        <h6 class="mb-0 fw-normal">Vehicles with errors</h6>
+        <p class="mb-0">
+          <span class="me-1 fw-medium">-8.7%</span>
+          <small class="text-body-secondary">than last week</small>
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-border-shadow-danger h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="avatar me-4">
+            <span class="avatar-initial rounded bg-label-danger"><i class="icon-base ri ri-route-line icon-24px"></i></span>
+          </div>
+          <h4 class="mb-0">27</h4>
+        </div>
+        <h6 class="mb-0 fw-normal">Deviated from route</h6>
+        <p class="mb-0">
+          <span class="me-1 fw-medium">+4.3%</span>
+          <small class="text-body-secondary">than last week</small>
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="card card-border-shadow-info h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="avatar me-4">
+            <span class="avatar-initial rounded bg-label-info"><i class="icon-base ri ri-time-line icon-24px"></i></span>
+          </div>
+          <h4 class="mb-0">13</h4>
+        </div>
+        <h6 class="mb-0 fw-normal">Late vehicles</h6>
+        <p class="mb-0">
+          <span class="me-1 fw-medium">-2.5%</span>
+          <small class="text-body-secondary">than last week</small>
+        </p>
+      </div>
+    </div>
+  </div>
+  <!--/ Card Border Shadow -->
+
+  <!-- Transactions -->
+  <div class="col-xl-8">
+    <div class="card">
+      <div class="card-header">
+        <div class="d-flex align-items-center justify-content-between">
+          <h5 class="card-title m-0 me-2">Transactions</h5>
+          <div class="dropdown">
+            <button class="btn text-body-secondary p-0" type="button" id="transactionID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="icon-base ri ri-more-2-line icon-24px"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+              <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+              <a class="dropdown-item" href="javascript:void(0);">Share</a>
+              <a class="dropdown-item" href="javascript:void(0);">Update</a>
+            </div>
+          </div>
+        </div>
+        <p class="small mb-0"><span class="h6 mb-0">Total 48.5% Growth</span> 😎 this month</p>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3 col-6">
+            <div class="d-flex align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-primary rounded shadow-xs">
+                  <i class="icon-base ri ri-pie-chart-2-line icon-24px"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="mb-0">Sales</p>
+                <h5 class="mb-0">245k</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="d-flex align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-success rounded shadow-xs">
+                  <i class="icon-base ri ri-group-line icon-24px"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="mb-0">Customers</p>
+                <h5 class="mb-0">12.5k</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="d-flex align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-warning rounded shadow-xs">
+                  <i class="icon-base ri ri-macbook-line icon-24px"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="mb-0">Product</p>
+                <h5 class="mb-0">1.54k</h5>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 col-6">
+            <div class="d-flex align-items-center">
+              <div class="avatar">
+                <div class="avatar-initial bg-info rounded shadow-xs">
+                  <i class="icon-base ri ri-money-dollar-circle-line icon-24px"></i>
+                </div>
+              </div>
+              <div class="ms-3">
+                <p class="mb-0">Revenue</p>
+                <h5 class="mb-0">$88k</h5>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Transactions -->
+
+  <!-- Total Sales -->
+  <div class="col-xl-4 col-lg-6">
+    <div class="card h-100">
+      <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+        <div class="me-3">
+          <h5 class="mb-1">Total Sales</h5>
+          <p class="mb-3">Calculated in last 7 days</p>
+          <div class="d-flex align-items-center">
+            <h4 class="mb-0 me-1">$25,980</h4>
+            <p class="text-success mb-0"><i class="icon-base ri ri-arrow-up-s-line icon-24px"></i>15.6%</p>
+          </div>
+        </div>
+        <div id="totalSalesDonutChart" class="mt-3 mt-md-0"></div>
+      </div>
+    </div>
+  </div>
+  <!--/ Total Sales -->
+
+  <!-- Cards with icon profit and loss info -->
+  <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="avatar">
+          <div class="avatar-initial bg-primary rounded-circle shadow-xs">
+            <i class="icon-base ri ri-file-word-2-line icon-24px"></i>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn text-body-secondary p-0" type="button" id="newProjectID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="icon-base ri ri-more-2-line icon-24px"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="newProjectID">
+            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-1">New Project</h6>
+        <div class="d-flex flex-wrap mb-1 align-items-center">
+          <h4 class="mb-0 me-2">862</h4>
+          <p class="text-danger mb-0">-18%</p>
+        </div>
+        <small>Yearly Project</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="avatar">
+          <div class="avatar-initial bg-secondary rounded-circle shadow-xs">
+            <i class="icon-base ri ri-pie-chart-2-line icon-24px"></i>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn text-body-secondary p-0" type="button" id="totalProfitID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="icon-base ri ri-more-2-line icon-24px"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="totalProfitID">
+            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-1">Total Profit</h6>
+        <div class="d-flex flex-wrap mb-1 align-items-center">
+          <h4 class="mb-0 me-2">$25.6k</h4>
+          <p class="text-success mb-0">+42%</p>
+        </div>
+        <small>Weekly Project</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="avatar">
+          <div class="avatar-initial bg-success rounded-circle shadow-xs">
+            <i class="icon-base ri ri-money-dollar-circle-line icon-24px"></i>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn text-body-secondary p-0" type="button" id="revenueID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="icon-base ri ri-more-2-line icon-24px"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="revenueID">
+            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-1">Revenue</h6>
+        <div class="d-flex flex-wrap mb-1 align-items-center">
+          <h4 class="mb-0 me-2">$95.2k</h4>
+          <p class="text-success mb-0">+12%</p>
+        </div>
+        <small>Revenue Increase</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="avatar">
+          <div class="avatar-initial bg-danger rounded-circle shadow-xs">
+            <i class="icon-base ri ri-car-line icon-24px"></i>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn text-body-secondary p-0" type="button" id="logisticsID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="icon-base ri ri-more-2-line icon-24px"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="logisticsID">
+            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-1">Logistics</h6>
+        <div class="d-flex flex-wrap mb-1 align-items-center">
+          <h4 class="mb-0 me-2">44.10k</h4>
+          <p class="text-success mb-0">+42%</p>
+        </div>
+        <small>Regional Logistics</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="avatar">
+          <div class="avatar-initial bg-warning rounded-circle shadow-xs">
+            <i class="icon-base ri ri-file-chart-line icon-24px"></i>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn text-body-secondary p-0" type="button" id="reportsID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="icon-base ri ri-more-2-line icon-24px"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="reportsID">
+            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-1">Reports</h6>
+        <div class="d-flex flex-wrap mb-1 align-items-center">
+          <h4 class="mb-0 me-2">268</h4>
+          <p class="text-danger mb-0">-28%</p>
+        </div>
+        <small>System Bugs</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="avatar">
+          <div class="avatar-initial bg-info rounded-circle shadow-xs">
+            <i class="icon-base ri ri-bank-card-line icon-24px"></i>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn text-body-secondary p-0" type="button" id="transactionsID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="icon-base ri ri-more-2-line icon-24px"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionsID">
+            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <h6 class="mb-1">Transactions</h6>
+        <div class="d-flex flex-wrap mb-1 align-items-center">
+          <h4 class="mb-0 me-2">1.2k</h4>
+          <p class="text-success mb-0">+38%</p>
+        </div>
+        <small>Daily Transactions</small>
+      </div>
+    </div>
+  </div>
+  <!--/ Cards with icon profit and loss info -->
+
+  <!-- Ratings -->
+  <div class="col-xl-3 col-lg-6 col-sm-6 mt-10">
+    <div class="card">
+      <div class="row">
+        <div class="col-6">
+          <div class="card-body">
+            <div class="card-info">
+              <h6 class="mb-4 pb-1 text-nowrap">Ratings</h6>
+              <div class="d-flex align-items-center mb-3">
+                <h4 class="mb-0 me-2">13k</h4>
+                <p class="text-success mb-0">+15.6%</p>
+              </div>
+              <div class="badge bg-label-primary rounded-pill">Year of 2021</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="h-100 position-relative">
+            <img src="~/img/illustrations/illustration-1.png" alt="Ratings" class="position-absolute card-img-position scaleX-n1-rtl bottom-0 w-auto end-0 me-3 me-xl-0 me-xxl-3 pe-2" width="95" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Ratings -->
+
+  <!-- Sessions -->
+  <div class="col-xl-3 col-lg-6 col-sm-6 mt-10">
+    <div class="card">
+      <div class="row">
+        <div class="col-6">
+          <div class="card-body">
+            <div class="card-info">
+              <h6 class="mb-4 pb-1 text-nowrap">Sessions</h6>
+              <div class="d-flex align-items-center mb-3">
+                <h4 class="mb-0 me-2">24.5k</h4>
+                <p class="text-danger mb-0">-20%</p>
+              </div>
+              <div class="badge bg-label-secondary rounded-pill">Last Week</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="h-100 position-relative">
+            <img src="~/img/illustrations/illustration-2.png" alt="Ratings" class="position-absolute card-img-position scaleX-n1-rtl bottom-0 w-auto end-0 me-3 me-xl-0 me-xxl-3 pe-2" width="81" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Sessions -->
+
+  <!-- Customers -->
+  <div class="col-xl-3 col-lg-6 col-sm-6 mt-10">
+    <div class="card">
+      <div class="row">
+        <div class="col-6">
+          <div class="card-body">
+            <div class="card-info">
+              <h6 class="mb-4 pb-1 text-nowrap">Customers</h6>
+              <div class="d-flex align-items-center mb-3">
+                <h4 class="mb-0 me-2">2,856</h4>
+                <p class="text-success mb-0">+59%</p>
+              </div>
+              <div class="badge bg-label-info rounded-pill">Daily Customers</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="h-100 position-relative">
+            <img src="~/img/illustrations/illustration-3.png" alt="Ratings" class="position-absolute card-img-position scaleX-n1-rtl bottom-0 w-auto end-0 me-3 me-xl-0 me-xxl-3 pe-2" width="84" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Customers -->
+
+  <!-- Total Orders -->
+  <div class="col-xl-3 col-lg-6 col-sm-6 mt-10">
+    <div class="card">
+      <div class="row">
+        <div class="col-6">
+          <div class="card-body">
+            <div class="card-info">
+              <h6 class="mb-4 pb-1 text-nowrap">Total Orders</h6>
+              <div class="d-flex align-items-center mb-3">
+                <h4 class="mb-0 me-2">42.5k</h4>
+                <p class="text-success mb-0">+26%</p>
+              </div>
+              <div class="badge bg-label-warning rounded-pill">Last Month</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="h-100 position-relative">
+            <img src="~/img/illustrations/illustration-4.png" alt="Ratings" class="position-absolute card-img-position scaleX-n1-rtl bottom-0 w-auto end-0 me-3 me-xl-0 me-xxl-3 pe-2" width="78" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--/ Total Orders -->
+
+  <!-- Total Revenue chart -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header pb-0">
+        <h4 class="mb-0">$35.4k</h4>
+      </div>
+      <div class="card-body">
+        <div id="totalRevenueChart" class="mb-3"></div>
+        <h6 class="text-center mb-0">Total Revenue</h6>
+      </div>
+    </div>
+  </div>
+  <!--/ Total Revenue chart -->
+
+  <!-- Sessions group chart -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header pb-0">
+        <h4 class="mb-0">4,350</h4>
+      </div>
+      <div class="card-body">
+        <div id="SessionsGroupChart" class="mb-3"></div>
+        <h6 class="text-center mb-0">Sessions</h6>
+      </div>
+    </div>
+  </div>
+  <!--/ Sessions group chart -->
+
+  <!-- Total Growth chart -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header pb-0">
+        <h4 class="mb-0">42.5k</h4>
+      </div>
+      <div class="card-body">
+        <div id="totalGrowthAreaChart" class="mb-3"></div>
+        <h6 class="text-center mb-0">Total Growth</h6>
+      </div>
+    </div>
+  </div>
+  <!--/ Total Growth chart -->
+
+  <!-- Total Sales chart -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="card h-100">
+      <div class="card-header pb-0">
+        <h4 class="mb-0">135k</h4>
+      </div>
+      <div class="card-body">
+        <div id="totalSalesSemiDonutChart" class="mb-4"></div>
+        <h6 class="text-center mb-0">Total Sales</h6>
+      </div>
+    </div>
+  </div>
+  <!--/ Total Sales chart -->
+
+  <!-- Sessions chart -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header pb-0">
+        <h4 class="mb-0">2,856</h4>
+      </div>
+      <div class="card-body">
+        <div id="sessionsColumnChart" class="mb-3"></div>
+        <h6 class="text-center mb-0">Sessions</h6>
+      </div>
+    </div>
+  </div>
+  <!--/ Sessions chart -->
+
+  <!-- Total Profit line chart -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="card">
+      <div class="card-header pb-0">
+        <h4 class="mb-0">$86.4k</h4>
+      </div>
+      <div class="card-body">
+        <div id="totalProfitLineChart" class="mb-3"></div>
+        <h6 class="text-center mb-0">Total Profit</h6>
+      </div>
+    </div>
+  </div>
+  <!--/ Total Profit line chart -->
+</div>

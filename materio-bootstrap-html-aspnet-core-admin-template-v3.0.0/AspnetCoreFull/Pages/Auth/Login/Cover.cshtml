@@ -1,0 +1,110 @@
+@page
+@model AspnetCoreFull.Pages.Auth.Login.CoverModel
+@{
+  Layout = "Layouts/_BlankLayout";
+  ViewData["Title"] = "Login Cover - Pages";
+}
+
+@section VendorStyles {
+<link rel="stylesheet" href="~/vendor/libs/&#64;form-validation/form-validation.dist.css" />
+}
+
+@section VendorScripts {
+<script src="~/vendor/libs/&#64;form-validation/popular.dist.js"></script>
+<script src="~/vendor/libs/&#64;form-validation/bootstrap5.dist.js"></script>
+<script src="~/vendor/libs/&#64;form-validation/auto-focus.dist.js"></script>
+}
+
+@section PageStyles {
+<link rel="stylesheet" href="~/vendor/css/pages/page-auth.dist.css" />
+}
+
+@section PageScripts {
+<script src="~/js/pages-auth.dist.js"></script>
+}
+@* ************** Content ************** *@
+<div class="authentication-wrapper authentication-cover">
+  <!-- Logo -->
+  <a href="/" class="auth-cover-brand d-flex align-items-center gap-3">
+    <span class="app-brand-logo demo">@await Html.PartialAsync("../_Partials/_Macros")</span>
+    <span class="app-brand-text demo text-heading fw-semibold">@TempData.Peek("appName")</span>
+  </a>
+  <!-- /Logo -->
+  <div class="authentication-inner row m-0">
+    <!-- /Left Section -->
+    <div class="d-none d-lg-flex col-lg-7 col-xl-8 align-items-center justify-content-center p-12 pb-2">
+      <div>
+        <img src="~/img/illustrations/auth-cover-login-illustration-light.png" class="authentication-image-model d-none d-lg-block" alt="auth-model" data-app-light-img="illustrations/auth-cover-login-illustration-light.png" data-app-dark-img="illustrations/auth-cover-login-illustration-dark.png" />
+      </div>
+      <img src="~/img/illustrations/tree.png" alt="tree" class="authentication-image-tree z-n1" />
+      <img src="~/img/illustrations/auth-cover-mask-light.png" class="scaleX-n1-rtl authentication-image d-none d-lg-block w-75" alt="triangle-bg" height="362" data-app-light-img="illustrations/auth-cover-mask-light.png" data-app-dark-img="illustrations/auth-cover-mask-dark.png" />
+    </div>
+    <!-- /Left Section -->
+
+    <!-- Login -->
+    <div class="d-flex col-12 col-lg-5 col-xl-4 align-items-center authentication-bg position-relative py-sm-5 px-12 py-4">
+      <div class="w-px-400 mx-auto pt-12 pt-lg-0">
+        <h4 class="mb-1">Welcome to @TempData.Peek("appName")! 👋🏻</h4>
+        <p class="mb-5">Please sign-in to your account and start the adventure</p>
+
+        <form id="formAuthentication" class="mb-5" action="~/Dashboards/Analytics" method="POST">
+          <div class="form-floating form-floating-outline mb-5 form-control-validation">
+            <input type="text" class="form-control" id="email" name="email-username" placeholder="Enter your email or username" autofocus />
+            <label for="email">Email or Username</label>
+          </div>
+          <div class="mb-5">
+            <div class="form-password-toggle form-control-validation">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="password" id="password" class="form-control" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" />
+                  <label for="password">Password</label>
+                </div>
+                <span class="input-group-text cursor-pointer"><i class="icon-base ri ri-eye-off-line icon-20px"></i></span>
+              </div>
+            </div>
+          </div>
+          <div class="mb-5 d-flex justify-content-between flex-wrap py-2">
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="remember-me" />
+              <label class="form-check-label me-2" for="remember-me"> Remember Me </label>
+            </div>
+            <a href="/Auth/ForgotPassword/Cover" class="float-end mb-1">
+              <span>Forgot Password?</span>
+            </a>
+          </div>
+          <button class="btn btn-primary d-grid w-100">Login</button>
+        </form>
+
+        <p class="text-center">
+          <span>New on our platform?</span>
+          <a href="/Auth/Register/Cover">
+            <span>Create an account</span>
+          </a>
+        </p>
+
+        <div class="divider my-5">
+          <div class="divider-text">or</div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2">
+          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-facebook">
+            <i class="icon-base ri  ri-facebook-fill icon-24px"></i>
+          </a>
+
+          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-twitter">
+            <i class="icon-base ri  ri-twitter-fill icon-24px"></i>
+          </a>
+
+          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-github">
+            <i class="icon-base ri  ri-github-fill icon-24px"></i>
+          </a>
+
+          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-google-plus">
+            <i class="icon-base ri  ri-google-fill icon-24px"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- /Login -->
+  </div>
+</div>
