@@ -101,12 +101,3 @@ Novos perfis de utilizador
 Telefone: 253 690 535
 Website: https://asnet.pt
 
-Se quiseres, posso:
-
-Adaptar o README para GitHub (com badges e secções padrão)
-
-Criar uma versão mais curta
-
-Traduzir para inglês
-
-Ajustar o tom para mais técnico ou mais académico
