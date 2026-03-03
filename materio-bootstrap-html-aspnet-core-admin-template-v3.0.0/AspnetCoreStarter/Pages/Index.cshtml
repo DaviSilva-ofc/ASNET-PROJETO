@@ -1,9 +1,64 @@
 @page
 @model AspnetCoreStarter.Pages.IndexModel
 @{
-  ViewData["Title"] = "Page 1 - Starter Kit";
+    ViewData["Title"] = "ASNET - Página Inicial";
 }
 
-@* ************** Content ************** *@
-<h4 class="py-4 mb-6">Page 1</h4>
-<p>Sample page.<br />For more layout options, refer <a href="@TempData.Peek("documentation")" target="_blank" class="fw-bold">Layout docs</a>.</p>
+<style>
+    body {
+        background-color: #f2f2f2; /* cinzento claro */
+    }
+
+    .hero-section {
+        background-color: #4a4a4a; /* cinzento escuro */
+        color: white;
+        padding: 60px 20px;
+        text-align: center;
+        border-radius: 10px;
+    }
+
+    .btn-asnet {
+        background-color: #f57c00; /* laranja */
+        color: white;
+        padding: 10px 25px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .btn-asnet:hover {
+        background-color: #e65100;
+        color: white;
+    }
+
+    .logo {
+        width: 180px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container mt-5">
+
+    <div class="hero-section">
+        <img src="~/images/logo-asnet.png" alt="Logo ASNET" class="logo" />
+
+        <h1>Bem-vindo à ASNET</h1>
+        <p class="mt-3">
+            Soluções Tecnológicas e Serviços Informáticos em Braga.
+        </p>
+
+        <a href="@TempData.Peek("documentation")" target="_blank" class="btn-asnet mt-3">
+            Ver Documentação
+        </a>
+    </div>
+
+    <div class="mt-5 text-center">
+        <h3 style="color:#4a4a4a;">Quem Somos</h3>
+        <p>
+            A ASNET é uma empresa especializada em soluções informáticas,
+            desenvolvimento de software e consultoria tecnológica.
+        </p>
+    </div>
+
+</div>
