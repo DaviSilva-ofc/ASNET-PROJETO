@@ -6,34 +6,72 @@
 
 <style>
     body {
-        background-color: #f2f2f2; /* cinzento claro */
+        background: linear-gradient(135deg, #e0e0e0, #f5f5f5);
     }
 
     .hero-section {
-        background-color: #4a4a4a; /* cinzento escuro */
+        background: linear-gradient(135deg, #4a4a4a, #2f2f2f);
         color: white;
-        padding: 60px 20px;
+        padding: 80px 20px;
         text-align: center;
-        border-radius: 10px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section h1 {
+        color: white; /* GARANTE branco */
+        font-size: 3rem;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .hero-section p {
+        font-size: 1.2rem;
+        opacity: 0.9;
     }
 
     .btn-asnet {
-        background-color: #f57c00; /* laranja */
+        background-color: #f57c00;
         color: white;
-        padding: 10px 25px;
-        border-radius: 30px;
+        padding: 12px 30px;
+        border-radius: 50px;
         text-decoration: none;
         font-weight: bold;
-        transition: 0.3s;
+        transition: all 0.3s ease;
+        display: inline-block;
+        margin-top: 20px;
     }
 
     .btn-asnet:hover {
-        background-color: #e65100;
+        background-color: #ff9800;
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         color: white;
     }
 
     .logo {
-        width: 180px;
+        width: 200px;
+        margin-bottom: 25px;
+        transition: 0.3s;
+    }
+
+    .logo:hover {
+        transform: scale(1.05);
+    }
+
+    .about-section {
+        margin-top: 60px;
+        padding: 40px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .about-section h3 {
+        color: #4a4a4a;
+        font-weight: bold;
         margin-bottom: 20px;
     }
 </style>
@@ -43,21 +81,24 @@
     <div class="hero-section">
         <img src="~/images/logo-asnet.png" alt="Logo ASNET" class="logo" />
 
-        <h1>Bem-vindo à ASNET</h1>
+        <h1>Bem-Vindo à ASNET</h1>
+
         <p class="mt-3">
             Soluções Tecnológicas e Serviços Informáticos em Braga.
         </p>
 
-        <a href="@TempData.Peek("documentation")" target="_blank" class="btn-asnet mt-3">
+        <a href="@TempData.Peek("documentation")" target="_blank" class="btn-asnet">
             Ver Documentação
         </a>
     </div>
 
-    <div class="mt-5 text-center">
-        <h3 style="color:#4a4a4a;">Quem Somos</h3>
+    <div class="about-section text-center">
+        <h3>Quem Somos</h3>
         <p>
             A ASNET é uma empresa especializada em soluções informáticas,
             desenvolvimento de software e consultoria tecnológica.
+            Trabalhamos para oferecer inovação, segurança e eficiência
+            às empresas.
         </p>
     </div>
 
