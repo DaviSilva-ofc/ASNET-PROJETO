@@ -50,29 +50,57 @@
   // Customers reviews
   // -----------------------------------
   if (swiperReviews) {
-    new Swiper(swiperReviews, {
+    // determine number of slides dynamically so loopedSlides stays in sync when we add/remove reviews
+    const reviewCount = swiperReviews.querySelectorAll('.swiper-slide').length;
+    console.log('initial reviewCount for swiper:', reviewCount);
+    const swiperInstance = new Swiper(swiperReviews, {
+      // always show single testimonial at once
       slidesPerView: 1,
       spaceBetween: 5,
-      centeredSlides: true,
       grabCursor: true,
       autoplay: {
         delay: 3000,
         disableOnInteraction: false
       },
-      loop: true,
-      loopAdditionalSlides: 1,
+      speed: 500,
+      // no loop — we'll restart manually to keep pagination sane
+      loop: false,
       pagination: {
         el: '.swiper-pagination',
-        clickable: true
+        clickable: true,
+        dynamicBullets: true
       },
+      observer: true,
+      observeParents: true,
       breakpoints: {
-        992: {
-          slidesPerView: 4,
-          spaceBetween: 20
-        },
         768: {
-          slidesPerView: 2,
+          slidesPerView: 1,
           spaceBetween: 20
+        }
+      },
+      on: {
+        init: function() {
+          console.log('swiper init: total slides =', this.slides.length);
+          this.slides.forEach((slide, idx) => {
+            const img = slide.querySelector('img.client-logo');
+            console.log('  slide[' + idx + '] src', img ? img.src : 'none');
+          });
+        },
+        slideChange: function() {
+          console.log('swiper slideChange: activeIndex', this.activeIndex, 'realIndex', this.realIndex);
+          if (this.activeIndex === reviewCount - 1) {
+            // reached final testimonial -> immediately jump back to start
+            // use zero duration so pagination resets in sync
+            this.slideTo(0, 0);
+            // ensure pagination bullets updated correctly
+            if (this.pagination && this.pagination.update) {
+              this.pagination.update();
+            }
+            // restart autoplay cycle explicitly
+            if (this.autoplay && this.autoplay.start) {
+              this.autoplay.start();
+            }
+          }
         }
       }
     });

@@ -8,7 +8,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 // Add services to the container.
+// During development we enable runtime compilation so changes to .cshtml files
+// are picked up without restarting dotnet. You'll need to run
+//    dotnet add package Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation
+// once to install the package.
+#if DEBUG
+builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
+#else
 builder.Services.AddRazorPages();
+#endif
 
 // builder.Services.AddDbContext<UserContext>(options =>
 // {
@@ -38,6 +46,13 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+// redirect root URL to landing page
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/frontpages/Landingpage");
+    return System.Threading.Tasks.Task.CompletedTask;
+});
 
 app.MapRazorPages();
 
