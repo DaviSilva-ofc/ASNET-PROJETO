@@ -102,18 +102,18 @@
   </section>
   <!-- utilidades: End -->
 
-  <!-- Real customers reviews: Start -->
+  <!-- Avaliações: Start -->
   <section id="landingReviews" class="section-py bg-body landing-reviews">
     <div class="container">
       <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
-        <span class="text-uppercase">real customers reviews</span>
+        <span class="text-uppercase">Avaliações dos clientes</span>
       </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">Success stories</span> from clients</h5>
-      <p class="text-center fw-medium mb-4 mb-md-12">See what our customers have to say about their experience.</p>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">Experiências positivas</span> de alguns dos nossos clientes</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12">Veja o que os nossos clientes dizem sobre a nossa aplicação.</p>
     </div>
-    <div class="swiper-reviews-carousel overflow-hidden mb-12 pt-4">
-      <div class="swiper" id="swiper-reviews">
+    <div class="swiper-reviews-carousel mb-12 pt-4" style="overflow: hidden;">
+      <div class="swiper" id="swiper-reviews" style="overflow: visible;">
         <div class="swiper-wrapper">
           <div class="swiper-slide">
             <div class="card h-100">
@@ -228,7 +228,7 @@
                 </div>
                 <div>
                   <h6 class="mb-1">Ângela Meireles</h6>
-                  <p class="mb-0 small">Diretor do Dona Maria</p>
+                  <p class="mb-0 small">Diretor da Dona Maria</p>
                 </div>
               </div>
             </div>
@@ -239,416 +239,63 @@
         <div class="swiper-pagination"></div>
       </div>
     </div>
-    <!-- debug: contar slides sem precisar colar na consola -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function(){
-const slides = document.querySelectorAll('#swiper-reviews .swiper-slide');
-        const count = slides.length;
-        console.log('Número de slides (debug):', count);
-        slides.forEach((slide, idx) => {
-          const img = slide.querySelector('img.client-logo');
-          console.log(`slide ${idx+1} logo src:`, img ? img.getAttribute('src') : 'none');
-        });
-        // cria um indicador visível num canto da secção para facilitar
-        const debugEl = document.createElement('div');
-        debugEl.textContent = 'slides: ' + count;
-        debugEl.style.position = 'absolute';
-        debugEl.style.top = '0';
-        debugEl.style.right = '0';
-        debugEl.style.background = 'rgba(0,0,0,0.5)';
-        debugEl.style.color = '#fff';
-        debugEl.style.padding = '2px 6px';
-        debugEl.style.fontSize = '0.75rem';
-        debugEl.style.zIndex = '9999';
-        document.querySelector('#landingReviews').style.position = 'relative';
-        document.querySelector('#landingReviews').appendChild(debugEl);
 
-      });
-    </script>
+<!-- logos cinzentas: Start -->
     <div class="container">
       <div class="swiper-logo-carousel pt-lg-4 mt-12">
         <div class="swiper" id="swiper-clients-logos">
           <div class="swiper-wrapper">
             <div class="swiper-slide">
-              <img src="~/img/front-pages/branding/logo-1-light.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/branding/logo-1-light.png" data-app-dark-img="front-pages/branding/logo-1-dark.png" />
+              <img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-esas.png" data-app-dark-img="~/img/front-pages/landing-page/logo-esas.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/branding/logo-2-light.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/branding/logo-2-light.png" data-app-dark-img="front-pages/branding/logo-2-dark.png" />
+              <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-sademiranda.png" data-app-dark-img="~/img/front-pages/landing-page/logo-sademiranda.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/branding/logo-3-light.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/branding/logo-3-light.png" data-app-dark-img="front-pages/branding/logo-3-dark.png" />
+              <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-andresoares.png" data-app-dark-img="~/img/front-pages/landing-page/logo-andresoares.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/branding/logo-4-light.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/branding/logo-4-light.png" data-app-dark-img="front-pages/branding/logo-4-dark.png" />
+              <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-carlosamarante.png" data-app-dark-img="~/img/front-pages/landing-page/logo-carlosamarante.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/branding/logo-5-light.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/branding/logo-5-light.png" data-app-dark-img="front-pages/branding/logo-5-dark.png" />
+              <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-donamaria.png" data-app-dark-img="~/img/front-pages/landing-page/logo-donamaria.png" />
             </div>
           </div>
         </div>
       </div>
     </div>
   </section>
+  <!-- logos cinzentas: Start -->
   <!-- avaliações de clientes "reais": End -->
 
-  <!-- Our great team: Start -->
-  <section id="landingTeam" class="section-py landing-team">
-    <div class="container bg-icon-right position-relative">
-      <img src="~/img/front-pages/icons/bg-right-icon-light.png" alt="section icon" class="position-absolute top-0 end-0" data-speed="1" data-app-light-img="front-pages/icons/bg-right-icon-light.png" data-app-dark-img="front-pages/icons/bg-right-icon-dark.png" />
-      <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
-        <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
-        <span class="text-uppercase">our great team</span>
-      </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">Supported</span> by Real People</h5>
-      <p class="text-center fw-medium mb-4 mb-md-12 pb-7">Who is behind these great-looking interfaces?</p>
-      <div class="row gy-lg-5 gy-12 mt-2">
-        <div class="col-lg-3 col-sm-6">
-          <div class="card card-hover-border-primary mt-4 mt-lg-0 shadow-none">
-            <div class="bg-label-primary position-relative team-image-box">
-              <img src="~/img/front-pages/landing-page/team-member-1.png" class="position-absolute card-img-position bottom-0 start-50 scaleX-n1-rtl" alt="human image" />
-            </div>
-            <div class="card-body text-center">
-              <h5 class="card-title mb-0">Sophie Gilbert</h5>
-              <p class="card-text mb-3">Project Manager</p>
-              <div class="text-center team-media-icons">
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-facebook-circle-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-twitter-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-linkedin-box-line icon-22px"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-sm-6">
-          <div class="card card-hover-border-danger mt-4 mt-lg-0 shadow-none">
-            <div class="bg-label-danger position-relative team-image-box">
-              <img src="~/img/front-pages/landing-page/team-member-2.png" class="position-absolute card-img-position bottom-0 start-50 scaleX-n1-rtl" alt="human image" />
-            </div>
-            <div class="card-body text-center">
-              <h5 class="card-title mb-0">Nannie Ford</h5>
-              <p class="card-text mb-3">Development Lead</p>
-              <div class="text-center team-media-icons">
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-facebook-circle-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-twitter-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-linkedin-box-line icon-22px"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-sm-6">
-          <div class="card card-hover-border-success mt-4 mt-lg-0 shadow-none">
-            <div class="bg-label-success position-relative team-image-box">
-              <img src="~/img/front-pages/landing-page/team-member-3.png" class="position-absolute card-img-position bottom-0 start-50 scaleX-n1-rtl" alt="human image" />
-            </div>
-            <div class="card-body text-center">
-              <h5 class="card-title mb-0">Chris Watkins</h5>
-              <p class="card-text mb-3">Marketing Manager</p>
-              <div class="text-center team-media-icons">
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-facebook-circle-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-twitter-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-linkedin-box-line icon-22px"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-sm-6">
-          <div class="card card-hover-border-info mt-4 mt-lg-0 shadow-none">
-            <div class="bg-label-info position-relative team-image-box">
-              <img src="~/img/front-pages/landing-page/team-member-4.png" class="position-absolute card-img-position bottom-0 start-50 scaleX-n1-rtl" alt="human image" />
-            </div>
-            <div class="card-body text-center">
-              <h5 class="card-title mb-0">Paul Miles</h5>
-              <p class="card-text mb-3">UI Designer</p>
-              <div class="text-center team-media-icons">
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-facebook-circle-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-twitter-line icon-22px me-2"></i>
-                </a>
-                <a href="javascript:void(0);" class="text-heading" target="_blank">
-                  <i class="icon-base ri ri-linkedin-box-line icon-22px"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- Our great team: End -->
-
-  <!-- Pricing plans: Start -->
-  <section id="landingPricing" class="section-py bg-body landing-pricing">
-    <div class="container bg-icon-left position-relative">
-      <img src="~/img/front-pages/icons/bg-left-icon-light.png" alt="section icon" class="position-absolute top-0 start-0" data-speed="1" data-app-light-img="front-pages/icons/bg-left-icon-light.png" data-app-dark-img="front-pages/icons/bg-left-icon-dark.png" />
-      <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
-        <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
-        <span class="text-uppercase">pricing plans</span>
-      </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">Tailored pricing plans</span> designed for you</h5>
-      <p class="text-center fw-medium mb-10 mb-md-12 pb-lg-4">
-        All plans include 40+ advanced tools and features to boost your product.<br />
-        the best plan to fit your needs.
-      </p>
-      <div id="slider-pricing" class="mb-10 mb-md-12"></div>
-      <div class="row gy-4 pt-lg-4">
-        <!-- Basic Plan: Start -->
-        <div class="col-xl-4 col-lg-6">
-          <div class="card shadow-none">
-            <div class="card-header border-0">
-              <h4 class="mb-3 text-center">Basic Plan</h4>
-              <div class="d-flex align-items-center">
-                <h5 class="d-flex mb-0"><sup class="h5 mt-4">$</sup><span class="display-3 fw-bold">20</span></h5>
-                <div class="ms-2 ps-1">
-                  <h6 class="mb-1">Per month</h6>
-                  <p class="small mb-0 text-body">10% off for yearly subscription</p>
-                </div>
-              </div>
-              <img src="~/img/front-pages/icons/smiling-icon.png" alt="smiling icon" />
-            </div>
-            <div class="card-body">
-              <ul class="list-unstyled">
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Timeline
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Basic search
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Live chat widget
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Email marketing
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Custom Forms
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Traffic analytics
-                  </h5>
-                </li>
-              </ul>
-              <hr />
-              <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="me-1">
-                  <h6 class="mb-1">Basic Support</h6>
-                  <p class="small mb-0 text-body">Only Email</p>
-                </div>
-                <span class="badge bg-label-primary rounded-pill">AVG. Time: 24h</span>
-              </div>
-              <div class="text-center mt-6 pt-2">
-                <a href="payment-page.html" class="btn btn-outline-primary w-100">Get Started</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Basic Plan: End -->
-
-        <!-- Favourite Plan: Start -->
-        <div class="col-xl-4 col-lg-6">
-          <div class="card border-primary border-2 shadow-none">
-            <div class="card-header border-0">
-              <h4 class="mb-3 text-center">Favourite Plan</h4>
-              <div class="d-flex align-items-center">
-                <h5 class="d-flex mb-0"><sup class="h5 mt-4">$</sup><span class="display-3 fw-bold">51</span></h5>
-                <div class="ms-2 ps-1">
-                  <h6 class="mb-1">Per month</h6>
-                  <p class="small mb-0 text-body">10% off for yearly subscription</p>
-                </div>
-              </div>
-              <img src="~/img/front-pages/icons/smiling-icon.png" alt="smiling icon" />
-            </div>
-            <div class="card-body">
-              <ul class="list-unstyled">
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Everything in basic
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Timeline with database
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Advanced search
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Marketing automation
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Advanced chatbot
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Campaign management
-                  </h5>
-                </li>
-              </ul>
-              <hr />
-              <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="me-1">
-                  <h6 class="mb-1">Standard Support</h6>
-                  <p class="small mb-0 text-body">Email & Chat</p>
-                </div>
-                <span class="badge bg-label-primary rounded-pill">AVG. Time: 6h</span>
-              </div>
-              <div class="text-center mt-6 pt-2">
-                <a href="payment-page.html" class="btn btn-primary w-100">Get Started</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Favourite Plan: End -->
-
-        <!-- Standard Plan: Start -->
-        <div class="col-xl-4 col-lg-6">
-          <div class="card shadow-none">
-            <div class="card-header border-0">
-              <h4 class="mb-3 text-center">Standard Plan</h4>
-              <div class="d-flex align-items-center">
-                <h5 class="d-flex mb-0"><sup class="h5 mt-4">$</sup><span class="display-3 fw-bold">99</span></h5>
-                <div class="ms-2 ps-1">
-                  <h6 class="mb-1">Per month</h6>
-                  <p class="small mb-0 text-body">10% off for yearly subscription</p>
-                </div>
-              </div>
-              <img src="~/img/front-pages/icons/smiling-icon.png" alt="smiling icon" />
-            </div>
-            <div class="card-body">
-              <ul class="list-unstyled">
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Everything in premium
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Timeline with database
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Fuzzy search
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    A/B testing sanbox
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Custom permissions
-                  </h5>
-                </li>
-                <li>
-                  <h5 class="mb-3">
-                    <img src="~/img/front-pages/icons/list-arrow-icon.png" alt="list arrow icon" class="me-2 pe-1 scaleX-n1-rtl" />
-                    Social media automation
-                  </h5>
-                </li>
-              </ul>
-              <hr />
-              <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="me-1">
-                  <h6 class="mb-1">Exclusive Support</h6>
-                  <p class="small mb-0 text-body">Email, Chat & Google Meet</p>
-                </div>
-                <span class="badge bg-label-primary rounded-pill">Live Support</span>
-              </div>
-              <div class="text-center mt-6 pt-2">
-                <a href="payment-page.html" class="btn btn-outline-primary w-100">Get Started</a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Standard Plan: End -->
-      </div>
-    </div>
-  </section>
-  <!-- Pricing plans: End -->
-
-  <!-- Fun facts: Start -->
+  <!-- factos: Start -->
   <section id="landingFunFacts" class="section-py landing-fun-facts py-12 my-4">
     <div class="container">
       <div class="row gx-0 gy-5 gx-sm-6">
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-primary bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-layout-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">137+</h2>
-          <h6 class="mb-0 text-body">Completed Sites</h6>
+          <h2 class="fw-bold mb-0 fun-facts-text">100+</h2>
+          <h6 class="mb-0 text-body">equipamentos reparados</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-success bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-time-line icon-42px"></i></span>
           <h2 class="fw-bold mb-0 fun-facts-text">1,100+</h2>
-          <h6 class="mb-0 text-body">Working Hours</h6>
+          <h6 class="mb-0 text-body">Horas trabalhadas</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-warning bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-user-smile-line icon-42px"></i></span>
           <h2 class="fw-bold mb-0 fun-facts-text">137+</h2>
-          <h6 class="mb-0 text-body">Happy Customers</h6>
+          <h6 class="mb-0 text-body">Clientes satisfeitos</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-info bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-award-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">23+</h2>
-          <h6 class="mb-0 text-body">Awards Winning</h6>
+          <h2 class="fw-bold mb-0 fun-facts-text">53+</h2>
+          <h6 class="mb-0 text-body">Avaliações positivas</h6>
         </div>
       </div>
     </div>
   </section>
-  <!-- Fun facts: End -->
+  <!-- factos: End -->
 
   <!-- FAQ: Start -->
   <section id="landingFAQ" class="section-py bg-body landing-faq">
@@ -658,13 +305,13 @@ const slides = document.querySelectorAll('#swiper-reviews .swiper-slide');
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
         <span class="text-uppercase">faq</span>
       </h6>
-      <h5 class="text-center mb-2">Frequently asked<span class="h4 fw-bold"> questions</span></h5>
-      <p class="text-center fw-medium mb-4 mb-md-12 pb-4">Browse through these FAQs to find answers to commonly asked questions.</p>
+      <h5 class="text-center mb-2">Perguntas <span class="h4 fw-bold"> frequentes</span></h5>
+      <p class="text-center fw-medium mb-4 mb-md-12 pb-4">Navegue pelas perguntas frequentes caso tenha alguma dúvida.</p>
       <div class="row gy-5">
         <div class="col-lg-5">
           <div class="text-center">
             <img
-              src="~/img/front-pages/landing-page/sitting-girl-with-laptop.png"
+              src="~/img/front-pages/landing-page/menina-sentada-com-portatil-removebg-preview.png"
               alt="sitting girl with laptop"
               class="faq-image scaleX-n1-rtl" />
           </div>
@@ -673,46 +320,45 @@ const slides = document.querySelectorAll('#swiper-reviews .swiper-slide');
           <div class="accordion" id="accordionFront">
             <div class="accordion-item">
               <h2 class="accordion-header" id="head-One">
-                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">Do you charge for each upgrade?</button>
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">quais as principais funções que um cliente tem?</button>
               </h2>
 
               <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionFront" aria-labelledby="accordionOne">
-                <div class="accordion-body">Lemon drops chocolate cake gummies carrot cake chupa chups muffin topping. Sesame snaps icing marzipan gummi bears macaroon dragée danish caramels powder. Bear claw dragée pastry topping soufflé. Wafer gummi bears marshmallow pastry pie.</div>
+                <div class="accordion-body">O cliente poderá marcar um dispositivo como avariado ou em funcionamento, e poderá solicitar um reparo à um dos nossos técnicos.</div>
               </div>
             </div>
             <div class="accordion-item previous-active">
               <h2 class="accordion-header" id="head-Two">
-                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionTwo" aria-expanded="false" aria-controls="accordionTwo">Do I need to purchase a license for each website?</button>
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionTwo" aria-expanded="false" aria-controls="accordionTwo">Quanto tempo demora para a chegada do técnico?</button>
               </h2>
               <div id="accordionTwo" class="accordion-collapse collapse" aria-labelledby="accordionTwo" data-bs-parent="#accordionFront">
-                <div class="accordion-body">Dessert ice cream donut oat cake jelly-o pie sugar plum cheesecake. Bear claw dragée oat cake dragée ice cream halvah tootsie roll. Danish cake oat cake pie macaroon tart donut gummies. Jelly beans candy canes carrot cake. Fruitcake chocolate chupa chups.</div>
+                <div class="accordion-body">Nossos técnicos estão disponíveis para solicitar um reparo das 09:30 às 19:00, e iremos chegar até 1 hora após o pedido de reparo.</div>
               </div>
             </div>
             <div class="accordion-item active">
               <h2 class="accordion-header" id="head-Three">
-                <button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#accordionThree" aria-expanded="true" aria-controls="accordionThree">What is regular license?</button>
+                <button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#accordionThree" aria-expanded="true" aria-controls="accordionThree">como isso pode ajudar a minha organização?</button>
               </h2>
               <div id="accordionThree" class="accordion-collapse collapse show" aria-labelledby="accordionThree" data-bs-parent="#accordionFront">
                 <div class="accordion-body">
-                  Regular license can be used for end products that do not charge users for access or service(access is free and there will be no monthly subscription fee). Single regular license can be used for single end product and end product can be used by you or your client. If you want to sell end product to multiple clients then you will need to purchase separate license for each client. The same rule applies if you want to use the same end product on multiple domains(unique setup).
-                  For more info on regular license you can check official description.
+                  De forma rápida, segura, organizada e eficaz, a nossa aplicação irá ajudar a sua organização a gerir os seus equipamentos, garantindo que cada um deles esteja sempre em funcionamento e atualizado, e que cada reparo seja feito de forma rápida e eficiente.
                 </div>
               </div>
             </div>
             <div class="accordion-item">
               <h2 class="accordion-header" id="head-Four">
-                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFour" aria-expanded="false" aria-controls="accordionFour">What is extended license?</button>
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFour" aria-expanded="false" aria-controls="accordionFour">Existe algum limite de solicitações?</button>
               </h2>
               <div id="accordionFour" class="accordion-collapse collapse" aria-labelledby="accordionFour" data-bs-parent="#accordionFront">
-                <div class="accordion-body">Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis et aliquid quaerat possimus maxime! Mollitia reprehenderit neque repellat deleniti delectus architecto dolorum maxime, blanditiis earum ea, incidunt quam possimus cumque.</div>
+                <div class="accordion-body">Não há limite de solicitações. Pode solicitar quantas vezes quiser, e cada solicitação será tratada com prioridade.</div>
               </div>
             </div>
             <div class="accordion-item">
               <h2 class="accordion-header" id="head-Five">
-                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFive" aria-expanded="false" aria-controls="accordionFive">Which license is applicable for SASS application?</button>
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFive" aria-expanded="false" aria-controls="accordionFive">Como posso aceder ao sistema?</button>
               </h2>
               <div id="accordionFive" class="accordion-collapse collapse" aria-labelledby="accordionFive" data-bs-parent="#accordionFront">
-                <div class="accordion-body">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Sequi molestias exercitationem ab cum nemo facere voluptates veritatis quia, eveniet veniam at et repudiandae mollitia ipsam quasi labore enim architecto non!</div>
+                <div class="accordion-body">Para aceder ao sistema, basta entrar na nossa aplicação e fazer login com as teus dados. Se ainda não tiver uma conta, pode criar uma gratuitamente.</div>
               </div>
             </div>
           </div>
@@ -728,9 +374,9 @@ const slides = document.querySelectorAll('#swiper-reviews .swiper-slide');
     <div class="container">
       <div class="row align-items-center gy-5 gy-lg-0">
         <div class="col-lg-6 text-center text-lg-start">
-          <h2 class="display-5 text-primary fw-bold mb-0">Ready to Get Started?</h2>
-          <p class="fw-medium mb-6 mb-md-8">Start your project with a 14-day free trial</p>
-          <a href="payment-page.html" class="btn btn-primary">Get Started<i class="icon-base ri ri-arrow-right-line icon-16px ms-2 scaleX-n1-rtl"></i></a>
+          <h2 class="display-5 text-primary fw-bold mb-0">Pronto para iniciar?</h2>
+          <p class="fw-medium mb-6 mb-md-8">Realize seu registo para obter acesso imediato</p>
+          <a href="payment-page.html" class="btn btn-primary">Criar conta<i class="icon-base ri ri-arrow-right-line icon-16px ms-2 scaleX-n1-rtl"></i></a>
         </div>
         <div class="col-lg-6 pt-lg-12">
           <img src="~/img/front-pages/landing-page/cta-dashboard.png" alt="cta dashboard" class="img-fluid" />
@@ -740,55 +386,55 @@ const slides = document.querySelectorAll('#swiper-reviews .swiper-slide');
   </section>
   <!-- CTA: End -->
 
-  <!-- Contact Us: Start -->
+  <!-- contacte-nos: Start -->
   <section id="landingContact" class="section-py bg-body landing-contact">
     <div class="container bg-icon-left position-relative">
       <img src="~/img/front-pages/icons/bg-left-icon-light.png" alt="section icon" class="position-absolute top-0 start-0" data-speed="1" data-app-light-img="front-pages/icons/bg-left-icon-light.png" data-app-dark-img="front-pages/icons/bg-left-icon-dark.png" />
       <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
-        <span class="text-uppercase">contact us</span>
+        <span class="text-uppercase">Contacte-nos</span>
       </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">Lets work</span> together</h5>
-      <p class="text-center fw-medium mb-4 mb-md-12 pb-3">Any question or remark? just write us a message</p>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">vamos trabalhar</span> juntos</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12 pb-3">Alguma dúvida ou comentário? Só nos escreva uma mensagem</p>
       <div class="row gy-4">
         <div class="col-lg-5">
           <div class="card h-100">
             <div class="bg-primary rounded text-white card-body p-lg-8">
-              <p class="fw-medium mb-2 tagline">Let’s contact with us</p>
-              <p class="display-6 mb-5 title">Share your ideas or requirement with our experts.</p>
-              <img src="~/img/front-pages/landing-page/let’s-contact.png" alt="let’s contact" class="w-100 mb-4 pb-1" />
-              <p class="mb-0 description">Looking for more customisation, more features, and more anything? Don’t worry, We’ve provide you with an entire team of experienced professionals.</p>
+              <p class="fw-medium mb-2 tagline">Escrva uma mensagem</p>
+              <p class="display-6 mb-5 title">Compartilhe suas ideias ou necessidades com nossos especialistas..</p>
+              <img src="~/img/front-pages/landing-page/contacte-nos.png" alt="let’s contact" class="w-100 mb-4 pb-1" />
+              <p class="mb-0 description">ainda resta dúvidas ou está a enfrentar problemas? Não se preocupe, fornecemos uma equipe completa de profissionais experientes.</p>
             </div>
           </div>
         </div>
         <div class="col-lg-7">
           <div class="card">
             <div class="card-body">
-              <h5 class="mb-6">Share your ideas</h5>
+              <h5 class="mb-6">escreva-nos uma mensagem</h5>
               <form>
                 <div class="row g-5">
                   <div class="col-md-6">
                     <div class="form-floating form-floating-outline">
                       <input type="text" class="form-control" id="basic-default-fullname" placeholder="John Doe" />
-                      <label for="basic-default-fullname">Full name</label>
+                      <label for="basic-default-fullname">Nome completo</label>
                     </div>
                   </div>
 
                   <div class="col-md-6">
                     <div class="form-floating form-floating-outline">
                       <input type="email" class="form-control" id="basic-default-email" placeholder="johndoe99&#64;gmail.com" />
-                      <label for="basic-default-email">Email address</label>
+                      <label for="basic-default-email">Endereço de email</label>
                     </div>
                   </div>
 
                   <div class="col-12">
                     <div class="form-floating form-floating-outline">
                       <textarea class="form-control h-px-200" placeholder="Message" aria-label="Message" id="basic-default-message"></textarea>
-                      <label for="basic-default-message">Message</label>
+                      <label for="basic-default-message">Mensagem</label>
                     </div>
                   </div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-5">Send inquiry</button>
+                <button type="submit" class="btn btn-primary mt-5">Enviar consulta</button>
               </form>
             </div>
           </div>
@@ -796,6 +442,6 @@ const slides = document.querySelectorAll('#swiper-reviews .swiper-slide');
       </div>
     </div>
   </section>
-  <!-- Contact Us: End -->
+  <!-- contacte-nos: End -->
 </div>
 
