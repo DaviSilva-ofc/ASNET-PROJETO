@@ -5,6 +5,21 @@
   ViewData["Title"] = "Landing Page - Front Pages";
 }
 
+@section VendorStyles{
+  <link rel="stylesheet" href="~/vendor/libs/nouislider/nouislider.dist.css" />
+  <link rel="stylesheet" href="~/vendor/libs/swiper/swiper.dist.css" />
+}
+@section PageStyles {
+<link rel="stylesheet" href="~/vendor/css/pages/front-page-landing.dist.css" />
+}
+@section VendorScripts{
+<script src="~/vendor/libs/nouislider/nouislider.dist.js"></script>
+<script src="~/vendor/libs/swiper/swiper.dist.js"></script>
+}
+@section PageScripts {
+<script src="~/js/front-page-landing.dist.js"></script>
+}
+
 @* ************** Content ************** *@
 <div data-bs-spy="scroll" class="scrollspy-example">
   <!-- Inicio iterativo: Start -->
@@ -87,18 +102,18 @@
   </section>
   <!-- utilidades: End -->
 
-  <!-- Real customers reviews: Start -->
+  <!-- Avaliações: Start -->
   <section id="landingReviews" class="section-py bg-body landing-reviews">
     <div class="container">
       <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
-        <span class="text-uppercase">feedback das escolas</span>
+        <span class="text-uppercase">Avaliações dos clientes</span>
       </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">Histórias de sucesso</span> dos nossos clientes</h5>
-      <p class="text-center fw-medium mb-4 mb-md-12">Veja o que as escolas têm a dizer sobre a sua experiência.</p>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">Experiências positivas</span> de alguns dos nossos clientes</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12">Veja o que os nossos clientes dizem sobre a nossa aplicação.</p>
     </div>
-    <div class="swiper-reviews-carousel overflow-hidden mb-12 pt-4">
-      <div class="swiper" id="swiper-reviews">
+    <div class="swiper-reviews-carousel mb-12 pt-4" style="overflow: hidden;">
+      <div class="swiper" id="swiper-reviews" style="overflow: visible;">
         <div class="swiper-wrapper">
           <div class="swiper-slide">
             <div class="card h-100">
@@ -107,7 +122,7 @@
                   <!-- exemplo de cliente 1: start -->
                   <img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo img-fluid" />
                 </div>
-                <p class="text-heading">“A plataforma facilitou imenso a gestão de avarias e a comunicação com os técnicos. Recomendo vivamente.”</p>
+                <p class="text-heading">“[Comentário do cliente esas].”</p>
                 <div class="text-warning mb-4">
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
@@ -131,7 +146,7 @@
                 <div class="mb-4">
                   <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo img-fluid" />
                 </div>
-                <p class="text-heading">“Excelente ferramenta para o inventário e manutenção dos equipamentos da nossa escola. Muito intuitiva.”</p>
+                <p class="text-heading">“[Comentário do cliente Sá de Miranda].”</p>
                 <div class="text-warning mb-4">
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
@@ -155,7 +170,7 @@
                 <div class="mb-4">
                   <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo img-fluid" />
                 </div>
-                <p class="text-heading">“Conseguimos organizar todos os pedidos de suporte técnico de forma eficiente pela primeira vez.”</p>
+                <p class="text-heading">“[Comentário do cliente André Soares].”</p>
                 <div class="text-warning mb-4">
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
@@ -179,7 +194,7 @@
                 <div class="mb-4">
                   <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo img-fluid" />
                 </div>
-                <p class="text-heading">“O suporte da equipas ASNET é fantástico e a aplicação responde a todas as nossas necessidades.”</p>
+                <p class="text-heading">“[Comentário do cliente Carlos Amarante].”</p>
                 <div class="text-warning mb-4">
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
@@ -203,7 +218,7 @@
                 <div class="mb-4">
                   <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo img-fluid" />
                 </div>
-                <p class="text-heading">“Uma solução inovadora que trouxe agilidade ao nosso dia-a-dia na gestão tecnológica.”</p>
+                <p class="text-heading">“[Comentário do cliente Dona Maria].”</p>
                 <div class="text-warning mb-4">
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
                   <i class="icon-base ri ri-star-fill icon-24px"></i>
@@ -213,7 +228,7 @@
                 </div>
                 <div>
                   <h6 class="mb-1">Ângela Meireles</h6>
-                  <p class="mb-0 small">Diretor do Dona Maria</p>
+                  <p class="mb-0 small">Diretor da Dona Maria</p>
                 </div>
               </div>
             </div>
@@ -224,86 +239,63 @@
         <div class="swiper-pagination"></div>
       </div>
     </div>
-    <!-- debug: contar slides sem precisar colar na consola -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function(){
-        const slides = document.querySelectorAll('#swiper-reviews .swiper-slide');
-        const count = slides.length;
-        console.log('Número de slides (debug):', count);
-        slides.forEach((slide, idx) => {
-          const img = slide.querySelector('img.client-logo');
-          console.log(`slide ${idx+1} logo src:`, img ? img.getAttribute('src') : 'none');
-        });
-        // cria um indicador visível num canto da secção para facilitar
-        const debugEl = document.createElement('div');
-        debugEl.textContent = 'slides: ' + count;
-        debugEl.style.position = 'absolute';
-        debugEl.style.top = '0';
-        debugEl.style.right = '0';
-        debugEl.style.background = 'rgba(0,0,0,0.5)';
-        debugEl.style.color = '#fff';
-        debugEl.style.padding = '2px 6px';
-        debugEl.style.fontSize = '0.75rem';
-        debugEl.style.zIndex = '9999';
-        document.querySelector('#landingReviews').style.position = 'relative';
-        document.querySelector('#landingReviews').appendChild(debugEl);
-      });
-    </script>
+
+<!-- logos cinzentas: Start -->
     <div class="container">
       <div class="swiper-logo-carousel pt-lg-4 mt-12">
         <div class="swiper" id="swiper-clients-logos">
           <div class="swiper-wrapper">
             <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo img-fluid" />
+              <img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-esas.png" data-app-dark-img="~/img/front-pages/landing-page/logo-esas.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo img-fluid" />
+              <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-sademiranda.png" data-app-dark-img="~/img/front-pages/landing-page/logo-sademiranda.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo img-fluid" />
+              <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-andresoares.png" data-app-dark-img="~/img/front-pages/landing-page/logo-andresoares.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo img-fluid" />
+              <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-carlosamarante.png" data-app-dark-img="~/img/front-pages/landing-page/logo-carlosamarante.png" />
             </div>
             <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo img-fluid" />
+              <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-donamaria.png" data-app-dark-img="~/img/front-pages/landing-page/logo-donamaria.png" />
             </div>
           </div>
         </div>
       </div>
     </div>
   </section>
+  <!-- logos cinzentas: Start -->
   <!-- avaliações de clientes "reais": End -->
 
-
-  <!-- Fun facts: Start -->
+  <!-- factos: Start -->
   <section id="landingFunFacts" class="section-py landing-fun-facts py-12 my-4">
     <div class="container">
       <div class="row gx-0 gy-5 gx-sm-6">
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-primary bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-layout-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">137+</h2>
-          <h6 class="mb-0 text-body">Sites Concluídos</h6>
+          <h2 class="fw-bold mb-0 fun-facts-text">100+</h2>
+          <h6 class="mb-0 text-body">equipamentos reparados</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-success bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-time-line icon-42px"></i></span>
           <h2 class="fw-bold mb-0 fun-facts-text">1,100+</h2>
-          <h6 class="mb-0 text-body">Horas de Trabalho</h6>
+          <h6 class="mb-0 text-body">Horas trabalhadas</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-warning bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-user-smile-line icon-42px"></i></span>
           <h2 class="fw-bold mb-0 fun-facts-text">137+</h2>
-          <h6 class="mb-0 text-body">Clientes Satisfeitos</h6>
+          <h6 class="mb-0 text-body">Clientes satisfeitos</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-info bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-award-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">23+</h2>
-          <h6 class="mb-0 text-body">Prémios Ganhos</h6>
+          <h2 class="fw-bold mb-0 fun-facts-text">53+</h2>
+          <h6 class="mb-0 text-body">Avaliações positivas</h6>
         </div>
       </div>
     </div>
   </section>
-  <!-- Fun facts: End -->
+  <!-- factos: End -->
 
   <!-- FAQ: Start -->
   <section id="landingFAQ" class="section-py bg-body landing-faq">
@@ -311,15 +303,15 @@
       <img src="~/img/front-pages/icons/bg-right-icon-light.png" alt="section icon" class="position-absolute top-0 end-0" data-speed="1" data-app-light-img="front-pages/icons/bg-right-icon-light.png" data-app-dark-img="front-pages/icons/bg-right-icon-dark.png" />
       <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
-        <span class="text-uppercase">FAQ</span>
+        <span class="text-uppercase">faq</span>
       </h6>
-      <h5 class="text-center mb-2">Perguntas<span class="h4 fw-bold"> frequentes</span></h5>
-      <p class="text-center fw-medium mb-4 mb-md-12 pb-4">Consulte estas perguntas frequentes para encontrar respostas a dúvidas comuns.</p>
+      <h5 class="text-center mb-2">Perguntas <span class="h4 fw-bold"> frequentes</span></h5>
+      <p class="text-center fw-medium mb-4 mb-md-12 pb-4">Navegue pelas perguntas frequentes caso tenha alguma dúvida.</p>
       <div class="row gy-5">
         <div class="col-lg-5">
           <div class="text-center">
             <img
-              src="~/img/front-pages/landing-page/sitting-girl-with-laptop.png"
+              src="~/img/front-pages/landing-page/Menina-sentada-com-portatil-removebg-preview.png"
               alt="sitting girl with laptop"
               class="faq-image scaleX-n1-rtl" />
           </div>
@@ -328,29 +320,45 @@
           <div class="accordion" id="accordionFront">
             <div class="accordion-item">
               <h2 class="accordion-header" id="head-One">
-                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">Como posso solicitar uma reparação?</button>
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">quais as principais funções que um cliente tem?</button>
               </h2>
 
               <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionFront" aria-labelledby="accordionOne">
-                <div class="accordion-body">Para solicitar uma reparação, basta aceder à secção "Solicitar reparos" no seu dashboard, preencher os detalhes do equipamento e o problema detetado.</div>
+                <div class="accordion-body">O cliente poderá marcar um dispositivo como avariado ou em funcionamento, e poderá solicitar um reparo à um dos nossos técnicos.</div>
               </div>
             </div>
             <div class="accordion-item previous-active">
               <h2 class="accordion-header" id="head-Two">
-                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionTwo" aria-expanded="false" aria-controls="accordionTwo">É possível gerir equipamentos de múltiplas salas?</button>
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionTwo" aria-expanded="false" aria-controls="accordionTwo">Quanto tempo demora para a chegada do técnico?</button>
               </h2>
               <div id="accordionTwo" class="accordion-collapse collapse" aria-labelledby="accordionTwo" data-bs-parent="#accordionFront">
-                <div class="accordion-body">Sim, a nossa aplicação permite categorizar e gerir equipamentos por localização, sala e departamento, garantindo uma organização total.</div>
+                <div class="accordion-body">Nossos técnicos estão disponíveis para solicitar um reparo das 09:30 às 19:00, e iremos chegar até 1 hora após o pedido de reparo.</div>
               </div>
             </div>
             <div class="accordion-item active">
               <h2 class="accordion-header" id="head-Three">
-                <button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#accordionThree" aria-expanded="true" aria-controls="accordionThree">Como funciona o suporte técnico?</button>
+                <button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#accordionThree" aria-expanded="true" aria-controls="accordionThree">como isso pode ajudar a minha organização?</button>
               </h2>
               <div id="accordionThree" class="accordion-collapse collapse show" aria-labelledby="accordionThree" data-bs-parent="#accordionFront">
                 <div class="accordion-body">
-                  Oferecemos suporte contínuo através da nossa plataforma. Pode abrir tickets de suporte e acompanhar o estado da resolução em tempo real.
+                  De forma rápida, segura, organizada e eficaz, a nossa aplicação irá ajudar a sua organização a gerir os seus equipamentos, garantindo que cada um deles esteja sempre em funcionamento e atualizado, e que cada reparo seja feito de forma rápida e eficiente.
                 </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="head-Four">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFour" aria-expanded="false" aria-controls="accordionFour">Existe algum limite de solicitações?</button>
+              </h2>
+              <div id="accordionFour" class="accordion-collapse collapse" aria-labelledby="accordionFour" data-bs-parent="#accordionFront">
+                <div class="accordion-body">Não há limite de solicitações. Pode solicitar quantas vezes quiser, e cada solicitação será tratada com prioridade.</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="head-Five">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFive" aria-expanded="false" aria-controls="accordionFive">Como posso aceder ao sistema?</button>
+              </h2>
+              <div id="accordionFive" class="accordion-collapse collapse" aria-labelledby="accordionFive" data-bs-parent="#accordionFront">
+                <div class="accordion-body">Para aceder ao sistema, basta entrar na nossa aplicação e fazer login com as teus dados. Se ainda não tiver uma conta, pode criar uma gratuitamente.</div>
               </div>
             </div>
           </div>
@@ -366,9 +374,9 @@
     <div class="container">
       <div class="row align-items-center gy-5 gy-lg-0">
         <div class="col-lg-6 text-center text-lg-start">
-          <h2 class="display-5 text-primary fw-bold mb-0">Pronto para Começar?</h2>
-          <p class="fw-medium mb-6 mb-md-8">Garanta a melhor gestão para a sua escola.</p>
-          <a href="/Ecommerce/Dashboard" class="btn btn-primary">Começar agora<i class="icon-base ri ri-arrow-right-line icon-16px ms-2 scaleX-n1-rtl"></i></a>
+          <h2 class="display-5 text-primary fw-bold mb-0">Pronto para iniciar?</h2>
+          <p class="fw-medium mb-6 mb-md-8">Realize seu registo para obter acesso imediato</p>
+          <a href="payment-page.html" class="btn btn-primary">Criar conta<i class="icon-base ri ri-arrow-right-line icon-16px ms-2 scaleX-n1-rtl"></i></a>
         </div>
         <div class="col-lg-6 pt-lg-12">
           <img src="~/img/front-pages/landing-page/cta-dashboard.png" alt="cta dashboard" class="img-fluid" />
@@ -378,55 +386,55 @@
   </section>
   <!-- CTA: End -->
 
-  <!-- Contact Us: Start -->
+  <!-- contacte-nos: Start -->
   <section id="landingContact" class="section-py bg-body landing-contact">
     <div class="container bg-icon-left position-relative">
       <img src="~/img/front-pages/icons/bg-left-icon-light.png" alt="section icon" class="position-absolute top-0 start-0" data-speed="1" data-app-light-img="front-pages/icons/bg-left-icon-light.png" data-app-dark-img="front-pages/icons/bg-left-icon-dark.png" />
       <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
-        <span class="text-uppercase">contacte-nos</span>
+        <span class="text-uppercase">Contacte-nos</span>
       </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">Vamos trabalhar</span> juntos</h5>
-      <p class="text-center fw-medium mb-4 mb-md-12 pb-3">Dúvidas ou sugestões? Envie-nos uma mensagem.</p>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">vamos trabalhar</span> juntos</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12 pb-3">Alguma dúvida ou comentário? Só nos escreva uma mensagem</p>
       <div class="row gy-4">
         <div class="col-lg-5">
           <div class="card h-100">
             <div class="bg-primary rounded text-white card-body p-lg-8">
-              <p class="fw-medium mb-2 tagline">Entre em contacto</p>
-              <p class="display-6 mb-5 title">Partilhe as suas ideias ou requisitos com os nossos especialistas.</p>
-              <img src="~/img/front-pages/landing-page/let’s-contact.png" alt="let’s contact" class="w-100 mb-4 pb-1" />
-              <p class="mb-0 description">Procura mais personalização ou funcionalidades específicas? Não se preocupe, temos uma equipa experiente pronta para ajudar a sua escola.</p>
+              <p class="fw-medium mb-2 tagline">Escreva uma mensagem</p>
+              <p class="display-6 mb-5 title">Compartilhe suas ideias ou necessidades com nossos especialistas..</p>
+              <img src="~/img/front-pages/landing-page/contacte-nos.png" alt="let’s contact" class="w-100 mb-4 pb-1" />
+              <p class="mb-0 description">ainda resta dúvidas ou está a enfrentar problemas? Não se preocupe, fornecemos uma equipe completa de profissionais experientes.</p>
             </div>
           </div>
         </div>
         <div class="col-lg-7">
           <div class="card">
             <div class="card-body">
-              <h5 class="mb-6">Envie a sua mensagem</h5>
+              <h5 class="mb-6">escreva-nos uma mensagem</h5>
               <form>
                 <div class="row g-5">
                   <div class="col-md-6">
                     <div class="form-floating form-floating-outline">
-                      <input type="text" class="form-control" id="basic-default-fullname" placeholder="João Silva" />
+                      <input type="text" class="form-control" id="basic-default-fullname" placeholder="John Doe" />
                       <label for="basic-default-fullname">Nome completo</label>
                     </div>
                   </div>
 
                   <div class="col-md-6">
                     <div class="form-floating form-floating-outline">
-                      <input type="email" class="form-control" id="basic-default-email" placeholder="exemplo@asnet.pt" />
+                      <input type="email" class="form-control" id="basic-default-email" placeholder="johndoe99&#64;gmail.com" />
                       <label for="basic-default-email">Endereço de email</label>
                     </div>
                   </div>
 
                   <div class="col-12">
                     <div class="form-floating form-floating-outline">
-                      <textarea class="form-control h-px-200" placeholder="A sua mensagem..." aria-label="Message" id="basic-default-message"></textarea>
+                      <textarea class="form-control h-px-200" placeholder="Message" aria-label="Message" id="basic-default-message"></textarea>
                       <label for="basic-default-message">Mensagem</label>
                     </div>
                   </div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-5">Enviar mensagem</button>
+                <button type="submit" class="btn btn-primary mt-5">Enviar consulta</button>
               </form>
             </div>
           </div>
@@ -434,5 +442,6 @@
       </div>
     </div>
   </section>
-  <!-- Contact Us: End -->
+  <!-- contacte-nos: End -->
 </div>
+
