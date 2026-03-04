@@ -43,7 +43,7 @@ app.UseAuthorization();
 // Redirecionar root para LandingPage
 app.MapGet("/", context =>
 {
-    context.Response.Redirect("/FrontPages/LandingPage");
+    context.Response.Redirect("/frontpages/LandingPage");
     return Task.CompletedTask;
 });
 
