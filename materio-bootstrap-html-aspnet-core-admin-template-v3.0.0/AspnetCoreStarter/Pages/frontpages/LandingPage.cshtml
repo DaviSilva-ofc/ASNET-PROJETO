@@ -1,29 +1,447 @@
 @page
 @model AspnetCoreStarter.Pages.FrontPages.LandingPageModel
+@{
+  Layout = "Layouts/_FrontLayout";
+  ViewData["Title"] = "Landing Page - Front Pages";
+}
 
-<h2>Login</h2>
+@section VendorStyles{
+  <link rel="stylesheet" href="~/vendor/libs/nouislider/nouislider.dist.css" />
+  <link rel="stylesheet" href="~/vendor/libs/swiper/swiper.dist.css" />
+}
+@section PageStyles {
+<link rel="stylesheet" href="~/vendor/css/pages/front-page-landing.dist.css" />
+}
+@section VendorScripts{
+<script src="~/vendor/libs/nouislider/nouislider.dist.js"></script>
+<script src="~/vendor/libs/swiper/swiper.dist.js"></script>
+}
+@section PageScripts {
+<script src="~/js/front-page-landing.dist.js"></script>
+}
 
-<form method="post">
-    <div>
-        <label>Nome de Utilizador</label>
-        <input asp-for="Input.NomeUtilizador" class="form-control" />
-        <span asp-validation-for="Input.NomeUtilizador" style="color:red"></span>
+@* ************** Content ************** *@
+<div data-bs-spy="scroll" class="scrollspy-example">
+  <!-- Inicio iterativo: Start -->
+  <section id="landingHero" class="section-py landing-hero position-relative">
+    <img src="~/img/front-pages/backgrounds/hero-bg-light.png" alt="hero background" class="position-absolute top-0 start-0 w-100 h-100 z-n1" data-speed="1" data-app-light-img="front-pages/backgrounds/hero-bg-light.png" data-app-dark-img="front-pages/backgrounds/hero-bg-dark.png" />
+    <div class="container">
+      <div class="hero-text-box text-center">
+        <h2 class="text-primary hero-title mb-4">Gestão eficaz de equipamentos</h2>
+        <h2 class="h6 mb-8 lh-md">garanta segurança, organização e agilidade em cada operação.</h2>
+        <a href="#landingPricing" class="btn btn-lg btn-primary">Criar conta</a>
+      </div>
+      <div class="position-relative hero-animation-img">
+        <a href="/Ecommerce/Dashboard" target="_blank">
+          <div class="hero-dashboard-img text-center">
+            <img src="~/img/front-pages/landing-page/hero-dashboard-light.png" alt="hero dashboard" class="animation-img" data-speed="2" data-app-light-img="front-pages/landing-page/hero-dashboard-light.png" data-app-dark-img="front-pages/landing-page/hero-dashboard-dark.png" />
+          </div>
+          <div class="position-absolute hero-elements-img">
+            <img src="~/img/front-pages/landing-page/hero-elements-light.png" alt="hero elements" class="animation-img" data-speed="4" data-app-light-img="front-pages/landing-page/hero-elements-light.png" data-app-dark-img="front-pages/landing-page/hero-elements-dark.png" />
+          </div>
+        </a>
+      </div>
     </div>
+  </section>
+  <!-- Inicio iterativo: End -->
 
-    <div class="mt-3">
-        <label>Palavra-Passe</label>
-        <input asp-for="Input.PalavraPasse" class="form-control" />
-        <span asp-validation-for="Input.PalavraPasse" style="color:red"></span>
-    </div>
-
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary">Entrar</button>
-    </div>
-
-    @if (!string.IsNullOrEmpty(Model.MensagemErro))
-    {
-        <div style="color:red; margin-top:10px;">
-            @Model.MensagemErro
+  <!-- utilidades: Start -->
+  <section id="landingFeatures" class="section-py landing-features">
+    <div class="container">
+      <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
+        <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
+        <span class="text-uppercase">Funcionalidades principais</span>
+      </h6>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">Tudo o que precisas</span> para gerir os teus equipamentos</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12">uma aplicação que garante segurança e organização em cada operação.</p>
+      <div class="features-icon-wrapper row gx-0 gy-12 gx-sm-6">
+        <div class="col-lg-4 col-sm-6 text-center features-icon-box">
+          <div class="features-icon mb-4">
+            <img src="~/img/front-pages/icons/laptop-charging.png" alt="laptop charging" />
+          </div>
+          <h5 class="mb-2">Solicitar reparos</h5>
+          <p class="features-icon-description">Solicite reparos para os equipamentos da sua organização.</p>
         </div>
-    }
-</form>
+        <div class="col-lg-4 col-sm-6 text-center features-icon-box">
+          <div class="features-icon mb-4">
+            <img src="~/img/front-pages/icons/transition-up.png" alt="transition up" />
+          </div>
+          <h5 class="mb-2">Cadastrar equipamentos</h5>
+          <p class="features-icon-description">Cadastre equipamentos da sua organização de forma simples e rápida.</p>
+        </div>
+        <div class="col-lg-4 col-sm-6 text-center features-icon-box">
+          <div class="features-icon mb-4">
+            <img src="~/img/front-pages/icons/edit.png" alt="edit" />
+          </div>
+          <h5 class="mb-2">Gerencie cada equipamento</h5>
+          <p class="features-icon-description">mantenha-se atualizado de cada equipamento e suas informações.</p>
+        </div>
+        <div class="col-lg-4 col-sm-6 text-center features-icon-box">
+          <div class="features-icon mb-4">
+            <img src="~/img/front-pages/icons/3d-select-solid.png" alt="3d select solid" />
+          </div>
+          <h5 class="mb-2">Personalizável</h5>
+          <p class="features-icon-description">Personalize a interface de acordo com as necessidades da sua organização.</p>
+        </div>
+        <div class="col-lg-4 col-sm-6 text-center features-icon-box">
+          <div class="features-icon mb-4">
+            <img src="~/img/front-pages/icons/lifebelt.png" alt="lifebelt" />
+          </div>
+          <h5 class="mb-2">Suporte contínuo</h5>
+          <p class="features-icon-description">Suporte técnico contínuo para garantir o funcionamento ideal da aplicação.</p>
+        </div>
+        <div class="col-lg-4 col-sm-6 text-center features-icon-box">
+          <div class="features-icon mb-4">
+            <img src="~/img/front-pages/icons/google-docs.png" alt="google docs" />
+          </div>
+          <h5 class="mb-2">Documentação completa</h5>
+          <p class="features-icon-description">Documentação detalhada e fácil de seguir com muitas referências e exemplos de utilização.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- utilidades: End -->
+
+  <!-- Avaliações: Start -->
+  <section id="landingReviews" class="section-py bg-body landing-reviews">
+    <div class="container">
+      <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
+        <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
+        <span class="text-uppercase">Avaliações dos clientes</span>
+      </h6>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">Experiências positivas</span> de alguns dos nossos clientes</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12">Veja o que os nossos clientes dizem sobre a nossa aplicação.</p>
+    </div>
+    <div class="swiper-reviews-carousel mb-12 pt-4" style="overflow: hidden;">
+      <div class="swiper" id="swiper-reviews" style="overflow: visible;">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide">
+            <div class="card h-100">
+              <div class="card-body text-body d-flex flex-column justify-content-between text-center p-lg-8">
+                <div class="mb-4">
+                  <!-- exemplo de cliente 1: start -->
+                  <img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo img-fluid" />
+                </div>
+                <p class="text-heading">“[Comentário do cliente esas].”</p>
+                <div class="text-warning mb-4">
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">João Andrade</h6>
+                  <p class="mb-0 small">Diretor da Esas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- exemplo de cliente 1: end -->
+
+          <!-- exemplo de cliente 2: start -->
+          <div class="swiper-slide">
+            <div class="card h-100">
+              <div class="card-body text-body d-flex flex-column justify-content-between text-center p-lg-8">
+                <div class="mb-4">
+                  <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo img-fluid" />
+                </div>
+                <p class="text-heading">“[Comentário do cliente Sá de Miranda].”</p>
+                <div class="text-warning mb-4">
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Margarida Silva</h6>
+                  <p class="mb-0 small">Diretora da Sá de Miranda</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- exemplo de cliente 2: end -->
+
+          <!-- exemplo de cliente 3: start -->
+          <div class="swiper-slide">
+            <div class="card h-100">
+              <div class="card-body text-body d-flex flex-column justify-content-between text-center p-lg-8">
+                <div class="mb-4">
+                  <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo img-fluid" />
+                </div>
+                <p class="text-heading">“[Comentário do cliente André Soares].”</p>
+                <div class="text-warning mb-4">
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Cândida Ferreira</h6>
+                  <p class="mb-0 small">Diretora do André Soares</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- exemplo de cliente 3: end -->
+
+          <!-- exemplo de cliente 4: start -->
+          <div class="swiper-slide">
+            <div class="card h-100">
+              <div class="card-body text-body d-flex flex-column justify-content-between text-center p-lg-8">
+                <div class="mb-4">
+                  <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo img-fluid" />
+                </div>
+                <p class="text-heading">“[Comentário do cliente Carlos Amarante].”</p>
+                <div class="text-warning mb-4">
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Carlos Gomes</h6>
+                  <p class="mb-0 small">Diretor do Carlos Amarante</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- exemplo de cliente 4: end -->
+
+          <!-- exemplo de cliente 5: start -->
+          <div class="swiper-slide">
+            <div class="card h-100">
+              <div class="card-body text-body d-flex flex-column justify-content-between text-center p-lg-8">
+                <div class="mb-4">
+                  <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo img-fluid" />
+                </div>
+                <p class="text-heading">“[Comentário do cliente Dona Maria].”</p>
+                <div class="text-warning mb-4">
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                  <i class="icon-base ri ri-star-fill icon-24px"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Ângela Meireles</h6>
+                  <p class="mb-0 small">Diretor da Dona Maria</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- exemplo de cliente 5: end -->
+
+        </div>
+        <div class="swiper-pagination"></div>
+      </div>
+    </div>
+
+<!-- logos cinzentas: Start -->
+    <div class="container">
+      <div class="swiper-logo-carousel pt-lg-4 mt-12">
+        <div class="swiper" id="swiper-clients-logos">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide">
+              <img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-esas.png" data-app-dark-img="~/img/front-pages/landing-page/logo-esas.png" />
+            </div>
+            <div class="swiper-slide">
+              <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-sademiranda.png" data-app-dark-img="~/img/front-pages/landing-page/logo-sademiranda.png" />
+            </div>
+            <div class="swiper-slide">
+              <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-andresoares.png" data-app-dark-img="~/img/front-pages/landing-page/logo-andresoares.png" />
+            </div>
+            <div class="swiper-slide">
+              <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-carlosamarante.png" data-app-dark-img="~/img/front-pages/landing-page/logo-carlosamarante.png" />
+            </div>
+            <div class="swiper-slide">
+              <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo" data-app-light-img="~/img/front-pages/landing-page/logo-donamaria.png" data-app-dark-img="~/img/front-pages/landing-page/logo-donamaria.png" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- logos cinzentas: Start -->
+  <!-- avaliações de clientes "reais": End -->
+
+  <!-- factos: Start -->
+  <section id="landingFunFacts" class="section-py landing-fun-facts py-12 my-4">
+    <div class="container">
+      <div class="row gx-0 gy-5 gx-sm-6">
+        <div class="col-md-3 col-sm-6 text-center">
+          <span class="badge rounded-pill bg-label-primary bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-layout-line icon-42px"></i></span>
+          <h2 class="fw-bold mb-0 fun-facts-text">100+</h2>
+          <h6 class="mb-0 text-body">equipamentos reparados</h6>
+        </div>
+        <div class="col-md-3 col-sm-6 text-center">
+          <span class="badge rounded-pill bg-label-success bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-time-line icon-42px"></i></span>
+          <h2 class="fw-bold mb-0 fun-facts-text">1,100+</h2>
+          <h6 class="mb-0 text-body">Horas trabalhadas</h6>
+        </div>
+        <div class="col-md-3 col-sm-6 text-center">
+          <span class="badge rounded-pill bg-label-warning bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-user-smile-line icon-42px"></i></span>
+          <h2 class="fw-bold mb-0 fun-facts-text">137+</h2>
+          <h6 class="mb-0 text-body">Clientes satisfeitos</h6>
+        </div>
+        <div class="col-md-3 col-sm-6 text-center">
+          <span class="badge rounded-pill bg-label-info bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-award-line icon-42px"></i></span>
+          <h2 class="fw-bold mb-0 fun-facts-text">53+</h2>
+          <h6 class="mb-0 text-body">Avaliações positivas</h6>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- factos: End -->
+
+  <!-- FAQ: Start -->
+  <section id="landingFAQ" class="section-py bg-body landing-faq">
+    <div class="container bg-icon-right">
+      <img src="~/img/front-pages/icons/bg-right-icon-light.png" alt="section icon" class="position-absolute top-0 end-0" data-speed="1" data-app-light-img="front-pages/icons/bg-right-icon-light.png" data-app-dark-img="front-pages/icons/bg-right-icon-dark.png" />
+      <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
+        <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
+        <span class="text-uppercase">faq</span>
+      </h6>
+      <h5 class="text-center mb-2">Perguntas <span class="h4 fw-bold"> frequentes</span></h5>
+      <p class="text-center fw-medium mb-4 mb-md-12 pb-4">Navegue pelas perguntas frequentes caso tenha alguma dúvida.</p>
+      <div class="row gy-5">
+        <div class="col-lg-5">
+          <div class="text-center">
+            <img
+              src="~/img/front-pages/landing-page/menina-sentada-com-portatil-removebg-preview.png"
+              alt="sitting girl with laptop"
+              class="faq-image scaleX-n1-rtl" />
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="accordion" id="accordionFront">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="head-One">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">quais as principais funções que um cliente tem?</button>
+              </h2>
+
+              <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionFront" aria-labelledby="accordionOne">
+                <div class="accordion-body">O cliente poderá marcar um dispositivo como avariado ou em funcionamento, e poderá solicitar um reparo à um dos nossos técnicos.</div>
+              </div>
+            </div>
+            <div class="accordion-item previous-active">
+              <h2 class="accordion-header" id="head-Two">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionTwo" aria-expanded="false" aria-controls="accordionTwo">Quanto tempo demora para a chegada do técnico?</button>
+              </h2>
+              <div id="accordionTwo" class="accordion-collapse collapse" aria-labelledby="accordionTwo" data-bs-parent="#accordionFront">
+                <div class="accordion-body">Nossos técnicos estão disponíveis para solicitar um reparo das 09:30 às 19:00, e iremos chegar até 1 hora após o pedido de reparo.</div>
+              </div>
+            </div>
+            <div class="accordion-item active">
+              <h2 class="accordion-header" id="head-Three">
+                <button type="button" class="accordion-button" data-bs-toggle="collapse" data-bs-target="#accordionThree" aria-expanded="true" aria-controls="accordionThree">como isso pode ajudar a minha organização?</button>
+              </h2>
+              <div id="accordionThree" class="accordion-collapse collapse show" aria-labelledby="accordionThree" data-bs-parent="#accordionFront">
+                <div class="accordion-body">
+                  De forma rápida, segura, organizada e eficaz, a nossa aplicação irá ajudar a sua organização a gerir os seus equipamentos, garantindo que cada um deles esteja sempre em funcionamento e atualizado, e que cada reparo seja feito de forma rápida e eficiente.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="head-Four">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFour" aria-expanded="false" aria-controls="accordionFour">Existe algum limite de solicitações?</button>
+              </h2>
+              <div id="accordionFour" class="accordion-collapse collapse" aria-labelledby="accordionFour" data-bs-parent="#accordionFront">
+                <div class="accordion-body">Não há limite de solicitações. Pode solicitar quantas vezes quiser, e cada solicitação será tratada com prioridade.</div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="head-Five">
+                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionFive" aria-expanded="false" aria-controls="accordionFive">Como posso aceder ao sistema?</button>
+              </h2>
+              <div id="accordionFive" class="accordion-collapse collapse" aria-labelledby="accordionFive" data-bs-parent="#accordionFront">
+                <div class="accordion-body">Para aceder ao sistema, basta entrar na nossa aplicação e fazer login com as teus dados. Se ainda não tiver uma conta, pode criar uma gratuitamente.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- FAQ: End -->
+
+  <!-- CTA: Start -->
+  <section id="landingCTA" class="section-py landing-cta p-lg-0 pb-0 position-relative">
+    <img src="~/img/front-pages/backgrounds/cta-bg.png" class="position-absolute bottom-0 end-0 scaleX-n1-rtl h-100 w-100 z-n1" alt="cta image" />
+    <div class="container">
+      <div class="row align-items-center gy-5 gy-lg-0">
+        <div class="col-lg-6 text-center text-lg-start">
+          <h2 class="display-5 text-primary fw-bold mb-0">Pronto para iniciar?</h2>
+          <p class="fw-medium mb-6 mb-md-8">Realize seu registo para obter acesso imediato</p>
+          <a href="payment-page.html" class="btn btn-primary">Criar conta<i class="icon-base ri ri-arrow-right-line icon-16px ms-2 scaleX-n1-rtl"></i></a>
+        </div>
+        <div class="col-lg-6 pt-lg-12">
+          <img src="~/img/front-pages/landing-page/cta-dashboard.png" alt="cta dashboard" class="img-fluid" />
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- CTA: End -->
+
+  <!-- contacte-nos: Start -->
+  <section id="landingContact" class="section-py bg-body landing-contact">
+    <div class="container bg-icon-left position-relative">
+      <img src="~/img/front-pages/icons/bg-left-icon-light.png" alt="section icon" class="position-absolute top-0 start-0" data-speed="1" data-app-light-img="front-pages/icons/bg-left-icon-light.png" data-app-dark-img="front-pages/icons/bg-left-icon-dark.png" />
+      <h6 class="text-center d-flex justify-content-center align-items-center mb-6">
+        <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
+        <span class="text-uppercase">Contacte-nos</span>
+      </h6>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">vamos trabalhar</span> juntos</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12 pb-3">Alguma dúvida ou comentário? Só nos escreva uma mensagem</p>
+      <div class="row gy-4">
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="bg-primary rounded text-white card-body p-lg-8">
+              <p class="fw-medium mb-2 tagline">Escreva uma mensagem</p>
+              <p class="display-6 mb-5 title">Compartilhe suas ideias ou necessidades com nossos especialistas..</p>
+              <img src="~/img/front-pages/landing-page/contacte-nos.png" alt="let’s contact" class="w-100 mb-4 pb-1" />
+              <p class="mb-0 description">ainda resta dúvidas ou está a enfrentar problemas? Não se preocupe, fornecemos uma equipe completa de profissionais experientes.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="mb-6">escreva-nos uma mensagem</h5>
+              <form>
+                <div class="row g-5">
+                  <div class="col-md-6">
+                    <div class="form-floating form-floating-outline">
+                      <input type="text" class="form-control" id="basic-default-fullname" placeholder="John Doe" />
+                      <label for="basic-default-fullname">Nome completo</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-floating form-floating-outline">
+                      <input type="email" class="form-control" id="basic-default-email" placeholder="johndoe99&#64;gmail.com" />
+                      <label for="basic-default-email">Endereço de email</label>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="form-floating form-floating-outline">
+                      <textarea class="form-control h-px-200" placeholder="Message" aria-label="Message" id="basic-default-message"></textarea>
+                      <label for="basic-default-message">Mensagem</label>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-5">Enviar consulta</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- contacte-nos: End -->
+</div>
+

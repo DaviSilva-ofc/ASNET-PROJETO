@@ -47,13 +47,16 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// redirect root URL to landing page
+
+
+// Redirect root URL to Landing Page
 app.MapGet("/", context =>
 {
-    context.Response.Redirect("/frontpages/Landingpage");
-    return System.Threading.Tasks.Task.CompletedTask;
+  context.Response.Redirect("/frontpages/LandingPage");
+  return Task.CompletedTask;
 });
 
 app.MapRazorPages();
+
 
 app.Run();
