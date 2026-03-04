@@ -1,7 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using AspnetCoreStarter.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar a base de dados (MySQL)
+var connectionString = builder.Configuration.GetConnectionString("UserContext");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 

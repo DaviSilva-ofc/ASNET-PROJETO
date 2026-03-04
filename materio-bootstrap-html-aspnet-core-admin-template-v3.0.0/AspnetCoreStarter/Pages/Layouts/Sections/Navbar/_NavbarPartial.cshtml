@@ -2,7 +2,7 @@
 @if (ViewData["navbarFull"] != null)
 {
   <div class="navbar-brand app-brand demo d-none d-xl-flex py-0 me-6">
-    <a asp-page="/Index" class="app-brand-link gap-2">
+    <a asp-page="/frontpages/LandingPage" class="app-brand-link gap-2">
       <span class="app-brand-logo demo">
         @await Html.PartialAsync("../_Partials/_Macros")
       </span>
@@ -30,6 +30,11 @@
 }
 
 <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+    <a href="/frontpages/LandingPage" class="app-brand-link gap-2 me-3" style="position: relative; z-index: 1000;">
+      <span class="app-brand-logo demo">
+        <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="30" />
+      </span>
+    </a>
 
   <!-- Style Switcher -->
   <div class="navbar-nav align-items-center">
@@ -125,6 +130,15 @@
     }
     else
     {
+      <li class="nav-item">
+        <a class="nav-link fw-medium" href="/frontpages/LandingPage" style="position: relative; z-index: 1000;">Início</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link fw-medium" href="/frontpages/LandingPage#landingFeatures">Sobre</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link fw-medium me-2" href="/frontpages/LandingPage#landingContact">Contacto</a>
+      </li>
       <li class="nav-item">
         <a class="btn btn-primary" href="/Auth/Login">
           <span class="tf-icons ri-login-box-line me-1"></span>Entrar

@@ -1,8 +1,9 @@
 @page
 @model AspnetCoreStarter.Pages.Auth.LoginModel
 @{
-  Layout = "Layouts/_BlankLayout";
+  Layout = "Layouts/_FrontLayout";
   ViewData["Title"] = "Login";
+  ViewData["isFront"] = true;
 }
 
 @section PageStyles {
@@ -20,19 +21,19 @@
           <div class="app-brand justify-content-center mt-5">
             <a asp-page="/Index" class="app-brand-link gap-2">
               <span class="app-brand-logo demo">
-                @await Html.PartialAsync("../_Partials/_Macros")
+                <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="30" />
               </span>
               <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
             </a>
           </div>
           <!-- /Logo -->
-          <h4 class="mb-1">Bem-vindo ao @TempData.Peek("appName")! 👋</h4>
+          <h4 class="mb-1">Bem-vindo à gestão de dispositivos @TempData.Peek("appName")</h4>
           <p class="mb-5">Por favor, inicie sessão na sua conta</p>
 
           <form id="formAuthentication" class="mb-5" action="/frontpages/LandingPage" method="GET">
             <div class="form-floating form-floating-outline mb-5">
               <input type="text" class="form-control" id="email" name="email-username" placeholder="Insira o seu email ou utilizador" autofocus>
-              <label for="email">Email ou Utilizador</label>
+              <label for="email">Email</label>
             </div>
             <div class="mb-5">
               <div class="form-password-toggle">
@@ -72,7 +73,7 @@
       <!-- /Login -->
       <img src="~/img/illustrations/auth-basic-mask-light.png" class="authentication-image d-none d-lg-block" alt="triangle-bg" data-app-light-img="illustrations/auth-basic-mask-light.png" data-app-dark-img="illustrations/auth-basic-mask-dark.png" />
       <img src="~/img/illustrations/tree-3.png" alt="auth-tree" class="authentication-image-1 d-none d-lg-block" />
-      <img src="~/img/illustrations/auth-basic-character.png" alt="auth-character" class="authentication-image-2 d-none d-lg-block" />
+      <img src="~/img/illustrations/sitting-girl-with-laptop.png" alt="auth-character" class="authentication-image-2 d-none d-lg-block" />
     </div>
   </div>
 </div>

@@ -116,3 +116,8 @@ img[src*="bg-right-icon"] {
     background: #f89223;
     color: #fff;
 }
+
+/* Fix: Disable blur effect on scrolled navbar to prevent logo blurring */
+nav.layout-navbar.navbar-active::before {
+    backdrop-filter: none !important;
+}

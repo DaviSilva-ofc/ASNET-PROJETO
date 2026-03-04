@@ -1,8 +1,9 @@
 @page
 @model AspnetCoreStarter.Pages.Auth.RegisterModel
 @{
-  Layout = "Layouts/_BlankLayout";
+  Layout = "Layouts/_FrontLayout";
   ViewData["Title"] = "Registo";
+  ViewData["isFront"] = true;
 }
 
 @section PageStyles {
@@ -20,29 +21,44 @@
           <div class="app-brand justify-content-center mt-5">
             <a asp-page="/Index" class="app-brand-link gap-2">
               <span class="app-brand-logo demo">
-                @await Html.PartialAsync("../_Partials/_Macros")
+                <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="30" />
               </span>
               <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
             </a>
-          </div>
+          </div><br>
           <!-- /Logo -->
-          <h4 class="mb-1">A aventura começa aqui 🚀</h4>
-          <p class="mb-5">Torne a gestão da sua organização fácil e intuitiva!</p>
-
-          <form id="formAuthentication" class="mb-5" action="/Auth/Login" method="GET">
+          @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+          {
+              <div class="alert alert-danger" role="alert">
+                  @Model.ErrorMessage
+              </div>
+          }
+          <form id="formAuthentication" class="mb-5" method="POST" enctype="multipart/form-data">
+            <div class="mb-5 text-center">
+              <div class="d-flex align-items-center justify-content-center flex-column gap-2">
+                <div class="avatar avatar-xl border border-primary border-2 rounded-circle p-1">
+                  <img src="~/img/avatars/1.png" alt="Avatar" class="rounded-circle" id="avatar-preview">
+                </div><br>
+                 <h4 class="mb-1 text-center">Registe-se!</h4><br>
+                <div class="form-floating form-floating-outline w-100">
+                  <input type="file" class="form-control" id="profile-photo" asp-for="Input.ProfilePhoto" accept="image/*" onchange="document.getElementById('avatar-preview').src = window.URL.createObjectURL(this.files[0])">
+                  <label for="profile-photo">Foto de Perfil (Opcional)</label>
+                </div>
+              </div>
+            </div>
             <div class="form-floating form-floating-outline mb-5">
-              <input type="text" class="form-control" id="username" name="username" placeholder="Insira o seu nome de utilizador" autofocus>
+              <input type="text" class="form-control" id="username" asp-for="Input.Username" placeholder="Insira o seu nome de utilizador" autofocus>
               <label for="username">Nome de Utilizador</label>
             </div>
             <div class="form-floating form-floating-outline mb-5">
-              <input type="text" class="form-control" id="email" name="email" placeholder="Insira o seu email">
+              <input type="email" class="form-control" id="email" asp-for="Input.Email" placeholder="Insira o seu email">
               <label for="email">Email</label>
             </div>
             <div class="mb-5">
               <div class="form-password-toggle">
                 <div class="input-group input-group-merge">
                   <div class="form-floating form-floating-outline">
-                    <input type="password" id="password" class="form-control" name="password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" />
+                    <input type="password" id="password" class="form-control" asp-for="Input.Password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" />
                     <label for="password">Palavra-passe</label>
                   </div>
                   <span class="input-group-text cursor-pointer"><i class="icon-base ri ri-eye-off-line icon-md"></i></span>
@@ -52,10 +68,10 @@
 
             <div class="mb-5">
               <div class="form-check mt-2">
-                <input class="form-check-input" type="checkbox" id="terms-conditions" name="terms">
+                <input class="form-check-input" type="checkbox" id="terms-conditions" asp-for="Input.Terms">
                 <label class="form-check-label" for="terms-conditions">
                   Eu concordo com os
-                  <a href="javascript:void(0);">termos e condições</a>
+                  <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#termsModal">termos e condições</a>
                 </label>
               </div>
             </div>
@@ -73,7 +89,46 @@
       <!-- Register Card -->
       <img src="~/img/illustrations/auth-basic-mask-light.png" class="authentication-image d-none d-lg-block" alt="triangle-bg" data-app-light-img="illustrations/auth-basic-mask-light.png" data-app-dark-img="illustrations/auth-basic-mask-dark.png" />
       <img src="~/img/illustrations/tree-3.png" alt="auth-tree" class="authentication-image-1 d-none d-lg-block" />
-      <img src="~/img/illustrations/auth-basic-character.png" alt="auth-character" class="authentication-image-2 d-none d-lg-block" />
+      <img src="~/img/illustrations/sitting-girl-with-laptop.png" alt="auth-character" class="authentication-image-2 d-none d-lg-block" />
+    </div>
+  </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Termos e Condições de Uso - ASNET</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>1. Aceitação dos Termos</h6>
+        <p>Ao registar-se na plataforma ASNET, o utilizador concorda em cumprir e estar vinculado aos seguintes termos e condições de uso. Se não concordar com qualquer parte destes termos, não deverá utilizar os nossos serviços.</p>
+
+        <h6>2. Descrição do Serviço</h6>
+        <p>A ASNET fornece uma plataforma de gestão de dispositivos e operações, visando otimizar a organização e segurança das atividades da sua organização.</p>
+
+        <h6>3. Registo e Segurança da Conta</h6>
+        <p>O utilizador é responsável por manter a confidencialidade dos seus dados de acesso e por todas as atividades que ocorram na sua conta. Compromete-se a fornecer informações verdadeiras e atualizadas durante o processo de registo.</p>
+
+        <h6>4. Proteção de Dados e Privacidade</h6>
+        <p>A ASNET compromete-se a proteger a privacidade dos dados dos utilizadores em conformidade com o RGPD. Os dados recolhidos (como nome, email e foto de perfil) serão utilizados exclusivamente para a prestação do serviço e melhoria da experiência do utilizador.</p>
+
+        <h6>5. Responsabilidades do Utilizador</h6>
+        <p>O utilizador compromete-se a não utilizar a plataforma para fins ilegais ou que possam prejudicar a integridade do sistema ou de outros utilizadores.</p>
+
+        <h6>6. Propriedade Intelectual</h6>
+        <p>Todo o conteúdo, logótipos e software da plataforma são propriedade da ASNET ou dos seus licenciadores e estão protegidos por leis de direitos de autor.</p>
+
+        <h6>7. Alterações aos Termos</h6>
+        <p>A ASNET reserva-se o direito de modificar estes termos a qualquer momento. As alterações entrarão em vigor assim que publicadas na plataforma.</p>
+
+        <p class="text-muted mt-4 small">Última atualização: 04 de Março de 2026</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Compreendo e Aceito</button>
+      </div>
     </div>
   </div>
 </div>

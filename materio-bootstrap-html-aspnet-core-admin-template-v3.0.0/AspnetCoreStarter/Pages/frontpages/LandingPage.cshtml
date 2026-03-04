@@ -2,7 +2,7 @@
 @model AspnetCoreStarter.Pages.FrontPages.LandingPageModel
 @{
   Layout = "Layouts/_FrontLayout";
-  ViewData["Title"] = "Landing Page - Front Pages";
+  ViewData["Title"] = "ASNET - Gestão de Equipamentos";
 }
 
 @section VendorStyles{
@@ -11,6 +11,53 @@
 }
 @section PageStyles {
 <link rel="stylesheet" href="~/vendor/css/pages/front-page-landing.dist.css" />
+<style>
+  .landing-hero-carousel {
+    overflow: hidden;
+    position: relative;
+    border-radius: 0 0 2rem 2rem;
+  }
+  .landing-hero-carousel .swiper-slide {
+    position: relative;
+    height: 600px;
+    background-size: cover;
+    background-position: center;
+  }
+  .landing-hero-carousel .slide-content {
+    position: absolute;
+    bottom: 20%;
+    left: 10%;
+    right: 10%;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 1rem;
+    color: white;
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .landing-hero-carousel h1 {
+    color: white !important;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+  .landing-hero-carousel .swiper-button-next,
+  .landing-hero-carousel .swiper-button-prev {
+    color: #f89223;
+    background: rgba(255, 255, 255, 0.8);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+  }
+  .landing-hero-carousel .swiper-button-next:after,
+  .landing-hero-carousel .swiper-button-prev:after {
+    font-size: 20px;
+  }
+  .landing-hero-carousel .swiper-pagination-bullet-active {
+    background: #f89223;
+  }
+</style>
 }
 @section VendorScripts{
 <script src="~/vendor/libs/nouislider/nouislider.dist.js"></script>
@@ -18,33 +65,68 @@
 }
 @section PageScripts {
 <script src="~/js/front-page-landing.dist.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const swiperHero = new Swiper('#swiper-hero', {
+      loop: true,
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false,
+      },
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      effect: 'fade',
+      fadeEffect: {
+        crossFade: true
+      }
+    });
+  });
+</script>
 }
 
-@* ************** Content ************** *@
-<div data-bs-spy="scroll" class="scrollspy-example">
-  <!-- Inicio iterativo: Start -->
-  <section id="landingHero" class="section-py landing-hero position-relative">
-    <img src="~/img/front-pages/backgrounds/hero-bg-light.png" alt="hero background" class="position-absolute top-0 start-0 w-100 h-100 z-n1" data-speed="1" data-app-light-img="front-pages/backgrounds/hero-bg-light.png" data-app-dark-img="front-pages/backgrounds/hero-bg-dark.png" />
-    <div class="container">
-      <div class="hero-text-box text-center">
-        <h2 class="text-primary hero-title mb-4">Gestão eficaz de equipamentos</h2>
-        <h2 class="h6 mb-8 lh-md">garanta segurança, organização e agilidade em cada operação.</h2>
-        <a href="/Auth/Register" class="btn btn-lg btn-primary">Criar conta</a>
-      </div>
-      <div class="position-relative hero-animation-img">
-        <a href="/Ecommerce/Dashboard" target="_blank">
-          <div class="hero-dashboard-img text-center">
-            <img src="~/img/front-pages/landing-page/hero-dashboard-light.png" alt="hero dashboard" class="animation-img" data-speed="2" data-app-light-img="front-pages/landing-page/hero-dashboard-light.png" data-app-dark-img="front-pages/landing-page/hero-dashboard-dark.png" />
+  <!-- Carrossel de imagens: Start -->
+  <section id="landingHeroCarousel" class="landing-hero-carousel">
+    <div class="swiper" id="swiper-hero">
+      <div class="swiper-wrapper">
+        <!-- Slide 1 -->
+        <div class="swiper-slide" style="background-image: url('/img/front-pages/landing-page/carousel/slide1.png')">
+          <div class="slide-content animate__animated animate__fadeInUp">
+            <h1 class="display-4 fw-bold mb-4">Inovação e Excelência</h1>
+            <p class="lead mb-6">Soluções tecnológicas de ponta para a gestão eficiente da sua organização. Na ASNET, transformamos desafios em oportunidades digitais.</p>
+            <a href="/Auth/Register" class="btn btn-lg btn-primary">Começar Agora</a>
           </div>
-          <div class="position-absolute hero-elements-img">
-            <img src="~/img/front-pages/landing-page/hero-elements-light.png" alt="hero elements" class="animation-img" data-speed="4" data-app-light-img="front-pages/landing-page/hero-elements-light.png" data-app-dark-img="front-pages/landing-page/hero-elements-dark.png" />
+        </div>
+        <!-- Slide 2 -->
+        <div class="swiper-slide" style="background-image: url('/img/front-pages/landing-page/carousel/slide2.png')">
+          <div class="slide-content animate__animated animate__fadeInUp">
+            <h1 class="display-4 fw-bold mb-4">Suporte Técnico Especializado</h1>
+            <p class="lead mb-6">Equipa dedicada para garantir que os seus equipamentos funcionam sempre na perfeição. Rapidez e rigor em cada intervenção.</p>
+            <a href="#landingFeatures" class="btn btn-lg btn-outline-light">Saber Mais</a>
           </div>
-        </a>
+        </div>
+        <!-- Slide 3 -->
+        <div class="swiper-slide" style="background-image: url('/img/front-pages/landing-page/carousel/slide3.png')">
+          <div class="slide-content animate__animated animate__fadeInUp">
+            <h1 class="display-4 fw-bold mb-4">Gestão Centralizada e Segura</h1>
+            <p class="lead mb-6">Mantenha o controlo total dos seus ativos informáticos com a nossa plataforma intuitiva. Segurança e organização num só lugar.</p>
+            <a href="/Auth/Register" class="btn btn-lg btn-primary">Criar Conta Grátis</a>
+          </div>
+        </div>
       </div>
+      <!-- Add Arrows -->
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <!-- Add Pagination -->
+      <div class="swiper-pagination"></div>
     </div>
   </section>
-  <!-- Inicio iterativo: End -->
-
+  <!-- Carrossel de imagens: End -->
   <!-- utilidades: Start -->
   <section id="landingFeatures" class="section-py landing-features">
     <div class="container">
@@ -109,8 +191,8 @@
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
         <span class="text-uppercase">Avaliações dos clientes</span>
       </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">Experiências positivas</span> de alguns dos nossos clientes</h5>
-      <p class="text-center fw-medium mb-4 mb-md-12">Veja o que os nossos clientes dizem sobre a nossa aplicação.</p>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">Experiências positivas</span> dos nossos clientes</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12">Veja o que os nossos clientes dizem sobre a nossa serviço.</p>
     </div>
     <div class="swiper-reviews-carousel mb-12 pt-4" style="overflow: hidden;">
       <div class="swiper" id="swiper-reviews" style="overflow: visible;">
@@ -275,7 +357,7 @@
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-primary bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-layout-line icon-42px"></i></span>
           <h2 class="fw-bold mb-0 fun-facts-text">100+</h2>
-          <h6 class="mb-0 text-body">equipamentos reparados</h6>
+          <h6 class="mb-0 text-body">Equipamentos reparados</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-success bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-time-line icon-42px"></i></span>
@@ -305,8 +387,7 @@
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
         <span class="text-uppercase">faq</span>
       </h6>
-      <h5 class="text-center mb-2">Perguntas <span class="h4 fw-bold"> frequentes</span></h5>
-      <p class="text-center fw-medium mb-4 mb-md-12 pb-4">Navegue pelas perguntas frequentes caso tenha alguma dúvida.</p>
+      <h5 class="text-center mb-2"><span class="h4 fw-bold">Perguntas frequentes</span></h5><br />
       <div class="row gy-5">
         <div class="col-lg-5">
           <div class="text-center">
@@ -394,23 +475,23 @@
         <img src="~/img/front-pages/icons/section-title-icon.png" alt="section title icon" class="me-2" height="19" />
         <span class="text-uppercase">Contacte-nos</span>
       </h6>
-      <h5 class="text-center mb-2"><span class="h4 fw-bold">vamos trabalhar</span> juntos</h5>
-      <p class="text-center fw-medium mb-4 mb-md-12 pb-3">Alguma dúvida ou comentário? Só nos escreva uma mensagem</p>
+      <h5 class="text-center mb-2"><span< class="h4 fw-bold">Vamos trabalhar </span></> juntos</h5>
+      <p class="text-center fw-medium mb-4 mb-md-12 pb-3">Alguma dúvida ou comentário? Escreva uma mensagem</p>
       <div class="row gy-4">
         <div class="col-lg-5">
           <div class="card h-100">
             <div class="bg-primary rounded text-white card-body p-lg-8">
               <p class="fw-medium mb-2 tagline">Escreva uma mensagem</p>
-              <p class="display-6 mb-5 title">Compartilhe suas ideias ou necessidades com nossos especialistas..</p>
+              <p class="display-6 mb-5 title">Compartilhe as suas ideias ou necessidades com nossos especialistas..</p>
               <img src="~/img/front-pages/landing-page/contacte-nos.png" alt="let’s contact" class="w-100 mb-4 pb-1" data-app-light-img="front-pages/landing-page/contacte-nos.png" data-app-dark-img="front-pages/landing-page/contacte-nos.png" />
-              <p class="mb-0 description">ainda resta dúvidas ou está a enfrentar problemas? Não se preocupe, fornecemos uma equipe completa de profissionais experientes.</p>
+              <p class="mb-0 description">ainda possui dúvidas ou está a enfrentar problemas? Não se preocupe, fornecemos uma equipe completa de profissionais experientes.</p>
             </div>
           </div>
         </div>
         <div class="col-lg-7">
           <div class="card">
             <div class="card-body">
-              <h5 class="mb-6">escreva-nos uma mensagem</h5>
+              <h5 class="mb-6">Escreva uma mensagem</h5>
               <form>
                 <div class="row g-5">
                   <div class="col-md-6">
@@ -434,7 +515,7 @@
                     </div>
                   </div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-5">Enviar consulta</button>
+                <button type="submit" class="btn btn-primary mt-5">Enviar Mensagem</button>
               </form>
             </div>
           </div>
