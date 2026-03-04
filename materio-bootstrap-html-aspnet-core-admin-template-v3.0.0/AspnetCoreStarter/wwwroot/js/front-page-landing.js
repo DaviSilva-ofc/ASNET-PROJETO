@@ -50,39 +50,57 @@
   // Customers reviews
   // -----------------------------------
   if (swiperReviews) {
-    new Swiper(swiperReviews, {
-      // Mostra 1 slide inteiro ao centro com meio slide de cada lado
-      slidesPerView: 1.5,
-      centeredSlides: true,
-      spaceBetween: 32,
+    // determine number of slides dynamically so loopedSlides stays in sync when we add/remove reviews
+    const reviewCount = swiperReviews.querySelectorAll('.swiper-slide').length;
+    console.log('initial reviewCount for swiper:', reviewCount);
+    const swiperInstance = new Swiper(swiperReviews, {
+      // always show single testimonial at once
+      slidesPerView: 1,
+      spaceBetween: 5,
       grabCursor: true,
-      // Loop nativo: quando chega ao último, o primeiro aparece do lado direito
-      loop: true,
       autoplay: {
         delay: 3000,
         disableOnInteraction: false
       },
-      speed: 600,
-      // Paginação com bolinhas correspondentes aos slides reais (sem contar duplicados do loop)
+      speed: 500,
+      // no loop — we'll restart manually to keep pagination sane
+      loop: false,
       pagination: {
         el: '.swiper-pagination',
         clickable: true,
-        dynamicBullets: false
+        dynamicBullets: true
       },
       observer: true,
       observeParents: true,
       breakpoints: {
-        // Em ecrãs pequenos mostra apenas 1 slide completo
-        0: {
-          slidesPerView: 1,
-          centeredSlides: false,
-          spaceBetween: 16
-        },
-        // A partir de 768px mostra 1.5
         768: {
-          slidesPerView: 1.5,
-          centeredSlides: true,
-          spaceBetween: 32
+          slidesPerView: 1,
+          spaceBetween: 20
+        }
+      },
+      on: {
+        init: function() {
+          console.log('swiper init: total slides =', this.slides.length);
+          this.slides.forEach((slide, idx) => {
+            const img = slide.querySelector('img.client-logo');
+            console.log('  slide[' + idx + '] src', img ? img.src : 'none');
+          });
+        },
+        slideChange: function() {
+          console.log('swiper slideChange: activeIndex', this.activeIndex, 'realIndex', this.realIndex);
+          if (this.activeIndex === reviewCount - 1) {
+            // reached final testimonial -> immediately jump back to start
+            // use zero duration so pagination resets in sync
+            this.slideTo(0, 0);
+            // ensure pagination bullets updated correctly
+            if (this.pagination && this.pagination.update) {
+              this.pagination.update();
+            }
+            // restart autoplay cycle explicitly
+            if (this.autoplay && this.autoplay.start) {
+              this.autoplay.start();
+            }
+          }
         }
       }
     });
@@ -93,20 +111,16 @@
   if (swiperLogos) {
     new Swiper(swiperLogos, {
       slidesPerView: 2,
-      spaceBetween: 100,
-      loop: true,
       autoplay: {
         delay: 3000,
         disableOnInteraction: false
       },
       breakpoints: {
         992: {
-          slidesPerView: 5,
-          spaceBetween: 120
+          slidesPerView: 5
         },
         768: {
-          slidesPerView: 3,
-          spaceBetween: 80
+          slidesPerView: 3
         }
       }
     });
