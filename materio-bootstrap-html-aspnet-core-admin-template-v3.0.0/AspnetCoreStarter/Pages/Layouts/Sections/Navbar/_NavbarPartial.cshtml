@@ -61,7 +61,7 @@
 
 
   <ul class="navbar-nav flex-row align-items-center ms-auto">
-    @* ! Hide User dropdown for front pages *@
+    @* ! Hide User dropdown for front pages and show Login button instead *@
     @if (ViewData["isFront"] == null || !Convert.ToBoolean(ViewData["isFront"]))
     {
       <!-- User -->
@@ -122,6 +122,14 @@
         </ul>
       </li>
       <!--/ User -->
+    }
+    else
+    {
+      <li class="nav-item">
+        <a class="btn btn-primary" href="/Auth/Login">
+          <span class="tf-icons ri-login-box-line me-1"></span>Entrar
+        </a>
+      </li>
     }
 
   </ul>
