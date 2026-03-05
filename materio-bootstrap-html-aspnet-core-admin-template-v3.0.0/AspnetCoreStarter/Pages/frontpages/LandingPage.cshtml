@@ -15,28 +15,51 @@
   .landing-hero-carousel {
     overflow: hidden;
     position: relative;
-    border-radius: 0 0 2rem 2rem;
+    z-index: 1;
   }
   .landing-hero-carousel .swiper-slide {
     position: relative;
-    height: 600px;
+    height: 100vh;
     background-size: cover;
     background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .landing-hero-carousel .slide-content {
-    position: absolute;
-    bottom: 20%;
-    left: 10%;
-    right: 10%;
-    text-align: center;
     background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    padding: 2rem;
-    border-radius: 1rem;
+    backdrop-filter: blur(8px);
+    padding: 3rem;
+    border-radius: 1.5rem;
     color: white;
     max-width: 800px;
     margin: 0 auto;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    z-index: 2;
+  }
+  /* Navbar styling to differentiate from background */
+  #layout-navbar {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  /* White text for navbar links and icons */
+  #layout-navbar:not(.navbar-active) .nav-link,
+  #layout-navbar:not(.navbar-active) .theme-icon-active,
+  #layout-navbar:not(.navbar-active) .app-brand-text {
+    color: #fff !important;
+  }
+  /* Hover effect for navbar links */
+  #layout-navbar .nav-link {
+    transition: all 0.3s ease-in-out;
+  }
+  #layout-navbar .nav-link:hover {
+    color: #f89223 !important; /* ASNET Orange */
+    transform: scale(1.1);
+  }
+  #layout-navbar.navbar-active {
+    background: var(--bs-body-bg) !important;
   }
   .landing-hero-carousel h1 {
     color: white !important;
@@ -67,6 +90,7 @@
 <script src="~/js/front-page-landing.dist.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    // Hero Swiper
     const swiperHero = new Swiper('#swiper-hero', {
       loop: true,
       autoplay: {
@@ -86,6 +110,47 @@
         crossFade: true
       }
     });
+
+    // Fun Facts Counter Animation
+    const counters = document.querySelectorAll('.counter');
+    const speed = 200; // The lower the slower
+
+    const animateCounters = () => {
+      counters.forEach(counter => {
+        const updateCount = () => {
+          const target = +counter.getAttribute('data-target');
+          const count = +counter.innerText.replace(/,/g, '');
+          const inc = target / speed;
+
+          if (count < target) {
+            counter.innerText = Math.ceil(count + inc).toLocaleString();
+            setTimeout(updateCount, 1);
+          } else {
+            counter.innerText = target.toLocaleString() + '+';
+          }
+        };
+        updateCount();
+      });
+    };
+
+    // Trigger animation when section is in view
+    const observerOptions = {
+      threshold: 0.5
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounters();
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    const funFactsSection = document.querySelector('#landingFunFacts');
+    if (funFactsSection) {
+      observer.observe(funFactsSection);
+    }
   });
 </script>
 }
@@ -95,27 +160,39 @@
     <div class="swiper" id="swiper-hero">
       <div class="swiper-wrapper">
         <!-- Slide 1 -->
-        <div class="swiper-slide" style="background-image: url('/img/front-pages/landing-page/carousel/slide1.png')">
+        <div class="swiper-slide" style="background-image: url('/img/backgrounds/working-code.jpg')">
           <div class="slide-content animate__animated animate__fadeInUp">
-            <h1 class="display-4 fw-bold mb-4">Inovação e Excelência</h1>
-            <p class="lead mb-6">Soluções tecnológicas de ponta para a gestão eficiente da sua organização. Na ASNET, transformamos desafios em oportunidades digitais.</p>
-            <a href="/Auth/Register" class="btn btn-lg btn-primary">Começar Agora</a>
+            <h1 class="display-3 fw-bold mb-2">ASNET</h1>
+            <h4 class="mb-5 text-white">Especialistas em Soluções Informáticas</h4>
+            <div class="bg-primary p-4 rounded shadow-lg d-inline-block">
+              <a href="https://www.google.com/maps/search/?api=1&query=Rua+Cónego+Avelino+Jesus+Costa+20+Braga+4715-405" target="_blank" class="text-white text-decoration-none">
+                <p class="mb-0"><i class="ri-map-pin-2-fill me-2"></i> Rua Cónego Avelino Jesus Costa 20, 4715-405 Braga</p>
+              </a>
+            </div>
           </div>
         </div>
         <!-- Slide 2 -->
-        <div class="swiper-slide" style="background-image: url('/img/front-pages/landing-page/carousel/slide2.png')">
+        <div class="swiper-slide" style="background-image: url('/img/backgrounds/male-hands-repairing-laptop.jpg')">
           <div class="slide-content animate__animated animate__fadeInUp">
-            <h1 class="display-4 fw-bold mb-4">Suporte Técnico Especializado</h1>
-            <p class="lead mb-6">Equipa dedicada para garantir que os seus equipamentos funcionam sempre na perfeição. Rapidez e rigor em cada intervenção.</p>
-            <a href="#landingFeatures" class="btn btn-lg btn-outline-light">Saber Mais</a>
+            <h1 class="display-3 fw-bold mb-2">ASNET</h1>
+            <h4 class="mb-5 text-white">Reparação e Manutenção de Equipamentos</h4>
+            <div class="bg-primary p-4 rounded shadow-lg d-inline-block">
+               <a href="tel:+351253690535" class="text-white text-decoration-none">
+                 <p class="mb-0"><i class="ri-phone-fill me-2"></i> 253 690 535</p>
+               </a>
+            </div>
           </div>
         </div>
         <!-- Slide 3 -->
-        <div class="swiper-slide" style="background-image: url('/img/front-pages/landing-page/carousel/slide3.png')">
+        <div class="swiper-slide" style="background-image: url('/img/backgrounds/young-woman-with-microphone-working-record-studio.jpg')">
           <div class="slide-content animate__animated animate__fadeInUp">
-            <h1 class="display-4 fw-bold mb-4">Gestão Centralizada e Segura</h1>
-            <p class="lead mb-6">Mantenha o controlo total dos seus ativos informáticos com a nossa plataforma intuitiva. Segurança e organização num só lugar.</p>
-            <a href="/Auth/Register" class="btn btn-lg btn-primary">Criar Conta Grátis</a>
+            <h1 class="display-3 fw-bold mb-2">ASNET</h1>
+            <h4 class="mb-5 text-white">Gestão Segura e Centralizada</h4>
+            <div class="bg-primary p-4 rounded shadow-lg d-inline-block">
+              <a href="https://www.asnet.pt" target="_blank" class="text-white text-decoration-none">
+                <p class="mb-0"><i class="ri-global-line me-2"></i> www.asnet.pt</p>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -356,22 +433,22 @@
       <div class="row gx-0 gy-5 gx-sm-6">
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-primary bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-layout-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">100+</h2>
+          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="100">0</h2>
           <h6 class="mb-0 text-body">Equipamentos reparados</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-success bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-time-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">1,100+</h2>
+          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="1100">0</h2>
           <h6 class="mb-0 text-body">Horas trabalhadas</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-warning bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-user-smile-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">137+</h2>
+          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="137">0</h2>
           <h6 class="mb-0 text-body">Clientes satisfeitos</h6>
         </div>
         <div class="col-md-3 col-sm-6 text-center">
           <span class="badge rounded-pill bg-label-info bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-award-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text">53+</h2>
+          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="53">0</h2>
           <h6 class="mb-0 text-body">Avaliações positivas</h6>
         </div>
       </div>
@@ -449,23 +526,6 @@
   </section>
   <!-- FAQ: End -->
 
-  <!-- CTA: Start -->
-  <section id="landingCTA" class="section-py landing-cta p-lg-0 pb-0 position-relative">
-    <img src="~/img/front-pages/backgrounds/cta-bg.png" class="position-absolute bottom-0 end-0 scaleX-n1-rtl h-100 w-100 z-n1" alt="cta image" />
-    <div class="container">
-      <div class="row align-items-center gy-5 gy-lg-0">
-        <div class="col-lg-6 text-center text-lg-start">
-          <h2 class="display-5 text-primary fw-bold mb-0">Pronto para iniciar?</h2>
-          <p class="fw-medium mb-6 mb-md-8">Realize seu registo para obter acesso imediato</p>
-          <a href="/Auth/Register" class="btn btn-primary">Criar conta<i class="icon-base ri ri-arrow-right-line icon-16px ms-2 scaleX-n1-rtl"></i></a>
-        </div>
-        <div class="col-lg-6 pt-lg-12">
-          <img src="~/img/front-pages/landing-page/cta-dashboard.png" alt="cta dashboard" class="img-fluid" />
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- CTA: End -->
 
   <!-- contacte-nos: Start -->
   <section id="landingContact" class="section-py bg-body landing-contact">

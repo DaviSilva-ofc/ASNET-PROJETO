@@ -155,4 +155,6 @@ window.isDarkStyle = window.Helpers.isDarkStyle();
     accordionTriggerEl.addEventListener('show.bs.collapse', accordionActiveFunction);
     accordionTriggerEl.addEventListener('hide.bs.collapse', accordionActiveFunction);
   });
+  // Initialize Password Toggle
+  window.Helpers.initPasswordToggle();
 })();
