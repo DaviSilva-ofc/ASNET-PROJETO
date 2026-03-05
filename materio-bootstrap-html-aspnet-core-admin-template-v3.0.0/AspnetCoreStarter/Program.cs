@@ -36,12 +36,30 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
+        // EnsureCreated() will create the DB if it doesn't exist.
+        // If it exists, it won't add new tables. So we check if Schools exists.
         context.Database.EnsureCreated();
+        
+        // Manual check for Schools table as a fallback for slow migrations
+        try {
+            context.Database.ExecuteSqlRaw("SELECT 1 FROM Schools LIMIT 1;");
+        } catch {
+            context.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS Schools (
+                    Id INT AUTO_INCREMENT PRIMARY KEY,
+                    Name VARCHAR(200) NOT NULL,
+                    Address VARCHAR(500) NOT NULL,
+                    ContactEmail VARCHAR(200) NOT NULL,
+                    Phone VARCHAR(50) NULL,
+                    RegisteredAt DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB;
+            ");
+        }
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocorreu um erro ao criar a base de dados.");
+        logger.LogError(ex, "Ocorreu um erro ao criar a base de dados ou tabelas.");
     }
 }
 

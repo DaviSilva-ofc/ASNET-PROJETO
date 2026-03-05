@@ -1,0 +1,79 @@
+@page
+@model AspnetCoreStarter.Pages.Auth.RegisterSchoolModel
+@{
+  Layout = "Layouts/_FrontLayout";
+  ViewData["Title"] = "Registar Escola";
+  ViewData["isFront"] = true;
+}
+
+@section PageStyles {
+  <link rel="stylesheet" href="~/vendor/css/pages/page-auth.dist.css">
+}
+
+<div class="position-relative">
+  <div class="authentication-wrapper authentication-basic container-p-y p-4 p-sm-0">
+    <div class="authentication-inner py-6">
+
+      <!-- Register School Card -->
+      <div class="card p-md-7 p-1">
+        <div class="card-body">
+          <!-- Logo -->
+          <div class="app-brand justify-content-center mt-5">
+            <a asp-page="/Index" class="app-brand-link gap-2">
+              <span class="app-brand-logo demo">
+                <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="30" />
+              </span>
+              <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
+            </a>
+          </div><br>
+          <!-- /Logo -->
+          <h4 class="mb-1 text-center font-weight-bold">Registe a sua Escola!</h4>
+          <p class="mb-5 text-center">Junte-se à nossa rede de gestão de equipamentos.</p>
+
+          @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+          {
+              <div class="alert alert-success" role="alert">
+                  @Model.SuccessMessage
+              </div>
+          }
+          @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+          {
+              <div class="alert alert-danger" role="alert">
+                  @Model.ErrorMessage
+              </div>
+          }
+
+          @if (string.IsNullOrEmpty(Model.SuccessMessage))
+          {
+            <form id="formRegistration" class="mb-5" method="POST">
+              <div class="form-floating form-floating-outline mb-4">
+                <input type="text" class="form-control" id="school-name" asp-for="Input.Name" placeholder="Nome da Escola" autofocus required>
+                <label for="school-name">Nome da Escola</label>
+              </div>
+              <div class="form-floating form-floating-outline mb-4">
+                <input type="text" class="form-control" id="school-address" asp-for="Input.Address" placeholder="Morada completa" required>
+                <label for="school-address">Morada</label>
+              </div>
+              <div class="form-floating form-floating-outline mb-4">
+                <input type="email" class="form-control" id="school-email" asp-for="Input.ContactEmail" placeholder="email@escola.pt" required>
+                <label for="school-email">Email de Contacto</label>
+              </div>
+              <div class="form-floating form-floating-outline mb-5">
+                <input type="text" class="form-control" id="school-phone" asp-for="Input.Phone" placeholder="Contacto telefónico" required>
+                <label for="school-phone">Telefone</label>
+              </div>
+              <button class="btn btn-primary d-grid w-100">Submeter Registo</button>
+            </form>
+          }
+
+          <p class="text-center mt-4">
+            <a href="/frontpages/LandingPage">
+              <i class="ri-arrow-left-s-line"></i> Voltar à página inicial
+            </a>
+          </p>
+        </div>
+      </div>
+      <!-- /Register School Card -->
+    </div>
+  </div>
+</div>
