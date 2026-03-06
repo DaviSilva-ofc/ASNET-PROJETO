@@ -25,6 +25,39 @@
     --bs-primary-text-emphasis: #ffdfb3;
     --bs-primary-bg-subtle: #52433f;
     --bs-primary-border-subtle: #ffdfb3;
+
+    /* Forcing True Black Dark Mode */
+    --bs-body-bg: #000000;
+    --bs-body-bg-rgb: 0, 0, 0;
+    --bs-paper-bg: #000000;
+    --bs-card-bg: #000000;
+    --bs-menu-bg: #000000;
+    --bs-shadow-bg: #000000;
+    --bs-tooltip-bg: #1a1a1a;
+    --bs-tooltip-color: #ffffff;
+    --bs-dark-text-emphasis: #ffffff;
+    --bs-light-bg-subtle: #0d0d0d;
+    --bs-border-color: #1a1a1a;
+    --bs-tertiary-bg: #0a0a0a;
+}
+
+[data-bs-theme=dark] body,
+[data-bs-theme=dark] .bg-body,
+[data-bs-theme=dark] .card,
+[data-bs-theme=dark] .menu,
+[data-bs-theme=dark] .layout-page,
+[data-bs-theme=dark] .navbar,
+[data-bs-theme=dark] .footer,
+[data-bs-theme=dark] .bg-footer-theme,
+[data-bs-theme=dark] .bg-light,
+[data-bs-theme=dark] .offcanvas,
+[data-bs-theme=dark] .dropdown-menu {
+    background-color: #000000 !important;
+}
+
+[data-bs-theme=dark] .card,
+[data-bs-theme=dark] .dropdown-menu {
+    border: 1px solid #1a1a1a !important;
 }
 
 /* Hero Background Gradients Correction */
