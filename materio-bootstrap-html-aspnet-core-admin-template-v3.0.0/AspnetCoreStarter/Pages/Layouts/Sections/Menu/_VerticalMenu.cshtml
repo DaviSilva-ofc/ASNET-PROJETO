@@ -24,19 +24,30 @@
   <div class="menu-inner-shadow"></div>
 
   @* ! Starter Kit menu-items *@
-  <ul class="menu-inner py-1">
-    <li class='menu-item@(currentPage == "/Index" ? " active" : "")'>
-      <a asp-page="/Index" class="menu-link">
-        <i class="menu-icon icon-base ri ri-home-smile-line"></i>
-        <div data-i18n="Home">Home</div>
-      </a>
-    </li>
-    <li class='menu-item@(currentPage == "/Page2" ? " active" : "")'>
-      <a asp-page="/Page2" class="menu-link">
-        <i class="menu-icon icon-base ri ri-file-3-line"></i>
-        <div data-i18n="Page2">Page2</div>
-      </a>
-    </li>
+    @if (Context.Session.GetString("UserId") != null)
+    {
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Painel</span>
+      </li>
+      <li class='menu-item@(currentPage == "/Admin/Dashboard" ? " active" : "")'>
+        <a asp-page="/Admin/Dashboard" class="menu-link">
+          <i class="menu-icon icon-base ri-dashboard-line"></i>
+          <div>Admin Dashboard</div>
+        </a>
+      </li>
+      <li class='menu-item@(currentPage == "/Admin/Infrastructure" ? " active" : "")'>
+        <a asp-page="/Admin/Infrastructure" class="menu-link">
+          <i class="menu-icon icon-base ri-government-line"></i>
+          <div>Infraestrutura</div>
+        </a>
+      </li>
+      <li class='menu-item@(currentPage == "/Admin/Equipment" ? " active" : "")'>
+        <a asp-page="/Admin/Equipment" class="menu-link">
+          <i class="menu-icon icon-base ri-computer-line"></i>
+          <div>Equipamentos</div>
+        </a>
+      </li>
+    }
   </ul>
 
 </aside>

@@ -1,0 +1,95 @@
+@page
+@model AspnetCoreStarter.Pages.Admin.DashboardModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Dashboard de Administrador";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Dashboard</h4>
+
+    <!-- Estatísticas -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card card-body text-center shadow-sm">
+                <i class='bx bx-user fs-1 text-primary mb-2'></i>
+                <h5 class="card-title">Utilizadores</h5>
+                <h3 class="fw-bold">@Model.TotalUsers</h3>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card card-body text-center shadow-sm">
+                <i class='bx bx-school fs-1 text-success mb-2'></i>
+                <h5 class="card-title">Escolas</h5>
+                <h3 class="fw-bold">@Model.TotalSchools</h3>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card card-body text-center shadow-sm">
+                <i class='bx bx-laptop fs-1 text-info mb-2'></i>
+                <h5 class="card-title">Equipamentos</h5>
+                <h3 class="fw-bold">@Model.TotalEquipments</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gestão de Infraestrutura -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 bg-primary text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="text-white mb-1">Gestão de Infraestrutura</h4>
+                        <p class="mb-0">Gerir Agrupamentos, Escolas, Blocos e Salas.</p>
+                    </div>
+                    <a href="/Admin/Infrastructure" class="btn btn-warning fw-bold">Gerir Agora</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aprovações Pendentes -->
+    <div class="card shadow-sm mt-4">
+        <h5 class="card-header bg-light">Aprovações de Conta Pendentes</h5>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Cargo</th>
+                        <th>Data Pedido</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @if (!Model.PendingUsers.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Não há pedidos pendentes.</td>
+                        </tr>
+                    }
+                    @foreach (var user in Model.PendingUsers)
+                    {
+                        <tr>
+                            <td><strong>@user.Username</strong></td>
+                            <td>@user.Email</td>
+                            <td><span class="badge bg-label-primary">@user.Role</span></td>
+                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <form method="post" asp-page-handler="Approve" asp-route-id="@user.Id">
+                                        <button type="submit" class="btn btn-sm btn-success">Aceitar</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="Reject" asp-route-id="@user.Id">
+                                        <button type="submit" class="btn btn-sm btn-danger">Recusar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

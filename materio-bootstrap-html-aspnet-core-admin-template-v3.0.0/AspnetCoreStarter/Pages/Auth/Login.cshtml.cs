@@ -52,6 +52,11 @@ namespace AspnetCoreStarter.Pages.Auth
                     HttpContext.Session.SetString("UserProfilePhoto", user.ProfilePhotoPath);
                 }
 
+                if (user.Role == "Admin")
+                {
+                    return RedirectToPage("/Admin/Dashboard");
+                }
+
                 return RedirectToPage("/frontpages/LandingPage");
             }
 

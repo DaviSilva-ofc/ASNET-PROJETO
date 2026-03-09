@@ -6,11 +6,20 @@
 }
 
 @section VendorStyles{
-  <link rel="stylesheet" href="~/vendor/libs/nouislider/nouislider.dist.css" />
-  <link rel="stylesheet" href="~/vendor/libs/swiper/swiper.dist.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@@15.8.1/dist/nouislider.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@@11.1.15/swiper-bundle.min.css" />
 }
 @section PageStyles {
-<link rel="stylesheet" href="~/vendor/css/pages/front-page-landing.dist.css" />
+<style>
+  /* Fallback for missing front-page-landing.dist.css */
+  .section-py { padding-top: 5rem; padding-bottom: 5rem; }
+  .features-icon-box { margin-bottom: 2rem; }
+  .features-icon img { width: 64px; height: 64px; }
+  .client-logo { max-height: 50px; opacity: 0.6; transition: opacity 0.3s; }
+  .client-logo:hover { opacity: 1; }
+  .faq-image { max-width: 100%; height: auto; }
+  .fun-facts-icon { font-size: 2rem; }
+</style>
 <style>
   .landing-hero-carousel {
     overflow: hidden;
@@ -83,8 +92,8 @@
 </style>
 }
 @section VendorScripts{
-<script src="~/vendor/libs/nouislider/nouislider.dist.js"></script>
-<script src="~/vendor/libs/swiper/swiper.dist.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nouislider@@15.8.1/dist/nouislider.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@@11.1.15/swiper-bundle.min.js"></script>
 }
 @section PageScripts {
 <script src="~/js/front-page-landing.dist.js"></script>
