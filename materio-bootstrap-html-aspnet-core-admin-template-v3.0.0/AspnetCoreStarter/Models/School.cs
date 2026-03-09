@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,8 +27,12 @@ namespace AspnetCoreStarter.Models
         [MaxLength(50)]
         public string Phone { get; set; }
 
+        [MaxLength(100)]
+        public string? Grouping { get; set; }
+
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
 
-        // Relation to users (optional, can be expanded later)
+        // Relation to users (Teachers)
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }

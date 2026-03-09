@@ -552,26 +552,46 @@
           <div class="card">
             <div class="card-body">
               <h5 class="mb-6">Escreva uma mensagem</h5>
-              <form>
+
+              @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+              {
+                <div class="alert alert-success alert-dismissible" role="alert">
+                  @Model.SuccessMessage
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              }
+
+              @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+              {
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                  @Model.ErrorMessage
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              }
+
+              <form method="post">
                 <div class="row g-5">
                   <div class="col-md-6">
                     <div class="form-floating form-floating-outline">
-                      <input type="text" class="form-control" id="basic-default-fullname" placeholder="John Doe" />
-                      <label for="basic-default-fullname">Nome completo</label>
+                      <input type="text" class="form-control" asp-for="FullName" placeholder="Nome Exemplo" required />
+                      <label asp-for="FullName">Nome completo</label>
+                      <span asp-validation-for="FullName" class="text-danger"></span>
                     </div>
                   </div>
 
                   <div class="col-md-6">
                     <div class="form-floating form-floating-outline">
-                      <input type="email" class="form-control" id="basic-default-email" placeholder="johndoe99&#64;gmail.com" />
-                      <label for="basic-default-email">Endereço de email</label>
+                      <input type="email" class="form-control" asp-for="ContactEmail" placeholder="email@exemplo.com" required />
+                      <label asp-for="ContactEmail">Endereço de email</label>
+                      <span asp-validation-for="ContactEmail" class="text-danger"></span>
                     </div>
                   </div>
 
                   <div class="col-12">
                     <div class="form-floating form-floating-outline">
-                      <textarea class="form-control h-px-200" placeholder="Message" aria-label="Message" id="basic-default-message"></textarea>
-                      <label for="basic-default-message">Mensagem</label>
+                      <textarea class="form-control h-px-200" asp-for="MessageBody" placeholder="A sua mensagem..." required></textarea>
+                      <label asp-for="MessageBody">Mensagem</label>
+                      <span asp-validation-for="MessageBody" class="text-danger"></span>
                     </div>
                   </div>
                 </div>

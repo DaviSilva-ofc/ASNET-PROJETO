@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using AspnetCoreStarter.Data;
+using AspnetCoreStarter.Services;
+using AspnetCoreStarter.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("UserContext");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+// 📧 CONFIGURAR E-MAIL
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -36,25 +42,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        // EnsureCreated() will create the DB if it doesn't exist.
-        // If it exists, it won't add new tables. So we check if Schools exists.
-        context.Database.EnsureCreated();
-        
-        // Manual check for Schools table as a fallback for slow migrations
-        try {
-            context.Database.ExecuteSqlRaw("SELECT 1 FROM Schools LIMIT 1;");
-        } catch {
-            context.Database.ExecuteSqlRaw(@"
-                CREATE TABLE IF NOT EXISTS Schools (
-                    Id INT AUTO_INCREMENT PRIMARY KEY,
-                    Name VARCHAR(200) NOT NULL,
-                    Address VARCHAR(500) NOT NULL,
-                    ContactEmail VARCHAR(200) NOT NULL,
-                    Phone VARCHAR(50) NULL,
-                    RegisteredAt DATETIME DEFAULT CURRENT_TIMESTAMP
-                ) ENGINE=InnoDB;
-            ");
-        }
+        context.Database.Migrate();
     }
     catch (Exception ex)
     {

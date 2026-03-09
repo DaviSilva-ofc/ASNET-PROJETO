@@ -22,12 +22,26 @@ namespace AspnetCoreStarter.Models
         [Required]
         public string PasswordHash { get; set; }
 
-        public string ProfilePhotoPath { get; set; }
+        public string? ProfilePhotoPath { get; set; }
 
         public string? PasswordResetToken { get; set; }
 
         public DateTime? ResetTokenExpiry { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // --- Teacher specific fields ---
+
+
+        [MaxLength(100)]
+        public string? Subject { get; set; } // Disciplina
+
+        [MaxLength(100)]
+        public string? Grouping { get; set; } // Agrupamento
+
+        // Default role could be "Membro" or "Professor"
+        [Required]
+        [MaxLength(50)]
+        public string Role { get; set; } = "Membro";
     }
 }

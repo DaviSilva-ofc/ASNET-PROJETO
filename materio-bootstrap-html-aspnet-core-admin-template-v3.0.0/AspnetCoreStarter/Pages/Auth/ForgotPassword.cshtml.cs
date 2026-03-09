@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using AspnetCoreStarter.Data;
+using AspnetCoreStarter.Services;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
@@ -10,10 +11,12 @@ namespace AspnetCoreStarter.Pages.Auth
     public class ForgotPasswordModel : PageModel
     {
         private readonly AppDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public ForgotPasswordModel(AppDbContext context)
+        public ForgotPasswordModel(AppDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         [BindProperty]
@@ -45,10 +48,28 @@ namespace AspnetCoreStarter.Pages.Auth
                 
                 await _context.SaveChangesAsync();
 
-                // Simular envio de email mostrando o link
+                // Enviar email real
                 var resetLink = $"{Request.Scheme}://{Request.Host}/Auth/ResetPassword?token={user.PasswordResetToken}";
-                Message = $"Link de recuperação gerado (Simulação de Email): <a href='{resetLink}'>Clique aqui para definir nova senha</a>";
-                ErrorMessage = null; // Limpar erro anterior se houver sucesso
+                var emailBody = $@"
+                    <h2>Recuperação de Palavra-passe</h2>
+                    <p>Olá,</p>
+                    <p>Recebemos um pedido para alterar a senha da sua conta ASNET.</p>
+                    <p>Clique no link abaixo para definir uma nova senha:</p>
+                    <p><a href='{resetLink}'>{resetLink}</a></p>
+                    <br>
+                    <p>Se não solicitou esta alteração, por favor ignore este email.</p>";
+
+                try
+                {
+                    await _emailService.SendEmailAsync(user.Email, "Recuperação de Palavra-passe - ASNET", emailBody);
+                    Message = "Enviámos um link de recuperação para o seu email. Por favor, verifique a sua caixa de entrada.";
+                    ErrorMessage = null;
+                }
+                catch (System.Exception)
+                {
+                    ErrorMessage = "Houve um erro ao tentar enviar o email. Por favor, tente novamente mais tarde ou contacte o suporte.";
+                    Message = null;
+                }
             }
             else
             {
