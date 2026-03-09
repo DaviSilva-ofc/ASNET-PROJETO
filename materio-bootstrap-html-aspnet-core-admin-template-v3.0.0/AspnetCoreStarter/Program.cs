@@ -12,13 +12,13 @@ var connectionString = builder.Configuration.GetConnectionString("UserContext");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// 📧 CONFIGURAR E-MAIL
+// CONFIGURAR E-MAIL
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailService, EmailService>();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-// 🔐 ATIVAR SESSÕES E AUTENTICAÇÃO
+// ATIVAR SESSÕES E AUTENTICAÇÃO
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -45,7 +45,7 @@ builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// 🛠️ GARANTIR QUE A BASE DE DADOS E TABELAS EXISTEM
+// GARANTIR QUE A BASE DE DADOS E TABELAS EXISTEM
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -73,7 +73,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 🔐 USAR SESSÃO (IMPORTANTE: antes de Authentication)
+// USAR SESSÃO (IMPORTANTE: antes de Authentication)
 app.UseSession();
 
 app.UseAuthentication();
