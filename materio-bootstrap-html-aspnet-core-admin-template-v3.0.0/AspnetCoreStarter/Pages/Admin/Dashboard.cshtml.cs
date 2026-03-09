@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace AspnetCoreStarter.Pages.Admin
 {
@@ -25,12 +26,14 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnGetAsync()
         {
-            // Verificação básica de segurança
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Auth/Login");
+            // Verificação de segurança via Cookie Authentication
+            if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
 
-            var admin = await _context.Users.FindAsync(int.Parse(userId));
-            if (admin == null || admin.Role != "Admin") return RedirectToPage("/Index");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userId) || userRole != "Admin") 
+                return RedirectToPage("/Index");
 
             PendingUsers = await _context.Users
                 .Where(u => u.AccountStatus == "Pendente")

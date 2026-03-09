@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using AspnetCoreStarter.Data;
 using AspnetCoreStarter.Services;
 using AspnetCoreStarter.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,14 +18,23 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-// 🔐 ATIVAR SESSÕES
+// 🔐 ATIVAR SESSÕES E AUTENTICAÇÃO
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // sessão expira em 30 minutos
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.AccessDeniedPath = "/Auth/Login";
+        options.ExpireTimeSpan = TimeSpan.FromDays(30); // Duração máxima se "Lembrar-me" for usado
+        options.SlidingExpiration = true;
+    });
 
 // Razor Pages
 #if DEBUG
@@ -63,9 +73,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 🔐 USAR SESSÃO (IMPORTANTE: antes de Authorization)
+// 🔐 USAR SESSÃO (IMPORTANTE: antes de Authentication)
 app.UseSession();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Redirecionar root para LandingPage

@@ -24,7 +24,8 @@
   <div class="menu-inner-shadow"></div>
 
   @* ! Starter Kit menu-items *@
-    @if (Context.Session.GetString("UserId") != null)
+  <ul class="menu-inner py-1">
+    @if (User.Identity.IsAuthenticated)
     {
       <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Painel</span>

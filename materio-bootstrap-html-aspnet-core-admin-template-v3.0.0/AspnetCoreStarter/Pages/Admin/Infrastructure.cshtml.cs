@@ -5,6 +5,7 @@ using AspnetCoreStarter.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace AspnetCoreStarter.Pages.Admin
 {
@@ -44,8 +45,10 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Auth/Login");
+            if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
+            
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            if (userRole != "Admin") return RedirectToPage("/Index");
 
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
             Schools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();

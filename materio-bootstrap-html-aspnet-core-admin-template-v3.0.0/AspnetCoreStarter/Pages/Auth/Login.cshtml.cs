@@ -4,6 +4,11 @@ using AspnetCoreStarter.Data;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Collections.Generic;
+using System;
 
 namespace AspnetCoreStarter.Pages.Auth
 {
@@ -21,9 +26,11 @@ namespace AspnetCoreStarter.Pages.Auth
         public string Email { get; set; }
 
         [BindProperty]
-        [Required(ErrorMessage = "A palavra-passe é obrigatória")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+
+        [BindProperty]
+        public bool RememberMe { get; set; }
 
         public string ErrorMessage { get; set; }
 
@@ -43,14 +50,36 @@ namespace AspnetCoreStarter.Pages.Auth
 
             if (user != null && BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
             {
-                // Login com sucesso
-                // Por agora vamos usar Sessão como configurado no Program.cs
-                HttpContext.Session.SetString("UserId", user.Id.ToString());
-                HttpContext.Session.SetString("Username", user.Username);
+                // Login com sucesso - Criar Claims
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, user.Role)
+                };
+
                 if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
                 {
-                    HttpContext.Session.SetString("UserProfilePhoto", user.ProfilePhotoPath);
+                    claims.Add(new Claim("ProfilePhoto", user.ProfilePhotoPath));
                 }
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = RememberMe,
+                    ExpiresUtc = RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null
+                };
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+
+                // Manter compatibilidade com sessões se necessário para layouts legados
+                HttpContext.Session.SetString("UserId", user.Id.ToString());
+                HttpContext.Session.SetString("Username", user.Username);
 
                 if (user.Role == "Admin")
                 {
