@@ -789,7 +789,7 @@ const Helpers = {
 
     // Set CSS custom properties
     if (defaultColor) {
-      styleSheet.innerHTML = `:root, [data-bs-theme=light], [data-bs-theme=dark] {
+      styleSheet.textContent = `:root, [data-bs-theme=light], [data-bs-theme=dark] {
     --bs-primary: ${color};
     --bs-primary-rgb: ${r}, ${g}, ${b};
     --bs-primary-bg-subtle: color-mix(in sRGB, ${window.config.colors.cardColor} ${subtleRatio}, ${color});
@@ -970,15 +970,22 @@ const Helpers = {
   // * Dark / Light / Auto Mode
 
   getStoredTheme: themeName => {
-    if (window.templateCustomizer) {
-      themeName = window.templateCustomizer._getSetting('Theme');
-    } else {
-      themeName = document.getElementsByTagName('HTML')[0].getAttribute('data-bs-theme');
+    // First, try to get theme from localStorage (set by setStoredTheme)
+    const localKey = `templateCustomizer-${window.templateName || 'front-page'}--Theme`;
+    const fromStorage = localStorage.getItem(localKey);
+    if (fromStorage) {
+      return fromStorage;
     }
-    return (
-      themeName ||
-      (window.templateCustomizer.settings.defaultTheme ? window.templateCustomizer.settings.defaultTheme : 'light')
-    );
+    // Second, try templateCustomizer if available
+    if (window.templateCustomizer && window.templateCustomizer._getSetting) {
+      const tcTheme = window.templateCustomizer._getSetting('Theme');
+      if (tcTheme) return tcTheme;
+    }
+    // Third, fall back to the HTML data-bs-theme attribute
+    const htmlTheme = document.getElementsByTagName('HTML')[0].getAttribute('data-bs-theme');
+    if (htmlTheme) return htmlTheme;
+    // Default to light
+    return 'light';
   },
 
   setStoredTheme: (templateName, theme) => {
@@ -994,17 +1001,19 @@ const Helpers = {
   },
 
   setTheme: theme => {
+    let appliedTheme = theme;
     if (theme === 'system') {
-      document.documentElement.setAttribute(
-        'data-bs-theme',
-        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      );
-    } else {
-      document.documentElement.setAttribute('data-bs-theme', theme);
+      appliedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-    // if (window.templateCustomizer && theme !== 'light') {
-    //   window.templateCustomizer._showResetBtnNotification(true)
-    // }
+
+    if (document.documentElement.getAttribute('data-bs-theme') !== appliedTheme) {
+      document.documentElement.setAttribute('data-bs-theme', appliedTheme);
+    }
+
+    // Also sync with templateCustomizer if available to ensure persistence
+    if (window.templateCustomizer && window.templateCustomizer._setSetting) {
+      window.templateCustomizer._setSetting('Theme', theme);
+    }
   },
 
   showActiveTheme: (theme, focus = false) => {
@@ -1016,8 +1025,12 @@ const Helpers = {
 
     const themeSwitcherText = document.querySelector('#nav-theme-text');
     const activeThemeIcon = document.querySelector('.theme-icon-active');
+    if (!themeSwitcherText || !activeThemeIcon) return;
     const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`);
-    const svgOfActiveBtn = btnToActive.querySelector('i').getAttribute('data-icon');
+    if (!btnToActive) return;
+    const iconEl = btnToActive.querySelector('i');
+    if (!iconEl) return;
+    const svgOfActiveBtn = iconEl.getAttribute('data-icon');
     document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
       element.classList.remove('active');
       element.setAttribute('aria-pressed', 'false');
@@ -1038,7 +1051,7 @@ const Helpers = {
 
   syncThemeToggles: e => {
     document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
-      if (toggle.getAttribute('data-bs-theme-value') === e) {
+      if (toggle.getAttribute('data-bs-theme-value') === e && !toggle.classList.contains('active')) {
         toggle.click();
       }
     });

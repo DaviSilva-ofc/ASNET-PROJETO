@@ -38,25 +38,9 @@ namespace AspnetCoreStarter.Models
         [Column("data_criacao")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // --- Teacher specific fields ---
-
-
-        [MaxLength(100)]
-        [Column("Subject")]
-        public string? Subject { get; set; } // Disciplina
-
-        [MaxLength(100)]
-        [Column("Grouping")]
-        public string? Grouping { get; set; } // Agrupamento
-
-        // Default role could be "Membro" or "Professor"
-        [Required]
-        [MaxLength(50)]
-        [Column("Role")]
-        public string Role { get; set; } = "Membro";
-
         [Column("status_conta")]
         [MaxLength(50)]
         public string AccountStatus { get; set; } = "Pendente";
     }
 }
+

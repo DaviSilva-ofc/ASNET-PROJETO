@@ -38,14 +38,14 @@
       </span>
     </a>
 
-  <!-- Style Switcher -->
-  <div class="navbar-nav align-items-center">
-    <div class="nav-item dropdown dropdown-style-switcher me-2 me-xl-0">
+  <ul class="navbar-nav flex-row align-items-center me-3">
+    <!-- Style Switcher -->
+    <li class="nav-item dropdown dropdown-style-switcher me-2" style="position: relative; z-index: 2000;">
       <a class="nav-link dropdown-toggle hide-arrow" id="nav-theme" href="javascript:void(0);" data-bs-toggle="dropdown">
         <i class="icon-base ri ri-sun-line icon-md theme-icon-active"></i>
         <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
       </a>
-      <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="nav-theme-text">
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-theme-text" style="z-index: 3000;">
         <li>
           <button type="button" class="dropdown-item align-items-center active" data-bs-theme-value="light" aria-pressed="false">
             <span> <i class="icon-base ri ri-sun-line icon-md me-3" data-icon="sun-line"></i>Light</span>
@@ -62,9 +62,10 @@
           </button>
         </li>
       </ul>
-    </div>
-  </div>
-  <!-- / Style Switcher-->
+    </li>
+    <!-- / Style Switcher-->
+  </ul>
+
 
 
   <ul class="navbar-nav flex-row align-items-center ms-auto">
@@ -87,6 +88,7 @@
         <a class="nav-link fw-medium me-2" href="/frontpages/LandingPage#landingContact" style="position: relative; z-index: 1000;">Contacto</a>
       </li>
     }
+
 
     @if (isAuthenticated)
     {
@@ -181,16 +183,17 @@
     else
     {
       <li class="nav-item me-2">
-        <a class="btn btn-outline-primary" href="/Auth/Register">
+        <a class="btn btn-outline-primary" href="/Auth/Register" style="position: relative; z-index: 2000;">
           <span class="tf-icons ri ri-user-add-line me-1"></span>Criar conta
         </a>
       </li>
       <li class="nav-item">
-        <a class="btn btn-primary" href="/Auth/Login">
+        <a class="btn btn-primary" href="/Auth/Login" style="position: relative; z-index: 2000;">
           <span class="tf-icons ri-login-box-line me-1"></span>Entrar
         </a>
       </li>
     }
+
 
   </ul>
 </div>
