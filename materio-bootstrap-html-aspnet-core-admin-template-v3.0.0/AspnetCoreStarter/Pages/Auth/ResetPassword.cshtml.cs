@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace AspnetCoreStarter.Pages.Auth
 {
-    public class ResetPasswordModel : PageModel
+    public class PasswordResetPageModel : PageModel
     {
         private readonly AppDbContext _context;
 
-        public ResetPasswordModel(AppDbContext context)
+        public PasswordResetPageModel(AppDbContext context)
         {
             _context = context;
         }
@@ -30,6 +30,7 @@ namespace AspnetCoreStarter.Pages.Auth
         public string ConfirmPassword { get; set; }
 
         public string ErrorMessage { get; set; }
+        public string SuccessMessage { get; set; }
 
         public async Task<IActionResult> OnGetAsync(string token)
         {
@@ -73,7 +74,8 @@ namespace AspnetCoreStarter.Pages.Auth
 
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("/Auth/Login");
+            SuccessMessage = "Palavra-passe redefinida com sucesso! Agora já pode iniciar sessão com a sua nova senha.";
+            return Page();
         }
     }
 }

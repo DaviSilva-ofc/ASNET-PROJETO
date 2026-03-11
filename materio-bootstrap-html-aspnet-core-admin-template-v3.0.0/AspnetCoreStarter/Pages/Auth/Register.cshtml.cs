@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using AspnetCoreStarter.Data;
 using AspnetCoreStarter.Models;
+using System;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace AspnetCoreStarter.Pages.Auth
@@ -36,6 +39,24 @@ namespace AspnetCoreStarter.Pages.Auth
         {
         }
 
+        private async Task<bool> IsValidEmailDomain(string email)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email)) return false;
+                var addr = new System.Net.Mail.MailAddress(email);
+                string domain = addr.Host;
+
+                // Tentar resolver o domínio para ver se ele existe
+                var hostAddresses = await Dns.GetHostAddressesAsync(domain);
+                return hostAddresses != null && hostAddresses.Length > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (!Input.Terms)
@@ -47,6 +68,13 @@ namespace AspnetCoreStarter.Pages.Auth
             if (string.IsNullOrWhiteSpace(Input.Username) || string.IsNullOrWhiteSpace(Input.Email) || string.IsNullOrWhiteSpace(Input.Password))
             {
                 ErrorMessage = "Preencha todos os campos obrigatórios.";
+                return Page();
+            }
+
+            // Validar se o domínio do email existe
+            if (!await IsValidEmailDomain(Input.Email))
+            {
+                ErrorMessage = "O domínio do email fornecido não parece ser válido ou não existe.";
                 return Page();
             }
 

@@ -9,11 +9,11 @@
 
   @* ! Hide app brand if navbar-full *@
   <div class='app-brand demo @((@ViewData["navbarFull"] != null && Convert.ToBoolean(@ViewData["navbarFull"])) ? "d-xl-none" : "")'>
-    <a asp-page="/Index" class="app-brand-link gap-xl-0 gap-2">
+    <a href="/frontpages/LandingPage" class="app-brand-link gap-xl-0 gap-2">
       <span class="app-brand-logo demo me-1">
-        @await Html.PartialAsync("../_Partials/_Macros")
+        <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="30" />
       </span>
-      <span class="app-brand-text demo menu-text fw-semibold ms-2">@TempData.Peek("appName")</span>
+      <span class="app-brand-text demo menu-text fw-semibold ms-2">ASNET</span>
     </a>
 
     <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
@@ -46,6 +46,33 @@
         <a asp-page="/Admin/Equipment" class="menu-link">
           <i class="menu-icon icon-base ri-computer-line"></i>
           <div>Equipamentos</div>
+        </a>
+      </li>
+      <li class='menu-item@(currentPage == "/Admin/Contracts" ? " active" : "")'>
+        <a asp-page="/Admin/Contracts" class="menu-link">
+          <i class="menu-icon icon-base ri-file-list-3-line"></i>
+          <div>Contratos</div>
+        </a>
+      </li>
+
+      <li class='menu-item@(currentPage == "/Admin/Stocks" ? " active" : "")'>
+        <a asp-page="/Admin/Stocks" class="menu-link">
+          <i class="menu-icon icon-base ri-archive-line"></i>
+          <div>Stocks</div>
+        </a>
+      </li>
+
+      <li class='menu-item@(currentPage == "/Admin/Tickets" ? " active" : "")'>
+        <a asp-page="/Admin/Tickets" class="menu-link">
+          <i class="menu-icon icon-base ri-ticket-line"></i>
+          <div>Tickets</div>
+        </a>
+      </li>
+
+      <li class='menu-item@(currentPage == "/Admin/Chat" ? " active" : "")'>
+        <a asp-page="/Admin/Chat" class="menu-link">
+          <i class="menu-icon icon-base ri-chat-3-line"></i>
+          <div>Chat</div>
         </a>
       </li>
     }

@@ -1,0 +1,77 @@
+@page
+@model AspnetCoreStarter.Pages.Admin.ChatModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Centro de Mensagens";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Chat</h4>
+
+    <div class="card overflow-hidden" style="height: calc(100vh - 200px);">
+        <div class="row g-0 h-100">
+            <!-- Sidebar de Contactos -->
+            <div class="col-3 border-end h-100 bg-light">
+                <div class="p-3 border-bottom bg-white">
+                    <input type="text" class="form-control form-control-sm" placeholder="Pesquisar contacto..." />
+                </div>
+                <div class="list-group list-group-flush overflow-auto" style="height: calc(100% - 60px);">
+                    <div class="list-group-item list-group-item-action border-0 py-3 active">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar me-2">
+                                <img src="/img/avatars/1.png" class="rounded-circle" alt="User" />
+                            </div>
+                            <div class="w-100">
+                                <h6 class="mb-0 small">Técnico João</h6>
+                                <p class="mb-0 text-muted x-small">Olá, como posso ajudar?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Janela de Chat -->
+            <div class="col-9 h-100 d-flex flex-column">
+                <!-- Header -->
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar me-2">
+                            <img src="/img/avatars/1.png" class="rounded-circle" alt="User" />
+                        </div>
+                        <h6 class="mb-0">Técnico João</h6>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm text-secondary"><i class="ri-phone-line"></i></button>
+                        <button class="btn btn-sm text-secondary"><i class="ri-video-chat-line"></i></button>
+                    </div>
+                </div>
+
+                <!-- Mensagens -->
+                <div class="flex-grow-1 p-3 overflow-auto bg-white" style="background-image: radial-gradient(#eee 1px, transparent 1px); background-size: 20px 20px;">
+                    <div class="d-flex flex-column gap-3">
+                        <div class="align-self-start bg-light p-2 rounded-3 shadow-sm" style="max-width: 70%;">
+                            <p class="mb-0 small">Bom dia! Estou a verificar o ticket #1234.</p>
+                            <small class="text-muted x-small">09:15</small>
+                        </div>
+                        <div class="align-self-end bg-primary text-white p-2 rounded-3 shadow-sm" style="max-width: 70%;">
+                            <p class="mb-0 small">Obrigado João. Alguma novidade sobre a placa?</p>
+                            <small class="text-white-50 x-small">09:17</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div class="p-3 border-top bg-white">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Escreva a sua mensagem..." />
+                        <button class="btn btn-primary"><i class="ri-send-plane-fill"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small { font-size: 0.75rem; }
+</style>

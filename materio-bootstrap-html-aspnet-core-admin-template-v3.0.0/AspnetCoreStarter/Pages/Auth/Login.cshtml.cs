@@ -62,11 +62,46 @@ namespace AspnetCoreStarter.Pages.Auth
                     return Page();
                 }
 
-                // Login com sucesso
+                // Verificar se o utilizador é administrador (existe na tabela administradores)
+                var isAdmin = await _context.Administradores.AnyAsync(a => a.UserId == user.Id);
+
+                Console.WriteLine($"[LOGIN] Utilizador: {user.Username}, Email: {user.Email}, AccountStatus: '{user.AccountStatus}', IsAdmin: {isAdmin}");
+
+                // Verificar se a conta está ativa (admins podem entrar sempre)
+                if (!isAdmin && !string.Equals(user.AccountStatus, "Ativo", StringComparison.OrdinalIgnoreCase))
+                {
+                    ErrorMessage = $"A sua conta está com o estado '{user.AccountStatus}'. Contacte o administrador.";
+                    return Page();
+                }
+
+                // Criar claims para autenticação por cookie
+                var role = isAdmin ? "Admin" : (user.AccountStatus ?? "Ativo");
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username ?? ""),
+                    new Claim(ClaimTypes.Email, user.Email ?? ""),
+                    new Claim(ClaimTypes.Role, role)
+                };
+
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    principal,
+                    new AuthenticationProperties
+                    {
+                        IsPersistent = RememberMe,
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(RememberMe ? 30 : 1)
+                    });
+
+                // Sessão (para compatibilidade)
                 HttpContext.Session.SetString("UserId", user.Id.ToString());
                 HttpContext.Session.SetString("Username", user.Username);
 
-                if (user.AccountStatus == "Admin")
+                // Redirecionar Admin para o Dashboard, outros para a Landing Page
+                if (isAdmin)
                 {
                     return RedirectToPage("/Admin/Dashboard");
                 }

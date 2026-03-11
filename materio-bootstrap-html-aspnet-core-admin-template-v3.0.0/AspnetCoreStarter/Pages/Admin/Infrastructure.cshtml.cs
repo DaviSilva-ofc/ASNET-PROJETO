@@ -51,7 +51,7 @@ namespace AspnetCoreStarter.Pages.Admin
             if (userRole != "Admin") return RedirectToPage("/Index");
 
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
-            Schools = await _context.Schools.Include(s => ((AspnetCoreStarter.Models.School)s).Agrupamento).ToListAsync();
+            Schools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();
             Blocos = await _context.Blocos.Include(b => b.School).ToListAsync();
             Salas = await _context.Salas.Include(s => s.Block).ToListAsync();
 
@@ -76,8 +76,6 @@ namespace AspnetCoreStarter.Pages.Admin
                 { 
                     Name = NewSchoolName, 
                     Address = NewSchoolAddress ?? "N/A",
-                    ContactEmail = "admin@escola.pt",
-                    Phone = "123456789",
                     AgrupamentoId = SelectedAgrupamentoId
                 });
                 await _context.SaveChangesAsync();
