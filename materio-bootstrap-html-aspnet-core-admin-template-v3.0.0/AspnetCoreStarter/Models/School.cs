@@ -31,8 +31,5 @@ namespace AspnetCoreStarter.Models
         public string? Grouping { get; set; }
 
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
-
-        // Relation to users (Teachers)
-        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }

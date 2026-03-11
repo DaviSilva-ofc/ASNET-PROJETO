@@ -38,13 +38,24 @@ namespace AspnetCoreStarter.Pages.Auth
                 return Page();
             }
 
-            // Procurar por email ou username
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);
-
-            if (user != null && BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
+            try
             {
+                // Procurar por email ou username
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);
+
+                if (user == null)
+                {
+                    ErrorMessage = "Utilizador não encontrado na base de dados.";
+                    return Page();
+                }
+
+                if (!BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
+                {
+                    ErrorMessage = "Palavra-passe incorreta.";
+                    return Page();
+                }
+
                 // Login com sucesso
-                // Por agora vamos usar Sessão como configurado no Program.cs
                 HttpContext.Session.SetString("UserId", user.Id.ToString());
                 HttpContext.Session.SetString("Username", user.Username);
                 if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
@@ -54,9 +65,11 @@ namespace AspnetCoreStarter.Pages.Auth
 
                 return RedirectToPage("/frontpages/LandingPage");
             }
-
-            ErrorMessage = "Email ou palavra-passe incorretos.";
-            return Page();
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Erro ao tentar iniciar sessão: {ex.Message}";
+                return Page();
+            }
         }
     }
 }
