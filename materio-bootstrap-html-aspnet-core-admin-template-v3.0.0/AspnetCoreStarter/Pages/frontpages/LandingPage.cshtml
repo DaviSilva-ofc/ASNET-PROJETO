@@ -6,11 +6,20 @@
 }
 
 @section VendorStyles{
-  <link rel="stylesheet" href="~/vendor/libs/nouislider/nouislider.dist.css" />
-  <link rel="stylesheet" href="~/vendor/libs/swiper/swiper.dist.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@@15.8.1/dist/nouislider.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@@11.1.15/swiper-bundle.min.css" />
 }
 @section PageStyles {
-<link rel="stylesheet" href="~/vendor/css/pages/front-page-landing.dist.css" />
+<style>
+  /* Fallback for missing front-page-landing.dist.css */
+  .section-py { padding-top: 5rem; padding-bottom: 5rem; }
+  .features-icon-box { margin-bottom: 2rem; }
+  .features-icon img { width: 64px; height: 64px; }
+  .client-logo { max-height: 50px; opacity: 0.6; transition: opacity 0.3s; }
+  .client-logo:hover { opacity: 1; }
+  .faq-image { max-width: 100%; height: auto; }
+  .fun-facts-icon { font-size: 2rem; }
+</style>
 <style>
   .landing-hero-carousel {
     overflow: hidden;
@@ -40,15 +49,24 @@
   }
   /* Navbar styling to differentiate from background */
   #layout-navbar {
-    background: rgba(255, 255, 255, 0.1) !important;
+    position: relative;
+    pointer-events: auto;
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 1070 !important;
   }
-  /* White text for navbar links and icons */
-  #layout-navbar:not(.navbar-active) .nav-link,
-  #layout-navbar:not(.navbar-active) .theme-icon-active,
-  #layout-navbar:not(.navbar-active) .app-brand-text {
-    color: #fff !important;
+
+  /* Cores de texto do navbar que funcionam em claro e escuro */
+  [data-bs-theme="light"] #layout-navbar .nav-link,
+  [data-bs-theme="light"] #layout-navbar .theme-icon-active,
+  [data-bs-theme="light"] #layout-navbar .app-brand-text {
+    color: #111111 !important;
+  }
+
+  [data-bs-theme="dark"] #layout-navbar .nav-link,
+  [data-bs-theme="dark"] #layout-navbar .theme-icon-active,
+  [data-bs-theme="dark"] #layout-navbar .app-brand-text {
+    color: #ffffff !important;
   }
   /* Hover effect for navbar links */
   #layout-navbar .nav-link {
@@ -83,8 +101,8 @@
 </style>
 }
 @section VendorScripts{
-<script src="~/vendor/libs/nouislider/nouislider.dist.js"></script>
-<script src="~/vendor/libs/swiper/swiper.dist.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nouislider@@15.8.1/dist/nouislider.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@@11.1.15/swiper-bundle.min.js"></script>
 }
 @section PageScripts {
 <script src="~/js/front-page-landing.dist.js"></script>
@@ -399,62 +417,74 @@
       </div>
     </div>
 
-<!-- logos cinzentas: Start -->
+  <!-- Logos Section: Start -->
+  <section id="landingLogos" class="section-py bg-black">
     <div class="container">
-      <div class="swiper-logo-carousel pt-lg-4 mt-12">
+      <!-- Desktop Logos: Shows in a row -->
+      <div class="desktop-only-logos">
+        <div class="desktop-logos-grid">
+          <img src="~/img/front-pages/landing-page/logo-esas.png" alt="ESAS" class="client-logo" />
+          <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="Sá de Miranda" class="client-logo" />
+          <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="André Soares" class="client-logo" />
+          <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="Carlos Amarante" class="client-logo" />
+          <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="Dona Maria" class="client-logo" />
+        </div>
+      </div>
+
+      <!-- Mobile Logos -->
+      <div class="mobile-only-logos">
         <div class="swiper" id="swiper-clients-logos">
           <div class="swiper-wrapper">
-            <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/landing-page/logo-esas.png" data-app-dark-img="front-pages/landing-page/logo-esas.png" />
-            </div>
-            <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/landing-page/logo-sademiranda.png" data-app-dark-img="front-pages/landing-page/logo-sademiranda.png" />
-            </div>
-            <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/landing-page/logo-andresoares.png" data-app-dark-img="front-pages/landing-page/logo-andresoares.png" />
-            </div>
-            <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/landing-page/logo-carlosamarante.png" data-app-dark-img="front-pages/landing-page/logo-carlosamarante.png" />
-            </div>
-            <div class="swiper-slide">
-              <img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo" data-app-light-img="front-pages/landing-page/logo-donamaria.png" data-app-dark-img="front-pages/landing-page/logo-donamaria.png" />
-            </div>
+            <div class="swiper-slide"><img src="~/img/front-pages/landing-page/logo-esas.png" alt="client logo" class="client-logo" /></div>
+            <div class="swiper-slide"><img src="~/img/front-pages/landing-page/logo-sademiranda.png" alt="client logo" class="client-logo" /></div>
+            <div class="swiper-slide"><img src="~/img/front-pages/landing-page/logo-andresoares.png" alt="client logo" class="client-logo" /></div>
+            <div class="swiper-slide"><img src="~/img/front-pages/landing-page/logo-carlosamarante.png" alt="client logo" class="client-logo" /></div>
+            <div class="swiper-slide"><img src="~/img/front-pages/landing-page/logo-donamaria.png" alt="client logo" class="client-logo" /></div>
           </div>
         </div>
       </div>
     </div>
   </section>
-  <!-- logos cinzentas: Start -->
-  <!-- avaliações de clientes "reais": End -->
+  <!-- Logos Section: End -->
 
-  <!-- factos: Start -->
-  <section id="landingFunFacts" class="section-py landing-fun-facts py-12 my-4">
+  <!-- Logos and Fun Facts: Start -->
+  <section id="landingLogosFacts" class="section-py bg-black pt-0">
     <div class="container">
-      <div class="row gx-0 gy-5 gx-sm-6">
-        <div class="col-md-3 col-sm-6 text-center">
-          <span class="badge rounded-pill bg-label-primary bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-layout-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="100">0</h2>
-          <h6 class="mb-0 text-body">Equipamentos reparados</h6>
+
+      <!-- Fun Facts Section -->
+      <div id="landingFunFacts" class="row gx-0 gy-5 gx-sm-6 text-center mt-5">
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-circle-icon">
+            <i class="icon-base ri ri-smartphone-line"></i>
+          </div>
+          <h2 class="stats-number counter" data-target="100">0</h2>
+          <p class="stats-label">Equipamentos reparados</p>
         </div>
-        <div class="col-md-3 col-sm-6 text-center">
-          <span class="badge rounded-pill bg-label-success bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-time-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="1100">0</h2>
-          <h6 class="mb-0 text-body">Horas trabalhadas</h6>
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-circle-icon">
+             <i class="icon-base ri ri-alarm-line"></i>
+          </div>
+          <h2 class="stats-number counter" data-target="1100">0</h2>
+          <p class="stats-label">Horas trabalhadas</p>
         </div>
-        <div class="col-md-3 col-sm-6 text-center">
-          <span class="badge rounded-pill bg-label-warning bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-user-smile-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="137">0</h2>
-          <h6 class="mb-0 text-body">Clientes satisfeitos</h6>
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-circle-icon">
+            <i class="icon-base ri ri-account-circle-line"></i>
+          </div>
+          <h2 class="stats-number counter" data-target="137">0</h2>
+          <p class="stats-label">Clientes satisfeitos</p>
         </div>
-        <div class="col-md-3 col-sm-6 text-center">
-          <span class="badge rounded-pill bg-label-info bg-label-hover fun-facts-icon mb-6 p-5"><i class="icon-base ri ri-award-line icon-42px"></i></span>
-          <h2 class="fw-bold mb-0 fun-facts-text counter" data-target="53">0</h2>
-          <h6 class="mb-0 text-body">Avaliações positivas</h6>
+        <div class="col-md-3 col-sm-6">
+          <div class="stats-circle-icon">
+            <i class="icon-base ri ri-sparkling-line"></i>
+          </div>
+          <h2 class="stats-number counter" data-target="53">0</h2>
+          <p class="stats-label">Avaliações positivas</p>
         </div>
       </div>
     </div>
   </section>
-  <!-- factos: End -->
+  <!-- Logos and Fun Facts: End -->
 
   <!-- FAQ: Start -->
   <section id="landingFAQ" class="section-py bg-body landing-faq">

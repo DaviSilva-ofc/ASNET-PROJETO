@@ -26,19 +26,19 @@
     --bs-primary-bg-subtle: #52433f;
     --bs-primary-border-subtle: #ffdfb3;
 
-    /* Forcing True Black Dark Mode */
-    --bs-body-bg: #000000;
-    --bs-body-bg-rgb: 0, 0, 0;
-    --bs-paper-bg: #000000;
-    --bs-card-bg: #000000;
-    --bs-menu-bg: #000000;
-    --bs-shadow-bg: #000000;
-    --bs-tooltip-bg: #1a1a1a;
+    /* Dark mode mais suave (cinza escuro em vez de preto puro) */
+    --bs-body-bg: #121826;
+    --bs-body-bg-rgb: 18, 24, 38;
+    --bs-paper-bg: #111827;
+    --bs-card-bg: #111827;
+    --bs-menu-bg: #111827;
+    --bs-shadow-bg: #0b1120;
+    --bs-tooltip-bg: #1f2937;
     --bs-tooltip-color: #ffffff;
-    --bs-dark-text-emphasis: #ffffff;
-    --bs-light-bg-subtle: #0d0d0d;
-    --bs-border-color: #1a1a1a;
-    --bs-tertiary-bg: #0a0a0a;
+    --bs-dark-text-emphasis: #f9fafb;
+    --bs-light-bg-subtle: #1f2933;
+    --bs-border-color: #1f2937;
+    --bs-tertiary-bg: #0b1120;
 }
 
 [data-bs-theme=dark] body,
@@ -52,7 +52,7 @@
 [data-bs-theme=dark] .bg-light,
 [data-bs-theme=dark] .offcanvas,
 [data-bs-theme=dark] .dropdown-menu {
-    background-color: #000000 !important;
+    background-color: var(--bs-body-bg) !important;
 }
 
 [data-bs-theme=dark] .card,
@@ -153,4 +153,110 @@ img[src*="bg-right-icon"] {
 /* Fix: Disable blur effect on scrolled navbar to prevent logo blurring */
 nav.layout-navbar.navbar-active::before {
     backdrop-filter: none !important;
+}
+
+/* Premium Desktop Styles */
+.bg-black {
+    /* Usar o mesmo fundo do app em vez de preto puro */
+    background-color: var(--bs-body-bg) !important;
+}
+
+.stats-circle-icon {
+    width: 200px;
+    height: 200px;
+    background-color: #fffaf0 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 1.5rem !important;
+    box-shadow: 0 4px 25px rgba(255, 255, 255, 0.15) !important;
+}
+
+.stats-circle-icon i {
+    /* Ícone quase preenchendo todo o círculo (sobrescreve .icon-base) */
+    font-size: 7rem !important;
+    inline-size: 7rem !important;
+    block-size: 7rem !important;
+    line-height: 1 !important;
+    color: #f89223 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+[data-bs-theme="light"] .stats-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #222222;
+    margin-bottom: 0.25rem;
+}
+
+[data-bs-theme="dark"] .stats-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+[data-bs-theme="light"] .stats-label {
+    font-size: 1rem;
+    color: #333333;
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+[data-bs-theme="dark"] .stats-label {
+    font-size: 1rem;
+    color: #ffffff;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+.desktop-logos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    padding: 2rem 0;
+}
+
+.desktop-logos-grid .client-logo {
+    max-height: 45px;
+    width: auto;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.desktop-logos-grid .client-logo:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Bordas visíveis em modo escuro para FAQ e Avaliações */
+[data-bs-theme="dark"] .landing-reviews .card,
+[data-bs-theme="dark"] .landing-faq .card,
+[data-bs-theme="dark"] .accordion .accordion-item {
+    /* container mais claro que o fundo e com borda visível */
+    background-color: #111827 !important; /* cinza mais claro que o fundo geral */
+    border: 1px solid rgba(229, 231, 235, 0.95) !important; /* próximo de #e5e7eb */
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.6);
+}
+
+/* Avaliações um pouco mais claras que o FAQ em dark mode */
+[data-bs-theme="dark"] .landing-reviews .card {
+    background-color: #1f2933 !important;
+}
+
+@media (max-width: 991.98px) {
+    .desktop-only-logos {
+        display: none !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .mobile-only-logos {
+        display: none !important;
+    }
 }

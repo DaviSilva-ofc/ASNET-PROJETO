@@ -12,6 +12,9 @@ namespace AspnetCoreStarter.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<School> Schools { get; set; }
-
+        public DbSet<Agrupamento> Agrupamentos { get; set; }
+        public DbSet<Bloco> Blocos { get; set; }
+        public DbSet<Sala> Salas { get; set; }
+        public DbSet<Equipamento> Equipamentos { get; set; }
     }
 }

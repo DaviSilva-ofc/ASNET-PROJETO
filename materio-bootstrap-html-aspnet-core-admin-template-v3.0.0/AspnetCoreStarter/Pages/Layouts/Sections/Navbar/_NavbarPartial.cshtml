@@ -38,14 +38,14 @@
       </span>
     </a>
 
-  <!-- Style Switcher -->
-  <div class="navbar-nav align-items-center">
-    <div class="nav-item dropdown dropdown-style-switcher me-2 me-xl-0">
+  <ul class="navbar-nav flex-row align-items-center me-3">
+    <!-- Style Switcher -->
+    <li class="nav-item dropdown dropdown-style-switcher me-2" style="position: relative; z-index: 2000;">
       <a class="nav-link dropdown-toggle hide-arrow" id="nav-theme" href="javascript:void(0);" data-bs-toggle="dropdown">
         <i class="icon-base ri ri-sun-line icon-md theme-icon-active"></i>
         <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
       </a>
-      <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="nav-theme-text">
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-theme-text" style="z-index: 3000;">
         <li>
           <button type="button" class="dropdown-item align-items-center active" data-bs-theme-value="light" aria-pressed="false">
             <span> <i class="icon-base ri ri-sun-line icon-md me-3" data-icon="sun-line"></i>Light</span>
@@ -62,17 +62,19 @@
           </button>
         </li>
       </ul>
-    </div>
-  </div>
-  <!-- / Style Switcher-->
+    </li>
+    <!-- / Style Switcher-->
+  </ul>
+
 
 
   <ul class="navbar-nav flex-row align-items-center ms-auto">
     @* ! Hide User dropdown for front pages and show Login button instead *@
     @{
-      var userId = HttpContextAccessor.HttpContext.Session.GetString("UserId");
-      var username = HttpContextAccessor.HttpContext.Session.GetString("Username") ?? "Utilizador";
-      var profilePhoto = HttpContextAccessor.HttpContext.Session.GetString("UserProfilePhoto") ?? "/img/avatars/1.png";
+      var isAuthenticated = User.Identity.IsAuthenticated;
+      var username = User.Identity.Name ?? "Utilizador";
+      var profilePhoto = User.FindFirst("ProfilePhoto")?.Value ?? "/img/avatars/1.png";
+      var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Membro";
     }
     @if (ViewData["isFront"] != null && Convert.ToBoolean(ViewData["isFront"]))
     {
@@ -87,7 +89,8 @@
       </li>
     }
 
-    @if (!string.IsNullOrEmpty(userId))
+
+    @if (isAuthenticated)
     {
       <!-- User -->
       <li class="nav-item navbar-dropdown dropdown-user dropdown">
@@ -107,7 +110,7 @@
                 </div>
                 <div class="flex-grow-1">
                   <h6 class="mb-0 small">@username</h6>
-                  <small class="text-body-secondary">Membro</small>
+                  <small class="text-body-secondary">@userRole</small>
                 </div>
               </div>
             </a>
@@ -123,12 +126,10 @@
           </li>
           <li>
             <div class="d-grid px-4 pt-2 pb-1">
-              <form method="POST" asp-page="/Auth/Logout">
-                <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
-                  <small class="align-middle">Sair</small>
-                  <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
-                </button>
-              </form>
+              <a href="/Auth/Logout" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
+                <small class="align-middle">Sair</small>
+                <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
+              </a>
             </div>
           </li>
         </ul>
@@ -182,16 +183,17 @@
     else
     {
       <li class="nav-item me-2">
-        <a class="btn btn-outline-primary" href="/Auth/Register">
+        <a class="btn btn-outline-primary" href="/Auth/Register" style="position: relative; z-index: 2000;">
           <span class="tf-icons ri ri-user-add-line me-1"></span>Criar conta
         </a>
       </li>
       <li class="nav-item">
-        <a class="btn btn-primary" href="/Auth/Login">
+        <a class="btn btn-primary" href="/Auth/Login" style="position: relative; z-index: 2000;">
           <span class="tf-icons ri-login-box-line me-1"></span>Entrar
         </a>
       </li>
     }
+
 
   </ul>
 </div>

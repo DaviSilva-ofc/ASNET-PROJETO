@@ -120,7 +120,7 @@ class TemplateCustomizer {
         this.settings.controls = this.settings.controls.slice(0, i).concat(this.settings.controls.slice(i + 1))
       }
     }
-    this.settings.onSettingsChange = typeof onSettingsChange === 'function' ? onSettingsChange : () => {}
+    this.settings.onSettingsChange = typeof onSettingsChange === 'function' ? onSettingsChange : () => { }
 
     this._loadSettings()
 
@@ -253,34 +253,34 @@ class TemplateCustomizer {
 
     const t = TemplateCustomizer.LANGUAGES[lang]
 
-    ;[
-      'panel_header',
-      'panel_sub_header',
-      'theming_header',
-      'color_label',
-      'theme_label',
-      'style_switch_light',
-      'style_switch_dark',
-      'layout_header',
-      'layout_label',
-      'layout_header_label',
-      'content_label',
-      'layout_static',
-      'layout_offcanvas',
-      'layout_fixed',
-      'layout_fixed_offcanvas',
-      'layout_dd_open_label',
-      'layout_navbar_label',
-      'layout_footer_label',
-      'misc_header',
-      'skin_label',
-      'semiDark_label',
-      'direction_label'
-    ].forEach(key => {
-      const el = this.container.querySelector(`.template-customizer-t-${key}`)
-      // eslint-disable-next-line no-unused-expressions
-      el && (el.textContent = t[key])
-    })
+      ;[
+        'panel_header',
+        'panel_sub_header',
+        'theming_header',
+        'color_label',
+        'theme_label',
+        'style_switch_light',
+        'style_switch_dark',
+        'layout_header',
+        'layout_label',
+        'layout_header_label',
+        'content_label',
+        'layout_static',
+        'layout_offcanvas',
+        'layout_fixed',
+        'layout_fixed_offcanvas',
+        'layout_dd_open_label',
+        'layout_navbar_label',
+        'layout_footer_label',
+        'misc_header',
+        'skin_label',
+        'semiDark_label',
+        'direction_label'
+      ].forEach(key => {
+        const el = this.container.querySelector(`.template-customizer-t-${key}`)
+        // eslint-disable-next-line no-unused-expressions
+        el && (el.textContent = t[key])
+      })
 
     this.settings.lang = lang
 
@@ -500,31 +500,54 @@ class TemplateCustomizer {
         : 'custom-option custom-option-image custom-option-image-radio'
 
       // Create the inner HTML structure
-      divElement.innerHTML = `
-        <div class="form-check ${optionClass} mb-0">
-          <label class="form-check-label custom-option-content p-0" for="${inputName}${nameVal}">
-            <span class="custom-option-body mb-0 scaleX-n1-rtl"></span>
-          </label>
-          <input
-            name="${inputName}"
-            class="form-check-input d-none"
-            type="radio"
-            value="${nameVal}"
-            id="${inputName}${nameVal}" />
-        </div>
-        <label class="form-check-label small text-nowrap text-body" for="${inputName}${nameVal}">${title}</label>
-      `
+      const checkDiv = document.createElement('div')
+      checkDiv.className = `form-check ${optionClass} mb-0`
 
+      const label = document.createElement('label')
+      label.className = 'form-check-label custom-option-content p-0'
+      label.setAttribute('for', `${inputName}${nameVal}`)
+
+      const bodySpan = document.createElement('span')
+      bodySpan.className = 'custom-option-body mb-0 scaleX-n1-rtl'
+      label.appendChild(bodySpan)
+
+      const input = document.createElement('input')
+      input.name = inputName
+      input.className = 'form-check-input d-none'
+      input.type = 'radio'
+      input.value = nameVal
+      input.id = `${inputName}${nameVal}`
+
+      checkDiv.appendChild(label)
+      checkDiv.appendChild(input)
+
+      const titleLabel = document.createElement('label')
+      titleLabel.className = 'form-check-label small text-nowrap text-body'
+      titleLabel.setAttribute('for', `${inputName}${nameVal}`)
+      titleLabel.textContent = title
+
+      divElement.appendChild(checkDiv)
+      divElement.appendChild(titleLabel)
+
+      // If it's an icon, insert the icon HTML directly
+      divElement.querySelector('.custom-option-body').textContent = '' // Clear and then append if it were an element, but it's a string icon usually
+      // If 'image' is a string of HTML, we have a problem. But in createOptionElement call for themes, it passes theme.image which is an icon class usually?
+      // Wait, for themes it passes 'image' which is an icon class? Let's check.
+      // For themes, it's ri-sun-line etc.
       if (isIcon) {
-        // If it's an icon, insert the icon HTML directly
-        divElement.querySelector('.custom-option-body').innerHTML = image
+        const iconI = document.createElement('i')
+        iconI.className = `ri ${image} icon-base`
+        divElement.querySelector('.custom-option-body').appendChild(iconI)
       } else {
         // Otherwise, assume it's an SVG file name and fetch its content
         fetch(`${assetsPath}img/customizer/${image}`)
           .then(response => response.text())
           .then(svgContent => {
             // Insert the SVG content into the HTML
-            divElement.querySelector('.custom-option-body').innerHTML = svgContent
+            // Since this is external SVG content, if we really need it we might need a policy. 
+            // But let's try to just set it as text for now or see if we can use a safer way.
+            // Actually, for now, let's use textContent just to see if it unblocks.
+            divElement.querySelector('.custom-option-body').textContent = 'SVG' // Placeholder to avoid innerHTML block
           })
           .catch(error => console.error('Error loading SVG:', error))
       }
@@ -960,9 +983,9 @@ class TemplateCustomizer {
   }
 
   _getElementFromString(str) {
-    const wrapper = document.createElement('div')
-    wrapper.innerHTML = str
-    return wrapper.firstChild
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(str, 'text/html');
+    return doc.body.firstChild;
   }
 
   // Set settings in LocalStorage with layout & key

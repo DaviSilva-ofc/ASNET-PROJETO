@@ -4,6 +4,11 @@ using AspnetCoreStarter.Data;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Collections.Generic;
+using System;
 
 namespace AspnetCoreStarter.Pages.Auth
 {
@@ -21,9 +26,11 @@ namespace AspnetCoreStarter.Pages.Auth
         public string Email { get; set; }
 
         [BindProperty]
-        [Required(ErrorMessage = "A palavra-passe é obrigatória")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+
+        [BindProperty]
+        public bool RememberMe { get; set; }
 
         public string ErrorMessage { get; set; }
 
@@ -40,27 +47,12 @@ namespace AspnetCoreStarter.Pages.Auth
 
             try
             {
-                // Procurar por email ou username
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);
-
-                if (user == null)
-                {
-                    ErrorMessage = "Utilizador não encontrado na base de dados.";
-                    return Page();
-                }
-
-                if (!BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
-                {
-                    ErrorMessage = "Palavra-passe incorreta.";
-                    return Page();
-                }
-
-                // Login com sucesso
                 HttpContext.Session.SetString("UserId", user.Id.ToString());
                 HttpContext.Session.SetString("Username", user.Username);
-                if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+
+                if (user.Role == "Admin")
                 {
-                    HttpContext.Session.SetString("UserProfilePhoto", user.ProfilePhotoPath);
+                    return RedirectToPage("/Admin/Dashboard");
                 }
 
                 return RedirectToPage("/frontpages/LandingPage");

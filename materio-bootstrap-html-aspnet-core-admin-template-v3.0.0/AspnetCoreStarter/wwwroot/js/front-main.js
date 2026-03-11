@@ -56,12 +56,14 @@ window.isDarkStyle = window.Helpers.isDarkStyle();
 
   // Function to close the mobile menu
   function closeMenu() {
-    menu.classList.remove('show');
+    if (menu) {
+      menu.classList.remove('show');
+    }
   }
 
   document.addEventListener('click', function (event) {
     // Check if the clicked element is inside mobile menu
-    if (!menu.contains(event.target)) {
+    if (menu && !menu.contains(event.target)) {
       closeMenu();
     }
   });
@@ -83,18 +85,22 @@ window.isDarkStyle = window.Helpers.isDarkStyle();
     });
   }
 
-  // Get style from local storage or use 'system' as default
+  // Get style from local storage or use 'light' as default
   let storedStyle =
-    localStorage.getItem('templateCustomizer-' + templateName + '--Theme') || //if no template style then use Customizer style
-    (window.templateCustomizer?.settings?.defaultStyle ?? document.documentElement.getAttribute('data-bs-theme')); //!if there is no Customizer then use default style as light
+    localStorage.getItem('templateCustomizer-' + (window.templateName || 'front-page') + '--Theme') || //if no template style then use Customizer style
+    (window.templateCustomizer?.settings?.defaultTheme ?? document.documentElement.getAttribute('data-bs-theme')) || //!if there is no Customizer then use default style
+    'light'; // final fallback
+  console.log('Front-Main: storedStyle identified as:', storedStyle);
 
   let styleSwitcher = document.querySelector('.dropdown-style-switcher');
-  const styleSwitcherIcon = styleSwitcher.querySelector('i');
+  let styleSwitcherIcon = styleSwitcher ? styleSwitcher.querySelector('i') : null;
 
-  new bootstrap.Tooltip(styleSwitcherIcon, {
-    title: storedStyle.charAt(0).toUpperCase() + storedStyle.slice(1) + ' Mode',
-    fallbackPlacements: ['bottom']
-  });
+  if (styleSwitcherIcon && storedStyle) {
+    new bootstrap.Tooltip(styleSwitcherIcon, {
+      title: storedStyle.charAt(0).toUpperCase() + storedStyle.slice(1) + ' Mode',
+      fallbackPlacements: ['bottom']
+    });
+  }
 
   // Run switchImage function based on the stored style
   window.Helpers.switchImage(storedStyle);
@@ -116,13 +122,16 @@ window.isDarkStyle = window.Helpers.isDarkStyle();
   getScrollbarWidth();
 
   //Style Switcher (Light/Dark/System Mode)
-  window.addEventListener('DOMContentLoaded', () => {
-    window.Helpers.showActiveTheme(window.Helpers.getPreferredTheme());
+  let initThemeSwitcher = () => {
+    const theme = window.Helpers.getStoredTheme(window.templateName) || window.Helpers.getPreferredTheme();
+    window.Helpers.setTheme(theme);
+    window.Helpers.showActiveTheme(theme);
     getScrollbarWidth();
-    document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+    const toggles = document.querySelectorAll('[data-bs-theme-value]');
+    toggles.forEach(toggle => {
       toggle.addEventListener('click', () => {
         const theme = toggle.getAttribute('data-bs-theme-value');
-        window.Helpers.setStoredTheme(templateName, theme);
+        window.Helpers.setStoredTheme(window.templateName, theme);
         window.Helpers.setTheme(theme);
         window.Helpers.showActiveTheme(theme, true);
         window.Helpers.syncCustomOptions(theme);
@@ -130,14 +139,32 @@ window.isDarkStyle = window.Helpers.isDarkStyle();
         if (theme === 'system') {
           currTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
-        new bootstrap.Tooltip(styleSwitcherIcon, {
-          title: theme.charAt(0).toUpperCase() + theme.slice(1) + ' Mode',
-          fallbackPlacements: ['bottom']
-        });
+        const styleSwitcher = document.querySelector('.dropdown-style-switcher');
+        const icon = styleSwitcher ? styleSwitcher.querySelector('i') : null;
+        if (icon) {
+          if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            try {
+              const tooltip = bootstrap.Tooltip.getInstance(icon);
+              if (tooltip) {
+                tooltip.dispose();
+              }
+              new bootstrap.Tooltip(icon, {
+                title: theme.charAt(0).toUpperCase() + theme.slice(1) + ' Mode',
+                fallbackPlacements: ['bottom']
+              });
+            } catch (e) { }
+          }
+        }
         window.Helpers.switchImage(currTheme);
       });
     });
-  });
+  };
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initThemeSwitcher);
+  } else {
+    initThemeSwitcher();
+  }
 
   // Accordion active class and previous-active class
   const accordionActiveFunction = function (e) {

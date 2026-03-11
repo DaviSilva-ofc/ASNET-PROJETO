@@ -1,0 +1,229 @@
+@page
+@model AspnetCoreStarter.Pages.Admin.InfrastructureModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Gestão de Infraestrutura";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Infraestrutura</h4>
+
+    <div class="row">
+        <!-- Coluna Agrupamentos -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">Agrupamentos</h5>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalAgrupamento">Novo</button>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in Model.Agrupamentos)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                @item.Name
+                                <form method="post" asp-page-handler="DeleteAgrupamento" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
+                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Escolas -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">Escolas</h5>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalEscola">Novo</button>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in Model.Schools)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@item.Name</strong><br/>
+                                    <small class="text-muted">@(item.Agrupamento?.Name ?? "Sem Agrupamento")</small>
+                                </div>
+                                <form method="post" asp-page-handler="DeleteSchool" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
+                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Coluna Blocos -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">Blocos</h5>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalBloco">Novo</button>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in Model.Blocos)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@item.Name</strong><br/>
+                                    <small class="text-muted">@item.School?.Name</small>
+                                </div>
+                                <form method="post" asp-page-handler="DeleteBloco" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
+                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Salas -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white">Salas</h5>
+                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalSala">Novo</button>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in Model.Salas)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@item.Name</strong><br/>
+                                    <small class="text-muted">@item.Block?.Name</small>
+                                </div>
+                                <form method="post" asp-page-handler="DeleteSala" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
+                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="modalAgrupamento" tabindex="-1" aria-hidden="true">
+        <!-- ... (sem alterações) ... -->
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="AddAgrupamento" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Agrupamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Agrupamento</label>
+                        <input type="text" asp-for="NewAgrupamentoName" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEscola" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="AddSchool" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova Escola</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Escola</label>
+                        <input type="text" asp-for="NewSchoolName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Localização</label>
+                        <input type="text" asp-for="NewSchoolAddress" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Agrupamento</label>
+                        <select asp-for="SelectedAgrupamentoId" class="form-select">
+                            <option value="">-- Sem Agrupamento --</option>
+                            @foreach (var item in Model.Agrupamentos)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalBloco" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="AddBloco" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo Bloco</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Bloco</label>
+                        <input type="text" asp-for="NewBlocoName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Escola</label>
+                        <select asp-for="SelectedSchoolId" class="form-select" required>
+                            @foreach (var item in Model.Schools)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalSala" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="AddSala" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nova Sala</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Sala</label>
+                        <input type="text" asp-for="NewSalaName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bloco</label>
+                        <select asp-for="SelectedBlocoId" class="form-select" required>
+                            @foreach (var item in Model.Blocos)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -10,10 +10,10 @@
   <!-- Core CSS -->
   <link rel="stylesheet" href="~/vendor/css/core.dist.css" />
   <link rel="stylesheet" href="~/css/demo.css" />
+  <link rel="stylesheet" href="~/vendor/css/pages/front-page.dist.css" />
+  <link rel="stylesheet" href="~/vendor/css/pages/front-page-landing.dist.css" />
 
   <link rel="stylesheet" href="~/vendor/libs/pickr/pickr-themes.dist.css" />
-
-  <link rel="stylesheet" href="~/vendor/css/pages/front-page.dist.css" />
 
   <!-- Application stylesheets -->
   <link rel="stylesheet" href="~/css/site.dist.css" />
@@ -23,17 +23,34 @@
 <environment exclude="Development">
   <!-- Fonts & Flag icons -->
   <link rel="stylesheet" href="~/vendor/fonts/iconify-icons.dist.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/vendor/libs/node-waves/node-waves.dist.css" asp-append-version="true" />
 
   <!-- Core CSS -->
   <link rel="stylesheet" href="~/vendor/css/core.dist.css" asp-append-version="true" />
   <link rel="stylesheet" href="~/css/demo.css" asp-append-version="true" />
-  <link rel="stylesheet" href="~/vendor/libs/node-waves/node-waves.dist.css" asp-append-version="true" />
-  <link rel="stylesheet" href="~/vendor/libs/pickr/pickr-themes.dist.css" asp-append-version="true" />
-
-  <link rel="stylesheet" href="~/vendor/libs/node-waves/node-waves.dist.css" asp-append-version="true" />
   <link rel="stylesheet" href="~/vendor/css/pages/front-page.dist.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/vendor/css/pages/front-page-landing.dist.css" asp-append-version="true" />
+
+  <link rel="stylesheet" href="~/vendor/libs/pickr/pickr-themes.dist.css" asp-append-version="true" />
 
   <!-- Application stylesheets -->
   <link rel="stylesheet" href="~/css/site.dist.css" asp-append-version="true" />
   <link rel="stylesheet" href="~/css/asnet-theme.css" asp-append-version="true" />
+<style>
+/* Responsive tweaks for laptop screens */
+@@media (max-width: 1366px) {
+  .layout-navbar .navbar-brand {
+    font-size: 1rem;
+  }
+  .layout-menu {
+    width: 250px;
+  }
+  .layout-page {
+    margin-left: 250px;
+  }
+  .layout-menu .menu-inner .menu-item .menu-link {
+    padding: 0.5rem 1rem;
+  }
+}
+</style>
 </environment>
