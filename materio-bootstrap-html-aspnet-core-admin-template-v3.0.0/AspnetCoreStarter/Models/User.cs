@@ -18,12 +18,16 @@ namespace AspnetCoreStarter.Models
 
         [Required]
         [EmailAddress]
-        [MaxLength(200)]
         [Column("email")]
         public string Email { get; set; }
 
-        [Required]
         [Column("palavra_passe")]
+        [Required]
+        [MaxLength(255)]
+        public string Password { get; set; } // Map to 'palavra_passe'
+
+        // We use PasswordHash for our logic as requested by the user's schema additions
+        [Required]
         public string PasswordHash { get; set; }
 
         [Column("ProfilePhotoPath")]
@@ -39,10 +43,6 @@ namespace AspnetCoreStarter.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("status_conta")]
-        [MaxLength(50)]
-        public string AccountStatus { get; set; } = "Pendente";
-
-        [Column("cargo")]
         [MaxLength(50)]
         public string Role { get; set; } = "User";
     }

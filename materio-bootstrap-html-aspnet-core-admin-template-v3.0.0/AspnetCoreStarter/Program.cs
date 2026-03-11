@@ -52,12 +52,19 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
+        Console.WriteLine("Tentando aplicar migrações na base de dados...");
         context.Database.Migrate();
+        Console.WriteLine("Base de dados atualizada com sucesso.");
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Ocorreu um erro ao criar a base de dados ou tabelas.");
+        Console.WriteLine($"ERRO CRÍTICO NA BASE DE DADOS: {ex.Message}");
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+        }
     }
 }
 

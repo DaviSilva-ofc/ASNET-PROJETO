@@ -45,39 +45,8 @@ namespace AspnetCoreStarter.Pages.Auth
                 return Page();
             }
 
-            // Procurar por email ou username
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);
-
-            if (user != null && BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
+            try
             {
-                // Login com sucesso - Criar Claims
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role)
-                };
-
-                if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
-                {
-                    claims.Add(new Claim("ProfilePhoto", user.ProfilePhotoPath));
-                }
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = RememberMe,
-                    ExpiresUtc = RememberMe ? DateTimeOffset.UtcNow.AddDays(30) : null
-                };
-
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties);
-
-                // Manter compatibilidade com sessões se necessário para layouts legados
                 HttpContext.Session.SetString("UserId", user.Id.ToString());
                 HttpContext.Session.SetString("Username", user.Username);
 
@@ -88,9 +57,11 @@ namespace AspnetCoreStarter.Pages.Auth
 
                 return RedirectToPage("/frontpages/LandingPage");
             }
-
-            ErrorMessage = "Email ou palavra-passe incorretos.";
-            return Page();
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Erro ao tentar iniciar sessão: {ex.Message}";
+                return Page();
+            }
         }
     }
 }

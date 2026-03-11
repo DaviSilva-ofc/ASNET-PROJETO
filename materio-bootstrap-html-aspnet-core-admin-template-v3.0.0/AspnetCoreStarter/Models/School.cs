@@ -38,14 +38,5 @@ namespace AspnetCoreStarter.Models
 
         [Column("RegisteredAt")]
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
-
-        [Column("id_agrupamento")]
-        public int? AgrupamentoId { get; set; }
-
-        [ForeignKey("AgrupamentoId")]
-        public Agrupamento? Agrupamento { get; set; }
-
-        // Relation to users (Teachers)
-        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }

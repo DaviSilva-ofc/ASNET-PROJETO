@@ -27,6 +27,7 @@
     <None Update="User.Data.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Remove="check_users.cs" />
   </ItemGroup>
 
 </Project>

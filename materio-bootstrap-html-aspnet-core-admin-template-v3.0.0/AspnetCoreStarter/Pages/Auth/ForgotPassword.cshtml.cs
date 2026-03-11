@@ -65,9 +65,9 @@ namespace AspnetCoreStarter.Pages.Auth
                     Message = "Enviámos um link de recuperação para o seu email. Por favor, verifique a sua caixa de entrada.";
                     ErrorMessage = null;
                 }
-                catch (System.Exception)
+                catch (System.Exception ex)
                 {
-                    ErrorMessage = "Houve um erro ao tentar enviar o email. Por favor, tente novamente mais tarde ou contacte o suporte.";
+                    ErrorMessage = $"Erro ao enviar e-mail: {ex.Message}";
                     Message = null;
                 }
             }

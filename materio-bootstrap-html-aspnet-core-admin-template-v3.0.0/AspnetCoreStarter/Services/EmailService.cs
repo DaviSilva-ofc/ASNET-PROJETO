@@ -41,8 +41,17 @@ namespace AspnetCoreStarter.Services
             }
             catch (System.Exception ex)
             {
-                // Rethrow or log properly. For now, we want the UI to catch it.
-                throw new System.Exception("Falha ao enviar e-mail. Verifique as configurações de SMTP no appsettings.json.", ex);
+                // Fallback: Log to console so the user can see the email content (e.g. reset link) in the terminal
+                System.Console.WriteLine("------ SIMULATED EMAIL START ------");
+                System.Console.WriteLine($"Para: {email}");
+                System.Console.WriteLine($"Assunto: {subject}");
+                System.Console.WriteLine($"Corpo: {message}");
+                System.Console.WriteLine("------ SIMULATED EMAIL END ------");
+                System.Console.WriteLine($"Erro SMTP detalhado: {ex.Message}");
+
+                // Do not throw in development if we want the user to see a "success" message but check the terminal
+                // Or throw a clearer message. Let's throw a message that explains how to check the terminal.
+                throw new System.Exception("O envio de email real falhou (verifique as credenciais no appsettings.json). No entanto, o link de recuperação foi impresso na consola/terminal do seu VS Code para que possa continuar a testar.", ex);
             }
         }
     }

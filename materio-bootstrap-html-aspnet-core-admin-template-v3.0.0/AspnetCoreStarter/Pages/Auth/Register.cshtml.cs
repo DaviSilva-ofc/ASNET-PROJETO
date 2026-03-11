@@ -68,18 +68,32 @@ namespace AspnetCoreStarter.Pages.Auth
             }
 
             // Criar utilizador
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Input.Password);
             var user = new User
             {
                 Username = Input.Username,
                 Email = Input.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(Input.Password),
+                Password = hashedPassword, // Map to 'palavra_passe'
+                PasswordHash = hashedPassword, // Map to 'PasswordHash'
                 ProfilePhotoPath = photoPath
             };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return RedirectToPage("/Auth/Login");
+            try
+            {
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                return RedirectToPage("/Auth/Login");
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException dbEx)
+            {
+                ErrorMessage = $"Erro ao gravar na base de dados: {dbEx.InnerException?.Message ?? dbEx.Message}";
+                return Page();
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Ocorreu um erro inesperado: {ex.Message}";
+                return Page();
+            }
         }
     }
 }
