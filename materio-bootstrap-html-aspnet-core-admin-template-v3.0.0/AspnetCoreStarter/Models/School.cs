@@ -34,7 +34,10 @@ namespace AspnetCoreStarter.Models
 
         [MaxLength(100)]
         [Column("Grouping")]
-        public string? Grouping { get; set; }
+        public int? AgrupamentoId { get; set; }
+
+        [ForeignKey("AgrupamentoId")]
+        public virtual Agrupamento? Agrupamento { get; set; }
 
         [Column("RegisteredAt")]
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;

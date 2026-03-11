@@ -44,7 +44,7 @@ namespace AspnetCoreStarter.Models
 
         [Column("status_conta")]
         [MaxLength(50)]
-        public string Role { get; set; } = "User";
+        public string AccountStatus { get; set; } = "Pendente";
     }
 }
 

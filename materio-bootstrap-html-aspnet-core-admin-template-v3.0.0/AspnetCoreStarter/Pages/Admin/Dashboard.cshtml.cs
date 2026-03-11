@@ -19,7 +19,7 @@ namespace AspnetCoreStarter.Pages.Admin
             _context = context;
         }
 
-        public List<User> PendingUsers { get; set; }
+        public List<AspnetCoreStarter.Models.User> PendingUsers { get; set; }
         public int TotalUsers { get; set; }
         public int TotalSchools { get; set; }
         public int TotalEquipments { get; set; }
@@ -48,10 +48,10 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnPostApproveAsync(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
+            var userFound = await _context.Users.FindAsync(id);
+            if (userFound != null)
             {
-                user.AccountStatus = "Ativo";
+                userFound.AccountStatus = "Ativo";
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage();
@@ -59,10 +59,10 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnPostRejectAsync(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
+            var userFound = await _context.Users.FindAsync(id);
+            if (userFound != null)
             {
-                user.AccountStatus = "Rejeitado";
+                userFound.AccountStatus = "Rejeitado";
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage();
