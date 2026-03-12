@@ -21,11 +21,22 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public List<AspnetCoreStarter.Models.User> PendingUsers { get; set; }
         public int TotalUsers { get; set; }
-        public int TotalSchools { get; set; }
-        public int TotalEquipments { get; set; }
-        public int TotalSalas { get; set; }
-        public int TotalBlocos { get; set; }
-        public int TotalAgrupamentos { get; set; }
+        public int ExpiringContractsCount { get; set; }
+        public int PendingTicketsCount { get; set; }
+        public int LowStockAlertsCount { get; set; }
+        public int TotalUnreadMessages { get; set; }
+        public List<AspnetCoreStarter.Models.User> RecentMessageSenders { get; set; }
+
+        public int TicketsPedidoCount { get; set; }
+        public int TicketsConcluidoCount { get; set; }
+        public int TicketsPendenteCount { get; set; }
+
+        public List<int> LineChartPedidosData { get; set; }
+        public List<int> LineChartPendentesData { get; set; }
+        public List<int> LineChartConcluidosData { get; set; }
+        public List<string> LineChartLabels { get; set; }
+
+        public string ClientLocationsJson { get; set; }
 
         // Infrastructure tree data
         public List<Agrupamento> Agrupamentos { get; set; }
@@ -54,11 +65,35 @@ namespace AspnetCoreStarter.Pages.Admin
 
             // Totals
             TotalUsers = await _context.Users.CountAsync();
-            TotalSchools = await _context.Schools.CountAsync();
-            TotalEquipments = await _context.Equipamentos.CountAsync();
-            TotalSalas = await _context.Salas.CountAsync();
-            TotalBlocos = await _context.Blocos.CountAsync();
-            TotalAgrupamentos = await _context.Agrupamentos.CountAsync();
+            
+            // New Metrics Logic
+            // 1. Contratos a expirar (using Periodo string - temporary logic: count all for now)
+            // Note: In a real scenario, we'd parse the 'Periodo' string to check expiration.
+            ExpiringContractsCount = await _context.Contratos.CountAsync(); 
+
+            // 2. Tickets pendentes (Tickets with status Pendente or no technician assigned)
+            PendingTicketsCount = await _context.Tickets
+                .Where(t => t.Status == "Pendente" || t.TechnicianId == null)
+                .CountAsync();
+
+            LowStockAlertsCount = await _context.StockEmpresa
+                .Where(s => !s.IsAvailable)
+                .CountAsync();
+
+            // 4. Chat Notifications (Unread messages for the current admin)
+            int currentUserId = int.Parse(userId);
+            var unreadMessages = await _context.Mensagens
+                .Include(m => m.Sender)
+                .Where(m => m.ReceiverId == currentUserId && !m.IsRead)
+                .ToListAsync();
+
+            TotalUnreadMessages = unreadMessages.Count;
+            RecentMessageSenders = unreadMessages
+                .Select(m => m.Sender)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .Take(5)
+                .ToList();
 
             // Infrastructure tree data
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
@@ -66,7 +101,7 @@ namespace AspnetCoreStarter.Pages.Admin
             AllBlocos = await _context.Blocos.Include(b => b.School).ToListAsync();
             AllSalas = await _context.Salas.Include(s => s.Block).ToListAsync();
 
-            // Per-school equipment counts for bar chart
+            // Per-school equipment counts for bar chart (keeping logic intact if needed elsewhere, though chart is removed)
             SchoolNames = new List<string>();
             SchoolEquipmentCounts = new List<int>();
 
@@ -87,6 +122,32 @@ namespace AspnetCoreStarter.Pages.Admin
                     .CountAsync();
                 SchoolEquipmentCounts.Add(equipCount);
             }
+
+            // Ticket Status Chart Data
+            TicketsPedidoCount = await _context.Tickets.CountAsync(t => t.Status == "Pedido");
+            TicketsConcluidoCount = await _context.Tickets.CountAsync(t => t.Status == "Concluido");
+            TicketsPendenteCount = await _context.Tickets.CountAsync(t => t.Status == "Pendente");
+
+            // Line Chart Data grouped by Level
+            var allTickets = await _context.Tickets.ToListAsync();
+            LineChartLabels = new List<string> { "Baixo", "Medio", "Alto" };
+            LineChartPedidosData = new List<int>();
+            LineChartPendentesData = new List<int>();
+            LineChartConcluidosData = new List<int>();
+
+            foreach (var label in LineChartLabels)
+            {
+                LineChartPedidosData.Add(allTickets.Count(t => t.Level == label && t.Status == "Pedido"));
+                LineChartPendentesData.Add(allTickets.Count(t => t.Level == label && t.Status == "Pendente"));
+                LineChartConcluidosData.Add(allTickets.Count(t => t.Level == label && t.Status == "Concluido"));
+            }
+
+            // Client Locations for Map
+            var locations = await _context.Schools
+                .Where(s => !string.IsNullOrEmpty(s.Address))
+                .Select(s => new { name = s.Name, address = s.Address })
+                .ToListAsync();
+            ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locations);
 
             return Page();
         }

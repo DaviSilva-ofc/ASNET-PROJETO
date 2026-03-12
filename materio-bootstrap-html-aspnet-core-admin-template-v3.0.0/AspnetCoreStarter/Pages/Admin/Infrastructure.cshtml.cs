@@ -43,6 +43,16 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty]
         public int SelectedBlocoId { get; set; }
 
+        // Edit Properties
+        [BindProperty]
+        public int EditId { get; set; }
+        [BindProperty]
+        public string EditName { get; set; }
+        [BindProperty]
+        public string EditAddress { get; set; }
+        [BindProperty]
+        public int? EditParentId { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -142,6 +152,55 @@ namespace AspnetCoreStarter.Pages.Admin
             if (item != null)
             {
                 _context.Salas.Remove(item);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
+        }
+
+        // --- Edit Handlers ---
+        public async Task<IActionResult> OnPostEditAgrupamentoAsync()
+        {
+            var item = await _context.Agrupamentos.FindAsync(EditId);
+            if (item != null && !string.IsNullOrEmpty(EditName))
+            {
+                item.Name = EditName;
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditSchoolAsync()
+        {
+            var item = await _context.Schools.FindAsync(EditId);
+            if (item != null && !string.IsNullOrEmpty(EditName))
+            {
+                item.Name = EditName;
+                item.Address = EditAddress ?? "N/A";
+                item.AgrupamentoId = EditParentId;
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditBlocoAsync()
+        {
+            var item = await _context.Blocos.FindAsync(EditId);
+            if (item != null && !string.IsNullOrEmpty(EditName) && EditParentId.HasValue)
+            {
+                item.Name = EditName;
+                item.SchoolId = EditParentId.Value;
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditSalaAsync()
+        {
+            var item = await _context.Salas.FindAsync(EditId);
+            if (item != null && !string.IsNullOrEmpty(EditName) && EditParentId.HasValue)
+            {
+                item.Name = EditName;
+                item.BlockId = EditParentId.Value;
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage();

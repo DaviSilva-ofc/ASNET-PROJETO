@@ -18,5 +18,9 @@ namespace AspnetCoreStarter.Data
         public DbSet<Equipamento> Equipamentos { get; set; }
         public DbSet<Administrador> Administradores { get; set; }
         public DbSet<Contrato> Contratos { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<StockEmpresa> StockEmpresa { get; set; }
+        public DbSet<StockTecnico> StockTecnico { get; set; }
+        public DbSet<Mensagem> Mensagens { get; set; }
     }
 }

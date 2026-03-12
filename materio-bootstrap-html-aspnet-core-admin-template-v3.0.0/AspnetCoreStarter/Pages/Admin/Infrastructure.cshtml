@@ -22,9 +22,16 @@
                         {
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 @item.Name
-                                <form method="post" asp-page-handler="DeleteAgrupamento" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
-                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
-                                </form>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditAgrupamento(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))')" title="Editar">
+                                        ✏️
+                                    </button>
+                                    <form method="post" asp-page-handler="DeleteAgrupamento" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
+                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
                             </li>
                         }
                     </ul>
@@ -48,9 +55,16 @@
                                     <strong>@item.Name</strong><br/>
                                     <small class="text-muted">@(item.Agrupamento?.Name ?? "Sem Agrupamento")</small>
                                 </div>
-                                <form method="post" asp-page-handler="DeleteSchool" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
-                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
-                                </form>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditSchool(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))', '@Html.Raw((item.Address ?? "").Replace("'", "\\'"))', @(item.AgrupamentoId.HasValue ? item.AgrupamentoId.Value.ToString() : "null"))" title="Editar">
+                                        ✏️
+                                    </button>
+                                    <form method="post" asp-page-handler="DeleteSchool" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
+                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
                             </li>
                         }
                     </ul>
@@ -76,9 +90,16 @@
                                     <strong>@item.Name</strong><br/>
                                     <small class="text-muted">@item.School?.Name</small>
                                 </div>
-                                <form method="post" asp-page-handler="DeleteBloco" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
-                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
-                                </form>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditBloco(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))', @item.SchoolId)" title="Editar">
+                                        ✏️
+                                    </button>
+                                    <form method="post" asp-page-handler="DeleteBloco" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
+                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
                             </li>
                         }
                     </ul>
@@ -102,9 +123,16 @@
                                     <strong>@item.Name</strong><br/>
                                     <small class="text-muted">@item.Block?.Name</small>
                                 </div>
-                                <form method="post" asp-page-handler="DeleteSala" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
-                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
-                                </form>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditSala(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))', @item.BlockId)" title="Editar">
+                                        ✏️
+                                    </button>
+                                    <form method="post" asp-page-handler="DeleteSala" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
+                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
                             </li>
                         }
                     </ul>
@@ -226,4 +254,160 @@
             </form>
         </div>
     </div>
+
+    <!-- Edit Modals -->
+    <!-- Modal Edit Agrupamento -->
+    <div class="modal fade" id="modalEditAgrupamento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="EditAgrupamento" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Agrupamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditId" id="editAgrupamentoId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Agrupamento</label>
+                        <input type="text" asp-for="EditName" id="editAgrupamentoName" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit Escola -->
+    <div class="modal fade" id="modalEditEscola" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="EditSchool" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Escola</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditId" id="editEscolaId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Escola</label>
+                        <input type="text" asp-for="EditName" id="editEscolaName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Localização</label>
+                        <input type="text" asp-for="EditAddress" id="editEscolaAddress" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Agrupamento</label>
+                        <select asp-for="EditParentId" id="editEscolaAgrupamentoId" class="form-select">
+                            <option value="">-- Sem Agrupamento --</option>
+                            @foreach (var item in Model.Agrupamentos)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit Bloco -->
+    <div class="modal fade" id="modalEditBloco" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="EditBloco" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Bloco</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditId" id="editBlocoId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Bloco</label>
+                        <input type="text" asp-for="EditName" id="editBlocoName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Escola</label>
+                        <select asp-for="EditParentId" id="editBlocoEscolaId" class="form-select" required>
+                            @foreach (var item in Model.Schools)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit Sala -->
+    <div class="modal fade" id="modalEditSala" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="EditSala" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Sala</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditId" id="editSalaId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Sala</label>
+                        <input type="text" asp-for="EditName" id="editSalaName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bloco</label>
+                        <select asp-for="EditParentId" id="editSalaBlocoId" class="form-select" required>
+                            @foreach (var item in Model.Blocos)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
+
+<script>
+    function openEditAgrupamento(id, name) {
+        document.getElementById('editAgrupamentoId').value = id;
+        document.getElementById('editAgrupamentoName').value = name;
+        var modal = new bootstrap.Modal(document.getElementById('modalEditAgrupamento'));
+        modal.show();
+    }
+
+    function openEditSchool(id, name, address, agrupamentoId) {
+        document.getElementById('editEscolaId').value = id;
+        document.getElementById('editEscolaName').value = name;
+        document.getElementById('editEscolaAddress').value = address;
+        document.getElementById('editEscolaAgrupamentoId').value = agrupamentoId || '';
+        var modal = new bootstrap.Modal(document.getElementById('modalEditEscola'));
+        modal.show();
+    }
+
+    function openEditBloco(id, name, schoolId) {
+        document.getElementById('editBlocoId').value = id;
+        document.getElementById('editBlocoName').value = name;
+        document.getElementById('editBlocoEscolaId').value = schoolId;
+        var modal = new bootstrap.Modal(document.getElementById('modalEditBloco'));
+        modal.show();
+    }
+
+    function openEditSala(id, name, blocoId) {
+        document.getElementById('editSalaId').value = id;
+        document.getElementById('editSalaName').value = name;
+        document.getElementById('editSalaBlocoId').value = blocoId;
+        var modal = new bootstrap.Modal(document.getElementById('modalEditSala'));
+        modal.show();
+    }
+</script>
