@@ -5,141 +5,351 @@
     ViewData["Title"] = "Gestão de Infraestrutura";
 }
 
+@section VendorStyles {
+<link rel="stylesheet" href="~/vendor/libs/notyf/notyf.dist.css" />
+}
+
+@section PageStyles {
+<style>
+    .dark-style .card-header h5,
+    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+    
+    .dark-style .list-group-item,
+    [data-bs-theme="dark"] .list-group-item {
+        background-color: transparent;
+        color: #cbcbe2;
+        border-color: rgba(255,255,255,0.1);
+    }
+    
+    .dark-style .text-muted,
+    [data-bs-theme="dark"] .text-muted { color: #a1acb8 !important; }
+
+    .dark-style .card,
+    [data-bs-theme="dark"] .card {
+        background-color: #2b2c40;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
+    }
+
+    .dark-style h4.fw-bold,
+    [data-bs-theme="dark"] h4.fw-bold { color: #f5f5f9 !important; }
+
+    /* New Styles for Client Dashboard */
+    .bg-light-section {
+        background-color: rgba(67, 89, 113, 0.02);
+        transition: all 0.3s ease;
+    }
+    .dark-style .bg-light-section,
+    [data-bs-theme="dark"] .bg-light-section {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .bg-light-section:hover {
+        background-color: rgba(67, 89, 113, 0.05);
+    }
+    .dark-style .bg-light-section:hover,
+    [data-bs-theme="dark"] .bg-light-section:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .infra-tree .tree-node {
+        position: relative;
+        padding: 4px 0;
+    }
+
+    .tree-node i {
+        font-size: 1.1rem;
+        vertical-align: middle;
+        opacity: 0.8;
+    }
+
+    .cursor-pointer { cursor: pointer; }
+
+    /* Animation for arrows */
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        font-weight: bold;
+        color: var(--bs-primary);
+        font-size: 1.4rem;
+        display: inline-block;
+        line-height: 1;
+        background-color: rgba(105, 108, 255, 0.15);
+        border: 1px solid rgba(105, 108, 255, 0.3);
+        border-radius: 4px;
+        padding: 4px;
+        margin-right: 8px;
+    }
+    
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background-color: var(--bs-primary);
+        color: #fff;
+    }
+
+    .dark-style [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .dark-style [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        background-color: #696cff;
+        color: #fff;
+    }
+
+    .agrupamento-node { color: var(--bs-primary); }
+    .school-node { color: var(--bs-success); }
+    .bloc-node { color: var(--bs-info); }
+    .room-node { color: var(--bs-warning); }
+    .director-node { color: #8592a3; }
+    .equip-node { color: #a1acb8; }
+    
+    /* Icon Base Fix */
+    .icon-base {
+        font-size: 1.25rem;
+        vertical-align: middle;
+        line-height: 1;
+    }
+
+    .tree-node i.ri-arrow-right-s-line, 
+    .tree-node i.ri-arrow-down-s-line {
+        background-color: rgba(105, 108, 255, 0.1);
+        border-radius: 4px;
+        padding: 4px;
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+    
+    .collapse.show + .d-flex i.ri-arrow-right-s-line,
+    [aria-expanded="true"] i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background-color: #696cff;
+        color: white;
+    }
+
+    .dark-style .agrupamento-node { color: #696cff; }
+    .dark-style .school-node { color: #71dd37; }
+    .dark-style .bloc-node { color: #03c3ec; }
+    .dark-style .room-node { color: #ffab00; }
+    .dark-style .director-node { color: #e1e1e3; }
+    .dark-style .equip-node { color: #707186; }
+
+    /* Fix for header buttons visibility */
+    .edit-header-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        padding: 5px;
+        border-radius: 0.375rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .edit-header-btn:hover {
+        background-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .edit-header-btn i {
+        font-size: 1.3rem !important;
+        display: block;
+        color: white !important;
+    }
+</style>
+}
+
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Infraestrutura</h4>
+    <div class="mb-4">
+        <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Admin /</span> Clientes</h4>
+    </div>
 
-    <div class="row">
-        <!-- Coluna Agrupamentos -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-white">Agrupamentos</h5>
-                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalAgrupamento">Novo</button>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @foreach (var item in Model.Agrupamentos)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                @item.Name
-                                <div class="d-flex gap-2 flex-shrink-0">
-                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditAgrupamento(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))')" title="Editar">
-                                        ✏️
-                                    </button>
-                                    <form method="post" asp-page-handler="DeleteAgrupamento" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
-                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
-                                            🗑️
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- Coluna Escolas -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-white">Escolas</h5>
-                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalEscola">Novo</button>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @foreach (var item in Model.Schools)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@item.Name</strong><br/>
-                                    <small class="text-muted">@(item.Agrupamento?.Name ?? "Sem Agrupamento")</small>
-                                </div>
-                                <div class="d-flex gap-2 flex-shrink-0">
-                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditSchool(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))', '@Html.Raw((item.Address ?? "").Replace("'", "\\'"))', @(item.AgrupamentoId.HasValue ? item.AgrupamentoId.Value.ToString() : "null"))" title="Editar">
-                                        ✏️
-                                    </button>
-                                    <form method="post" asp-page-handler="DeleteSchool" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
-                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
-                                            🗑️
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        }
-                    </ul>
+    <!-- Creator Menu Card -->
+    <div class="card mb-4 border-primary shadow-sm">
+        <div class="card-body p-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                <h5 class="mb-2 mb-md-0 fw-bold text-primary"><i class="icon-base ri-tools-line me-2"></i>Gestão da Infraestrutura</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAgrupamento">
+                        <i class="icon-base ri-add-line me-1"></i> Agrupamento
+                    </button>
+                    <button class="btn btn-success btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEscola">
+                        <i class="icon-base ri-add-line me-1"></i> Escola
+                    </button>
+                    <button class="btn btn-info btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalBloco">
+                        <i class="icon-base ri-add-line me-1"></i> Bloco
+                    </button>
+                    <button class="btn btn-warning btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSala">
+                        <i class="icon-base ri-add-line me-1"></i> Sala
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+        @foreach (var client in Model.Clients)
+        {
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center cursor-pointer" 
+                         data-bs-toggle="collapse" data-bs-target="#client-@client.Agrupamento.Id">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 text-white me-3">
+                                <strong>@client.Agrupamento.Name - @client.DirectorName</strong>
+                            </h5>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="edit-header-btn" 
+                                    onclick="event.stopPropagation(); openEditAgrupamento(@client.Agrupamento.Id, '@client.Agrupamento.Name', @client.DirectorUserId)"
+                                    title="Editar Agrupamento e Diretor">
+                                ✏️
+                            </button>
+                            <i class="icon-base ri-arrow-down-s-line text-white fs-4"></i>
+                        </div>
+                    </div>
+                    <div id="client-@client.Agrupamento.Id" class="collapse show">
+                        <div class="card-body pt-4">
+                            <!-- Secções do Cliente -->
+                            <div class="row">
+                                <!-- Coluna Tickets -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer" 
+                                             data-bs-toggle="collapse" data-bs-target="#tickets-@client.Agrupamento.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-ticket-2-line me-2"></i>Tickets</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="tickets-@client.Agrupamento.Id" class="collapse show">
+                                            <h3 class="mb-1 text-primary">@client.TicketCount</h3>
+                                            <p class="text-muted small mb-2">Tickets ativos em todas as escolas</p>
+                                            <a asp-page="./Tickets" asp-route-agrupamentoId="@client.Agrupamento.Id" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                                Gerir Tickets
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
 
-    <div class="row">
-        <!-- Coluna Blocos -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-white">Blocos</h5>
-                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalBloco">Novo</button>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @foreach (var item in Model.Blocos)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@item.Name</strong><br/>
-                                    <small class="text-muted">@item.School?.Name</small>
+                                <!-- Coluna Contratos -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer" 
+                                             data-bs-toggle="collapse" data-bs-target="#contracts-@client.Agrupamento.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-file-list-3-line me-2"></i>Contratos</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="contracts-@client.Agrupamento.Id" class="collapse show">
+                                            <h3 class="mb-1 text-success">@client.ContractCount</h3>
+                                            <p class="text-muted small mb-2">Contratos registados para este agrupamento</p>
+                                            <a asp-page="./Contracts" asp-route-agrupamentoId="@client.Agrupamento.Id" class="btn btn-sm btn-outline-success w-100 mt-2">
+                                                Gerir Contratos
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="d-flex gap-2 flex-shrink-0">
-                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditBloco(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))', @item.SchoolId)" title="Editar">
-                                        ✏️
-                                    </button>
-                                    <form method="post" asp-page-handler="DeleteBloco" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
-                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
-                                            🗑️
-                                        </button>
-                                    </form>
+
+                                <!-- Coluna Agrupamento (Árvore) -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer" 
+                                             data-bs-toggle="collapse" data-bs-target="#infra-@client.Agrupamento.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-node-tree me-2"></i>Agrupamento</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="infra-@client.Agrupamento.Id" class="collapse show mt-3">
+                                            <div class="infra-tree">
+                                                <div class="tree-node director-node mb-2 d-flex align-items-center">
+                                                    <i class="icon-base ri-user-star-line me-1"></i> <strong>Diretor: @client.DirectorName</strong>
+                                                    <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
+                                                            onclick="openEditDirector(@client.DirectorUserId, '@client.DirectorName')"
+                                                            title="Editar Nome do Diretor">
+                                                        <i class="tf-icons ri-edit-line small"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="tree-node agrupamento-node">
+                                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-schools-@client.Agrupamento.Id">
+                                                        <i class="icon-base ri-arrow-right-s-line"></i>
+                                                        <i class="icon-base ri-community-line me-1"></i> <strong>@client.Agrupamento.Name</strong>
+                                                    </div>
+                                                    
+                                                    <div id="tree-schools-@client.Agrupamento.Id" class="collapse">
+                                                        @{ var schools = client.Schools; }
+                                                        @foreach (var schoolVm in schools)
+                                                        {
+                                                            <div class="tree-node school-node ms-4 mt-2">
+                                                                <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-blocks-@schoolVm.School.Id">
+                                                                    <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                    <i class="icon-base ri-building-line me-1"></i> <strong>@schoolVm.School.Name</strong>
+                                                                    <span class="ms-2 text-muted small">(Coord: @schoolVm.CoordinatorName)</span>
+                                                                    <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
+                                                                            onclick="event.stopPropagation(); openEditSchool(@schoolVm.School.Id, '@schoolVm.School.Name', '@schoolVm.School.Address', @client.Agrupamento.Id, @schoolVm.CoordinatorUserId)"
+                                                                            title="Editar Escola">
+                                                                        <i class="tf-icons ri-edit-line small"></i>
+                                                                    </button>
+                                                                </div>
+                                                                
+                                                                <div id="tree-blocks-@schoolVm.School.Id" class="collapse">
+                                                                    @{ var blocs = Model.Blocos.Where(b => b.SchoolId == schoolVm.School.Id).ToList(); }
+                                                                    @foreach (var bloc in blocs)
+                                                                    {
+                                                                        <div class="tree-node bloc-node ms-4 mt-1">
+                                                                            <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-rooms-@bloc.Id">
+                                                                                <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                                <i class="icon-base ri-box-3-line me-1"></i> @bloc.Name
+                                                                                <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
+                                                                                        onclick="event.stopPropagation(); openEditBloco(@bloc.Id, '@bloc.Name', @schoolVm.School.Id)"
+                                                                                        title="Editar Bloco">
+                                                                                    <i class="tf-icons ri-edit-line small"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                            
+                                                                            <div id="tree-rooms-@bloc.Id" class="collapse">
+                                                                                @{ var rooms = Model.Salas.Where(s => s.BlockId == bloc.Id).ToList(); }
+                                                                                @foreach (var room in rooms)
+                                                                                {
+                                                                                    <div class="tree-node room-node ms-4 mt-1">
+                                                                                        <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-equips-@room.Id">
+                                                                                            <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                                            <i class="icon-base ri-door-open-line me-1"></i> @room.Name
+                                                                                            <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
+                                                                                                    onclick="event.stopPropagation(); openEditSala(@room.Id, '@room.Name', @bloc.Id)"
+                                                                                                    title="Editar Sala">
+                                                                                                <i class="tf-icons ri-edit-line small"></i>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                        
+                                                                                        <div id="tree-equips-@room.Id" class="collapse">
+                                                                                            @if (room.Equipments != null && room.Equipments.Any())
+                                                                                            {
+                                                                                                @foreach (var equip in room.Equipments)
+                                                                                                {
+                                                                                                    <div class="tree-node equip-node ms-4 mt-1 small text-muted">
+                                                                                                        <i class="icon-base ri-computer-line me-1"></i> @equip.Name 
+                                                                                                    </div>
+                                                                                                }
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                <div class="ms-4 mt-1 small text-muted italic">Sem equipamentos</div>
+                                                                                            }
+                                                                                        </div>
+                                                                                    </div>
+                                                                                }
+                                                                            </div>
+                                                                        </div>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </li>
-                        }
-                    </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Coluna Salas -->
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-white">Salas</h5>
-                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modalSala">Novo</button>
-                </div>
-                <div class="card-body p-0">
-                    <ul class="list-group list-group-flush">
-                        @foreach (var item in Model.Salas)
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>@item.Name</strong><br/>
-                                    <small class="text-muted">@item.Block?.Name</small>
-                                </div>
-                                <div class="d-flex gap-2 flex-shrink-0">
-                                    <button class="btn btn-sm btn-icon btn-outline-primary" onclick="openEditSala(@item.Id, '@Html.Raw(item.Name.Replace("'", "\\'"))', @item.BlockId)" title="Editar">
-                                        ✏️
-                                    </button>
-                                    <form method="post" asp-page-handler="DeleteSala" asp-route-id="@item.Id" onsubmit="return confirm('Tens a certeza que queres excluir?');" class="m-0">
-                                        <button type="submit" class="btn btn-sm btn-icon btn-outline-danger" title="Excluir">
-                                            🗑️
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </div>
+        }
     </div>
+
 
     <!-- Modals -->
     <div class="modal fade" id="modalAgrupamento" tabindex="-1" aria-hidden="true">
@@ -186,6 +396,16 @@
                             @foreach (var item in Model.Agrupamentos)
                             {
                                 <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Coordenador</label>
+                        <select asp-for="NewSchoolCoordinatorId" class="form-select">
+                            <option value="0">-- Sem Coordenador --</option>
+                            @foreach (var coord in Model.AvailableCoordenadores)
+                            {
+                                <option value="@coord.Id">@coord.Username</option>
                             }
                         </select>
                     </div>
@@ -270,6 +490,16 @@
                         <label class="form-label">Nome do Agrupamento</label>
                         <input type="text" asp-for="EditName" id="editAgrupamentoName" class="form-control" required />
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Diretor</label>
+                        <select asp-for="EditParentId" id="editAgrupamentoDirectorUserId" class="form-select">
+                            <option value="0">-- Sem Diretor --</option>
+                            @foreach (var dir in Model.AvailableDirectors)
+                            {
+                                <option value="@dir.Id">@dir.Username</option>
+                            }
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">Guardar</button>
@@ -303,6 +533,16 @@
                             @foreach (var item in Model.Agrupamentos)
                             {
                                 <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Coordenador</label>
+                        <select asp-for="EditCoordinatorId" id="editEscolaCoordinatorId" class="form-select">
+                            <option value="0">-- Sem Coordenador --</option>
+                            @foreach (var coord in Model.AvailableCoordenadores)
+                            {
+                                <option value="@coord.Id">@coord.Username</option>
                             }
                         </select>
                     </div>
@@ -376,21 +616,50 @@
         </div>
     </div>
 
+    <!-- Modal Edit Diretor -->
+    <div class="modal fade" id="modalEditDirector" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="EditDirector" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Nome do Diretor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditId" id="editDirectorId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Diretor (Username)</label>
+                        <input type="text" asp-for="EditName" id="editDirectorName" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
+@section VendorScripts {
+<script src="~/vendor/libs/notyf/notyf.dist.js"></script>
+}
+
+@section PageScripts {
 <script>
-    function openEditAgrupamento(id, name) {
+    function openEditAgrupamento(id, name, directorUserId) {
         document.getElementById('editAgrupamentoId').value = id;
         document.getElementById('editAgrupamentoName').value = name;
+        document.getElementById('editAgrupamentoDirectorUserId').value = directorUserId || 0;
         var modal = new bootstrap.Modal(document.getElementById('modalEditAgrupamento'));
         modal.show();
     }
 
-    function openEditSchool(id, name, address, agrupamentoId) {
+    function openEditSchool(id, name, address, agrupamentoId, coordinatorId) {
         document.getElementById('editEscolaId').value = id;
         document.getElementById('editEscolaName').value = name;
         document.getElementById('editEscolaAddress').value = address;
         document.getElementById('editEscolaAgrupamentoId').value = agrupamentoId || '';
+        document.getElementById('editEscolaCoordinatorId').value = coordinatorId || 0;
         var modal = new bootstrap.Modal(document.getElementById('modalEditEscola'));
         modal.show();
     }
@@ -410,4 +679,55 @@
         var modal = new bootstrap.Modal(document.getElementById('modalEditSala'));
         modal.show();
     }
+
+    function openEditDirector(id, name) {
+        document.getElementById('editDirectorId').value = id;
+        document.getElementById('editDirectorName').value = name;
+        var modal = new bootstrap.Modal(document.getElementById('modalEditDirector'));
+        modal.show();
+    }
+
+    @* Notyf Notifications Logic *@
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.notyfInitialized) return;
+        window.notyfInitialized = true;
+
+        if (typeof Notyf !== 'undefined') {
+            const notyf = new Notyf({
+                duration: 5000,
+                position: { x: 'right', y: 'top' },
+                types: [
+                    {
+                        type: 'success',
+                        background: '#28a745',
+                        icon: { className: 'ri-checkbox-circle-fill', tagName: 'i', color: 'white' }
+                    },
+                    {
+                        type: 'error',
+                        background: '#dc3545',
+                        icon: { className: 'ri-close-circle-fill', tagName: 'i', color: 'white' }
+                    }
+                ]
+            });
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>notyf.success('@TempData["SuccessMessage"]');</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>notyf.error('@TempData["ErrorMessage"]');</text>
+            }
+        } else {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>alert('@TempData["SuccessMessage"]');</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>alert('ERRO: @TempData["ErrorMessage"]');</text>
+            }
+        }
+    });
 </script>
+}

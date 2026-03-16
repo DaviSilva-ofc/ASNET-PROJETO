@@ -23,6 +23,8 @@
         font-weight: 700;
         color: var(--asnet-navy);
     }
+    .dark-style .dash-title,
+    [data-bs-theme="dark"] .dash-title { color: #f5f5f9 !important; }
 
     /* ===== Stat mini-cards ===== */
     .stat-card {
@@ -45,7 +47,11 @@
         color: #fff;
     }
     .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; }
+    .dark-style .stat-number,
+    [data-bs-theme="dark"] .stat-number { color: #f5f5f9; }
     .stat-label  { font-size: .8rem; color: #9e9e9e; margin: 0; }
+    .dark-style .stat-label,
+    [data-bs-theme="dark"] .stat-label { color: #cbcbe2; }
 
     /* ===== Chart cards ===== */
     .chart-card {
@@ -73,8 +79,15 @@
         color: var(--asnet-navy);
         font-weight: 500;
     }
+    .dark-style .tree-tabs .nav-link,
+    [data-bs-theme="dark"] .tree-tabs .nav-link { color: #cbcbe2; }
     .tree-tabs .nav-link.active {
         background: var(--asnet-navy);
+        color: #fff;
+    }
+    .dark-style .tree-tabs .nav-link.active,
+    [data-bs-theme="dark"] .tree-tabs .nav-link.active {
+        background: var(--asnet-orange);
         color: #fff;
     }
 
@@ -95,6 +108,38 @@
         cursor: pointer;
         user-select: none;
     }
+    /* ===== Dark mode Specific Enhancements ===== */
+    .dark-style .modal-content,
+    [data-bs-theme="dark"] .modal-content {
+        background-color: #2b2c40 !important;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .dark-style .modal-header,
+    [data-bs-theme="dark"] .modal-header {
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .dark-style .table-hover tbody tr:hover,
+    [data-bs-theme="dark"] .table-hover tbody tr:hover {
+        background-color: rgba(255,255,255,0.05) !important;
+    }
+    .dark-style .form-check-label,
+    [data-bs-theme="dark"] .form-check-label { color: #cbcbe2; }
+    
+    .dark-style .pending-big-number,
+    [data-bs-theme="dark"] .pending-big-number { color: #f5f5f9; }
+    
+    /* Enhance colors in dark mode to overlap/stand out */
+    .dark-style .badge, .dark-style .btn,
+    [data-bs-theme="dark"] .badge, [data-bs-theme="dark"] .btn {
+        box-shadow: 0 0 10px rgba(0,0,0,0.2) !important;
+        filter: saturate(1.2);
+    }
+    .dark-style .bg-label-secondary,
+    [data-bs-theme="dark"] .bg-label-secondary {
+        background-color: #323249 !important;
+        color: #cbcbe2 !important;
+    }
+
     .tree-badge {
         display: inline-flex;
         align-items: center;
@@ -533,12 +578,111 @@
                                     <td><span class="badge" style="background:var(--asnet-orange);color:#fff;">@user.AccountStatus</span></td>
                                     <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
                                     <td>
-                                        <div class="d-flex gap-2">
-                                            <form method="post" asp-page-handler="Approve" asp-route-id="@user.Id">
-                                                <button type="submit" class="btn btn-sm btn-success">Aceitar</button>
+                                        <div class="d-flex flex-column gap-2">
+                                            <form method="post" asp-page-handler="ProcessApproval" asp-route-id="@user.Id">
+                                                <div class="mb-2">
+                                                    <select name="role" class="form-select form-select-sm role-selector" onchange="toggleRoleOptions(this, @user.Id)">
+                                                        <option value="">Cargo...</option>
+                                                        <option value="Tecnico">Técnico</option>
+                                                        <option value="Diretor">Diretor</option>
+                                                        <option value="Coordenador">Coordenador</option>
+                                                        <option value="Professor">Professor</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <!-- Dynamic Fields Container -->
+                                                <div id="roleFields_@user.Id" class="mb-2" style="display:none;">
+                                                    <!-- Diretor: Agrupamento -->
+                                                    <div class="field-Diretor" style="display:none;">
+                                                        <select name="agrupamentoId" class="form-select form-select-sm">
+                                                            <option value="">Selecionar Agrupamento...</option>
+                                                            @foreach (var agrup in Model.Agrupamentos) {
+                                                                <option value="@agrup.Id">@agrup.Name</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Tecnico: Area e Nivel -->
+                                                    <div class="field-Tecnico" style="display:none;">
+                                                        <label class="form-label mb-1 small fw-bold">Áreas Técnicas (Selecione múltiplas):</label>
+                                                        <div class="d-flex flex-column gap-1 mb-2 p-2 border rounded bg-label-secondary" style="max-height: 200px; overflow-y: auto;">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Redes" id="checkRedes_@user.Id">
+                                                                <label class="form-check-label small" for="checkRedes_@user.Id">Redes</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Segurança" id="checkSeguranca_@user.Id">
+                                                                <label class="form-check-label small" for="checkSeguranca_@user.Id">Segurança</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Infraestrutura" id="checkInfra_@user.Id">
+                                                                <label class="form-check-label small" for="checkInfra_@user.Id">Infraestrutura</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Sistemas" id="checkSistemas_@user.Id">
+                                                                <label class="form-check-label small" for="checkSistemas_@user.Id">Sistemas</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Telecomunicações" id="checkTele_@user.Id">
+                                                                <label class="form-check-label small" for="checkTele_@user.Id">Telecomunicações</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Manutenção" id="checkManut_@user.Id">
+                                                                <label class="form-check-label small" for="checkManut_@user.Id">Manutenção</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Consultoria Técnica" id="checkConsul_@user.Id">
+                                                                <label class="form-check-label small" for="checkConsul_@user.Id">Consultoria</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="areaTecnica" value="Vendas" id="checkVendas_@user.Id">
+                                                                <label class="form-check-label small" for="checkVendas_@user.Id">Vendas</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox" id="checkOutros_@user.Id" onchange="toggleOthersInput(@user.Id)">
+                                                                <label class="form-check-label small" for="checkOutros_@user.Id">Outros</label>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <input type="text" name="areaTecnicaOutros" id="inputOutros_@user.Id" class="form-control form-control-sm mb-2" placeholder="Descreva outra área..." style="display:none;">
+
+                                                        <select name="nivel" class="form-select form-select-sm">
+                                                            <option value="">Nível...</option>
+                                                            <option value="estagiário">estagiário</option>
+                                                            <option value="Júnior">Júnior</option>
+                                                            <option value="médio">médio</option>
+                                                            <option value="sénior">sénior</option>
+                                                            <option value="master">master</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Coordenador: Escola -->
+                                                    <div class="field-Coordenador" style="display:none;">
+                                                        <select name="escolaId" class="form-select form-select-sm">
+                                                            <option value="">Selecionar Escola...</option>
+                                                            @foreach (var school in Model.AllSchools) {
+                                                                <option value="@school.Id">@school.Name</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Professor: Bloco -->
+                                                    <div class="field-Professor" style="display:none;">
+                                                        <select name="blocoId" class="form-select form-select-sm">
+                                                            <option value="">Selecionar Bloco...</option>
+                                                            @foreach (var bloco in Model.AllBlocos) {
+                                                                <option value="@bloco.Id">@bloco.Name (@bloco.School?.Name)</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="d-flex gap-2">
+                                                    <button type="submit" class="btn btn-sm btn-success flex-grow-1">Aceitar</button>
+                                                </div>
                                             </form>
                                             <form method="post" asp-page-handler="Reject" asp-route-id="@user.Id">
-                                                <button type="submit" class="btn btn-sm btn-danger">Recusar</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">Recusar</button>
                                             </form>
                                         </div>
                                     </td>
@@ -639,6 +783,40 @@
             }
         }
     });
+
+    // ===== Role toggles in Pending Modal =====
+    function toggleRoleOptions(selectEl, userId) {
+        const role = selectEl.value;
+        const container = document.getElementById('roleFields_' + userId);
+        
+        if (!role) {
+            container.style.display = 'none';
+            return;
+        }
+
+        container.style.display = 'block';
+        
+        // Hide all specific field groups
+        container.querySelectorAll('[class^="field-"]').forEach(div => div.style.display = 'none');
+        
+        // Show selected role group
+        const targetDiv = container.querySelector('.field-' + role);
+        if (targetDiv) {
+            targetDiv.style.display = 'block';
+        }
+    }
+
+    function toggleOthersInput(userId) {
+        const checkbox = document.getElementById('checkOutros_' + userId);
+        const input = document.getElementById('inputOutros_' + userId);
+        if (checkbox.checked) {
+            input.style.display = 'block';
+            input.focus();
+        } else {
+            input.style.display = 'none';
+            input.value = '';
+        }
+    }
 </script>
 <script>
     function initMap() {

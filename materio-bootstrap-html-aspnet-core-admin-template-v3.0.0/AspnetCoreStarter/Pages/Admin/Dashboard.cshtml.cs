@@ -152,12 +152,49 @@ namespace AspnetCoreStarter.Pages.Admin
             return Page();
         }
 
-        public async Task<IActionResult> OnPostApproveAsync(int id)
+        public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? blocoId)
         {
             var userFound = await _context.Users.FindAsync(id);
             if (userFound != null)
             {
                 userFound.AccountStatus = "Ativo";
+
+                // Create role-specific record based on the selected role
+                switch (role)
+                {
+                    case "Diretor":
+                        var diretor = new Diretor { UserId = id, AgrupamentoId = agrupamentoId };
+                        _context.Diretores.Add(diretor);
+                        break;
+                    case "Tecnico":
+                        // Consolidate multiple technical areas
+                        var areas = new List<string>();
+                        if (areaTecnica != null && areaTecnica.Length > 0)
+                        {
+                            areas.AddRange(areaTecnica);
+                        }
+                        if (!string.IsNullOrWhiteSpace(areaTecnicaOutros))
+                        {
+                            areas.Add(areaTecnicaOutros.Trim());
+                        }
+                        
+                        string finalArea = string.Join(", ", areas);
+                        // Limit to schema VARCHAR length if necessary (optional safeguard)
+                        if (finalArea.Length > 100) finalArea = finalArea.Substring(0, 97) + "...";
+
+                        var tecnico = new Tecnico { UserId = id, AreaTecnica = finalArea, Nivel = nivel };
+                        _context.Tecnicos.Add(tecnico);
+                        break;
+                    case "Coordenador":
+                        var coordenador = new Coordenador { UserId = id, SchoolId = escolaId };
+                        _context.Coordenadores.Add(coordenador);
+                        break;
+                    case "Professor":
+                        var professor = new Professor { UserId = id, BlocoId = blocoId };
+                        _context.Professores.Add(professor);
+                        break;
+                }
+
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage();
