@@ -12,7 +12,7 @@
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Lista de Contratos</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalContrato">Novo Contrato</button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalContrato">Carregar Contratos</button>
         </div>
         <div class="table-responsive text-nowrap">
             <table class="table table-hover">
@@ -21,7 +21,6 @@
                         <th>Tipo</th>
                         <th>Período</th>
                         <th>Estado</th>
-                        <th>Preço/Hora</th>
                         <th>Agrupamento</th>
                         <th>Ações</th>
                     </tr>
@@ -37,7 +36,6 @@
                                     @item.ContractStatus
                                 </span>
                             </td>
-                            <td>@(item.HourlyRate?.ToString("C2") ?? "—")</td>
                             <td>@(item.Agrupamento?.Name ?? "N/A")</td>
                             <td>
                                 <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
@@ -60,9 +58,9 @@
     <!-- Modal Novo Contrato -->
     <div class="modal fade" id="modalContrato" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form method="post" asp-page-handler="Add" class="modal-content">
+            <form method="post" asp-page-handler="Add" enctype="multipart/form-data" class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Registar Novo Contrato</h5>
+                    <h5 class="modal-title">Carregar Contrato</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -83,10 +81,6 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Preço por Hora (€)</label>
-                        <input type="number" step="0.01" asp-for="NewContract.HourlyRate" class="form-control" />
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Agrupamento</label>
                         <select asp-for="NewContract.AgrupamentoId" class="form-select">
                             <option value="">Selecione um agrupamento (opcional)</option>
@@ -97,12 +91,16 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Arquivo de Contrato (PDF)</label>
+                        <input type="file" name="ContractFile" class="form-control" accept=".pdf" required />
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Descrição</label>
                         <textarea asp-for="NewContract.Description" class="form-control" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Criar Contrato</button>
+                    <button type="submit" class="btn btn-primary">Carregar Contrato</button>
                 </div>
             </form>
         </div>

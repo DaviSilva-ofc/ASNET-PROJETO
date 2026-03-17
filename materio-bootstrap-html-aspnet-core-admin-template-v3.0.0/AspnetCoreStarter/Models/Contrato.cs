@@ -25,8 +25,6 @@ namespace AspnetCoreStarter.Models
         [Column("descricao")]
         public string? Description { get; set; }
 
-        [Column("preco_hora")]
-        public decimal? HourlyRate { get; set; }
 
         [Column("id_agrupamento")]
         public int? AgrupamentoId { get; set; }

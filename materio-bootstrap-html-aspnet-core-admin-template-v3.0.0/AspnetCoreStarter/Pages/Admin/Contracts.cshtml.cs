@@ -24,6 +24,9 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty]
         public Contrato NewContract { get; set; } = new();
 
+        [BindProperty]
+        public IFormFile? ContractFile { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -52,10 +55,17 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnPostAddAsync()
         {
+            if (ContractFile == null || ContractFile.Length == 0)
+            {
+                ModelState.AddModelError("ContractFile", "Por favor, selecione um arquivo PDF.");
+                return Page();
+            }
+
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdStr, out int userId))
             {
                 NewContract.AdminId = userId;
+                // Note: File saving logic can be added here (e.g., saving to wwwroot/uploads)
                 _context.Contratos.Add(NewContract);
                 await _context.SaveChangesAsync();
             }

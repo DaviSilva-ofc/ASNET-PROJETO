@@ -153,6 +153,28 @@
         display: block;
         color: white !important;
     }
+    /* Searchable select wrapper */
+    .select-search-wrapper { position: relative; }
+    .select-search-input {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--bs-border-color);
+        border-bottom: none;
+        border-radius: 0.375rem 0.375rem 0 0;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        outline: none;
+    }
+    .select-search-input:focus {
+        border-color: #696cff;
+        box-shadow: 0 0 0 0.2rem rgba(105,108,255,0.15);
+    }
+    .select-search-wrapper select {
+        border-radius: 0 0 0.375rem 0.375rem;
+    }
+    .select-search-wrapper select option.hidden-option { display: none; }
 </style>
 }
 
@@ -196,7 +218,10 @@
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button type="button" class="edit-header-btn" 
-                                    onclick="event.stopPropagation(); openEditAgrupamento(@client.Agrupamento.Id, '@client.Agrupamento.Name', @client.DirectorUserId)"
+                                    data-id="@client.Agrupamento.Id"
+                                    data-name="@client.Agrupamento.Name"
+                                    data-director="@client.DirectorUserId"
+                                    onclick="event.stopPropagation(); openEditAgrupamento(this)"
                                     title="Editar Agrupamento e Diretor">
                                 ✏️
                             </button>
@@ -256,7 +281,9 @@
                                                 <div class="tree-node director-node mb-2 d-flex align-items-center">
                                                     <i class="icon-base ri-user-star-line me-1"></i> <strong>Diretor: @client.DirectorName</strong>
                                                     <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
-                                                            onclick="openEditDirector(@client.DirectorUserId, '@client.DirectorName')"
+                                                            data-id="@client.DirectorUserId"
+                                                            data-name="@client.DirectorName"
+                                                            onclick="openEditDirector(this)"
                                                             title="Editar Nome do Diretor">
                                                         <i class="tf-icons ri-edit-line small"></i>
                                                     </button>
@@ -277,7 +304,12 @@
                                                                     <i class="icon-base ri-building-line me-1"></i> <strong>@schoolVm.School.Name</strong>
                                                                     <span class="ms-2 text-muted small">(Coord: @schoolVm.CoordinatorName)</span>
                                                                     <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
-                                                                            onclick="event.stopPropagation(); openEditSchool(@schoolVm.School.Id, '@schoolVm.School.Name', '@schoolVm.School.Address', @client.Agrupamento.Id, @schoolVm.CoordinatorUserId)"
+                                                                            data-id="@schoolVm.School.Id"
+                                                                            data-name="@schoolVm.School.Name"
+                                                                            data-address="@schoolVm.School.Address"
+                                                                            data-agrupamento="@client.Agrupamento.Id"
+                                                                            data-coordinator="@schoolVm.CoordinatorUserId"
+                                                                            onclick="event.stopPropagation(); openEditSchool(this)"
                                                                             title="Editar Escola">
                                                                         <i class="tf-icons ri-edit-line small"></i>
                                                                     </button>
@@ -292,7 +324,10 @@
                                                                                 <i class="icon-base ri-arrow-right-s-line"></i>
                                                                                 <i class="icon-base ri-box-3-line me-1"></i> @bloc.Name
                                                                                 <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
-                                                                                        onclick="event.stopPropagation(); openEditBloco(@bloc.Id, '@bloc.Name', @schoolVm.School.Id)"
+                                                                                        data-id="@bloc.Id"
+                                                                                        data-name="@bloc.Name"
+                                                                                        data-school="@schoolVm.School.Id"
+                                                                                        onclick="event.stopPropagation(); openEditBloco(this)"
                                                                                         title="Editar Bloco">
                                                                                     <i class="tf-icons ri-edit-line small"></i>
                                                                                 </button>
@@ -306,11 +341,21 @@
                                                                                         <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-equips-@room.Id">
                                                                                             <i class="icon-base ri-arrow-right-s-line"></i>
                                                                                             <i class="icon-base ri-door-open-line me-1"></i> @room.Name
+                                                                                            @if (room.ResponsibleProfessor?.User != null)
+                                                                                            {
+                                                                                                <span class="ms-2 text-muted small" style="font-size: 0.75rem;">(Prof: @room.ResponsibleProfessor.User.Username)</span>
+                                                                                            }
                                                                                             <button class="btn btn-sm btn-icon btn-outline-secondary ms-2 border-0" 
-                                                                                                    onclick="event.stopPropagation(); openEditSala(@room.Id, '@room.Name', @bloc.Id)"
+                                                                                                    data-id="@room.Id"
+                                                                                                    data-name="@room.Name"
+                                                                                                    data-bloc="@bloc.Id"
+                                                                                                    onclick="event.stopPropagation(); openEditSala(this)"
                                                                                                     title="Editar Sala">
                                                                                                 <i class="tf-icons ri-edit-line small"></i>
                                                                                             </button>
+                                                                                            <a asp-page="/Admin/Equipment" asp-route-roomId="@room.Id" class="btn btn-sm btn-icon btn-outline-info border-0 ms-1" title="Ver Equipamentos">
+                                                                                                <i class="tf-icons ri-computer-line small"></i>
+                                                                                            </a>
                                                                                         </div>
                                                                                         
                                                                                         <div id="tree-equips-@room.Id" class="collapse">
@@ -318,14 +363,20 @@
                                                                                             {
                                                                                                 @foreach (var equip in room.Equipments)
                                                                                                 {
-                                                                                                    <div class="tree-node equip-node ms-4 mt-1 small text-muted">
-                                                                                                        <i class="icon-base ri-computer-line me-1"></i> @equip.Name 
+                                                                                                    <div class="tree-node equip-node ms-4 mt-1 small">
+                                                                                                        <a asp-page="/Admin/Equipment" asp-route-roomId="@room.Id" class="text-secondary text-decoration-none">
+                                                                                                            <i class="ri-computer-line me-1"></i> @equip.Name 
+                                                                                                        </a>
                                                                                                     </div>
                                                                                                 }
                                                                                             }
                                                                                             else
                                                                                             {
-                                                                                                <div class="ms-4 mt-1 small text-muted italic">Sem equipamentos</div>
+                                                                                                <div class="ms-4 mt-1 small">
+                                                                                                    <a asp-page="/Admin/Equipment" asp-route-roomId="@room.Id" class="text-info italic text-decoration-none" style="font-size: 0.82rem;">
+                                                                                                        <i class="ri-search-line me-1"></i> Ver equipamentos
+                                                                                                    </a>
+                                                                                                </div>
                                                                                             }
                                                                                         </div>
                                                                                     </div>
@@ -391,23 +442,29 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Agrupamento</label>
-                        <select asp-for="SelectedAgrupamentoId" class="form-select">
-                            <option value="">-- Sem Agrupamento --</option>
-                            @foreach (var item in Model.Agrupamentos)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar agrupamento..." oninput="filterSelect(this, 'newSchoolAgrupamentoId')" />
+                            <select asp-for="SelectedAgrupamentoId" id="newSchoolAgrupamentoId" class="form-select">
+                                <option value="">-- Sem Agrupamento --</option>
+                                @foreach (var item in Model.Agrupamentos)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Coordenador</label>
-                        <select asp-for="NewSchoolCoordinatorId" class="form-select">
-                            <option value="0">-- Sem Coordenador --</option>
-                            @foreach (var coord in Model.AvailableCoordenadores)
-                            {
-                                <option value="@coord.Id">@coord.Username</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar coordenador..." oninput="filterSelect(this, 'newSchoolCoordinatorId')" />
+                            <select asp-for="NewSchoolCoordinatorId" id="newSchoolCoordinatorId" class="form-select">
+                                <option value="0">-- Sem Coordenador --</option>
+                                @foreach (var coord in Model.AvailableCoordenadores)
+                                {
+                                    <option value="@coord.Id">@coord.Username</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -431,12 +488,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Escola</label>
-                        <select asp-for="SelectedSchoolId" class="form-select" required>
-                            @foreach (var item in Model.Schools)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'newBlocoSchoolId')" />
+                            <select asp-for="SelectedSchoolId" id="newBlocoSchoolId" class="form-select" required>
+                                @foreach (var item in Model.Schools)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -460,12 +520,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Bloco</label>
-                        <select asp-for="SelectedBlocoId" class="form-select" required>
-                            @foreach (var item in Model.Blocos)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'newSalaBlocoId')" />
+                            <select asp-for="SelectedBlocoId" id="newSalaBlocoId" class="form-select" required>
+                                @foreach (var item in Model.Blocos)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -492,13 +555,103 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Diretor</label>
-                        <select asp-for="EditParentId" id="editAgrupamentoDirectorUserId" class="form-select">
-                            <option value="0">-- Sem Diretor --</option>
-                            @foreach (var dir in Model.AvailableDirectors)
-                            {
-                                <option value="@dir.Id">@dir.Username</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar diretor..." oninput="filterSelect(this, 'editAgrupamentoDirectorUserId')" />
+                            <select asp-for="EditParentId" id="editAgrupamentoDirectorUserId" class="form-select">
+                                <option value="0">-- Sem Diretor --</option>
+                                @foreach (var dir in Model.AvailableDirectors)
+                                {
+                                    <option value="@dir.Id">@dir.Username</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr class="my-3" />
+                    <p class="text-muted small mb-2 fw-semibold">
+                        <i class="ri-building-line me-1"></i>Editar Escola deste Agrupamento <span class="fw-normal">(opcional)</span>
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Escola</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'editAgrEscolaId')" />
+                            <select id="editAgrEscolaId" name="EditSchoolId" class="form-select" onchange="onAgrEscolaChange(this)">
+                                <option value="0">-- Nenhuma escola --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="editAgrEscolaNameWrap" style="display:none">
+                        <label class="form-label">Nome da Escola</label>
+                        <input type="text" name="EditSchoolName" id="editAgrEscolaName" class="form-control" placeholder="Nome da escola..." />
+                    </div>
+                    <div class="mb-3" id="editAgrCoordWrap" style="display:none">
+                        <label class="form-label">Coordenador</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar coordenador..." oninput="filterSelect(this, 'editAgrCoordinatorId')" />
+                            <select name="EditCoordinatorId" id="editAgrCoordinatorId" class="form-select">
+                                <option value="0">-- Sem Coordenador --</option>
+                                @foreach (var coord in Model.AvailableCoordenadores)
+                                {
+                                    <option value="@coord.Id">@coord.Username</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Bloco Section -->
+                    <div id="editAgrBlocoSection" style="display:none">
+                        <hr class="my-3" />
+                        <p class="text-muted small mb-2 fw-semibold">
+                            <i class="ri-instance-line me-1"></i>Editar Bloco desta Escola
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label">Bloco</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'editAgrBlocoId')" />
+                                <select id="editAgrBlocoId" name="EditBlocoId" class="form-select" onchange="onAgrBlocoChange(this)">
+                                    <option value="0">-- Nenhum bloco --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3" id="editAgrBlocoNameWrap" style="display:none">
+                            <label class="form-label">Nome do Bloco</label>
+                            <input type="text" name="EditBlocoName" id="editAgrBlocoName" class="form-control" placeholder="Nome do bloco..." />
+                        </div>
+                    </div>
+
+                    <!-- Sala Section -->
+                    <div id="editAgrSalaSection" style="display:none">
+                        <hr class="my-3" />
+                        <p class="text-muted small mb-2 fw-semibold">
+                            <i class="ri-door-open-line me-1"></i>Editar Sala deste Bloco
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label">Sala</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar sala..." oninput="filterSelect(this, 'editAgrSalaId')" />
+                                <select id="editAgrSalaId" name="EditSalaId" class="form-select" onchange="onAgrSalaChange(this)">
+                                    <option value="0">-- Nenhuma sala --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3" id="editAgrSalaNameWrap" style="display:none">
+                            <label class="form-label">Nome da Sala</label>
+                            <input type="text" name="EditSalaName" id="editAgrSalaName" class="form-control" placeholder="Nome da sala..." />
+                        </div>
+                        <div class="mb-3" id="editAgrSalaProfessorWrap" style="display:none">
+                            <label class="form-label">Professor Responsável</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar professor..." oninput="filterSelect(this, 'editAgrResponsibleProfessorId')" />
+                                <select name="EditResponsibleProfessorId" id="editAgrResponsibleProfessorId" class="form-select">
+                                    <option value="0">-- Sem Professor Responsável --</option>
+                                    @foreach (var prof in Model.AvailableProfessores)
+                                    {
+                                        <option value="@prof.Id">@prof.Username</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -528,23 +681,29 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Agrupamento</label>
-                        <select asp-for="EditParentId" id="editEscolaAgrupamentoId" class="form-select">
-                            <option value="">-- Sem Agrupamento --</option>
-                            @foreach (var item in Model.Agrupamentos)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar agrupamento..." oninput="filterSelect(this, 'editEscolaAgrupamentoId')" />
+                            <select asp-for="EditParentId" id="editEscolaAgrupamentoId" class="form-select">
+                                <option value="">-- Sem Agrupamento --</option>
+                                @foreach (var item in Model.Agrupamentos)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Coordenador</label>
-                        <select asp-for="EditCoordinatorId" id="editEscolaCoordinatorId" class="form-select">
-                            <option value="0">-- Sem Coordenador --</option>
-                            @foreach (var coord in Model.AvailableCoordenadores)
-                            {
-                                <option value="@coord.Id">@coord.Username</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar coordenador..." oninput="filterSelect(this, 'editEscolaCoordinatorId')" />
+                            <select asp-for="EditCoordinatorId" id="editEscolaCoordinatorId" class="form-select">
+                                <option value="0">-- Sem Coordenador --</option>
+                                @foreach (var coord in Model.AvailableCoordenadores)
+                                {
+                                    <option value="@coord.Id">@coord.Username</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -570,12 +729,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Escola</label>
-                        <select asp-for="EditParentId" id="editBlocoEscolaId" class="form-select" required>
-                            @foreach (var item in Model.Schools)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'editBlocoEscolaId')" />
+                            <select asp-for="EditParentId" id="editBlocoEscolaId" class="form-select" required>
+                                @foreach (var item in Model.Schools)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -601,12 +763,15 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Bloco</label>
-                        <select asp-for="EditParentId" id="editSalaBlocoId" class="form-select" required>
-                            @foreach (var item in Model.Blocos)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'editSalaBlocoId')" />
+                            <select asp-for="EditParentId" id="editSalaBlocoId" class="form-select" required>
+                                @foreach (var item in Model.Blocos)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -646,44 +811,268 @@
 
 @section PageScripts {
 <script>
-    function openEditAgrupamento(id, name, directorUserId) {
+    // Filter select options by search input
+    function filterSelect(input, selectId) {
+        var filter = input.value.toLowerCase();
+        var select = document.getElementById(selectId);
+        var options = select.querySelectorAll('option');
+        options.forEach(function(opt) {
+            var text = opt.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
+    // Reset search inputs when a modal is closed
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.modal').forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', function() {
+                modal.querySelectorAll('.select-search-input').forEach(function(inp) {
+                    inp.value = '';
+                    var wrapper = inp.closest('.select-search-wrapper');
+                    if (wrapper) {
+                        wrapper.querySelectorAll('select option').forEach(function(opt) {
+                            opt.style.display = '';
+                        });
+                    }
+                });
+            });
+        });
+    });
+
+    // School data embedded per agrupamento: { agrupamentoId: [{id, name, coordinatorId, blocos: [{id, name, salas: [{id, name, profId}]}]}] }
+    var schoolsByAgrupamento = {
+        @foreach (var client in Model.Clients)
+        {
+            <text>@client.Agrupamento.Id: [</text>
+            @foreach (var sv in client.Schools)
+            {
+                <text>{</text>
+                <text>id: @sv.School.Id, </text>
+                <text>name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(sv.School.Name)), </text>
+                <text>coordinatorId: @(sv.CoordinatorUserId ?? 0),</text>
+                <text>blocos: [</text>
+                @foreach (var b in sv.Blocos)
+                {
+                    <text>{</text>
+                    <text>id: @b.Id, </text>
+                    <text>name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(b.Name)), </text>
+                    <text>salas: [</text>
+                    @foreach (var s in b.Rooms)
+                    {
+                        <text>{id: @s.Id, name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(s.Name)), profId: @(s.ResponsibleProfessorId ?? 0)},</text>
+                    }
+                    <text>]</text>
+                    <text>},</text>
+                }
+                <text>]</text>
+                <text>},</text>
+            }
+            <text>],</text>
+        }
+    };
+
+    function openEditAgrupamento(el) {
+        var id = el.getAttribute('data-id');
+        var name = el.getAttribute('data-name');
+        var directorUserId = el.getAttribute('data-director');
+
         document.getElementById('editAgrupamentoId').value = id;
         document.getElementById('editAgrupamentoName').value = name;
         document.getElementById('editAgrupamentoDirectorUserId').value = directorUserId || 0;
-        var modal = new bootstrap.Modal(document.getElementById('modalEditAgrupamento'));
+
+        // Rebuild escola dropdown for this agrupamento
+        var escolaSel = document.getElementById('editAgrEscolaId');
+        escolaSel.innerHTML = '<option value="0">-- Nenhuma escola --</option>';
+        var schools = schoolsByAgrupamento[id] || [];
+        schools.forEach(function(s) {
+            var opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            escolaSel.appendChild(opt);
+        });
+
+        // Reset all secondary sections
+        escolaSel.value = '0';
+        resetAgrEscolaFields();
+        resetAgrBlocoSection();
+        resetAgrSalaSection();
+
+        var modalEl = document.getElementById('modalEditAgrupamento');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
     }
 
-    function openEditSchool(id, name, address, agrupamentoId, coordinatorId) {
+    function onAgrEscolaChange(sel) {
+        var escolaId = parseInt(sel.value);
+        resetAgrEscolaFields();
+        resetAgrBlocoSection();
+        resetAgrSalaSection();
+
+        if (escolaId > 0) {
+            document.getElementById('editAgrEscolaNameWrap').style.display = '';
+            document.getElementById('editAgrCoordWrap').style.display = '';
+            
+            var agrId = document.getElementById('editAgrupamentoId').value;
+            var schools = schoolsByAgrupamento[agrId] || [];
+            var school = schools.find(function(s) { return s.id === escolaId; });
+            if (school) {
+                document.getElementById('editAgrEscolaName').value = school.name;
+                document.getElementById('editAgrCoordinatorId').value = school.coordinatorId || 0;
+
+                // Build Bloco dropdown
+                document.getElementById('editAgrBlocoSection').style.display = '';
+                var blocoSel = document.getElementById('editAgrBlocoId');
+                blocoSel.innerHTML = '<option value="0">-- Nenhum bloco --</option>';
+                (school.blocos || []).forEach(function(b) {
+                    var opt = document.createElement('option');
+                    opt.value = b.id;
+                    opt.textContent = b.name;
+                    blocoSel.appendChild(opt);
+                });
+            }
+        }
+    }
+
+    function onAgrBlocoChange(sel) {
+        var blocoId = parseInt(sel.value);
+        resetAgrBlocoFields();
+        resetAgrSalaSection();
+
+        if (blocoId > 0) {
+            document.getElementById('editAgrBlocoNameWrap').style.display = '';
+            
+            var agrId = document.getElementById('editAgrupamentoId').value;
+            var escolaId = parseInt(document.getElementById('editAgrEscolaId').value);
+            var school = (schoolsByAgrupamento[agrId] || []).find(s => s.id === escolaId);
+            var bloco = (school.blocos || []).find(b => b.id === blocoId);
+            
+            if (bloco) {
+                document.getElementById('editAgrBlocoName').value = bloco.name;
+
+                // Build Sala dropdown
+                document.getElementById('editAgrSalaSection').style.display = '';
+                var salaSel = document.getElementById('editAgrSalaId');
+                salaSel.innerHTML = '<option value="0">-- Nenhuma sala --</option>';
+                (bloco.salas || []).forEach(function(s) {
+                    var opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    salaSel.appendChild(opt);
+                });
+            }
+        }
+    }
+
+    function onAgrSalaChange(sel) {
+        var salaId = parseInt(sel.value);
+        resetAgrSalaFields();
+
+        if (salaId > 0) {
+            document.getElementById('editAgrSalaNameWrap').style.display = '';
+            document.getElementById('editAgrSalaProfessorWrap').style.display = '';
+            
+            var agrId = document.getElementById('editAgrupamentoId').value;
+            var escolaId = parseInt(document.getElementById('editAgrEscolaId').value);
+            var blocoId = parseInt(document.getElementById('editAgrBlocoId').value);
+            
+            var school = (schoolsByAgrupamento[agrId] || []).find(s => s.id === escolaId);
+            var bloco = (school.blocos || []).find(b => b.id === blocoId);
+            var sala = (bloco.salas || []).find(s => s.id === salaId);
+
+            if (sala) {
+                document.getElementById('editAgrSalaName').value = sala.name;
+                document.getElementById('editAgrResponsibleProfessorId').value = sala.profId || 0;
+            }
+        }
+    }
+
+    // Helpers to reset UI
+    function resetAgrEscolaFields() {
+        document.getElementById('editAgrEscolaNameWrap').style.display = 'none';
+        document.getElementById('editAgrCoordWrap').style.display = 'none';
+        document.getElementById('editAgrEscolaName').value = '';
+        document.getElementById('editAgrCoordinatorId').value = '0';
+    }
+    function resetAgrBlocoSection() {
+        document.getElementById('editAgrBlocoSection').style.display = 'none';
+        document.getElementById('editAgrBlocoId').innerHTML = '<option value="0">-- Nenhum bloco --</option>';
+        resetAgrBlocoFields();
+    }
+    function resetAgrBlocoFields() {
+        document.getElementById('editAgrBlocoNameWrap').style.display = 'none';
+        document.getElementById('editAgrBlocoName').value = '';
+    }
+    function resetAgrSalaSection() {
+        document.getElementById('editAgrSalaSection').style.display = 'none';
+        document.getElementById('editAgrSalaId').innerHTML = '<option value="0">-- Nenhuma sala --</option>';
+        resetAgrSalaFields();
+    }
+    function resetAgrSalaFields() {
+        document.getElementById('editAgrSalaNameWrap').style.display = 'none';
+        document.getElementById('editAgrSalaProfessorWrap').style.display = 'none';
+        document.getElementById('editAgrSalaName').value = '';
+        document.getElementById('editAgrResponsibleProfessorId').value = '0';
+    }
+
+    function openEditSchool(el) {
+        var id = el.getAttribute('data-id');
+        var name = el.getAttribute('data-name');
+        var address = el.getAttribute('data-address');
+        var agrupamentoId = el.getAttribute('data-agrupamento');
+        var coordinatorId = el.getAttribute('data-coordinator');
+
         document.getElementById('editEscolaId').value = id;
         document.getElementById('editEscolaName').value = name;
         document.getElementById('editEscolaAddress').value = address;
         document.getElementById('editEscolaAgrupamentoId').value = agrupamentoId || '';
         document.getElementById('editEscolaCoordinatorId').value = coordinatorId || 0;
-        var modal = new bootstrap.Modal(document.getElementById('modalEditEscola'));
+        
+        var modalEl = document.getElementById('modalEditEscola');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
     }
 
-    function openEditBloco(id, name, schoolId) {
+    function openEditBloco(el) {
+        var id = el.getAttribute('data-id');
+        var name = el.getAttribute('data-name');
+        var schoolId = el.getAttribute('data-school');
+
         document.getElementById('editBlocoId').value = id;
         document.getElementById('editBlocoName').value = name;
         document.getElementById('editBlocoEscolaId').value = schoolId;
-        var modal = new bootstrap.Modal(document.getElementById('modalEditBloco'));
+        
+        var modalEl = document.getElementById('modalEditBloco');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
     }
 
-    function openEditSala(id, name, blocoId) {
+    function openEditSala(el) {
+        var id = el.getAttribute('data-id');
+        var name = el.getAttribute('data-name');
+        var blocoId = el.getAttribute('data-bloc');
+
         document.getElementById('editSalaId').value = id;
         document.getElementById('editSalaName').value = name;
         document.getElementById('editSalaBlocoId').value = blocoId;
-        var modal = new bootstrap.Modal(document.getElementById('modalEditSala'));
+        
+        var modalEl = document.getElementById('modalEditSala');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
     }
 
-    function openEditDirector(id, name) {
+    function openEditDirector(el) {
+        var id = el.getAttribute('data-id');
+        var name = el.getAttribute('data-name');
+
         document.getElementById('editDirectorId').value = id;
         document.getElementById('editDirectorName').value = name;
-        var modal = new bootstrap.Modal(document.getElementById('modalEditDirector'));
+        
+        var modalEl = document.getElementById('modalEditDirector');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
     }
 

@@ -21,6 +21,12 @@ namespace AspnetCoreStarter.Models
         [ForeignKey("BlockId")]
         public Bloco Block { get; set; }
 
+        [Column("id_professor_responsavel")]
+        public int? ResponsibleProfessorId { get; set; }
+
+        [ForeignKey("ResponsibleProfessorId")]
+        public virtual Professor? ResponsibleProfessor { get; set; }
+
         public ICollection<Equipamento> Equipments { get; set; } = new List<Equipamento>();
     }
 }

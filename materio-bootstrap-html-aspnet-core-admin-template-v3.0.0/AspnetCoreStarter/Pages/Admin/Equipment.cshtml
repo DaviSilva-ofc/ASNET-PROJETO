@@ -11,8 +11,29 @@
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Inventário de Equipamentos</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">Novo Equipamento</button>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    <i class="ri-filter-3-line me-1"></i> Filtros
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">Novo Equipamento</button>
+            </div>
         </div>
+        @{
+            var activeFilterText = "";
+            if (Model.ActiveFilterRoom != null) activeFilterText = $"sala: {Model.ActiveFilterRoom.Name}";
+            else if (Model.ActiveFilterBloco != null) activeFilterText = $"bloco: {Model.ActiveFilterBloco.Name}";
+            else if (Model.ActiveFilterEscola != null) activeFilterText = $"escola: {Model.ActiveFilterEscola.Name}";
+            else if (Model.ActiveFilterAgrupamento != null) activeFilterText = $"agrupamento: {Model.ActiveFilterAgrupamento.Name}";
+        }
+        @if (!string.IsNullOrEmpty(activeFilterText))
+        {
+            <div class="card-body">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert">
+                    <span>A visualizar equipamentos do <strong>@activeFilterText</strong></span>
+                    <a asp-page="./Equipment" class="btn btn-sm btn-info border-1 border-white">Limpar Filtro</a>
+                </div>
+            </div>
+        }
         <div class="table-responsive text-nowrap">
             <table class="table table-hover">
                 <thead>
@@ -44,7 +65,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal Novo Equipamento -->
     <div class="modal fade" id="modalEquipamento" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <form method="post" asp-page-handler="Add" class="modal-content">
@@ -55,27 +76,27 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Nome</label>
-                        <input type="text" asp-for="NewEquipment.Name" class="form-control" required />
+                        <input type="text" name="NewEquipment.Name" class="form-control" required />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Tipo</label>
-                        <input type="text" asp-for="NewEquipment.Type" class="form-control" placeholder="ex: Portátil, Projetor" required />
+                        <input type="text" name="NewEquipment.Type" class="form-control" placeholder="ex: Portátil, Projetor" required />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Nº Série</label>
-                        <input type="text" asp-for="NewEquipment.SerialNumber" class="form-control" required />
+                        <input type="text" name="NewEquipment.SerialNumber" class="form-control" required />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Processador</label>
-                        <input type="text" asp-for="NewEquipment.Processor" class="form-control" />
+                        <input type="text" name="NewEquipment.Processor" class="form-control" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Discos/Memória</label>
-                        <input type="text" asp-for="NewEquipment.Storage" class="form-control" />
+                        <input type="text" name="NewEquipment.Storage" class="form-control" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Sala</label>
-                        <select asp-for="NewEquipment.RoomId" class="form-select" required>
+                        <select name="NewEquipment.RoomId" class="form-select" required>
                             @foreach (var sala in Model.Rooms)
                             {
                                 <option value="@sala.Id">@sala.Name</option>
@@ -89,4 +110,123 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="get" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Filtrar Equipamentos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Nome do Equipamento</label>
+                            <input type="text" name="name" class="form-control" placeholder="Pesquisar por nome..." />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo</label>
+                            <input type="text" name="type" class="form-control" placeholder="ex: Portátil" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nº Série</label>
+                            <input type="text" name="serialNumber" class="form-control" />
+                        </div>
+                        
+                        <hr class="my-3">
+                        <h6>Localização</h6>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Agrupamento</label>
+                            <select id="filterAgrupamento" name="agrupamentoId" class="form-select" onchange="filterEscolas()">
+                                <option value="">Todos</option>
+                                @foreach (var agr in Model.AvailableAgrupamentos)
+                                {
+                                    <option value="@agr.Id">@agr.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Escola</label>
+                            <select id="filterEscola" name="escolaId" class="form-select" onchange="filterBlocos()">
+                                <option value="">Todas</option>
+                                @foreach (var esc in Model.AvailableEscolas)
+                                {
+                                    <option value="@esc.Id" data-agr="@esc.AgrupamentoId">@esc.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Bloco</label>
+                            <select id="filterBloco" name="blocoId" class="form-select" onchange="filterSalas()">
+                                <option value="">Todos</option>
+                                @foreach (var blc in Model.AvailableBlocos)
+                                {
+                                    <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sala</label>
+                            <select id="filterSala" name="roomId" class="form-select">
+                                <option value="">Todas</option>
+                                @foreach (var sala in Model.Rooms)
+                                {
+                                    <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="reset" class="btn btn-outline-secondary" onclick="window.location.href='@Url.Page("./Equipment")'">Limpar Tudo</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+@section PageScripts {
+<script>
+    function filterEscolas() {
+        const agrId = document.getElementById('filterAgrupamento').value;
+        const escSelect = document.getElementById('filterEscola');
+        const options = escSelect.querySelectorAll('option');
+        
+        escSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
+        });
+        filterBlocos();
+    }
+
+    function filterBlocos() {
+        const escId = document.getElementById('filterEscola').value;
+        const blcSelect = document.getElementById('filterBloco');
+        const options = blcSelect.querySelectorAll('option');
+        
+        blcSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
+        });
+        filterSalas();
+    }
+
+    function filterSalas() {
+        const blcId = document.getElementById('filterBloco').value;
+        const salaSelect = document.getElementById('filterSala');
+        const options = salaSelect.querySelectorAll('option');
+        
+        salaSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
+        });
+    }
+</script>
+}
+

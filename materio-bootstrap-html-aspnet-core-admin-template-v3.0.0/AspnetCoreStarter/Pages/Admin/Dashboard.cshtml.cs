@@ -58,6 +58,11 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(userId) || userRole != "Admin")
                 return RedirectToPage("/Index");
 
+            // Temporary fix for missing column in MySQL
+            try {
+                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;");
+            } catch { /* Ignore if it already exists or failed for other reasons */ }
+
             // Pending users
             PendingUsers = await _context.Users
                 .Where(u => u.AccountStatus == "Pendente")

@@ -21,6 +21,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<ClientViewModel> Clients { get; set; } = new();
         public List<User> AvailableDirectors { get; set; } = new();
         public List<User> AvailableCoordenadores { get; set; } = new();
+        public List<User> AvailableProfessores { get; set; } = new();
 
         // Existing properties for modals (kept for compatibility)
         public List<Agrupamento> Agrupamentos { get; set; } = new();
@@ -58,6 +59,20 @@ namespace AspnetCoreStarter.Pages.Admin
         public int? EditParentId { get; set; }
         [BindProperty]
         public int? EditCoordinatorId { get; set; }
+        [BindProperty]
+        public int? EditSchoolId { get; set; }
+        [BindProperty]
+        public string? EditSchoolName { get; set; }
+        [BindProperty]
+        public int? EditBlocoId { get; set; }
+        [BindProperty]
+        public string? EditBlocoName { get; set; }
+        [BindProperty]
+        public int? EditSalaId { get; set; }
+        [BindProperty]
+        public string? EditSalaName { get; set; }
+        [BindProperty]
+        public int? EditResponsibleProfessorId { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -66,12 +81,19 @@ namespace AspnetCoreStarter.Pages.Admin
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userRole != "Admin") return RedirectToPage("/Index");
 
+            // Temporary fix for missing column
+            try {
+                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;");
+            } catch { /* Ignore if it already exists or failed for other reasons */ }
+
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
             Schools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();
             Blocos = await _context.Blocos.Include(b => b.School).ToListAsync();
             Salas = await _context.Salas
                 .Include(s => s.Block)
                 .Include(s => s.Equipments)
+                .Include(s => s.ResponsibleProfessor)
+                    .ThenInclude(p => p.User)
                 .ToListAsync();
 
             // Build Client ViewModels
@@ -103,11 +125,14 @@ namespace AspnetCoreStarter.Pages.Admin
                         .Include(c => c.User)
                         .FirstOrDefaultAsync(c => c.SchoolId == school.Id);
                         
+                    var schoolBlocos = Blocos.Where(b => b.SchoolId == school.Id).ToList();
+                    
                     clientVm.Schools.Add(new SchoolViewModel
                     {
                         School = school,
                         CoordinatorName = coordinatorRecord?.User?.Username ?? "Sem Coordenador",
-                        CoordinatorUserId = coordinatorRecord?.UserId ?? 0
+                        CoordinatorUserId = coordinatorRecord?.UserId,
+                        Blocos = schoolBlocos
                     });
                 }
                 
@@ -126,6 +151,14 @@ namespace AspnetCoreStarter.Pages.Admin
             AvailableCoordenadores = await _context.Coordenadores
                 .Include(c => c.User)
                 .Select(c => c.User)
+                .Where(u => u != null)
+                .Distinct()
+                .ToListAsync();
+
+            // Fetch all users that belong to the 'Professor' role/table
+            AvailableProfessores = await _context.Professores
+                .Include(p => p.User)
+                .Select(p => p.User)
                 .Where(u => u != null)
                 .Distinct()
                 .ToListAsync();
@@ -282,6 +315,56 @@ namespace AspnetCoreStarter.Pages.Admin
                         }
                     }
 
+                    // 3. Optionally update escola name and coordinator
+                    if (EditSchoolId.HasValue && EditSchoolId.Value > 0)
+                    {
+                        var school = await _context.Schools.FindAsync(EditSchoolId.Value);
+                        if (school != null)
+                        {
+                            if (!string.IsNullOrWhiteSpace(EditSchoolName))
+                                school.Name = EditSchoolName.Trim();
+
+                            // Remove previous coordinator link for this school
+                            var schoolCoordLinks = await _context.Coordenadores
+                                .Where(c => c.SchoolId == EditSchoolId.Value).ToListAsync();
+                            foreach (var lnk in schoolCoordLinks) lnk.SchoolId = null;
+
+                            // Assign new coordinator if selected
+                            if (EditCoordinatorId.HasValue && EditCoordinatorId.Value > 0)
+                            {
+                                var newCoord = await _context.Coordenadores
+                                    .FirstOrDefaultAsync(c => c.UserId == EditCoordinatorId.Value);
+                                if (newCoord != null) newCoord.SchoolId = EditSchoolId.Value;
+                            }
+
+                            // 4. Optionally update Bloco
+                            if (EditBlocoId.HasValue && EditBlocoId.Value > 0)
+                            {
+                                var bloco = await _context.Blocos.FindAsync(EditBlocoId.Value);
+                                if (bloco != null)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(EditBlocoName))
+                                        bloco.Name = EditBlocoName.Trim();
+
+                                    // 5. Optionally update Sala
+                                    if (EditSalaId.HasValue && EditSalaId.Value > 0)
+                                    {
+                                        var sala = await _context.Salas.FindAsync(EditSalaId.Value);
+                                        if (sala != null)
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(EditSalaName))
+                                                sala.Name = EditSalaName.Trim();
+                                            
+                                            sala.ResponsibleProfessorId = (EditResponsibleProfessorId.HasValue && EditResponsibleProfessorId.Value > 0) 
+                                                ? EditResponsibleProfessorId.Value 
+                                                : null;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = $"O Agrupamento '{agrupamento.Name}' foi atualizado com sucesso.";
                 }
@@ -398,6 +481,7 @@ namespace AspnetCoreStarter.Pages.Admin
     {
         public AspnetCoreStarter.Models.School School { get; set; }
         public string CoordinatorName { get; set; }
-        public int CoordinatorUserId { get; set; }
+        public int? CoordinatorUserId { get; set; }
+        public List<Bloco> Blocos { get; set; } = new();
     }
 }
