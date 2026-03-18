@@ -240,44 +240,76 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnPostDeleteAgrupamentoAsync(int id)
         {
-            var item = await _context.Agrupamentos.FindAsync(id);
-            if (item != null)
+            try
             {
-                _context.Agrupamentos.Remove(item);
-                await _context.SaveChangesAsync();
+                var item = await _context.Agrupamentos.FindAsync(id);
+                if (item != null)
+                {
+                    _context.Agrupamentos.Remove(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Agrupamento removido com sucesso.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Não é possível remover este agrupamento pois existem escolas ou diretores vinculados a ele.";
             }
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostDeleteSchoolAsync(int id)
         {
-            var item = await _context.Schools.FindAsync(id);
-            if (item != null)
+            try
             {
-                _context.Schools.Remove(item);
-                await _context.SaveChangesAsync();
+                var item = await _context.Schools.FindAsync(id);
+                if (item != null)
+                {
+                    _context.Schools.Remove(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Escola removida com sucesso.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Não é possível remover esta escola pois existem blocos ou coordenadores vinculados a ela.";
             }
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostDeleteBlocoAsync(int id)
         {
-            var item = await _context.Blocos.FindAsync(id);
-            if (item != null)
+            try
             {
-                _context.Blocos.Remove(item);
-                await _context.SaveChangesAsync();
+                var item = await _context.Blocos.FindAsync(id);
+                if (item != null)
+                {
+                    _context.Blocos.Remove(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Bloco removido com sucesso.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Não é possível remover este bloco pois existem salas vinculadas a ele.";
             }
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostDeleteSalaAsync(int id)
         {
-            var item = await _context.Salas.FindAsync(id);
-            if (item != null)
+            try
             {
-                _context.Salas.Remove(item);
-                await _context.SaveChangesAsync();
+                var item = await _context.Salas.FindAsync(id);
+                if (item != null)
+                {
+                    _context.Salas.Remove(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Sala removida com sucesso.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Não é possível remover esta sala pois existem equipamentos vinculados a ela.";
             }
             return RedirectToPage();
         }
@@ -464,24 +496,5 @@ namespace AspnetCoreStarter.Pages.Admin
             }
             return RedirectToPage();
         }
-    }
-
-    public class ClientViewModel
-    {
-        public Agrupamento Agrupamento { get; set; }
-        public string Abbreviation { get; set; }
-        public string DirectorName { get; set; }
-        public int DirectorUserId { get; set; }
-        public int TicketCount { get; set; }
-        public int ContractCount { get; set; }
-        public List<SchoolViewModel> Schools { get; set; } = new();
-    }
-
-    public class SchoolViewModel
-    {
-        public AspnetCoreStarter.Models.School School { get; set; }
-        public string CoordinatorName { get; set; }
-        public int? CoordinatorUserId { get; set; }
-        public List<Bloco> Blocos { get; set; } = new();
     }
 }

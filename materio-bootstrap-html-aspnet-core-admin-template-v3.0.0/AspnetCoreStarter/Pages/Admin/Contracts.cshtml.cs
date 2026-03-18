@@ -27,6 +27,18 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty]
         public IFormFile? ContractFile { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string? FilterType { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterPeriod { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterStatus { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterAgrupamento { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -38,10 +50,31 @@ namespace AspnetCoreStarter.Pages.Admin
 
             try 
             {
-                Contracts = await _context.Contratos
+                var query = _context.Contratos
                     .Include(c => c.Agrupamento)
-                    .ToListAsync();
+                    .AsQueryable();
 
+                if (!string.IsNullOrEmpty(FilterType))
+                {
+                    query = query.Where(c => c.ContractType.Contains(FilterType));
+                }
+
+                if (!string.IsNullOrEmpty(FilterPeriod))
+                {
+                    query = query.Where(c => c.Period != null && c.Period.Contains(FilterPeriod));
+                }
+
+                if (!string.IsNullOrEmpty(FilterStatus))
+                {
+                    query = query.Where(c => c.ContractStatus == FilterStatus);
+                }
+
+                if (FilterAgrupamento.HasValue)
+                {
+                    query = query.Where(c => c.AgrupamentoId == FilterAgrupamento);
+                }
+
+                Contracts = await query.ToListAsync();
                 Agrupamentos = await _context.Agrupamentos.ToListAsync();
             }
             catch (System.Exception ex)

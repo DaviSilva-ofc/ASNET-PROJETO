@@ -12,7 +12,50 @@
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Lista de Contratos</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalContrato">Carregar Contratos</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+                    <i class="bx bx-filter-alt me-1"></i> Filtrar
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalContrato">Carregar Contratos</button>
+            </div>
+        </div>
+
+        <div class="collapse @(Model.FilterStatus != null || Model.FilterType != null || Model.FilterPeriod != null || Model.FilterAgrupamento != null ? "show" : "")" id="collapseFilters">
+            <div class="card-body border-top">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo</label>
+                        <input type="text" name="FilterType" value="@Model.FilterType" class="form-control" placeholder="Filtrar por tipo" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Período (meses)</label>
+                        <input type="text" name="FilterPeriod" value="@Model.FilterPeriod" class="form-control" placeholder="Filtrar por período" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Estado</label>
+                        <select name="FilterStatus" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Ativo" selected="@(Model.FilterStatus == "Ativo" ? "selected" : null)">Ativo</option>
+                            <option value="Pendente" selected="@(Model.FilterStatus == "Pendente" ? "selected" : null)">Pendente</option>
+                            <option value="Finalizado" selected="@(Model.FilterStatus == "Finalizado" ? "selected" : null)">Finalizado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Agrupamento</label>
+                        <select name="FilterAgrupamento" class="form-select">
+                            <option value="">Todos</option>
+                            @foreach (var agrup in Model.Agrupamentos)
+                            {
+                                <option value="@agrup.Id" selected="@(Model.FilterAgrupamento == agrup.Id ? "selected" : null)">@agrup.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary btn-icon" title="Filtrar"><i class="bx bx-search"></i></button>
+                        <a asp-page="./Contracts" class="btn btn-outline-secondary btn-icon text-nowrap" title="Limpar Filtros">❌</a>
+                    </div>
+                </form>
+            </div>
         </div>
         <div class="table-responsive text-nowrap">
             <table class="table table-hover">
