@@ -62,20 +62,40 @@ namespace AspnetCoreStarter.Pages.Auth
                     return Page();
                 }
 
-                // Verificar se o utilizador é administrador (existe na tabela administradores)
+                // Identify the user's role by checking specific tables
                 var isAdmin = await _context.Administradores.AnyAsync(a => a.UserId == user.Id);
+                string role = "Ativo"; // Default fallback
+                if (isAdmin)
+                {
+                    role = "Admin";
+                }
+                else if (await _context.Diretores.AnyAsync(d => d.UserId == user.Id))
+                {
+                    role = "Diretor";
+                }
+                else if (await _context.Tecnicos.AnyAsync(t => t.UserId == user.Id))
+                {
+                    role = "Tecnico";
+                }
+                else if (await _context.Coordenadores.AnyAsync(c => c.UserId == user.Id))
+                {
+                    role = "Coordenador";
+                }
+                else if (await _context.Professores.AnyAsync(p => p.UserId == user.Id))
+                {
+                    role = "Professor";
+                }
 
-                Console.WriteLine($"[LOGIN] Utilizador: {user.Username}, Email: {user.Email}, AccountStatus: '{user.AccountStatus}', IsAdmin: {isAdmin}");
+                Console.WriteLine($"[LOGIN] Utilizador: {user.Username}, Role: {role}, AccountStatus: '{user.AccountStatus}'");
 
                 // Verificar se a conta está ativa (admins podem entrar sempre)
-                if (!isAdmin && !string.Equals(user.AccountStatus, "Ativo", StringComparison.OrdinalIgnoreCase))
+                if (role != "Admin" && !string.Equals(user.AccountStatus, "Ativo", StringComparison.OrdinalIgnoreCase))
                 {
                     ErrorMessage = $"A sua conta está com o estado '{user.AccountStatus}'. Contacte o administrador.";
                     return Page();
                 }
 
                 // Criar claims para autenticação por cookie
-                var role = isAdmin ? "Admin" : (user.AccountStatus ?? "Ativo");
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -100,10 +120,14 @@ namespace AspnetCoreStarter.Pages.Auth
                 HttpContext.Session.SetString("UserId", user.Id.ToString());
                 HttpContext.Session.SetString("Username", user.Username);
 
-                // Redirecionar Admin para o Dashboard, outros para a Landing Page
-                if (isAdmin)
+                // Redirecionar com base no cargo
+                if (role == "Admin")
                 {
                     return RedirectToPage("/Admin/Dashboard");
+                }
+                if (role == "Diretor")
+                {
+                    return RedirectToPage("/Clients/Directors/Dashboard");
                 }
 
                 return RedirectToPage("/frontpages/LandingPage");

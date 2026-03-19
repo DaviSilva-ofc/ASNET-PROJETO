@@ -63,5 +63,9 @@ namespace AspnetCoreStarter.Models
 
         [ForeignKey("RoomId")]
         public Sala? Room { get; set; }
+
+        [Column("status")]
+        [MaxLength(50)]
+        public string? Status { get; set; } = "Funcionando";
     }
 }

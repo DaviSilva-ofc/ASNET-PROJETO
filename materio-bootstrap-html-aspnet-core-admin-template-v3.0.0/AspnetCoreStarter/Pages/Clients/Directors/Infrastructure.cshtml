@@ -1,0 +1,258 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Directors.DirectorInfrastructureModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Infraestrutura";
+}
+
+@section VendorStyles {
+<link rel="stylesheet" href="~/vendor/libs/notyf/notyf.dist.css" />
+}
+
+@section PageStyles {
+<style>
+    .dark-style .card-header h5,
+    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+    
+    .dark-style .list-group-item,
+    [data-bs-theme="dark"] .list-group-item {
+        background-color: transparent;
+        color: #cbcbe2;
+        border-color: rgba(255,255,255,0.1);
+    }
+    
+    .dark-style .text-muted,
+    [data-bs-theme="dark"] .text-muted { color: #a1acb8 !important; }
+
+    .dark-style .card,
+    [data-bs-theme="dark"] .card {
+        background-color: #2b2c40;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
+    }
+
+    .dark-style h4.fw-bold,
+    [data-bs-theme="dark"] h4.fw-bold { color: #f5f5f9 !important; }
+
+    .bg-light-section {
+        background-color: rgba(67, 89, 113, 0.02);
+        transition: all 0.3s ease;
+    }
+    .dark-style .bg-light-section,
+    [data-bs-theme="dark"] .bg-light-section {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .infra-tree .tree-node {
+        position: relative;
+        padding: 4px 0;
+    }
+
+    .tree-node i {
+        font-size: 1.1rem;
+        vertical-align: middle;
+        opacity: 0.8;
+    }
+
+    .cursor-pointer { cursor: pointer; }
+
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        font-weight: bold;
+        color: var(--bs-primary);
+        font-size: 1.4rem;
+        display: inline-block;
+        line-height: 1;
+        background-color: rgba(105, 108, 255, 0.15);
+        border: 1px solid rgba(105, 108, 255, 0.3);
+        border-radius: 4px;
+        padding: 4px;
+        margin-right: 8px;
+    }
+    
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background-color: var(--bs-primary);
+        color: #fff;
+    }
+
+    .agrupamento-node { color: var(--bs-primary); }
+    .school-node { color: var(--bs-success); }
+    .bloc-node { color: var(--bs-info); }
+    .room-node { color: var(--bs-warning); }
+    .director-node { color: #8592a3; }
+    .equip-node { color: #a1acb8; }
+    
+    .icon-base {
+        font-size: 1.25rem;
+        vertical-align: middle;
+        line-height: 1;
+    }
+
+    .tree-node i.ri-arrow-right-s-line, 
+    .tree-node i.ri-arrow-down-s-line {
+        background-color: rgba(105, 108, 255, 0.1);
+        border-radius: 4px;
+        padding: 4px;
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+    
+    .dark-style .agrupamento-node { color: #696cff; }
+    .dark-style .school-node { color: #71dd37; }
+    .dark-style .bloc-node { color: #03c3ec; }
+    .dark-style .room-node { color: #ffab00; }
+    .dark-style .director-node { color: #e1e1e3; }
+    .dark-style .equip-node { color: #707186; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="mb-4">
+        <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Diretor /</span> Infraestrutura</h4>
+    </div>
+
+    <div class="row">
+        @foreach (var client in Model.Clients)
+        {
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center cursor-pointer" 
+                         data-bs-toggle="collapse" data-bs-target="#client-@client.Agrupamento.Id">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 text-white me-3">
+                                <strong>@client.Agrupamento.Name</strong>
+                            </h5>
+                        </div>
+                        <i class="icon-base ri-arrow-down-s-line text-white fs-4"></i>
+                    </div>
+                    <div id="client-@client.Agrupamento.Id" class="collapse show">
+                        <div class="card-body pt-4">
+                            <div class="row">
+                                <!-- Coluna Tickets -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer" 
+                                             data-bs-toggle="collapse" data-bs-target="#tickets-@client.Agrupamento.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-ticket-2-line me-2"></i>Tickets</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="tickets-@client.Agrupamento.Id" class="collapse show">
+                                            <h3 class="mb-1 text-primary">@client.TicketCount</h3>
+                                            <p class="text-muted small mb-2">Tickets ativos em todas as escolas</p>
+                                            <a asp-page="./Tickets" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                                Ver Tickets
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna Contratos -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer" 
+                                             data-bs-toggle="collapse" data-bs-target="#contracts-@client.Agrupamento.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-file-list-3-line me-2"></i>Contratos</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="contracts-@client.Agrupamento.Id" class="collapse show">
+                                            <h3 class="mb-1 text-success">@client.ContractCount</h3>
+                                            <p class="text-muted small mb-2">Contratos registados</p>
+                                            <a asp-page="./Contracts" class="btn btn-sm btn-outline-success w-100 mt-2">
+                                                Ver Contratos
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna Agrupamento (Árvore) -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer" 
+                                             data-bs-toggle="collapse" data-bs-target="#infra-@client.Agrupamento.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-node-tree me-2"></i>Agrupamento</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="infra-@client.Agrupamento.Id" class="collapse show mt-3">
+                                            <div class="infra-tree">
+                                                <div class="tree-node director-node mb-2 d-flex align-items-center">
+                                                    <i class="icon-base ri-user-star-line me-1"></i> <strong>Diretor: @client.DirectorName</strong>
+                                                </div>
+                                                <div class="tree-node agrupamento-node">
+                                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-schools-@client.Agrupamento.Id">
+                                                        <i class="icon-base ri-arrow-right-s-line"></i>
+                                                        <i class="icon-base ri-community-line me-1"></i> <strong>@client.Agrupamento.Name</strong>
+                                                    </div>
+                                                    
+                                                    <div id="tree-schools-@client.Agrupamento.Id" class="collapse">
+                                                        @foreach (var schoolVm in client.Schools)
+                                                        {
+                                                            <div class="tree-node school-node ms-4 mt-2">
+                                                                <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-blocks-@schoolVm.School.Id">
+                                                                    <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                    <i class="icon-base ri-building-line me-1"></i> <strong>@schoolVm.School.Name</strong>
+                                                                    <span class="ms-2 text-muted small">(Coord: @schoolVm.CoordinatorName)</span>
+                                                                </div>
+                                                                
+                                                                <div id="tree-blocks-@schoolVm.School.Id" class="collapse">
+                                                                    @foreach (var bloc in schoolVm.Blocos)
+                                                                    {
+                                                                        <div class="tree-node bloc-node ms-4 mt-1">
+                                                                            <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-rooms-@bloc.Id">
+                                                                                <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                                <i class="icon-base ri-box-3-line me-1"></i> @bloc.Name
+                                                                            </div>
+                                                                            
+                                                                            <div id="tree-rooms-@bloc.Id" class="collapse">
+                                                                                @{ var rooms = Model.Salas.Where(s => s.BlockId == bloc.Id).ToList(); }
+                                                                                @foreach (var room in rooms)
+                                                                                {
+                                                                                    <div class="tree-node room-node ms-4 mt-1">
+                                                                                        <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-equips-@room.Id">
+                                                                                            <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                                            <i class="icon-base ri-door-open-line me-1"></i> @room.Name
+                                                                                            <div class="ms-auto">
+                                                                                                <a asp-page="./Equipment" asp-route-roomId="@room.Id" class="btn btn-sm btn-icon btn-outline-info border-0" title="Ver Equipamentos">
+                                                                                                    <i class="ri-computer-line"></i>
+                                                                                                </a>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        
+                                                                                        <div id="tree-equips-@room.Id" class="collapse">
+                                                                                            @if (room.Equipments != null && room.Equipments.Any())
+                                                                                            {
+                                                                                                @foreach (var equip in room.Equipments)
+                                                                                                {
+                                                                                                    <div class="tree-node equip-node ms-4 mt-1 small">
+                                                                                                        <i class="ri-computer-line me-1"></i> @equip.Name 
+                                                                                                    </div>
+                                                                                                }
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                <div class="ms-4 mt-1 small italic text-muted">
+                                                                                                    Sem equipamentos
+                                                                                                </div>
+                                                                                            }
+                                                                                        </div>
+                                                                                    </div>
+                                                                                }
+                                                                            </div>
+                                                                        </div>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

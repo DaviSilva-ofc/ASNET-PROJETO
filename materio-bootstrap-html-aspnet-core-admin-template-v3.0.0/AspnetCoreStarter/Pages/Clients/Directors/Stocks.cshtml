@@ -1,0 +1,139 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Directors.DirectorStocksModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Stocks";
+}
+
+@section PageStyles {
+<style>
+    .dark-style .card,
+    [data-bs-theme="dark"] .card {
+        background-color: #2b2c40 !important;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
+    }
+
+    .dark-style h4, .dark-style h6, .dark-style h5,
+    [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h6, [data-bs-theme="dark"] h5 { 
+        color: #f5f5f9 !important; 
+    }
+    
+    .dark-style .text-muted,
+    [data-bs-theme="dark"] .text-muted { color: #a1acb8 !important; }
+
+    .dark-style .bg-label-primary, [data-bs-theme="dark"] .bg-label-primary { background-color: rgba(105, 108, 255, 0.25) !important; color: #8592ff !important; }
+    .dark-style .bg-label-success, [data-bs-theme="dark"] .bg-label-success { background-color: rgba(113, 221, 55, 0.25) !important; color: #71dd37 !important; }
+    .dark-style .bg-label-warning, [data-bs-theme="dark"] .bg-label-warning { background-color: rgba(255, 171, 0, 0.25) !important; color: #ffab00 !important; }
+    .dark-style .bg-label-info, [data-bs-theme="dark"] .bg-label-info { background-color: rgba(3, 195, 236, 0.25) !important; color: #03c3ec !important; }
+
+    .dark-style .table th, [data-bs-theme="dark"] .table th { color: #cbcbe2 !important; }
+    .dark-style .table td, [data-bs-theme="dark"] .table td { color: #a1acb8 !important; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Diretor /</span> Stocks</h4>
+
+    <div class="row">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-primary"><i class="ri-government-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">Escolas</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountEscolas</h4>
+                    <p class="text-muted small mb-0">Total de escolas no agrupamento</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-success"><i class="ri-door-open-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">Salas</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountSalas</h4>
+                    <p class="text-muted small mb-0">Total de salas monitorizadas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-warning"><i class="ri-computer-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">Equipamentos</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountEquipamentos</h4>
+                    <p class="text-muted small mb-0">Total de itens registados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-info"><i class="ri-ticket-2-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">Tickets</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountTickets</h4>
+                    <p class="text-muted small mb-0">Relatórios de manutenção ativos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-2">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Visão Geral de Equipamentos e Inventário</h5>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Artigo</th>
+                        <th>Categoria</th>
+                        <th>Localização</th>
+                        <th>Quantidade</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Items.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">Nenhum artigo encontrado no agrupamento.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td><strong>@item.Name</strong></td>
+                                <td><span class="badge bg-label-secondary">@item.Category</span></td>
+                                <td>@item.Location</td>
+                                <td>@item.Quantity</td>
+                                <td>
+                                    <span class="badge @(item.Status == "Disponível" ? "bg-label-success" : "bg-label-warning")">
+                                        @item.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

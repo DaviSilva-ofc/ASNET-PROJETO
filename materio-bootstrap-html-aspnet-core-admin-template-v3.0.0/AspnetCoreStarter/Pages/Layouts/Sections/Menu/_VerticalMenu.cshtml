@@ -27,60 +27,108 @@
   <ul class="menu-inner py-1">
     @if (User.Identity.IsAuthenticated)
     {
+      bool isDirector = User.IsInRole("Diretor");
+
       <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Painel</span>
       </li>
-      <li class='menu-item@(currentPage == "/Admin/Dashboard" ? " active" : "")'>
-        <a asp-page="/Admin/Dashboard" class="menu-link">
-          <i class="menu-icon icon-base ri-dashboard-line"></i>
-          <div>Admin Dashboard</div>
-        </a>
-      </li>
-      <li class='menu-item@(currentPage == "/Admin/Infrastructure" ? " active" : "")'>
-        <a asp-page="/Admin/Infrastructure" class="menu-link">
-          <i class="menu-icon icon-base ri-government-line"></i>
-          <div>Infraestrutura</div>
-        </a>
-      </li>
-      <li class='menu-item@(currentPage == "/Admin/Clients" ? " active" : "")'>
-        <a asp-page="/Admin/Clients" class="menu-link">
-          <i class="menu-icon icon-base ri-user-line"></i>
-          <div>Clientes</div>
-        </a>
-      </li>
-      <li class='menu-item@(currentPage == "/Admin/Equipment" ? " active" : "")'>
-        <a asp-page="/Admin/Equipment" class="menu-link">
-          <i class="menu-icon icon-base ri-computer-line"></i>
-          <div>Equipamentos</div>
-        </a>
-      </li>
-      <li class='menu-item@(currentPage == "/Admin/Contracts" ? " active" : "")'>
-        <a asp-page="/Admin/Contracts" class="menu-link">
-          <i class="menu-icon icon-base ri-file-list-3-line"></i>
-          <div>Contratos</div>
-        </a>
-      </li>
 
-      <li class='menu-item@(currentPage == "/Admin/Stocks" ? " active" : "")'>
-        <a asp-page="/Admin/Stocks" class="menu-link">
-          <i class="menu-icon icon-base ri-archive-line"></i>
-          <div>Stocks</div>
-        </a>
-      </li>
-
-      <li class='menu-item@(currentPage == "/Admin/Tickets" ? " active" : "")'>
-        <a asp-page="/Admin/Tickets" class="menu-link">
-          <i class="menu-icon icon-base ri-ticket-line"></i>
-          <div>Tickets</div>
-        </a>
-      </li>
-
-      <li class='menu-item@(currentPage == "/Admin/Chat" ? " active" : "")'>
-        <a asp-page="/Admin/Chat" class="menu-link">
-          <i class="menu-icon icon-base ri-chat-3-line"></i>
-          <div>Chat</div>
-        </a>
-      </li>
+      @if (isDirector)
+      {
+        <li class='menu-item@(currentPage == "/Clients/Directors/Dashboard" ? " active" : "")'>
+          <a asp-page="/Clients/Directors/Dashboard" class="menu-link">
+            <i class="menu-icon icon-base ri-dashboard-line"></i>
+            <div>Visão Geral</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Directors/Infrastructure" ? " active" : "")'>
+          <a asp-page="/Clients/Directors/Infrastructure" class="menu-link">
+            <i class="menu-icon icon-base ri-government-line"></i>
+            <div>Infraestrutura</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Directors/Equipment" ? " active" : "")'>
+          <a asp-page="/Clients/Directors/Equipment" class="menu-link">
+            <i class="menu-icon icon-base ri-computer-line"></i>
+            <div>Equipamentos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Directors/Contracts" ? " active" : "")'>
+          <a asp-page="/Clients/Directors/Contracts" class="menu-link">
+            <i class="menu-icon icon-base ri-file-list-3-line"></i>
+            <div>Contratos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Directors/Stocks" ? " active" : "")'>
+          <a asp-page="/Clients/Directors/Stocks" class="menu-link">
+            <i class="menu-icon icon-base ri-archive-line"></i>
+            <div>Stocks</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Directors/Tickets" ? " active" : "")'>
+          <a asp-page="/Clients/Directors/Tickets" class="menu-link">
+            <i class="menu-icon icon-base ri-ticket-line"></i>
+            <div>Tickets</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Directors/Chat" ? " active" : "")'>
+          <a asp-page="/Clients/Directors/Chat" class="menu-link">
+            <i class="menu-icon icon-base ri-chat-3-line"></i>
+            <div>Chat</div>
+          </a>
+        </li>
+      }
+      else
+      {
+        <li class='menu-item@(currentPage == "/Admin/Dashboard" ? " active" : "")'>
+          <a asp-page="/Admin/Dashboard" class="menu-link">
+            <i class="menu-icon icon-base ri-dashboard-line"></i>
+            <div>Admin Dashboard</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Infrastructure" ? " active" : "")'>
+          <a asp-page="/Admin/Infrastructure" class="menu-link">
+            <i class="menu-icon icon-base ri-government-line"></i>
+            <div>Infraestrutura</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Clients" ? " active" : "")'>
+          <a asp-page="/Admin/Clients" class="menu-link">
+            <i class="menu-icon icon-base ri-user-line"></i>
+            <div>Clientes</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Equipment" ? " active" : "")'>
+          <a asp-page="/Admin/Equipment" class="menu-link">
+            <i class="menu-icon icon-base ri-computer-line"></i>
+            <div>Equipamentos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Contracts" ? " active" : "")'>
+          <a asp-page="/Admin/Contracts" class="menu-link">
+            <i class="menu-icon icon-base ri-file-list-3-line"></i>
+            <div>Contratos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Stocks" ? " active" : "")'>
+          <a asp-page="/Admin/Stocks" class="menu-link">
+            <i class="menu-icon icon-base ri-archive-line"></i>
+            <div>Stocks</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Tickets" ? " active" : "")'>
+          <a asp-page="/Admin/Tickets" class="menu-link">
+            <i class="menu-icon icon-base ri-ticket-line"></i>
+            <div>Tickets</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Chat" ? " active" : "")'>
+          <a asp-page="/Admin/Chat" class="menu-link">
+            <i class="menu-icon icon-base ri-chat-3-line"></i>
+            <div>Chat</div>
+          </a>
+        </li>
+      }
     }
   </ul>
 

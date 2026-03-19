@@ -39,5 +39,8 @@ namespace AspnetCoreStarter.Models
         [Column("status")]
         [MaxLength(20)]
         public string? Status { get; set; } = "Pedido";
+
+        [Column("data_criacao")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

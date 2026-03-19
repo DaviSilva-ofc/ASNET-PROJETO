@@ -1,0 +1,81 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Directors.DirectorContractsModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Contratos";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Diretor /</span> Contratos</h4>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Lista de Contratos @(Model.MyAgrupamentoName != null ? $"- {Model.MyAgrupamentoName}" : "")</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+                    <i class="ri-filter-line me-1"></i> Filtrar e Pesquisar
+                </button>
+            </div>
+        </div>
+
+        <div class="collapse @(Model.FilterStatus != null || Model.FilterType != null || Model.FilterPeriod != null ? "show" : "")" id="collapseFilters">
+            <div class="card-body border-top">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo</label>
+                        <input type="text" name="FilterType" value="@Model.FilterType" class="form-control" placeholder="Filtrar por tipo" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Período (meses)</label>
+                        <input type="text" name="FilterPeriod" value="@Model.FilterPeriod" class="form-control" placeholder="Filtrar por período" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Estado</label>
+                        <select name="FilterStatus" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Ativo" selected="@(Model.FilterStatus == "Ativo" ? "selected" : null)">Ativo</option>
+                            <option value="Pendente" selected="@(Model.FilterStatus == "Pendente" ? "selected" : null)">Pendente</option>
+                            <option value="Finalizado" selected="@(Model.FilterStatus == "Finalizado" ? "selected" : null)">Finalizado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-icon" title="Filtrar"><i class="ri-search-line"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Período</th>
+                        <th>Estado</th>
+                        <th>Agrupamento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Contracts)
+                    {
+                        <tr>
+                            <td><strong>@item.ContractType</strong></td>
+                            <td>@item.Period</td>
+                            <td>
+                                <span class="badge @(item.ContractStatus == "Ativo" ? "bg-label-success" : "bg-label-warning")">
+                                    @item.ContractStatus
+                                </span>
+                            </td>
+                            <td>@(item.Agrupamento?.Name ?? "N/A")</td>
+                        </tr>
+                    }
+                    @if (!Model.Contracts.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-4">Nenhum contrato encontrado.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
