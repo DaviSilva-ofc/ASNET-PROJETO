@@ -112,15 +112,15 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label">Nome do Equipamento</label>
-                            <input type="text" name="name" class="form-control" placeholder="Pesquisar por nome..." />
+                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por nome..." />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tipo</label>
-                            <input type="text" name="type" class="form-control" placeholder="ex: Portátil" />
+                            <input type="text" asp-for="FilterType" class="form-control" placeholder="ex: Portátil" />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Estado</label>
-                            <select name="status" class="form-select">
+                            <select asp-for="FilterStatus" class="form-select">
                                 <option value="">Todos</option>
                                 <option value="Funcionando">Funcionando</option>
                                 <option value="Avariado">Avariado</option>
@@ -132,7 +132,7 @@
                         
                         <div class="col-12">
                             <label class="form-label">Escola</label>
-                            <select id="filterEscola" name="escolaId" class="form-select" onchange="filterBlocos()">
+                            <select id="filterEscola" asp-for="FilterEscolaId" class="form-select" onchange="filterBlocos()">
                                 <option value="">Todas</option>
                                 @foreach (var esc in Model.AvailableEscolas)
                                 {
@@ -142,7 +142,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Bloco</label>
-                            <select id="filterBloco" name="blocoId" class="form-select" onchange="filterSalas()">
+                            <select id="filterBloco" asp-for="FilterBlocoId" class="form-select" onchange="filterSalas()">
                                 <option value="">Todos</option>
                                 @foreach (var blc in Model.AvailableBlocos)
                                 {
@@ -152,7 +152,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Sala</label>
-                            <select id="filterSala" name="roomId" class="form-select">
+                            <select id="filterSala" asp-for="FilterRoomId" class="form-select">
                                 <option value="">Todas</option>
                                 @foreach (var sala in Model.Rooms)
                                 {

@@ -53,6 +53,28 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             int userId = int.Parse(userIdStr);
 
+            // Temporary fix for missing tables and columns
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS contratos (
+                        id_contrato INT AUTO_INCREMENT PRIMARY KEY,
+                        periodo VARCHAR(50),
+                        tipo_contrato VARCHAR(50),
+                        status_contrato VARCHAR(50),
+                        descricao TEXT,
+                        id_agrupamento INT,
+                        id_admin INT,
+                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento),
+                        FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN password_hash VARCHAR(255) NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
+
             // Fetch the Director's Agrupamento
             var diretor = await _context.Diretores
                 .Include(d => d.Agrupamento)
@@ -92,7 +114,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             TotalContratos = await _context.Contratos.CountAsync(c => c.AgrupamentoId == agrupamentoId);
             
             DamagedEquipmentCount = await _context.Equipamentos
-                .CountAsync(e => salaIds.Contains(e.RoomId) && e.Status == "Avariado");
+                .CountAsync(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value) && e.Status == "Avariado");
 
             // Total Professores belonging to blocks in this Agrupamento
             TotalProfessores = await _context.Professores

@@ -27,10 +27,25 @@ namespace AspnetCoreStarter.Models
         [Column("id_tecnico")]
         public int? TechnicianId { get; set; }
 
+        [ForeignKey("TechnicianId")]
+        public virtual Tecnico? Technician { get; set; }
+
+        [Column("id_agrupamento")]
+        public int? AgrupamentoId { get; set; }
+
+        [ForeignKey("AgrupamentoId")]
+        public virtual Agrupamento? Agrupamento { get; set; }
+
+        [Column("id_escola")]
+        public int? SchoolId { get; set; }
+
+        [ForeignKey("SchoolId")]
+        public virtual School? School { get; set; }
+
         [Column("id_admin")]
         public int? AdminId { get; set; }
 
         [ForeignKey("AdminId")]
-        public Administrador? Admin { get; set; }
+        public virtual Administrador? Admin { get; set; }
     }
 }

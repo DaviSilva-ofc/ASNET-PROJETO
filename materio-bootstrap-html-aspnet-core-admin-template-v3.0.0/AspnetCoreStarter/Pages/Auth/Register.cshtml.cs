@@ -103,7 +103,8 @@ namespace AspnetCoreStarter.Pages.Auth
                 Email = Input.Email,
                 Password = hashedPassword, // Map to 'palavra_passe'
                 PasswordHash = hashedPassword, // Map to 'PasswordHash'
-                ProfilePhotoPath = photoPath
+                ProfilePhotoPath = photoPath,
+                AccountStatus = "Pendente"
             };
 
             try

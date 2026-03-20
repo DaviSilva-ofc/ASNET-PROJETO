@@ -32,14 +32,28 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<School> AvailableEscolas { get; set; }
         public List<Bloco> AvailableBlocos { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(
-            int? roomId, 
-            int? blocoId, 
-            int? escolaId, 
-            int? agrupamentoId,
-            string name,
-            string type,
-            string serialNumber)
+        [BindProperty(SupportsGet = true)]
+        public string? FilterName { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterType { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterSerialNumber { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterAgrupamentoId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterEscolaId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterBlocoId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterRoomId { get; set; }
+
+        public async Task<IActionResult> OnGetAsync()
         {
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Auth/Login");
@@ -49,29 +63,29 @@ namespace AspnetCoreStarter.Pages.Admin
                 .AsQueryable();
 
             // Apply Filters
-            if (!string.IsNullOrEmpty(name)) query = query.Where(e => e.Name.Contains(name));
-            if (!string.IsNullOrEmpty(type)) query = query.Where(e => e.Type.Contains(type));
-            if (!string.IsNullOrEmpty(serialNumber)) query = query.Where(e => e.SerialNumber.Contains(serialNumber));
+            if (!string.IsNullOrEmpty(FilterName)) query = query.Where(e => e.Name.Contains(FilterName));
+            if (!string.IsNullOrEmpty(FilterType)) query = query.Where(e => e.Type.Contains(FilterType));
+            if (!string.IsNullOrEmpty(FilterSerialNumber)) query = query.Where(e => e.SerialNumber.Contains(FilterSerialNumber));
 
-            if (roomId.HasValue)
+            if (FilterRoomId.HasValue)
             {
-                query = query.Where(e => e.RoomId == roomId.Value);
-                ActiveFilterRoom = await _context.Salas.FindAsync(roomId.Value);
+                query = query.Where(e => e.RoomId == FilterRoomId.Value);
+                ActiveFilterRoom = await _context.Salas.FindAsync(FilterRoomId.Value);
             }
-            else if (blocoId.HasValue)
+            else if (FilterBlocoId.HasValue)
             {
-                query = query.Where(e => e.Room.BlockId == blocoId.Value);
-                ActiveFilterBloco = await _context.Blocos.FindAsync(blocoId.Value);
+                query = query.Where(e => e.Room != null && e.Room.BlockId == FilterBlocoId.Value);
+                ActiveFilterBloco = await _context.Blocos.FindAsync(FilterBlocoId.Value);
             }
-            else if (escolaId.HasValue)
+            else if (FilterEscolaId.HasValue)
             {
-                query = query.Where(e => e.Room.Block.SchoolId == escolaId.Value);
-                ActiveFilterEscola = await _context.Schools.FindAsync(escolaId.Value);
+                query = query.Where(e => e.Room != null && e.Room.Block.SchoolId == FilterEscolaId.Value);
+                ActiveFilterEscola = await _context.Schools.FindAsync(FilterEscolaId.Value);
             }
-            else if (agrupamentoId.HasValue)
+            else if (FilterAgrupamentoId.HasValue)
             {
-                query = query.Where(e => e.Room.Block.School.AgrupamentoId == agrupamentoId.Value);
-                ActiveFilterAgrupamento = await _context.Agrupamentos.FindAsync(agrupamentoId.Value);
+                query = query.Where(e => e.Room != null && e.Room.Block.School.AgrupamentoId == FilterAgrupamentoId.Value);
+                ActiveFilterAgrupamento = await _context.Agrupamentos.FindAsync(FilterAgrupamentoId.Value);
             }
 
             Equipments = await query.ToListAsync();

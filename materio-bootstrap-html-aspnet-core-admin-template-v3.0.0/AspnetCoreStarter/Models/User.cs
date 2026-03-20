@@ -18,33 +18,33 @@ namespace AspnetCoreStarter.Models
 
         [Required]
         [EmailAddress]
+        [MaxLength(100)]
         [Column("email")]
         public string Email { get; set; }
 
-        [Column("palavra_passe")]
         [Required]
         [MaxLength(255)]
-        public string Password { get; set; } // Map to 'palavra_passe'
+        [Column("palavra_passe")]
+        public string Password { get; set; }
 
-        // We use PasswordHash for our logic as requested by the user's schema additions
-        [Required]
-        public string PasswordHash { get; set; }
-
-        [Column("ProfilePhotoPath")]
-        public string? ProfilePhotoPath { get; set; }
-
-        [Column("PasswordResetToken")]
-        public string? PasswordResetToken { get; set; }
-
-        [Column("ResetTokenExpiry")]
-        public DateTime? ResetTokenExpiry { get; set; }
+        [Column("password_hash")]
+        public string PasswordHash { get; set; } = string.Empty;
 
         [Column("data_criacao")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("status_conta")]
         [MaxLength(50)]
-        public string AccountStatus { get; set; } = "Pendente";
+        public string? AccountStatus { get; set; }
+
+        [Column("profile_photo_path")]
+        public string? ProfilePhotoPath { get; set; }
+
+        [Column("password_reset_token")]
+        public string? PasswordResetToken { get; set; }
+
+        [Column("reset_token_expiry")]
+        public DateTime? ResetTokenExpiry { get; set; }
     }
 }
 

@@ -31,6 +31,54 @@
     /* Table adjustments */
     .dark-style .table th, [data-bs-theme="dark"] .table th { color: #cbcbe2 !important; }
     .dark-style .table td, [data-bs-theme="dark"] .table td { color: #a1acb8 !important; }
+
+    /* Print Styles */
+    @@media print {
+        .layout-navbar, .layout-menu-horizontal, .layout-menu, .footer, .btn, .nav-links, .buy-now, .btn-primary, .btn-outline-primary {
+            display: none !important;
+        }
+        .container-xxl {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+        }
+        .content-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        body {
+            background: white !important;
+            color: black !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .card-header h5 {
+            font-size: 24pt !important;
+            margin-bottom: 20px !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+        .table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd !important;
+            padding: 8px !important;
+            color: black !important;
+        }
+        .badge {
+            border: 1px solid #ccc !important;
+            color: black !important;
+            background: transparent !important;
+        }
+        .text-primary, .text-warning, .text-info, .text-success {
+            color: black !important;
+            font-weight: bold !important;
+        }
+    }
 </style>
 }
 
@@ -99,21 +147,73 @@
     <div class="card shadow-sm mt-2">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Visão Geral de Inventário</h5>
-            <button class="btn btn-sm btn-outline-primary">Exportar PDF</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+                    <i class="ri-filter-3-line me-1"></i> Filtrar
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddStock">
+                    <i class="ri-add-line me-1"></i> Adicionar Stock
+                </button>
+                <button class="btn btn-outline-primary" onclick="window.print()">
+                    <i class="ri-file-pdf-line me-1"></i> Exportar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Collapsible Filters -->
+        <div class="collapse @(Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null ? "show" : "")" id="collapseFilters">
+            <div class="card-body border-top">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Artigo / Equipamento</label>
+                        <input type="text" name="SearchName" value="@Model.SearchName" class="form-control" placeholder="Procurar por nome..." />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tipo</label>
+                        <select name="FilterType" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Portátil" selected="@(Model.FilterType == "Portátil" ? "selected" : null)">Portátil</option>
+                            <option value="Monitor" selected="@(Model.FilterType == "Monitor" ? "selected" : null)">Monitor</option>
+                            <option value="Teclado" selected="@(Model.FilterType == "Teclado" ? "selected" : null)">Teclado</option>
+                            <option value="Rato" selected="@(Model.FilterType == "Rato" ? "selected" : null)">Rato</option>
+                            <option value="Impressora" selected="@(Model.FilterType == "Impressora" ? "selected" : null)">Impressora</option>
+                            <option value="Projetor" selected="@(Model.FilterType == "Projetor" ? "selected" : null)">Projetor</option>
+                            <option value="Outro" selected="@(Model.FilterType == "Outro" ? "selected" : null)">Outro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Localização</label>
+                        <select name="FilterCategory" class="form-select">
+                            <option value="">Todas</option>
+                            <option value="Empresa" selected="@(Model.FilterCategory == "Empresa" ? "selected" : null)">Stock Empresa</option>
+                            <option value="Tecnico" selected="@(Model.FilterCategory == "Tecnico" ? "selected" : null)">Com Técnico</option>
+                            <option value="Agrupamento" selected="@(Model.FilterCategory == "Agrupamento" ? "selected" : null)">Stock Agrupamento</option>
+                            <option value="Escola" selected="@(Model.FilterCategory == "Escola" ? "selected" : null)">Stock Escola</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                        @if (Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null)
+                        {
+                            <a asp-page="./Stocks" class="btn btn-outline-secondary">Limpar</a>
+                        }
+                    </div>
+                </form>
+            </div>
         </div>
         <div class="table-responsive text-nowrap">
             <table class="table table-hover">
                 <thead>
                     <tr>
                         <th>Artigo</th>
-                        <th>Categoria</th>
+                        <th>Tipo</th>
                         <th>Localização</th>
                         <th>Quantidade</th>
                         <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (!Model.RecentItems.Any())
+                    @if (!Model.Inventory.Any())
                     {
                         <tr>
                             <td colspan="5" class="text-center py-5 text-muted">Nenhum artigo encontrado no stock.</td>
@@ -121,15 +221,24 @@
                     }
                     else
                     {
-                        @foreach (var item in Model.RecentItems)
+                        @foreach (var item in Model.Inventory)
                         {
                             <tr>
                                 <td><strong>@item.Name</strong></td>
-                                <td><span class="badge bg-label-secondary">@item.Category</span></td>
-                                <td>@item.Location</td>
+                                <td><span class="badge bg-label-secondary">@item.Type</span></td>
+                                <td>
+                                    @{
+                                        var locColor = "text-body";
+                                        if (item.Location.Contains("Empresa")) locColor = "text-primary fw-bold";
+                                        else if (item.Location.Contains("técnico")) locColor = "text-warning fw-bold";
+                                        else if (item.Location.Contains("agrupamento")) locColor = "text-info fw-bold";
+                                        else if (item.Location.Contains("escola")) locColor = "text-success fw-bold";
+                                    }
+                                    <span class="@locColor">@item.Location</span>
+                                </td>
                                 <td>@item.Quantity</td>
                                 <td>
-                                    <span class="badge @(item.Status == "Disponível" ? "bg-label-success" : "bg-label-warning")">
+                                    <span class="badge @(item.Status == "Disponível" || item.Status == "Funcionando" ? "bg-label-success" : "bg-label-warning")">
                                         @item.Status
                                     </span>
                                 </td>
@@ -141,3 +250,109 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Adicionar Stock -->
+<div class="modal fade" id="modalAddStock" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Solicitar / Adicionar Novo Artigo ao Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="AddStock">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Equipamento / Artigo</label>
+                        <input type="text" name="name" class="form-control" placeholder="Ex: Portátil HP ProBook" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo / Categoria</label>
+                        <select name="type" class="form-select" required>
+                            <option value="">Selecione...</option>
+                            <option value="Portátil">Portátil</option>
+                            <option value="Monitor">Monitor</option>
+                            <option value="Teclado">Teclado</option>
+                            <option value="Rato">Rato</option>
+                            <option value="Impressora">Impressora</option>
+                            <option value="Projetor">Projetor</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Local de Destino</label>
+                        <select name="locationCategory" class="form-select" onchange="toggleAddStockLocation(this)" required>
+                            <option value="Empresa">Stock Empresa (Central)</option>
+                            <option value="Tecnico">Com Técnico</option>
+                            <option value="Agrupamento">Stock Agrupamento</option>
+                            <option value="Escola">Stock Escola</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Location Fields -->
+                    <div id="addStock_Tecnico" class="mb-3 add-stock-loc" style="display:none;">
+                        <label class="form-label">Selecionar Técnico</label>
+                        <select name="technicianId" class="form-select">
+                            <option value="">Escolha um técnico...</option>
+                            @foreach (var t in Model.AvailableTecnicos) {
+                                <option value="@t.Id">@t.Username</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div id="addStock_Agrupamento" class="mb-3 add-stock-loc" style="display:none;">
+                        <label class="form-label">Selecionar Agrupamento</label>
+                        <select name="agrupamentoId" class="form-select">
+                            <option value="">Escolha um agrupamento...</option>
+                            @foreach (var a in Model.AvailableAgrupamentos) {
+                                <option value="@a.Id">@a.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div id="addStock_Escola" class="mb-3 add-stock-loc" style="display:none;">
+                        <label class="form-label">Selecionar Escola</label>
+                        <select name="schoolId" class="form-select">
+                            <option value="">Escolha uma escola...</option>
+                            @foreach (var s in Model.AvailableSchools) {
+                                <option value="@s.Id">@s.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Descrição / Observações</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Detalhes adicionais..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Adicionar ao Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+<script>
+    function toggleAddStockLocation(selectEl) {
+        const category = selectEl.value;
+        const modal = selectEl.closest('.modal-content');
+        
+        // Hide all sub-locations and remove required
+        modal.querySelectorAll('.add-stock-loc').forEach(div => {
+            div.style.display = 'none';
+            div.querySelectorAll('select').forEach(s => s.required = false);
+        });
+
+        // Show target if not Empresa
+        if (category !== 'Empresa') {
+            const target = modal.querySelector('#addStock_' + category);
+            if (target) {
+                target.style.display = 'block';
+                target.querySelectorAll('select').forEach(s => s.required = true);
+            }
+        }
+    }
+</script>
+}

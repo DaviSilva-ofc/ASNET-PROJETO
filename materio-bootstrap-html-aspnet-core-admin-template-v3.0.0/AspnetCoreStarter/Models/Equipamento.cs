@@ -18,37 +18,20 @@ namespace AspnetCoreStarter.Models
         [MaxLength(100)]
         public string? Type { get; set; }
 
+        [Column("marca")]
+        [MaxLength(100)]
+        public string? Brand { get; set; }
+
+        [Column("modelo")]
+        [MaxLength(100)]
+        public string? Model { get; set; }
+
+        [Column("numero_patrimonio")]
+        public long? AssetNumber { get; set; }
+
         [Column("numero_serie")]
         [MaxLength(100)]
         public string? SerialNumber { get; set; }
-
-        [Column("processador")]
-        [MaxLength(100)]
-        public string? Processor { get; set; }
-
-        [Column("discos")]
-        [MaxLength(100)]
-        public string? Storage { get; set; }
-
-        [Column("placa_video")]
-        [MaxLength(100)]
-        public string? GraphicsCard { get; set; }
-
-        [Column("bateria")]
-        [MaxLength(100)]
-        public string? Battery { get; set; }
-
-        [Column("cooler")]
-        [MaxLength(100)]
-        public string? Cooler { get; set; }
-
-        [Column("memoria")]
-        [MaxLength(100)]
-        public string? Memory { get; set; }
-
-        [Column("memoria_ram")]
-        [MaxLength(100)]
-        public string? Ram { get; set; }
 
         [Column("mac_address")]
         [MaxLength(100)]
@@ -59,7 +42,7 @@ namespace AspnetCoreStarter.Models
         public string? IpAddress { get; set; }
 
         [Column("id_sala")]
-        public int RoomId { get; set; }
+        public int? RoomId { get; set; }
 
         [ForeignKey("RoomId")]
         public Sala? Room { get; set; }

@@ -31,13 +31,19 @@ namespace AspnetCoreStarter.Models
         public int? AdminId { get; set; }
 
         [ForeignKey("AdminId")]
-        public Administrador? Admin { get; set; }
+        public User? Admin { get; set; }
 
         [Column("id_tecnico")]
         public int? TechnicianId { get; set; }
 
+        [Column("id_equipamento")]
+        public int? EquipamentoId { get; set; }
+
+        [ForeignKey("EquipamentoId")]
+        public Equipamento? Equipamento { get; set; }
+
         [Column("status")]
-        [MaxLength(20)]
+        [MaxLength(50)]
         public string? Status { get; set; } = "Pedido";
 
         [Column("data_criacao")]

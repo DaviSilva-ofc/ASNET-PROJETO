@@ -58,10 +58,114 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(userId) || userRole != "Admin")
                 return RedirectToPage("/Index");
 
-            // Temporary fix for missing column in MySQL
-            try {
-                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;");
-            } catch { /* Ignore if it already exists or failed for other reasons */ }
+            // Temporary fix for missing tables and columns in MySQL
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS contratos (
+                        id_contrato INT AUTO_INCREMENT PRIMARY KEY,
+                        periodo VARCHAR(50),
+                        tipo_contrato VARCHAR(50),
+                        status_contrato VARCHAR(50),
+                        descricao TEXT,
+                        id_agrupamento INT,
+                        id_admin INT,
+                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento),
+                        FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS diretores (
+                        id_diretores INT AUTO_INCREMENT PRIMARY KEY,
+                        id_utilizador INT,
+                        id_agrupamento INT,
+                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS coordenadores (
+                        id_coordenadores INT AUTO_INCREMENT PRIMARY KEY,
+                        id_utilizador INT,
+                        id_escola INT,
+                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                        FOREIGN KEY (id_escola) REFERENCES escolas(id_escola)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS professores (
+                        id_professores INT AUTO_INCREMENT PRIMARY KEY,
+                        id_utilizador INT,
+                        id_bloco INT,
+                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                        FOREIGN KEY (id_bloco) REFERENCES blocos(id_bloco)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS tecnicos (
+                        id_utilizador INT PRIMARY KEY,
+                        especialidade VARCHAR(100),
+                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS administradores (
+                        id_utilizador INT PRIMARY KEY,
+                        id_agrupamento INT,
+                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS stock_empresa (
+                        id_stock INT AUTO_INCREMENT PRIMARY KEY,
+                        nome_equipamento VARCHAR(100),
+                        tipo VARCHAR(100),
+                        descricao TEXT,
+                        disponivel BOOLEAN DEFAULT TRUE,
+                        id_tecnico INT,
+                        id_admin INT,
+                        FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS stock_tecnico (
+                        id_stock_tecnico INT AUTO_INCREMENT PRIMARY KEY,
+                        id_tecnico INT,
+                        nome_equipamento VARCHAR(100),
+                        descricao TEXT,
+                        disponivel BOOLEAN DEFAULT TRUE,
+                        FOREIGN KEY (id_tecnico) REFERENCES tecnicos(id_utilizador)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { 
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS mensagens (
+                        id_mensagem INT AUTO_INCREMENT PRIMARY KEY,
+                        id_remetente INT,
+                        id_destinatario INT,
+                        conteudo TEXT,
+                        data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        lida BOOLEAN DEFAULT FALSE,
+                        FOREIGN KEY (id_remetente) REFERENCES utilizadores(id_utilizador),
+                        FOREIGN KEY (id_destinatario) REFERENCES utilizadores(id_utilizador)
+                    ) ENGINE=InnoDB;"); 
+            } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN password_hash VARCHAR(255) NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("UPDATE utilizadores SET status_conta = 'Pendente' WHERE status_conta IS NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_agrupamento INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_escola INT NULL;"); } catch { }
 
             // Pending users
             PendingUsers = await _context.Users
@@ -123,7 +227,7 @@ namespace AspnetCoreStarter.Pages.Admin
                     .Select(s => s.Id)
                     .ToListAsync();
                 var equipCount = await _context.Equipamentos
-                    .Where(e => salaIds.Contains(e.RoomId))
+                    .Where(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value))
                     .CountAsync();
                 SchoolEquipmentCounts.Add(equipCount);
             }
@@ -156,22 +260,29 @@ namespace AspnetCoreStarter.Pages.Admin
 
             return Page();
         }
-
         public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? blocoId)
         {
+            if (string.IsNullOrEmpty(role))
+            {
+                ModelState.AddModelError("", "O cargo é obrigatório para aprovação.");
+                return RedirectToPage(); // Or handle error message in TempData
+            }
+
             var userFound = await _context.Users.FindAsync(id);
             if (userFound != null)
             {
-                userFound.AccountStatus = "Ativo";
-
                 // Create role-specific record based on the selected role
+                bool roleCreated = false;
                 switch (role)
                 {
                     case "Diretor":
+                        if (!agrupamentoId.HasValue) break;
                         var diretor = new Diretor { UserId = id, AgrupamentoId = agrupamentoId };
                         _context.Diretores.Add(diretor);
+                        roleCreated = true;
                         break;
                     case "Tecnico":
+                        if (string.IsNullOrEmpty(nivel)) break;
                         // Consolidate multiple technical areas
                         var areas = new List<string>();
                         if (areaTecnica != null && areaTecnica.Length > 0)
@@ -189,18 +300,27 @@ namespace AspnetCoreStarter.Pages.Admin
 
                         var tecnico = new Tecnico { UserId = id, AreaTecnica = finalArea, Nivel = nivel };
                         _context.Tecnicos.Add(tecnico);
+                        roleCreated = true;
                         break;
                     case "Coordenador":
+                        if (!escolaId.HasValue) break;
                         var coordenador = new Coordenador { UserId = id, SchoolId = escolaId };
                         _context.Coordenadores.Add(coordenador);
+                        roleCreated = true;
                         break;
                     case "Professor":
+                        if (!blocoId.HasValue) break;
                         var professor = new Professor { UserId = id, BlocoId = blocoId };
                         _context.Professores.Add(professor);
+                        roleCreated = true;
                         break;
                 }
 
-                await _context.SaveChangesAsync();
+                if (roleCreated)
+                {
+                    userFound.AccountStatus = "Ativo";
+                    await _context.SaveChangesAsync();
+                }
             }
             return RedirectToPage();
         }

@@ -81,10 +81,13 @@ namespace AspnetCoreStarter.Pages.Admin
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userRole != "Admin") return RedirectToPage("/Index");
 
-            // Temporary fix for missing column
-            try {
-                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;");
-            } catch { /* Ignore if it already exists or failed for other reasons */ }
+            // Temporary fix for missing columns
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN password_hash VARCHAR(255) NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
 
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
             Schools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();

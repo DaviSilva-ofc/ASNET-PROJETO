@@ -581,7 +581,7 @@
                                         <div class="d-flex flex-column gap-2">
                                             <form method="post" asp-page-handler="ProcessApproval" asp-route-id="@user.Id">
                                                 <div class="mb-2">
-                                                    <select name="role" class="form-select form-select-sm role-selector" onchange="toggleRoleOptions(this, @user.Id)">
+                                                    <select name="role" class="form-select form-select-sm role-selector" onchange="toggleRoleOptions(this, @user.Id)" required>
                                                         <option value="">Cargo...</option>
                                                         <option value="Tecnico">Técnico</option>
                                                         <option value="Diretor">Diretor</option>
@@ -791,18 +791,25 @@
         
         if (!role) {
             container.style.display = 'none';
+            // Remove required from all potential sub-fields
+            container.querySelectorAll('select, input').forEach(el => el.required = false);
             return;
         }
 
         container.style.display = 'block';
         
-        // Hide all specific field groups
-        container.querySelectorAll('[class^="field-"]').forEach(div => div.style.display = 'none');
-        
-        // Show selected role group
+        // Hide all specific field groups and remove required
+        container.querySelectorAll('[class^="field-"]').forEach(div => {
+            div.style.display = 'none';
+            div.querySelectorAll('select, input').forEach(el => el.required = false);
+        });
+
+        // Show the specific group and set required
         const targetDiv = container.querySelector('.field-' + role);
         if (targetDiv) {
             targetDiv.style.display = 'block';
+            // Only make selects required (since tecnico areas are checkboxes)
+            targetDiv.querySelectorAll('select').forEach(el => el.required = true);
         }
     }
 

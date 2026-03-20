@@ -174,7 +174,7 @@
                                 <div class="d-flex align-items-center gap-1">
                                     <button type="button" class="btn-edit-subtle" title="Editar Diretor"
                                             data-bs-toggle="modal" data-bs-target="#modalEditUser"
-                                            onclick="setEditUser('@d.UserId', '@Html.Raw((d.User?.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((d.User?.Email ?? "").Replace("'", "\\'"))', 'Diretor')">✏️</button>
+                                            onclick="setEditUser('@d.UserId', '@Html.Raw((d.User?.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((d.User?.Email ?? "").Replace("'", "\\'"))', 'Diretor', '@d.AgrupamentoId')">✏️</button>
                                     <form method="post" asp-page-handler="DeleteUser" asp-route-id="@d.UserId" asp-route-role="Diretor" onsubmit="return confirm('Remover este diretor?')">
                                         <button type="submit" class="btn-delete-subtle" title="Eliminar Diretor">🗑️</button>
                                     </form>
@@ -225,7 +225,7 @@
                                 <div class="d-flex align-items-center gap-1">
                                     <button type="button" class="btn-edit-subtle" title="Editar Coordenador"
                                             data-bs-toggle="modal" data-bs-target="#modalEditUser"
-                                            onclick="setEditUser('@c.UserId', '@Html.Raw((c.User?.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((c.User?.Email ?? "").Replace("'", "\\'"))', 'Coordenador')">✏️</button>
+                                            onclick="setEditUser('@c.UserId', '@Html.Raw((c.User?.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((c.User?.Email ?? "").Replace("'", "\\'"))', 'Coordenador', '@c.SchoolId')">✏️</button>
                                     <form method="post" asp-page-handler="DeleteUser" asp-route-id="@c.UserId" asp-route-role="Coordenador" onsubmit="return confirm('Remover este coordenador?')">
                                         <button type="submit" class="btn-delete-subtle" title="Eliminar Coordenador">🗑️</button>
                                     </form>
@@ -276,7 +276,7 @@
                                 <div class="d-flex align-items-center gap-1">
                                     <button type="button" class="btn-edit-subtle" title="Editar Professor"
                                             data-bs-toggle="modal" data-bs-target="#modalEditUser"
-                                            onclick="setEditUser('@p.UserId', '@Html.Raw((p.User?.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((p.User?.Email ?? "").Replace("'", "\\'"))', 'Professor')">✏️</button>
+                                            onclick="setEditUser('@p.UserId', '@Html.Raw((p.User?.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((p.User?.Email ?? "").Replace("'", "\\'"))', 'Professor', '@p.BlocoId')">✏️</button>
                                     <form method="post" asp-page-handler="DeleteUser" asp-route-id="@p.UserId" asp-route-role="Professor" onsubmit="return confirm('Remover este professor?')">
                                         <button type="submit" class="btn-delete-subtle" title="Eliminar Professor">🗑️</button>
                                     </form>
@@ -432,6 +432,36 @@
                         <label class="form-label fw-semibold">Nova Palavra-passe <span class="text-muted small">(deixe em branco para manter)</span></label>
                         <input type="password" id="editUserPassword" name="EditUserPassword" class="form-control" placeholder="••••••••" />
                     </div>
+                    <div class="mb-3" id="editAgrupamentoDiv" style="display:none;">
+                        <label class="form-label fw-semibold">Agrupamento</label>
+                        <select name="SelectedParentId" class="form-select" id="editAgrupamentoSelect" disabled>
+                            <option value="">-- Sem Alteração --</option>
+                            @foreach (var item in Model.Agrupamentos)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3" id="editEscolaDiv" style="display:none;">
+                        <label class="form-label fw-semibold">Escola</label>
+                        <select name="SelectedParentId" class="form-select" id="editEscolaSelect" disabled>
+                            <option value="">-- Sem Alteração --</option>
+                            @foreach (var item in Model.Schools)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3" id="editBlocoDiv" style="display:none;">
+                        <label class="form-label fw-semibold">Bloco</label>
+                        <select name="SelectedParentId" class="form-select" id="editBlocoSelect" disabled>
+                            <option value="">-- Sem Alteração --</option>
+                            @foreach (var item in Model.Blocos)
+                            {
+                                <option value="@item.Id">@item.Name (@item.School?.Name)</option>
+                            }
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -444,13 +474,39 @@
 
 @section PageScripts {
 <script>
-    function setEditUser(id, name, email, role) {
+    function setEditUser(id, name, email, role, currentParentId) {
         document.getElementById('editUserId').value = id;
         document.getElementById('editUserName').value = name;
         document.getElementById('editUserEmail').value = email;
         document.getElementById('editUserRole').value = role;
         document.getElementById('editUserPassword').value = '';
         document.querySelector('#modalEditUser .modal-title').textContent = '✏️ Editar ' + role;
+
+        // Reset visibility
+        document.getElementById('editAgrupamentoDiv').style.display = 'none';
+        document.getElementById('editEscolaDiv').style.display = 'none';
+        document.getElementById('editBlocoDiv').style.display = 'none';
+        document.getElementById('editAgrupamentoSelect').disabled = true;
+        document.getElementById('editEscolaSelect').disabled = true;
+        document.getElementById('editBlocoSelect').disabled = true;
+
+        // Show relevant dropdown and enable it (to avoid sending data for wrong role)
+        if (role === 'Diretor') {
+            document.getElementById('editAgrupamentoDiv').style.display = 'block';
+            var sel = document.getElementById('editAgrupamentoSelect');
+            sel.disabled = false;
+            sel.value = currentParentId || '';
+        } else if (role === 'Coordenador') {
+            document.getElementById('editEscolaDiv').style.display = 'block';
+            var sel = document.getElementById('editEscolaSelect');
+            sel.disabled = false;
+            sel.value = currentParentId || '';
+        } else if (role === 'Professor') {
+            document.getElementById('editBlocoDiv').style.display = 'block';
+            var sel = document.getElementById('editBlocoSelect');
+            sel.disabled = false;
+            sel.value = currentParentId || '';
+        }
     }
 </script>
 }

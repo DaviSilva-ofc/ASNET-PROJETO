@@ -24,6 +24,27 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<AspnetCoreStarter.Models.School> Schools { get; set; } = new();
         public List<Bloco> Blocos { get; set; } = new();
         public List<Sala> Salas { get; set; } = new();
+        public List<User> AvailableCoordenadores { get; set; } = new();
+        public List<User> AvailableProfessores { get; set; } = new();
+
+        [BindProperty]
+        public string? NewBlocoName { get; set; }
+        [BindProperty]
+        public int? SelectedSchoolId { get; set; }
+        [BindProperty]
+        public string? NewSalaName { get; set; }
+        [BindProperty]
+        public int? SelectedBlocoId { get; set; }
+
+        // Edit Properties
+        [BindProperty]
+        public int? EditId { get; set; }
+        [BindProperty]
+        public string? EditName { get; set; }
+        [BindProperty]
+        public int? EditParentId { get; set; }
+        [BindProperty]
+        public int? EditResponsibleProfessorId { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -44,6 +65,11 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             }
 
             int agrupamentoId = director.AgrupamentoId.Value;
+ 
+            // Temporary fix for missing columns in MySQL
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
 
             // Fetch only data related to this agrupamento
             Agrupamentos = await _context.Agrupamentos
@@ -109,7 +135,140 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 Clients.Add(clientVm);
             }
 
+            // Fetch available coordinators and professors for dropdowns (scoped or all)
+            AvailableCoordenadores = await _context.Coordenadores
+                .Include(c => c.User)
+                .Select(c => c.User)
+                .Where(u => u != null)
+                .Distinct()
+                .ToListAsync();
+
+            AvailableProfessores = await _context.Professores
+                .Include(p => p.User)
+                .Select(p => p.User)
+                .Where(u => u != null)
+                .Distinct()
+                .ToListAsync();
+
             return Page();
+        }
+
+        // --- CRUD Handlers for Blocos and Salas ---
+
+        public async Task<IActionResult> OnPostAddBlocoAsync()
+        {
+            if (!string.IsNullOrEmpty(NewBlocoName) && SelectedSchoolId.HasValue)
+            {
+                // Safety check: ensure school belongs to director's agrupamento
+                var director = await GetDirectorAsync();
+                var school = await _context.Schools.FindAsync(SelectedSchoolId.Value);
+                if (school != null && director != null && school.AgrupamentoId == director.AgrupamentoId)
+                {
+                    _context.Blocos.Add(new Bloco { Name = NewBlocoName, SchoolId = SelectedSchoolId.Value });
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Bloco adicionado com sucesso.";
+                }
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostAddSalaAsync()
+        {
+            if (!string.IsNullOrEmpty(NewSalaName) && SelectedBlocoId.HasValue)
+            {
+                // Safety check: ensure bloco's school belongs to director's agrupamento
+                var director = await GetDirectorAsync();
+                var bloco = await _context.Blocos.Include(b => b.School).FirstOrDefaultAsync(b => b.Id == SelectedBlocoId.Value);
+                if (bloco != null && director != null && bloco.School?.AgrupamentoId == director.AgrupamentoId)
+                {
+                    _context.Salas.Add(new Sala { Name = NewSalaName, BlockId = SelectedBlocoId.Value });
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Sala adicionada com sucesso.";
+                }
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditBlocoAsync()
+        {
+            var item = await _context.Blocos.FindAsync(EditId);
+            if (item != null && !string.IsNullOrEmpty(EditName) && EditParentId.HasValue)
+            {
+                var director = await GetDirectorAsync();
+                if (director != null)
+                {
+                    item.Name = EditName;
+                    item.SchoolId = EditParentId.Value;
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Bloco atualizado com sucesso.";
+                }
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditSalaAsync()
+        {
+            var item = await _context.Salas.FindAsync(EditId);
+            if (item != null && !string.IsNullOrEmpty(EditName) && EditParentId.HasValue)
+            {
+                var director = await GetDirectorAsync();
+                if (director != null)
+                {
+                    item.Name = EditName;
+                    item.BlockId = EditParentId.Value;
+                    item.ResponsibleProfessorId = (EditResponsibleProfessorId.HasValue && EditResponsibleProfessorId.Value > 0) 
+                        ? EditResponsibleProfessorId.Value 
+                        : null;
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Sala atualizada com sucesso.";
+                }
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteBlocoAsync(int id)
+        {
+            try
+            {
+                var item = await _context.Blocos.FindAsync(id);
+                if (item != null)
+                {
+                    _context.Blocos.Remove(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Bloco removido com sucesso.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Não é possível remover este bloco pois existem salas vinculadas a ele.";
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteSalaAsync(int id)
+        {
+            try
+            {
+                var item = await _context.Salas.FindAsync(id);
+                if (item != null)
+                {
+                    _context.Salas.Remove(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Sala removida com sucesso.";
+                }
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Não é possível remover esta sala pois existem equipamentos vinculados a ela.";
+            }
+            return RedirectToPage();
+        }
+
+        private async Task<Diretor?> GetDirectorAsync()
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return null;
+            return await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == userId);
         }
     }
 }

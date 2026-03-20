@@ -311,6 +311,26 @@ namespace AspnetCoreStarter.Pages.Admin
             if (!string.IsNullOrWhiteSpace(EditUserPassword))
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(EditUserPassword);
 
+            // Role-specific reassignment (Agrupamento/School/Bloco)
+            if (SelectedParentId.HasValue && SelectedParentId.Value > 0)
+            {
+                if (EditUserRole == "Diretor")
+                {
+                    var record = await _context.Diretores.FirstOrDefaultAsync(x => x.UserId == EditUserId);
+                    if (record != null) record.AgrupamentoId = SelectedParentId.Value;
+                }
+                else if (EditUserRole == "Coordenador")
+                {
+                    var record = await _context.Coordenadores.FirstOrDefaultAsync(x => x.UserId == EditUserId);
+                    if (record != null) record.SchoolId = SelectedParentId.Value;
+                }
+                else if (EditUserRole == "Professor")
+                {
+                    var record = await _context.Professores.FirstOrDefaultAsync(x => x.UserId == EditUserId);
+                    if (record != null) record.BlocoId = SelectedParentId.Value;
+                }
+            }
+
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"Utilizador atualizado com sucesso.";
             return RedirectToPage();

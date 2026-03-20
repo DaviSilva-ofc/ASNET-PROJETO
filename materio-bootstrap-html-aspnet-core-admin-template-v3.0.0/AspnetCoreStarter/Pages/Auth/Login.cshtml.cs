@@ -47,6 +47,116 @@ namespace AspnetCoreStarter.Pages.Auth
 
             try
             {
+                // Temporary fix for missing tables and columns in MySQL
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS contratos (
+                            id_contrato INT AUTO_INCREMENT PRIMARY KEY,
+                            periodo VARCHAR(50),
+                            tipo_contrato VARCHAR(50),
+                            status_contrato VARCHAR(50),
+                            descricao TEXT,
+                            id_agrupamento INT,
+                            id_admin INT,
+                            FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento),
+                            FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS diretores (
+                            id_diretores INT AUTO_INCREMENT PRIMARY KEY,
+                            id_utilizador INT,
+                            id_agrupamento INT,
+                            FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                            FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS coordenadores (
+                            id_coordenadores INT AUTO_INCREMENT PRIMARY KEY,
+                            id_utilizador INT,
+                            id_escola INT,
+                            FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                            FOREIGN KEY (id_escola) REFERENCES escolas(id_escola)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS professores (
+                            id_professores INT AUTO_INCREMENT PRIMARY KEY,
+                            id_utilizador INT,
+                            id_bloco INT,
+                            FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                            FOREIGN KEY (id_bloco) REFERENCES blocos(id_bloco)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS tecnicos (
+                            id_tecnico INT AUTO_INCREMENT PRIMARY KEY,
+                            id_utilizador INT,
+                            especialidade VARCHAR(100),
+                            FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS administradores (
+                            id_utilizador INT PRIMARY KEY,
+                            id_agrupamento INT,
+                            FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
+                            FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS stock_empresa (
+                            id_stock INT AUTO_INCREMENT PRIMARY KEY,
+                            nome_equipamento VARCHAR(100),
+                            tipo VARCHAR(100),
+                            descricao TEXT,
+                            disponivel BOOLEAN DEFAULT TRUE,
+                            id_tecnico INT,
+                            id_admin INT,
+                            FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS stock_tecnico (
+                            id_stock_tecnico INT AUTO_INCREMENT PRIMARY KEY,
+                            id_tecnico INT,
+                            nome_equipamento VARCHAR(100),
+                            descricao TEXT,
+                            disponivel BOOLEAN DEFAULT TRUE,
+                            FOREIGN KEY (id_tecnico) REFERENCES tecnicos(id_utilizador)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS mensagens (
+                            id_mensagem INT AUTO_INCREMENT PRIMARY KEY,
+                            id_remetente INT,
+                            id_destinatario INT,
+                            conteudo TEXT,
+                            data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            lida BOOLEAN DEFAULT FALSE,
+                            FOREIGN KEY (id_remetente) REFERENCES utilizadores(id_utilizador),
+                            FOREIGN KEY (id_destinatario) REFERENCES utilizadores(id_utilizador)
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN password_hash VARCHAR(255) NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("UPDATE utilizadores SET status_conta = 'Pendente' WHERE status_conta IS NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_agrupamento INT NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_escola INT NULL;"); } catch { }
+
                 // Procurar por email ou username
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);
 
@@ -56,7 +166,9 @@ namespace AspnetCoreStarter.Pages.Auth
                     return Page();
                 }
 
-                if (!BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
+                // Verify against PasswordHash or the direct Password/palavra_passe field
+                var passwordToVerify = string.IsNullOrEmpty(user.PasswordHash) ? user.Password : user.PasswordHash;
+                if (!BCrypt.Net.BCrypt.Verify(Password, passwordToVerify))
                 {
                     ErrorMessage = "Palavra-passe incorreta.";
                     return Page();

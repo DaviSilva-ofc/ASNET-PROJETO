@@ -36,16 +36,28 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<AspnetCoreStarter.Models.School> AvailableEscolas { get; set; } = new();
         public List<Bloco> AvailableBlocos { get; set; } = new();
 
-        public async Task<IActionResult> OnGetAsync(
-            int? roomId, 
-            int? blocoId, 
-            int? escolaId, 
-            int? agrupamentoId,
-            string name,
-            string type,
-            string serialNumber,
-            string status,
-            string success)
+        [BindProperty(SupportsGet = true)]
+        public string? FilterName { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterType { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterSerialNumber { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterStatus { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterEscolaId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterBlocoId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterRoomId { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(string? success)
         {
             if (User?.Identity == null || !User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
             
@@ -66,30 +78,30 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             var query = _context.Equipamentos
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
-                .Where(e => e.Room.Block.School.AgrupamentoId == myAgrupamentoId)
+                .Where(e => e.Room != null && e.Room.Block.School.AgrupamentoId == myAgrupamentoId) // Stay within director's agrupamento
                 .AsQueryable();
 
             // Apply Search Filters
-            if (!string.IsNullOrEmpty(name)) query = query.Where(e => e.Name.Contains(name));
-            if (!string.IsNullOrEmpty(type)) query = query.Where(e => e.Type.Contains(type));
-            if (!string.IsNullOrEmpty(serialNumber)) query = query.Where(e => e.SerialNumber.Contains(serialNumber));
-            if (!string.IsNullOrEmpty(status)) query = query.Where(e => e.Status == status);
+            if (!string.IsNullOrEmpty(FilterName)) query = query.Where(e => e.Name.Contains(FilterName));
+            if (!string.IsNullOrEmpty(FilterType)) query = query.Where(e => e.Type.Contains(FilterType));
+            if (!string.IsNullOrEmpty(FilterSerialNumber)) query = query.Where(e => e.SerialNumber.Contains(FilterSerialNumber));
+            if (!string.IsNullOrEmpty(FilterStatus)) query = query.Where(e => e.Status == FilterStatus);
 
             // Apply Location Filters (limited to their agrupamento)
-            if (roomId.HasValue)
+            if (FilterRoomId.HasValue)
             {
-                query = query.Where(e => e.RoomId == roomId.Value);
-                ActiveFilterRoom = await _context.Salas.FindAsync(roomId.Value);
+                query = query.Where(e => e.RoomId == FilterRoomId.Value);
+                ActiveFilterRoom = await _context.Salas.FindAsync(FilterRoomId.Value);
             }
-            else if (blocoId.HasValue)
+            else if (FilterBlocoId.HasValue)
             {
-                query = query.Where(e => e.Room.BlockId == blocoId.Value);
-                ActiveFilterBloco = await _context.Blocos.FindAsync(blocoId.Value);
+                query = query.Where(e => e.Room != null && e.Room.BlockId == FilterBlocoId.Value);
+                ActiveFilterBloco = await _context.Blocos.FindAsync(FilterBlocoId.Value);
             }
-            else if (escolaId.HasValue)
+            else if (FilterEscolaId.HasValue)
             {
-                query = query.Where(e => e.Room.Block.SchoolId == escolaId.Value);
-                ActiveFilterEscola = await _context.Schools.FindAsync(escolaId.Value);
+                query = query.Where(e => e.Room != null && e.Room.Block.SchoolId == FilterEscolaId.Value);
+                ActiveFilterEscola = await _context.Schools.FindAsync(FilterEscolaId.Value);
             }
 
             Equipments = await query.ToListAsync();

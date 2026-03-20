@@ -19,10 +19,15 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             _context = context;
         }
 
+        [BindProperty(SupportsGet = true)]
+        public int? FilterEscolaId { get; set; }
+
         public int CountEscolas { get; set; }
         public int CountSalas { get; set; }
         public int CountEquipamentos { get; set; }
         public int CountTickets { get; set; }
+
+        public List<School> AvailableSchools { get; set; } = new();
 
         public List<StockItemViewModel> Items { get; set; } = new();
 
@@ -43,9 +48,15 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             int agrId = director.AgrupamentoId.Value;
 
             // Stats for the director
-            var schools = await _context.Schools.Where(s => s.AgrupamentoId == agrId).ToListAsync();
-            var schoolIds = schools.Select(s => s.Id).ToList();
-            CountEscolas = schools.Count;
+            AvailableSchools = await _context.Schools.Where(s => s.AgrupamentoId == agrId).ToListAsync();
+            var schoolIds = AvailableSchools.Select(s => s.Id).ToList();
+            
+            if (FilterEscolaId.HasValue)
+            {
+                schoolIds = new List<int> { FilterEscolaId.Value };
+            }
+
+            CountEscolas = AvailableSchools.Count;
 
             var blocks = await _context.Blocos.Where(b => schoolIds.Contains(b.SchoolId)).ToListAsync();
             var blockIds = blocks.Select(b => b.Id).ToList();
@@ -58,7 +69,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                         .ThenInclude(b => b.School)
-                .Where(e => roomIds.Contains(e.RoomId))
+                .Where(e => e.RoomId.HasValue && roomIds.Contains(e.RoomId.Value))
                 .ToListAsync();
             CountEquipamentos = equips.Count;
 

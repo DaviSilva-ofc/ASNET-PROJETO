@@ -26,5 +26,12 @@ namespace AspnetCoreStarter.Data
         public DbSet<StockEmpresa> StockEmpresa { get; set; }
         public DbSet<StockTecnico> StockTecnico { get; set; }
         public DbSet<Mensagem> Mensagens { get; set; }
+
+        // New tables from schema sync
+        public DbSet<ComponenteEquipamento> ComponentesEquipamentos { get; set; }
+        public DbSet<StatusEquipamento> StatusEquipamentos { get; set; }
+        public DbSet<Historico> Historico { get; set; }
+        public DbSet<Reparo> Reparos { get; set; }
+        public DbSet<Emprestimo> Emprestimos { get; set; }
     }
 }
