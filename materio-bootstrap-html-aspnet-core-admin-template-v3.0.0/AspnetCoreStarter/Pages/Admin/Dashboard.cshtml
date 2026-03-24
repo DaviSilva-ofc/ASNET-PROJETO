@@ -490,6 +490,42 @@
         </div>
     </div>
 
+    <!-- ===== Low Stock Alerts Row ===== -->
+    @if (Model.LowStockItems.Any())
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm" style="border-left: 5px solid #ffab00;">
+                    <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class='bx bx-error text-warning' style="font-size: 1.5rem;"></i>
+                            <h5 class="mb-0 fw-bold">Alertas de Stock Baixo</h5>
+                        </div>
+                        <a href="/Admin/Stocks" class="btn btn-xs btn-outline-warning">Gerir Stock</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                            @foreach (var item in Model.LowStockItems)
+                            {
+                                <div class="col">
+                                    <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-light">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="stat-icon bg-warning" style="width: 32px; height: 32px; font-size: 1rem;">
+                                                <i class='bx bx-box'></i>
+                                            </div>
+                                            <span class="fw-semibold text-dark">@item.Name</span>
+                                        </div>
+                                        <span class="badge bg-label-danger">@item.AvailableCount disponíveis</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <!-- ===== Charts Row ===== -->
     <div class="row g-4 mb-4">
         <!-- Ticket Status Chart -->

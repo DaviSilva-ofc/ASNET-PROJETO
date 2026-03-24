@@ -28,9 +28,32 @@
     .dark-style .bg-label-warning, [data-bs-theme="dark"] .bg-label-warning { background-color: rgba(255, 171, 0, 0.25) !important; color: #ffab00 !important; }
     .dark-style .bg-label-info, [data-bs-theme="dark"] .bg-label-info { background-color: rgba(3, 195, 236, 0.25) !important; color: #03c3ec !important; }
 
-    /* Table adjustments */
-    .dark-style .table th, [data-bs-theme="dark"] .table th { color: #cbcbe2 !important; }
-    .dark-style .table td, [data-bs-theme="dark"] .table td { color: #a1acb8 !important; }
+    /* ===== Stat mini-cards (ASNET standard) ===== */
+    .stat-card {
+        border: none;
+        border-radius: 14px;
+        overflow: hidden;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(30,33,48,.12);
+    }
+    .stat-icon {
+        width: 42px; height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #fff;
+    }
+    .stat-number { font-size: 1.4rem; font-weight: 700; margin: 0; }
+    .dark-style .stat-number,
+    [data-bs-theme="dark"] .stat-number { color: #f5f5f9; }
+    .stat-label  { font-size: .75rem; color: #9e9e9e; margin: 0; }
+    .dark-style .stat-label,
+    [data-bs-theme="dark"] .stat-label { color: #cbcbe2; }
 
     /* Print Styles */
     @@media print {
@@ -83,62 +106,83 @@
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Stocks</h4>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb py-3 mb-0">
+            <li class="breadcrumb-item"><a asp-page="/Admin/Dashboard">Admin</a></li>
+            <li class="breadcrumb-item active">Stocks</li>
+        </ol>
+    </nav>
 
-    <div class="row">
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-primary"><i class="ri-government-line"></i></span>
-                        </div>
-                        <h6 class="mb-0">Agrupamentos</h6>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-checkbox-circle-line me-1"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-1"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+    <!-- Cards de Resumo (Standard ASNET Style) -->
+    <div class="row g-3 mb-4">
+        <!-- Agrupamentos -->
+        <div class="col-6 col-lg-3 mt-0">
+            <div class="card stat-card h-100 shadow-sm border-0">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#696cff;">
+                        🏢
                     </div>
-                    <h4 class="ms-1">@Model.CountAgrupamentos Itens</h4>
-                    <p class="text-muted small mb-0">Total em stock nos agrupamentos</p>
+                    <div>
+                        <h4 class="stat-number">@Model.CountAgrupamentos</h4>
+                        <p class="stat-label">Stock Agrupamentos</p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-success"><i class="ri-building-line"></i></span>
-                        </div>
-                        <h6 class="mb-0">Escolas</h6>
+        <!-- Escolas -->
+        <div class="col-6 col-lg-3 mt-0">
+            <div class="card stat-card h-100 shadow-sm border-0">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#71dd37;">
+                        🏫
                     </div>
-                    <h4 class="ms-1">@Model.CountEscolas Itens</h4>
-                    <p class="text-muted small mb-0">Total em stock nas escolas</p>
+                    <div>
+                        <h4 class="stat-number">@Model.CountEscolas</h4>
+                        <p class="stat-label">Stock Escolas</p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-warning"><i class="ri-user-settings-line"></i></span>
-                        </div>
-                        <h6 class="mb-0">Técnicos</h6>
+        <!-- Técnicos -->
+        <div class="col-6 col-lg-3 mt-0">
+            <div class="card stat-card h-100 shadow-sm border-0">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#ff3e1d;">
+                        🔧
                     </div>
-                    <h4 class="ms-1">@Model.CountTecnicos Itens</h4>
-                    <p class="text-muted small mb-0">Itens com os técnicos</p>
+                    <div>
+                        <h4 class="stat-number">@Model.CountTecnicos</h4>
+                        <p class="stat-label">Stock Técnicos</p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-info"><i class="ri-community-line"></i></span>
-                        </div>
-                        <h6 class="mb-0">Empresa</h6>
+        <!-- Empresa -->
+        <div class="col-6 col-lg-3 mt-0">
+            <div class="card stat-card h-100 shadow-sm border-0">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#03c3ec;">
+                        💼
                     </div>
-                    <h4 class="ms-1">@Model.CountEmpresa Itens</h4>
-                    <p class="text-muted small mb-0">Stock central da empresa</p>
+                    <div>
+                        <h4 class="stat-number">@Model.CountEmpresa</h4>
+                        <p class="stat-label">Stock Central Empresa</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -161,14 +205,14 @@
         </div>
 
         <!-- Collapsible Filters -->
-        <div class="collapse @(Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null ? "show" : "")" id="collapseFilters">
+        <div class="collapse @(Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null || Model.FilterStatus != null ? "show" : "")" id="collapseFilters">
             <div class="card-body border-top">
                 <form method="get" class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Artigo / Equipamento</label>
                         <input type="text" name="SearchName" value="@Model.SearchName" class="form-control" placeholder="Procurar por nome..." />
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Tipo</label>
                         <select name="FilterType" class="form-select">
                             <option value="">Todos</option>
@@ -181,7 +225,7 @@
                             <option value="Outro" selected="@(Model.FilterType == "Outro" ? "selected" : null)">Outro</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Localização</label>
                         <select name="FilterCategory" class="form-select">
                             <option value="">Todas</option>
@@ -191,9 +235,19 @@
                             <option value="Escola" selected="@(Model.FilterCategory == "Escola" ? "selected" : null)">Stock Escola</option>
                         </select>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end gap-2">
+                    <div class="col-md-2">
+                        <label class="form-label">Estado</label>
+                        <select name="FilterStatus" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Disponível" selected="@(Model.FilterStatus == "Disponível" ? "selected" : null)">Disponível</option>
+                            <option value="Emprestado" selected="@(Model.FilterStatus == "Emprestado" ? "selected" : null)">Emprestado</option>
+                            <option value="Em uso" selected="@(Model.FilterStatus == "Em uso" ? "selected" : null)">Em uso</option>
+                            <option value="Indisponível" selected="@(Model.FilterStatus == "Indisponível" ? "selected" : null)">Indisponível</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end gap-2">
                         <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-                        @if (Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null)
+                        @if (Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null || Model.FilterStatus != null)
                         {
                             <a asp-page="./Stocks" class="btn btn-outline-secondary">Limpar</a>
                         }
@@ -210,6 +264,7 @@
                         <th>Localização</th>
                         <th>Quantidade</th>
                         <th>Estado</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -238,9 +293,47 @@
                                 </td>
                                 <td>@item.Quantity</td>
                                 <td>
-                                    <span class="badge @(item.Status == "Disponível" || item.Status == "Funcionando" ? "bg-label-success" : "bg-label-warning")">
+                                    <span class="badge @(item.Status == "Disponível" ? "bg-label-success" : (item.Status == "Emprestado" ? "bg-label-info" : (item.Status == "Indisponível" ? "bg-label-danger" : "bg-label-warning")))">
                                         @item.Status
                                     </span>
+                                </td>
+                                <td>
+                                    @if (item.Location == "Stock Empresa")
+                                    {
+                                            <button type="button" class="btn btn-sm btn-primary open-lend-modal d-flex align-items-center gap-1 mb-1"
+                                                    data-bs-target="#modalLendReturn"
+                                                    data-sample-id="@item.SampleId"
+                                                    data-name="@item.Name"
+                                                    data-type="@item.Type"
+                                                    data-location="@item.Location"
+                                                    data-quantity="@item.Quantity"
+                                                    title="Emprestar">
+                                                <span>📤 Emprestar</span>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger open-delete-modal d-flex align-items-center justify-content-center"
+                                                    data-bs-target="#modalDeleteStock"
+                                                    data-sample-id="@item.SampleId"
+                                                    data-name="@item.Name"
+                                                    data-type="@item.Type"
+                                                    data-location="@item.Location"
+                                                    data-quantity="@item.Quantity"
+                                                    title="Excluir">
+                                                <span>🗑️</span>
+                                            </button>
+                                    }
+                                    @if (item.Status == "Emprestado")
+                                    {
+                                            <button type="button" class="btn btn-sm btn-success text-white open-return-modal d-flex align-items-center gap-1"
+                                                    data-bs-target="#modalLendReturn"
+                                                    data-sample-id="@item.SampleId"
+                                                    data-name="@item.Name"
+                                                    data-type="@item.Type"
+                                                    data-location="@item.Location"
+                                                    data-quantity="@item.Quantity"
+                                                    title="Devolver">
+                                                <span>📥 Devolver</span>
+                                            </button>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -263,7 +356,19 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Nome do Equipamento / Artigo</label>
-                        <input type="text" name="name" class="form-control" placeholder="Ex: Portátil HP ProBook" required />
+                        <select name="name" class="form-select" required>
+                            <option value="">Selecione ou escolha um artigo existente...</option>
+                            @foreach (var existingName in Model.ExistingEquipmentNames)
+                            {
+                                <option value="@existingName">@existingName</option>
+                            }
+                        </select>
+                        <small class="text-muted">Se o artigo não existir, escolha 'Outro' ou adicione manualmente (Dica: Se precisar de um novo nome, use a opção 'Outro Equivalente' ou peça ao Admin para registar o modelo).</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade a Adicionar</label>
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Tipo / Categoria</label>
@@ -288,11 +393,10 @@
                         </select>
                     </div>
 
-                    <!-- Dynamic Location Fields -->
                     <div id="addStock_Tecnico" class="mb-3 add-stock-loc" style="display:none;">
-                        <label class="form-label">Selecionar Técnico</label>
-                        <select name="technicianId" class="form-select">
-                            <option value="">Escolha um técnico...</option>
+                        <label class="form-label">Técnico Responsável</label>
+                        <select name="technicianId" class="form-select select2">
+                            <option value="">Selecione o técnico...</option>
                             @foreach (var t in Model.AvailableTecnicos) {
                                 <option value="@t.Id">@t.Username</option>
                             }
@@ -300,9 +404,9 @@
                     </div>
 
                     <div id="addStock_Agrupamento" class="mb-3 add-stock-loc" style="display:none;">
-                        <label class="form-label">Selecionar Agrupamento</label>
-                        <select name="agrupamentoId" class="form-select">
-                            <option value="">Escolha um agrupamento...</option>
+                        <label class="form-label">Agrupamento</label>
+                        <select name="agrupamentoId" id="addAgrupamentoId" class="form-select select2" onchange="filterAddStockSchools()">
+                            <option value="">Selecione o agrupamento...</option>
                             @foreach (var a in Model.AvailableAgrupamentos) {
                                 <option value="@a.Id">@a.Name</option>
                             }
@@ -310,11 +414,11 @@
                     </div>
 
                     <div id="addStock_Escola" class="mb-3 add-stock-loc" style="display:none;">
-                        <label class="form-label">Selecionar Escola</label>
-                        <select name="schoolId" class="form-select">
-                            <option value="">Escolha uma escola...</option>
+                        <label class="form-label">Escola</label>
+                        <select name="schoolId" id="addSchoolId" class="form-select select2">
+                            <option value="">Selecione a escola...</option>
                             @foreach (var s in Model.AvailableSchools) {
-                                <option value="@s.Id">@s.Name</option>
+                                <option value="@s.Id" data-agr="@s.AgrupamentoId">@s.Name</option>
                             }
                         </select>
                     </div>
@@ -327,6 +431,92 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
                     <button type="submit" class="btn btn-primary">Adicionar ao Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Emprestar / Devolver -->
+<div class="modal fade" id="modalLendReturn" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="lendReturnModalTitle">Emprestar Artigo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="lendReturnForm" method="post">
+                <div class="modal-body">
+                    <p id="lendReturnModalDesc">A selecionar quantidade para o artigo: <strong id="modalItemName">...</strong></p>
+                    <input type="hidden" name="sampleId" id="modalInputSampleId" />
+                    <input type="hidden" name="name" id="modalInputName" />
+                    <input type="hidden" name="type" id="modalInputType" />
+                    <input type="hidden" name="location" id="modalInputLocation" />
+
+                    <div class="mb-3" id="lendLocationFields">
+                        <label class="form-label">Local de Destino</label>
+                        <select name="agrupamentoId" id="lendAgrupamentoId" class="form-select mb-2" onchange="filterLendSchools()" required>
+                            <option value="">Selecione o Agrupamento...</option>
+                            @foreach (var a in Model.AvailableAgrupamentos) {
+                                <option value="@a.Id">@a.Name</option>
+                            }
+                        </select>
+                        <select name="schoolId" id="lendSchoolId" class="form-select" required>
+                            <option value="">Selecione a Escola...</option>
+                            @foreach (var s in Model.AvailableSchools) {
+                                <option value="@s.Id" data-agr="@s.AgrupamentoId">@s.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade</label>
+                        <div class="input-group">
+                            <input type="number" name="quantity" id="modalInputQuantity" class="form-control" value="1" min="1" required />
+                            <span class="input-group-text">de <span id="modalMaxQuantity">1</span> disponíveis</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="modalSubmitBtn" class="btn btn-primary">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Deletar -->
+<div class="modal fade" id="modalDeleteStock" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Excluir do Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteStockForm" method="post" asp-page-handler="DeleteStock">
+                <div class="modal-body">
+                    <p>Deseja excluir unidades de <strong id="deleteItemName">...</strong>?</p>
+                    <input type="hidden" name="sampleId" id="deleteInputSampleId" />
+                    <input type="hidden" name="name" id="deleteInputName" />
+                    <input type="hidden" name="type" id="deleteInputType" />
+                    <input type="hidden" name="location" id="deleteInputLocation" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade a Excluir</label>
+                        <div class="input-group">
+                            <input type="number" name="quantity" id="deleteInputQuantity" class="form-control" value="1" min="1" required />
+                            <span class="input-group-text">de <span id="deleteMaxQuantity">1</span> totais</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="ri-error-warning-line me-1"></i> Esta ação removerá os equipamentos permanentemente do stock.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Excluir Permanentemente</button>
                 </div>
             </form>
         </div>
@@ -347,12 +537,110 @@
 
         // Show target if not Empresa
         if (category !== 'Empresa') {
-            const target = modal.querySelector('#addStock_' + category);
-            if (target) {
-                target.style.display = 'block';
-                target.querySelectorAll('select').forEach(s => s.required = true);
+            if (category === 'Escola') {
+                // For schools, we also show the agrupamento for filtering
+                modal.querySelector('#addStock_Agrupamento').style.display = 'block';
+                modal.querySelector('#addStock_Escola').style.display = 'block';
+                modal.querySelector('#addAgrupamentoId').required = true;
+                modal.querySelector('#addSchoolId').required = true;
+            } else {
+                const target = modal.querySelector('#addStock_' + category);
+                if (target) {
+                    target.style.display = 'block';
+                    target.querySelectorAll('select').forEach(s => s.required = true);
+                }
             }
         }
     }
+
+    function filterAddStockSchools() {
+        const agrId = document.getElementById('addAgrupamentoId').value;
+        const schoolSelect = document.getElementById('addSchoolId');
+        const options = schoolSelect.querySelectorAll('option');
+        
+        schoolSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
+        });
+    }
+
+    function filterLendSchools() {
+        const agrId = document.getElementById('lendAgrupamentoId').value;
+        const schoolSelect = document.getElementById('lendSchoolId');
+        const options = schoolSelect.querySelectorAll('option');
+        
+        schoolSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
+        });
+    }
+
+    function setupModal(id, name, type, location, maxQty) {
+        document.getElementById('modalItemName').innerText = name;
+        document.getElementById('deleteItemName').innerText = name;
+
+        document.getElementById('modalInputSampleId').value = id;
+        document.getElementById('modalInputName').value = name;
+        document.getElementById('modalInputType').value = type;
+        document.getElementById('modalInputLocation').value = location;
+        document.getElementById('modalMaxQuantity').innerText = maxQty;
+        
+        const lendQtyInput = document.getElementById('modalInputQuantity');
+        lendQtyInput.max = maxQty;
+        lendQtyInput.value = 1;
+
+        document.getElementById('deleteInputSampleId').value = id;
+        document.getElementById('deleteInputName').value = name;
+        document.getElementById('deleteInputType').value = type;
+        document.getElementById('deleteInputLocation').value = location;
+        document.getElementById('deleteMaxQuantity').innerText = maxQty;
+        
+        const deleteQtyInput = document.getElementById('deleteInputQuantity');
+        deleteQtyInput.max = maxQty;
+        deleteQtyInput.value = 1;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.open-lend-modal, .open-return-modal, .open-delete-modal').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-sample-id');
+                const name = this.getAttribute('data-name');
+                const type = this.getAttribute('data-type');
+                const loc = this.getAttribute('data-location');
+                const qty = this.getAttribute('data-quantity');
+                
+                setupModal(id, name, type, loc, qty);
+
+                const mode = this.classList.contains('open-lend-modal') ? 'lend' : (this.classList.contains('open-return-modal') ? 'return' : 'delete');
+                const modalElement = document.querySelector(this.getAttribute('data-bs-target'));
+                const modal = new bootstrap.Modal(modalElement);
+
+                if (mode === 'lend') {
+                    document.getElementById('lendReturnModalTitle').innerText = 'Emprestar Artigo';
+                    document.getElementById('lendReturnModalDesc').innerHTML = 'Selecione a quantidade de <strong>' + name + '</strong> a emprestar:';
+                    document.getElementById('modalSubmitBtn').innerText = 'Emprestar';
+                    document.getElementById('modalSubmitBtn').className = 'btn btn-info';
+                    document.getElementById('lendReturnForm').action = '?handler=Lend';
+                    document.getElementById('lendLocationFields').style.display = 'block';
+                    document.getElementById('lendAgrupamentoId').required = true;
+                    document.getElementById('lendSchoolId').required = true;
+                } else if (mode === 'return') {
+                    document.getElementById('lendReturnModalTitle').innerText = 'Devolução de Artigo';
+                    document.getElementById('lendReturnModalDesc').innerHTML = 'Selecione a quantidade de <strong>' + name + '</strong> que foi devolvida:';
+                    document.getElementById('modalSubmitBtn').innerText = 'Confirmar Devolução';
+                    document.getElementById('modalSubmitBtn').className = 'btn btn-success';
+                    document.getElementById('lendReturnForm').action = '?handler=Return';
+                    document.getElementById('lendLocationFields').style.display = 'none';
+                    document.getElementById('lendAgrupamentoId').required = false;
+                    document.getElementById('lendSchoolId').required = false;
+                } else if (mode === 'delete') {
+                    // Delete modal has its own form and title, setupModal already handles inputs
+                }
+                modal.show();
+            });
+        });
+    });
 </script>
 }

@@ -21,6 +21,11 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
         public List<Ticket> Tickets { get; set; } = new();
         public string? MyAgrupamentoName { get; set; }
+        public Agrupamento? Agrupamento { get; set; }
+        public List<AspnetCoreStarter.Models.School>? Schools { get; set; }
+        public List<Bloco>? Blocos { get; set; }
+        public List<Sala>? Salas { get; set; }
+        public List<string> EquipmentTypes { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
         public string? FilterStatus { get; set; }
@@ -44,12 +49,30 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             }
 
             int myAgrupamentoId = director.AgrupamentoId.Value;
-            MyAgrupamentoName = director.Agrupamento?.Name;
+            Agrupamento = director.Agrupamento;
+            MyAgrupamentoName = Agrupamento?.Name;
 
             // Get schools in this agrupamento
-            var schoolIds = await _context.Schools
+            Schools = await _context.Schools
                 .Where(s => s.AgrupamentoId == myAgrupamentoId)
-                .Select(s => s.Id)
+                .ToListAsync();
+
+            var schoolIds = Schools.Select(s => s.Id).ToList();
+
+            Blocos = await _context.Blocos
+                .Where(b => schoolIds.Contains(b.SchoolId))
+                .ToListAsync();
+
+            var blocoIds = Blocos.Select(b => b.Id).ToList();
+
+            Salas = await _context.Salas
+                .Where(s => blocoIds.Contains(s.BlockId))
+                .ToListAsync();
+
+            EquipmentTypes = await _context.Equipamentos
+                .Where(e => !string.IsNullOrEmpty(e.Type))
+                .Select(e => e.Type)
+                .Distinct()
                 .ToListAsync();
 
             var query = _context.Tickets
@@ -65,6 +88,33 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostCreateTicketAsync(string level, string equipmentType, int schoolId, int blockId, int roomId)
+        {
+            if (User?.Identity == null || !User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
+
+            var school = await _context.Schools.FindAsync(schoolId);
+            var block = await _context.Blocos.FindAsync(blockId);
+            var room = await _context.Salas.FindAsync(roomId);
+
+            string fullDescription = $"[Detalhes da Localização]\nTipo: {equipmentType}\nEscola: {school?.Name ?? "N/A"}\nBloco: {block?.Name ?? "N/A"}\nSala: {room?.Name ?? "N/A"}";
+
+            var ticket = new Ticket
+            {
+                Level = level,
+                Description = fullDescription,
+                Status = "Pedido",
+                SchoolId = schoolId,
+                AdminId = 1, // Dummy admin if required by constraints
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Ticket de suporte submetido com sucesso!";
+            return RedirectToPage();
         }
     }
 }

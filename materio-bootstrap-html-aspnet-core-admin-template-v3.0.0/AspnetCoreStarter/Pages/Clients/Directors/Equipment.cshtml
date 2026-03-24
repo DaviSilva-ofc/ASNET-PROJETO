@@ -70,13 +70,17 @@
                                 <td>@item.Type</td>
                                 <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
                                 <td>
-                                    @if (item.Status == "Avariado")
+                                    @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Indisponivel")
                                     {
-                                        <span class="badge bg-label-danger">Avariado</span>
+                                        <span class="badge bg-label-danger">Indisponível</span>
+                                    }
+                                    else if (item.Status == "Em uso" || item.Status == "Em Uso")
+                                    {
+                                        <span class="badge bg-label-warning">Em uso</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-label-success">Funcionando</span>
+                                        <span class="badge bg-label-success">Disponível</span>
                                     }
                                 </td>
                                 <td>@item.Room?.Name (@item.Room?.Block?.Name)</td>
@@ -116,14 +120,25 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tipo</label>
-                            <input type="text" asp-for="FilterType" class="form-control" placeholder="ex: Portátil" />
+                            <select asp-for="FilterType" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Portátil">Portátil</option>
+                                <option value="Monitor">Monitor</option>
+                                <option value="Teclado">Teclado</option>
+                                <option value="Rato">Rato</option>
+                                <option value="Impressora">Impressora</option>
+                                <option value="Projetor">Projetor</option>
+                                <option value="Desktop">Desktop</option>
+                                <option value="Outro">Outro</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Estado</label>
                             <select asp-for="FilterStatus" class="form-select">
                                 <option value="">Todos</option>
-                                <option value="Funcionando">Funcionando</option>
-                                <option value="Avariado">Avariado</option>
+                                <option value="Disponível">Disponível</option>
+                                <option value="Em uso">Em uso</option>
+                                <option value="Indisponível">Indisponível</option>
                             </select>
                         </div>
                         

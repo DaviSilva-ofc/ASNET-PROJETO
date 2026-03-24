@@ -24,6 +24,10 @@ namespace AspnetCoreStarter.Models
         [Column("disponivel")]
         public bool IsAvailable { get; set; }
 
+        [Column("status")]
+        [MaxLength(50)]
+        public string? Status { get; set; } = "Disponível";
+
         [Column("id_tecnico")]
         public int? TechnicianId { get; set; }
 

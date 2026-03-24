@@ -140,7 +140,7 @@
                                 <td>@item.Location</td>
                                 <td>@item.Quantity</td>
                                 <td>
-                                    <span class="badge @(item.Status == "Disponível" ? "bg-label-success" : "bg-label-warning")">
+                                    <span class="badge @(item.Status == "Disponível" ? "bg-label-success" : (item.Status == "Indisponível" ? "bg-label-danger" : "bg-label-warning"))">
                                         @item.Status
                                     </span>
                                 </td>

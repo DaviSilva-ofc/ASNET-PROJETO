@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -12,18 +13,18 @@ namespace AspnetCoreStarter.Models
 
         [Column("estado")]
         [MaxLength(50)]
-        public string? State { get; set; }
+        public string? Estado { get; set; }
 
         [Column("versao")]
         [MaxLength(50)]
-        public string? Version { get; set; }
+        public string? Versao { get; set; }
 
         [Column("empresa")]
         [MaxLength(100)]
-        public string? Company { get; set; }
+        public string? Empresa { get; set; }
 
         [Column("id_equipamento")]
-        public int EquipamentoId { get; set; }
+        public int? EquipamentoId { get; set; }
 
         [ForeignKey("EquipamentoId")]
         public Equipamento? Equipamento { get; set; }

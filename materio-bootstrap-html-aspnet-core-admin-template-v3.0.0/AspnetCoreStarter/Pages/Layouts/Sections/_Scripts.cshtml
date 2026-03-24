@@ -30,4 +30,16 @@
   <script src="~/vendor/libs/i18n/i18n.dist.js" asp-append-version="true"></script>
   <script src="~/vendor/js/menu.dist.js" asp-append-version="true"></script>
   <script src="~/js/site.dist.js" asp-append-version="true"></script>
+
+  @* Global Auto-dismiss for Notifications *@
+  <script>
+    $(function() {
+      // Auto-dismiss standard Bootstrap alerts after 5 seconds
+      setTimeout(function() {
+        $(".alert-dismissible").fadeOut("slow", function() {
+          $(this).remove();
+        });
+      }, 5000);
+    });
+  </script>
 </environment>

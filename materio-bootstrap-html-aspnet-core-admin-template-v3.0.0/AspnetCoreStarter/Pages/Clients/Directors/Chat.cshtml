@@ -10,62 +10,182 @@
 
     <div class="card overflow-hidden" style="height: calc(100vh - 200px);">
         <div class="row g-0 h-100">
-            <!-- Sidebar de Contactos -->
-            <div class="col-3 border-end h-100 bg-light">
+            <!-- Sidebar de Contactos (Técnicos) -->
+            <div class="col-3 border-end h-100 bg-light d-none d-md-block">
                 <div class="p-3 border-bottom bg-white">
-                    <input type="text" class="form-control form-control-sm" placeholder="Pesquisar contacto..." />
+                    <input type="text" class="form-control form-control-sm" placeholder="Pesquisar técnico..." />
                 </div>
                 <div class="list-group list-group-flush overflow-auto" style="height: calc(100% - 60px);">
-                    <div class="list-group-item list-group-item-action border-0 py-3 active">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar me-2">
-                                <img src="/img/avatars/1.png" class="rounded-circle" alt="User" />
+                    @foreach (var tech in Model.Technicians)
+                    {
+                        <a asp-page="./Chat" asp-route-techId="@tech.Id" 
+                           class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedTechId == tech.Id ? "active" : "")">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar me-2">
+                                    <span class="avatar-initial rounded-circle bg-label-primary">@tech.Username[0]</span>
+                                </div>
+                                <div class="w-100">
+                                    <h6 class="mb-0 small">@tech.Username</h6>
+                                    <p class="mb-0 text-muted x-small">Técnico ASNET</p>
+                                </div>
                             </div>
-                            <div class="w-100">
-                                <h6 class="mb-0 small">Suporte Técnico</h6>
-                                <p class="mb-0 text-muted x-small">Olá, como posso ajudar?</p>
-                            </div>
-                        </div>
-                    </div>
+                        </a>
+                    }
+                    @if (!Model.Technicians.Any())
+                    {
+                        <div class="p-3 text-center text-muted">Nenhum técnico disponível.</div>
+                    }
                 </div>
             </div>
 
             <!-- Janela de Chat -->
-            <div class="col-9 h-100 d-flex flex-column">
-                <!-- Header -->
-                <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar me-2">
-                            <img src="/img/avatars/1.png" class="rounded-circle" alt="User" />
-                        </div>
-                        <h6 class="mb-0">Suporte Técnico</h6>
-                    </div>
-                </div>
-
-                <!-- Mensagens -->
-                <div class="flex-grow-1 p-3 overflow-auto bg-white" style="background-image: radial-gradient(#eee 1px, transparent 1px); background-size: 20px 20px;">
-                    <div class="d-flex flex-column gap-3">
-                        <div class="align-self-start bg-light p-2 rounded-3 shadow-sm" style="max-width: 70%;">
-                            <p class="mb-0 small">Olá Diretor! Estamos prontos para ajudar com qualquer questão no seu agrupamento.</p>
-                            <small class="text-muted x-small">09:15</small>
+            <div class="col-12 col-md-9 h-100 d-flex flex-column">
+                @if (Model.SelectedTechId.HasValue)
+                {
+                    var currentTech = Model.Technicians.FirstOrDefault(t => t.Id == Model.SelectedTechId);
+                    <!-- Header -->
+                    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar me-2">
+                                <span class="avatar-initial rounded-circle bg-label-primary">@currentTech?.Username[0]</span>
+                            </div>
+                            <h6 class="mb-0">@currentTech?.Username</h6>
                         </div>
                     </div>
-                </div>
 
-                <!-- Input -->
-                <div class="p-3 border-top bg-white">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Escreva a sua mensagem para o suporte..." />
-                        <button class="btn btn-primary"><i class="ri-send-plane-fill"></i></button>
+                    <!-- Mensagens -->
+                    <div id="chatWindow" class="flex-grow-1 p-3 overflow-auto bg-white" style="background-image: radial-gradient(#eee 1px, transparent 1px); background-size: 20px 20px;">
+                        <div id="messageContainer" class="d-flex flex-column gap-3">
+                            @foreach (var msg in Model.Messages)
+                            {
+                                bool isMe = msg.SenderId == Model.CurrentUserId;
+                                <div class="@(isMe ? "align-self-end text-white bg-primary" : "align-self-start bg-light") p-2 rounded-3 shadow-sm" 
+                                     style="max-width: 70%;" data-msg-id="@msg.Id">
+                                    <p class="mb-0 small">@msg.Content</p>
+                                    <small class="@(isMe ? "text-white-50" : "text-muted") x-small">@msg.CreatedAt.ToString("HH:mm")</small>
+                                </div>
+                            }
+                        </div>
                     </div>
-                </div>
+
+                    <!-- Input -->
+                    <div class="p-3 border-top bg-white">
+                        <form id="chatForm" class="input-group">
+                            <input type="text" id="messageInput" class="form-control" placeholder="Escreva a sua mensagem..." required autocomplete="off" />
+                            <input type="hidden" id="receiverId" value="@Model.SelectedTechId" />
+                            <button type="submit" class="btn btn-primary"><i class="ri-send-plane-fill"></i></button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center bg-light text-center p-5">
+                        <div class="mb-3 text-primary" style="font-size: 3rem;"><i class="ri-chat-smile-2-line"></i></div>
+                        <h5>Bem-vindo ao Chat ASNET</h5>
+                        <p class="text-muted">Selecione um técnico à esquerda para iniciar uma conversa.</p>
+                        <div class="d-md-none mt-3">
+                            <h6>Técnicos Disponíveis:</h6>
+                            <div class="list-group mt-2">
+                                @foreach (var tech in Model.Technicians)
+                                {
+                                    <a asp-page="./Chat" asp-route-techId="@tech.Id" class="list-group-item list-group-item-action">@tech.Username</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
 
+@section PageScripts {
+<script>
+    const chatWindow = document.getElementById('chatWindow');
+    const messageContainer = document.getElementById('messageContainer');
+    const chatForm = document.getElementById('chatForm');
+    const messageInput = document.getElementById('messageInput');
+    const receiverId = document.getElementById('receiverId')?.value;
+    let lastMessageId = 0;
+
+    // Scroll to bottom helper
+    const scrollToBottom = () => {
+        if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+    };
+
+    // Initialize lastMessageId
+    const updateLastMessageId = () => {
+        const lastMsg = messageContainer?.lastElementChild;
+        if (lastMsg) lastMessageId = parseInt(lastMsg.getAttribute('data-msg-id'));
+    };
+
+    if (chatForm) {
+        scrollToBottom();
+        updateLastMessageId();
+
+        // Handle sending messages
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = messageInput.value;
+            if (!content.trim()) return;
+
+            messageInput.value = '';
+
+            try {
+                const response = await fetch('?handler=SendMessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ ReceiverId: parseInt(receiverId), Content: content })
+                });
+
+                if (response.ok) {
+                    await fetchNewMessages();
+                }
+            } catch (err) {
+                console.error('Error sending message:', err);
+            }
+        });
+
+        // Polling for new messages
+        const fetchNewMessages = async () => {
+            try {
+                const response = await fetch(`?handler=FetchMessages&techId=${receiverId}&lastMessageId=${lastMessageId}`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    if (messages.length > 0) {
+                        messages.forEach(msg => {
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = msg.isMe ? 'align-self-end text-white bg-primary p-2 rounded-3 shadow-sm' : 'align-self-start bg-light p-2 rounded-3 shadow-sm';
+                            msgDiv.style.maxWidth = '70%';
+                            msgDiv.setAttribute('data-msg-id', msg.id);
+                            
+                            msgDiv.innerHTML = `
+                                <p class="mb-0 small">${msg.content}</p>
+                                <small class="${msg.isMe ? 'text-white-50' : 'text-muted'} x-small">${msg.createdAt}</small>
+                            `;
+                            messageContainer.appendChild(msgDiv);
+                            lastMessageId = msg.id;
+                        });
+                        scrollToBottom();
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching messages:', err);
+            }
+        };
+
+        // Poll every 5 seconds
+        setInterval(fetchNewMessages, 5000);
+    }
+</script>
+}
+
 <style>
     .x-small { font-size: 0.75rem; }
+    .avatar-initial { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     /* Fix for dark mode inside card */
     .dark-style .bg-white, [data-bs-theme="dark"] .bg-white { background-color: #2b2c40 !important; }
     .dark-style .bg-light, [data-bs-theme="dark"] .bg-light { background-color: rgba(255,255,255,0.05) !important; }

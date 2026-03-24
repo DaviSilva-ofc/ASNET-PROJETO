@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace AspnetCoreStarter.Models
 {
@@ -47,8 +49,9 @@ namespace AspnetCoreStarter.Models
         [ForeignKey("RoomId")]
         public Sala? Room { get; set; }
 
-        [Column("status")]
-        [MaxLength(50)]
-        public string? Status { get; set; } = "Funcionando";
+        [NotMapped]
+        public string? Status => StatusEquipamentos?.OrderByDescending(s => s.Id).FirstOrDefault()?.Estado ?? "Disponível";
+
+        public virtual ICollection<StatusEquipamento> StatusEquipamentos { get; set; } = new List<StatusEquipamento>();
     }
 }

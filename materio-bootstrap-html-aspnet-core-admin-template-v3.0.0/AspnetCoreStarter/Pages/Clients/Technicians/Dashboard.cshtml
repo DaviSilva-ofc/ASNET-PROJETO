@@ -1,0 +1,187 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Technicians.DashboardModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Visão Geral - Técnico";
+}
+
+@section PageStyles {
+<style>
+    :root {
+        --asnet-navy: #1e2130;
+        --asnet-orange: #f89223;
+        --asnet-blue: #696cff;
+        --asnet-green: #71dd37;
+    }
+
+    .dash-title { font-size: 1.75rem; font-weight: 700; color: var(--asnet-navy); }
+    .dark-style .dash-title { color: #f5f5f9 !important; }
+
+    .stat-card {
+        border: none;
+        border-radius: 14px;
+        transition: transform .2s;
+    }
+    .stat-card:hover { transform: translateY(-4px); }
+    
+    .stat-icon {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; color: #fff;
+    }
+    .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; }
+    .stat-label  { font-size: .8rem; color: #9e9e9e; margin: 0; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="dash-title mb-1">Painel Técnico</h4>
+            <p class="text-muted mb-0">Bem-vindo, <span class="fw-bold text-primary">@User.Identity.Name</span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Admin/Tickets" class="btn btn-primary btn-sm">
+                <i class='bx bx-list-ul me-1'></i> Todos os Tickets
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:var(--asnet-blue);">
+                        <i class='bx bx-support'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.TotalTicketsCount</p>
+                        <p class="stat-label">Total Tickets</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:var(--asnet-orange);">
+                        <i class='bx bx-user-check'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.MyTicketsCount</p>
+                        <p class="stat-label">Meus Tickets</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#ff3e1d;">
+                        <i class='bx bx-error-circle'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.PendingTicketsCount</p>
+                        <p class="stat-label">Pendentes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:var(--asnet-green);">
+                        <i class='bx bx-chat'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.UnreadMessagesCount</p>
+                        <p class="stat-label">Mensagens</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Tickets -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Tickets Recentes</h5>
+                    <a href="/Admin/Tickets" class="btn btn-xs btn-outline-primary">Ver todos</a>
+                </div>
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Escola</th>
+                                <th>Nível</th>
+                                <th>Estado</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.RecentTickets)
+                            {
+                                <tr>
+                                    <td><strong>@t.School?.Name</strong></td>
+                                    <td>
+                                        <span class="badge @(t.Level?.Contains("Alto") == true ? "bg-label-danger" : "bg-label-info")">
+                                            @t.Level
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(t.Status == "Fechado" ? "bg-label-success" : "bg-label-warning")">
+                                            @t.Status
+                                        </span>
+                                    </td>
+                                    <td>@t.CreatedAt.ToString("dd/MM")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Stock Alerts -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Alertas de Stock Técnico</h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.MyStock.Any())
+                    {
+                        <div class="text-center py-4">
+                            <i class='bx bx-package text-muted' style="font-size: 3rem;"></i>
+                            <p class="mt-2 text-muted">Sem itens no stock pessoal.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var s in Model.MyStock)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <h6 class="mb-0">@s.ItemName</h6>
+                                        <small class="text-muted">@s.Description</small>
+                                    </div>
+                                    <span class="badge @(s.IsAvailable ? "bg-label-success" : "bg-label-danger")">
+                                        @(s.IsAvailable ? "Disponível" : "Em Uso")
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                        <div class="mt-3">
+                            <a href="/Admin/Stocks" class="btn btn-sm btn-outline-secondary w-100">Gerir meu Stock</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

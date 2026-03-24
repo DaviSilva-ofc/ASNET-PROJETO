@@ -26,6 +26,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public int LowStockAlertsCount { get; set; }
         public int TotalUnreadMessages { get; set; }
         public List<AspnetCoreStarter.Models.User> RecentMessageSenders { get; set; }
+        public List<LowStockItemViewModel> LowStockItems { get; set; } = new();
 
         public int TicketsPedidoCount { get; set; }
         public int TicketsConcluidoCount { get; set; }
@@ -258,6 +259,21 @@ namespace AspnetCoreStarter.Pages.Admin
                 .ToListAsync();
             ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locations);
 
+            // 5. Low Stock Alerts Logic
+            // Group StockEmpresa by EquipmentName and count available items
+            var lowStockItems = await _context.StockEmpresa
+                .Where(s => s.IsAvailable || s.Status == "Disponível")
+                .GroupBy(s => s.EquipmentName)
+                .Select(g => new LowStockItemViewModel
+                {
+                    Name = g.Key ?? "Sem Nome",
+                    AvailableCount = g.Count()
+                })
+                .Where(x => x.AvailableCount < 3)
+                .ToListAsync();
+
+            LowStockItems = lowStockItems;
+
             return Page();
         }
         public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? blocoId)
@@ -335,5 +351,11 @@ namespace AspnetCoreStarter.Pages.Admin
             }
             return RedirectToPage();
         }
+    }
+
+    public class LowStockItemViewModel
+    {
+        public string Name { get; set; }
+        public int AvailableCount { get; set; }
     }
 }

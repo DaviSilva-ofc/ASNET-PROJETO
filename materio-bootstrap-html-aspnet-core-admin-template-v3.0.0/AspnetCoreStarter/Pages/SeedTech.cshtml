@@ -1,0 +1,19 @@
+@page
+@model AspnetCoreStarter.Pages.SeedTechModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seed Technician</title>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+    <h2>Criação de Técnico de Teste</h2>
+    <div style="padding: 20px; background-color: #f8f9fa; border: 1px solid #dee2e6; display: inline-block; border-radius: 5px;">
+        <p style="font-size: 1.2rem; margin: 0;">@Model.Result</p>
+    </div>
+    <br/><br/>
+    <a href="/Auth/Login" style="padding: 10px 20px; background: #0d6efd; color: white; text-decoration: none; border-radius: 5px;">Ir para o Login</a>
+</body>
+</html>

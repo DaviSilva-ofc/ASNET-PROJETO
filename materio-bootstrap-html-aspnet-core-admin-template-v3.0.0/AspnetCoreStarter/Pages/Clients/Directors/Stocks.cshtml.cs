@@ -45,6 +45,11 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 return Page();
             }
 
+            try { 
+                await _context.Database.ExecuteSqlRawAsync("UPDATE status_equipamento SET estado = 'Disponível' WHERE estado = 'Funcionando';"); 
+                await _context.Database.ExecuteSqlRawAsync("UPDATE status_equipamento SET estado = 'Indisponível' WHERE estado IN ('Avariado', 'Recolhido');"); 
+            } catch { }
+
             int agrId = director.AgrupamentoId.Value;
 
             // Stats for the director
@@ -66,6 +71,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             CountSalas = rooms.Count;
 
             var equips = await _context.Equipamentos
+                .Include(e => e.StatusEquipamentos)
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                         .ThenInclude(b => b.School)
@@ -75,16 +81,36 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             CountTickets = await _context.Tickets.CountAsync(t => t.SchoolId.HasValue && schoolIds.Contains(t.SchoolId.Value));
 
-            // Load items for the table
-            Items = equips.Select(e => new StockItemViewModel {
-                Name = e.Name,
+            // Load items for the table grouped by identical properties
+            var groupedItems = equips.GroupBy(e => new {
+                Name = e.Name ?? "Desconhecido",
                 Category = e.Type ?? "Equipamento",
                 Location = $"{e.Room?.Name} ({e.Room?.Block?.School?.Name})",
-                Quantity = 1,
-                Status = "Em uso" // Simplified
-            }).ToList();
+                Status = MapStatus(e)
+            });
+
+            Items = groupedItems.Select(g => new StockItemViewModel {
+                Name = g.Key.Name,
+                Category = g.Key.Category,
+                Location = g.Key.Location,
+                Quantity = g.Count(),
+                Status = g.Key.Status
+            }).OrderBy(i => i.Location).ThenBy(i => i.Name).ToList();
 
             return Page();
+        }
+
+        private string MapStatus(Equipamento e)
+        {
+            var estado = e.StatusEquipamentos?.OrderByDescending(s => s.Id).FirstOrDefault()?.Estado ?? "";
+
+            return estado.ToLower() switch
+            {
+                "disponível" or "disponivel" or "funcionando" => "Disponível",
+                "em uso" => "Em uso",
+                "avariado" or "indisponível" or "indisponivel" or "recolhido" => "Indisponível",
+                _ => "Disponível" // Qualquer outro estado → Disponível por defeito
+            };
         }
     }
 

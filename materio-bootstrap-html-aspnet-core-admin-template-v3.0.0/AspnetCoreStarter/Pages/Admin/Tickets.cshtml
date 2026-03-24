@@ -8,17 +8,37 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Tickets</h4>
 
+    <!-- Exibição de Alertas TempData -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Solicitações de Suporte</h5>
             <div class="d-flex gap-2">
-                <select class="form-select form-select-sm" style="width: auto;">
-                    <option>Todos os Estados</option>
-                    <option>Pendente</option>
-                    <option>Em Resolução</option>
-                    <option>Fechado</option>
-                </select>
-                <button class="btn btn-sm btn-primary">Filtram</button>
+                <form method="get" class="d-flex gap-2">
+                    <select name="FilterStatus" class="form-select form-select-sm" style="width: auto;">
+                        <option value="Todos os Estados">Todos os Estados</option>
+                        <option value="Pedido" selected="@(Model.FilterStatus == "Pedido" ? "selected" : null)">Pedido</option>
+                        <option value="Pendente" selected="@(Model.FilterStatus == "Pendente" ? "selected" : null)">Pendente</option>
+                        <option value="Em Resolução" selected="@(Model.FilterStatus == "Em Resolução" ? "selected" : null)">Em Resolução</option>
+                        <option value="Fechado" selected="@(Model.FilterStatus == "Fechado" ? "selected" : null)">Fechado</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+                    <a asp-page="./Tickets" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                </form>
             </div>
         </div>
         <div class="table-responsive text-nowrap">
@@ -26,8 +46,8 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Assunto</th>
-                        <th>Solicitante</th>
+                        <th>Escola / Solicitante</th>
+                        <th>Assunto / Descrição</th>
                         <th>Prioridade</th>
                         <th>Estado</th>
                         <th>Data</th>
@@ -35,9 +55,66 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">A carregar lista de tickets...</td>
-                    </tr>
+                    @if (Model.Tickets == null || !Model.Tickets.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">Nenhum ticket encontrado.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var t in Model.Tickets)
+                        {
+                            <tr>
+                                <td>#@t.Id</td>
+                                <td>@(t.School?.Name ?? t.Admin?.Username ?? "N/A")</td>
+                                <td>
+                                    <div class="text-wrap" style="max-width: 300px;">
+                                        @t.Description
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(t.Level))
+                                    {
+                                        <span class="badge @(t.Level.Contains("Alta") || t.Level.Contains("Crítica") ? "bg-label-danger" : (t.Level.Contains("Média") ? "bg-label-warning" : "bg-label-info"))">
+                                            @t.Level
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var statusClass = t.Status switch
+                                        {
+                                            "Pedido" => "bg-label-primary",
+                                            "Pendente" => "bg-label-warning",
+                                            "Em Resolução" => "bg-label-info",
+                                            "Fechado" => "bg-label-success",
+                                            _ => "bg-label-secondary"
+                                        };
+                                    }
+                                    <span class="badge @statusClass">@t.Status</span>
+                                </td>
+                                <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <form method="post" asp-page-handler="UpdateStatus" class="d-inline-flex gap-2">
+                                        <input type="hidden" name="id" value="@t.Id" />
+                                        <input type="hidden" name="FilterStatus" value="@Model.FilterStatus" />
+                                        <select name="newStatus" class="form-select form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                                            <option value="" disabled selected>Alterar Estado</option>
+                                            <option value="Pedido" disabled="@(t.Status == "Pedido" ? "disabled" : null)">Pedido</option>
+                                            <option value="Pendente" disabled="@(t.Status == "Pendente" ? "disabled" : null)">Pendente</option>
+                                            <option value="Em Resolução" disabled="@(t.Status == "Em Resolução" ? "disabled" : null)">Em Resolução</option>
+                                            <option value="Fechado" disabled="@(t.Status == "Fechado" ? "disabled" : null)">Fechado</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
             </table>
         </div>

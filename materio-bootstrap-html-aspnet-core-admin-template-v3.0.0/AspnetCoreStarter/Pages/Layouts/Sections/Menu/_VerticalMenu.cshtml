@@ -27,13 +27,7 @@
   <ul class="menu-inner py-1">
     @if (User.Identity.IsAuthenticated)
     {
-      bool isDirector = User.IsInRole("Diretor");
-
-      <li class="menu-header small text-uppercase">
-        <span class="menu-header-text">Painel</span>
-      </li>
-
-      @if (isDirector)
+      @if (User.IsInRole("Diretor"))
       {
         <li class='menu-item@(currentPage == "/Clients/Directors/Dashboard" ? " active" : "")'>
           <a asp-page="/Clients/Directors/Dashboard" class="menu-link">
@@ -78,7 +72,46 @@
           </a>
         </li>
       }
-      else
+      else if (User.IsInRole("Tecnico"))
+      {
+        <li class='menu-item@(currentPage == "/Clients/Technicians/Dashboard" ? " active" : "")'>
+          <a asp-page="/Clients/Technicians/Dashboard" class="menu-link">
+            <i class="menu-icon icon-base ri-dashboard-line"></i>
+            <div>Visão Geral</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Infrastructure" ? " active" : "")'>
+          <a asp-page="/Admin/Infrastructure" class="menu-link">
+            <i class="menu-icon icon-base ri-government-line"></i>
+            <div>Infraestrutura</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Equipment" ? " active" : "")'>
+          <a asp-page="/Admin/Equipment" class="menu-link">
+            <i class="menu-icon icon-base ri-computer-line"></i>
+            <div>Equipamentos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Stocks" ? " active" : "")'>
+          <a asp-page="/Admin/Stocks" class="menu-link">
+            <i class="menu-icon icon-base ri-archive-line"></i>
+            <div>Stocks</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Tickets" ? " active" : "")'>
+          <a asp-page="/Admin/Tickets" class="menu-link">
+            <i class="menu-icon icon-base ri-ticket-line"></i>
+            <div>Tickets</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Chat" ? " active" : "")'>
+          <a asp-page="/Admin/Chat" class="menu-link">
+            <i class="menu-icon icon-base ri-chat-3-line"></i>
+            <div>Chat</div>
+          </a>
+        </li>
+      }
+      else if (User.IsInRole("Admin"))
       {
         <li class='menu-item@(currentPage == "/Admin/Dashboard" ? " active" : "")'>
           <a asp-page="/Admin/Dashboard" class="menu-link">

@@ -62,10 +62,31 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
                 .AsQueryable();
 
-            // Apply Filters
-            if (!string.IsNullOrEmpty(FilterName)) query = query.Where(e => e.Name.Contains(FilterName));
-            if (!string.IsNullOrEmpty(FilterType)) query = query.Where(e => e.Type.Contains(FilterType));
-            if (!string.IsNullOrEmpty(FilterSerialNumber)) query = query.Where(e => e.SerialNumber.Contains(FilterSerialNumber));
+            // Apply Filters (Case-insensitive and robust)
+            if (!string.IsNullOrEmpty(FilterName)) 
+            {
+                var nameLower = FilterName.ToLower();
+                query = query.Where(e => e.Name.ToLower().Contains(nameLower) || 
+                                         (e.Brand != null && e.Brand.ToLower().Contains(nameLower)) || 
+                                         (e.Model != null && e.Model.ToLower().Contains(nameLower)));
+            }
+
+            if (!string.IsNullOrEmpty(FilterType)) 
+            {
+                var typeMatch = FilterType;
+                var typeNoAccent = FilterType.Replace("á", "a").Replace("é", "e").Replace("í", "i").Replace("ó", "o").Replace("ú", "u").ToLower();
+                
+                // Search in BOTH Type and Name to be highly inclusive
+                // Allow matches in Name even if Type is NULL
+                query = query.Where(e => (e.Type != null && (e.Type.Contains(typeMatch) || e.Type.ToLower().Contains(typeNoAccent))) || 
+                                         (e.Name != null && e.Name.ToLower().Contains(typeNoAccent)));
+            }
+
+            if (!string.IsNullOrEmpty(FilterSerialNumber)) 
+            {
+                var snLower = FilterSerialNumber.ToLower();
+                query = query.Where(e => e.SerialNumber != null && e.SerialNumber.ToLower().Contains(snLower));
+            }
 
             if (FilterRoomId.HasValue)
             {

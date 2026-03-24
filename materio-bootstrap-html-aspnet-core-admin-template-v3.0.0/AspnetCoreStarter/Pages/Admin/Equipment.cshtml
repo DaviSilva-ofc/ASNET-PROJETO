@@ -5,6 +5,10 @@
     ViewData["Title"] = "Gestão de Equipamentos";
 }
 
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/select2/select2.dist.css" />
+}
+
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Equipamentos</h4>
 
@@ -108,11 +112,42 @@
                         <input type="text" name="NewEquipment.SerialNumber" class="form-control" required />
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Agrupamento</label>
+                        <select id="regAgrupamento" class="form-select select2" onchange="regFilterEscolas()">
+                            <option value="">Selecione o agrupamento...</option>
+                            @foreach (var agr in Model.AvailableAgrupamentos)
+                            {
+                                <option value="@agr.Id">@agr.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Escola</label>
+                        <select id="regEscola" class="form-select select2" onchange="regFilterBlocos()">
+                            <option value="">Selecione a escola...</option>
+                            @foreach (var esc in Model.AvailableEscolas)
+                            {
+                                <option value="@esc.Id" data-agr="@esc.AgrupamentoId">@esc.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bloco</label>
+                        <select id="regBloco" class="form-select select2" onchange="regFilterSalas()">
+                            <option value="">Selecione o bloco...</option>
+                            @foreach (var blc in Model.AvailableBlocos)
+                            {
+                                <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Sala</label>
-                        <select name="NewEquipment.RoomId" class="form-select" required>
+                        <select id="regSala" name="NewEquipment.RoomId" class="form-select select2" required>
+                            <option value="">Selecione a sala...</option>
                             @foreach (var sala in Model.Rooms)
                             {
-                                <option value="@sala.Id">@sala.Name</option>
+                                <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option>
                             }
                         </select>
                     </div>
@@ -140,7 +175,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tipo</label>
-                            <select asp-for="FilterType" class="form-select">
+                            <select asp-for="FilterType" class="form-select select2">
                                 <option value="">Todos</option>
                                 <option value="Portátil">Portátil</option>
                                 <option value="Monitor">Monitor</option>
@@ -211,8 +246,66 @@
     </div>
 </div>
 
+@section VendorScripts {
+    <script src="~/vendor/libs/select2/select2.dist.js"></script>
+}
+
 @section PageScripts {
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2 for all select elements with class 'select2'
+        $('.select2').each(function() {
+            var $this = $(this);
+            $this.select2({
+                placeholder: $this.attr('placeholder') || 'Selecione uma opção',
+                dropdownParent: $this.closest('.modal') // Ensure dropdown works inside modals
+            });
+        });
+    });
+
+    // Registration Modal Filters
+    function regFilterEscolas() {
+        const agrId = document.getElementById('regAgrupamento').value;
+        const escSelect = document.getElementById('regEscola');
+        const options = escSelect.querySelectorAll('option');
+
+        escSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
+        });
+        $(escSelect).trigger('change'); // Notify Select2
+        regFilterBlocos();
+    }
+
+    function regFilterBlocos() {
+        const escId = document.getElementById('regEscola').value;
+        const blcSelect = document.getElementById('regBloco');
+        const options = blcSelect.querySelectorAll('option');
+
+        blcSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
+        });
+        $(blcSelect).trigger('change'); // Notify Select2
+        regFilterSalas();
+    }
+
+    function regFilterSalas() {
+        const blcId = document.getElementById('regBloco').value;
+        const salaSelect = document.getElementById('regSala');
+        const options = salaSelect.querySelectorAll('option');
+
+        salaSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
+        });
+        $(salaSelect).trigger('change'); // Notify Select2
+    }
+
+    // Main Filter Modal Filters
     function filterEscolas() {
         const agrId = document.getElementById('filterAgrupamento').value;
         const escSelect = document.getElementById('filterEscola');
@@ -223,6 +316,7 @@
             if (opt.value === "") return;
             opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
         });
+        $(escSelect).trigger('change'); // Notify Select2
         filterBlocos();
     }
 
@@ -236,6 +330,7 @@
             if (opt.value === "") return;
             opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
         });
+        $(blcSelect).trigger('change'); // Notify Select2
         filterSalas();
     }
 
@@ -249,6 +344,7 @@
             if (opt.value === "") return;
             opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
+        $(salaSelect).trigger('change'); // Notify Select2
     }
 </script>
 }
