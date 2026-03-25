@@ -25,6 +25,9 @@ namespace AspnetCoreStarter.Models
         [Column("descricao")]
         public string? Description { get; set; }
 
+        [Column("nivel_urgencia")]
+        [MaxLength(20)]
+        public string? UrgencyLevel { get; set; }
 
         [Column("id_agrupamento")]
         public int? AgrupamentoId { get; set; }

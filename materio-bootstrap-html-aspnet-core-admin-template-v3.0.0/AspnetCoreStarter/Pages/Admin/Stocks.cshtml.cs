@@ -16,12 +16,12 @@ namespace AspnetCoreStarter.Pages.Admin
             _context = context;
         }
 
-        public int CountAgrupamentos { get; set; }
-        public int CountEscolas { get; set; }
-        public int CountTecnicos { get; set; }
-        public int CountEmpresa { get; set; }
+        public int CountStockEmpresa { get; set; }
+        public int CountStockAgrupamentos { get; set; }
 
         public List<StockItemViewModel> Inventory { get; set; } = new();
+        public List<StockItemViewModel> EmpresaInventory { get; set; } = new();
+        public List<AgrupamentoStockGroup> AgrupamentoTree { get; set; } = new();
 
         public List<Agrupamento> AvailableAgrupamentos { get; set; } = new();
         public List<School> AvailableSchools { get; set; } = new();
@@ -61,20 +61,9 @@ namespace AspnetCoreStarter.Pages.Admin
                 await _context.Database.ExecuteSqlRawAsync("UPDATE stock_tecnico SET status = 'Disponível' WHERE status IS NULL;");
             } catch { }
 
-            // 1. Calculations (Fixed to reflect actual DB state)
-            CountAgrupamentos = await _context.Equipamentos
-                .Include(e => e.Room)
-                    .ThenInclude(r => r.Block)
-                        .ThenInclude(b => b.School)
-                .CountAsync(e => e.Room != null && e.Room.Block != null && e.Room.Block.School != null && e.Room.Block.School.AgrupamentoId != null);
-
-            CountEscolas = await _context.Equipamentos
-                .Include(e => e.Room)
-                    .ThenInclude(r => r.Block)
-                .CountAsync(e => e.Room != null && e.Room.Block != null && e.Room.Block.SchoolId != 0);
-
-            CountTecnicos = await _context.StockTecnico.CountAsync();
-            CountEmpresa = await _context.StockEmpresa.CountAsync();
+            // 1. Base counts (only 2 "types" shown in UI)
+            // Stock Empresa = central + com técnico (i.e., stock_empresa rows without agrupamento/escola).
+            CountStockEmpresa = await _context.StockEmpresa.CountAsync(s => s.AgrupamentoId == null && s.SchoolId == null);
 
             // Load lookup lists for the modal
             AvailableAgrupamentos = await _context.Agrupamentos.ToListAsync();
@@ -99,6 +88,7 @@ namespace AspnetCoreStarter.Pages.Admin
             // --- Stock Empresa / Agrupamento / Escola / Técnico (from StockEmpresa table) ---
             var empQuery = _context.StockEmpresa
                 .Include(s => s.Technician)
+                    .ThenInclude(t => t.User)
                 .Include(s => s.Agrupamento)
                 .Include(s => s.School)
                 .AsQueryable();
@@ -139,7 +129,8 @@ namespace AspnetCoreStarter.Pages.Admin
                     Type = s.Type,
                     Location = loc,
                     Quantity = 1,
-                    Status = normStatus
+                    Status = normStatus,
+                    TechnicianName = s.Technician?.User?.Username
                 });
             }
 
@@ -214,7 +205,7 @@ namespace AspnetCoreStarter.Pages.Admin
 
             // 3. Group by identical properties and sum quantity
             Inventory = rawInventory
-                .GroupBy(i => new { i.Name, i.Type, i.Location, i.Status })
+                .GroupBy(i => new { i.Name, i.Type, i.Location, i.Status, i.TechnicianName })
                 .Select(g => new StockItemViewModel
                 {
                     SampleId = g.First().SampleId,
@@ -222,11 +213,118 @@ namespace AspnetCoreStarter.Pages.Admin
                     Type = g.Key.Type,
                     Status = g.Key.Status,
                     Location = g.Key.Location,
-                    Quantity = g.Sum(i => i.Quantity)
+                    Quantity = g.Sum(i => i.Quantity),
+                    TechnicianName = g.Key.TechnicianName
                 })
                 .OrderBy(i => i.Location)
                 .ThenBy(i => i.Name)
                 .ToList();
+
+            // 4. Split into Empresa (central + técnico) vs Agrupamentos
+            EmpresaInventory = Inventory
+                .Where(i => i.Location == "Stock Empresa" || i.Location == "com técnico" || i.Status == "Emprestado")
+                .ToList();
+
+            // 5. Build Agrupamento tree from equipped rooms
+            var agrupamentos = await _context.Agrupamentos
+                .Include(a => a.Schools)
+                .ToListAsync();
+
+            var allEmpresaStock = await _context.StockEmpresa
+                .Include(s => s.Agrupamento)
+                .Include(s => s.School)
+                .Where(s => s.AgrupamentoId != null || s.SchoolId != null)
+                .ToListAsync();
+
+            // Equipamentos registados nas escolas (inventário), para mostrar dentro de cada escola no stock de agrupamentos
+            var equippedItems = await _context.Equipamentos
+                .Include(e => e.StatusEquipamentos)
+                .Include(e => e.Room)
+                    .ThenInclude(r => r.Block)
+                        .ThenInclude(b => b.School)
+                .Where(e => e.RoomId != null && e.Room != null && e.Room.Block != null && e.Room.Block.School != null)
+                .ToListAsync();
+
+            var equipsBySchool = equippedItems
+                .Where(e => e.Room?.Block?.School != null)
+                .GroupBy(e => e.Room!.Block!.School!.Id)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.GroupBy(e => new
+                        {
+                            Name = e.Name ?? "Desconhecido",
+                            Type = e.Type ?? "Equipamento",
+                            Status = MapEquipamentoStatus(e)
+                        })
+                        .Select(gg => new StockItemViewModel
+                        {
+                            Name = gg.Key.Name,
+                            Type = gg.Key.Type,
+                            Status = gg.Key.Status,
+                            Location = "Equipamento",
+                            Quantity = gg.Count()
+                        })
+                        .OrderBy(i => i.Name)
+                        .ToList()
+                );
+
+            foreach (var agr in agrupamentos)
+            {
+                var agrGroup = new AgrupamentoStockGroup { AgrupamentoName = agr.Name ?? "Sem Nome", AgrupamentoId = agr.Id };
+
+                // Stock directly at agrupamento level
+                var agrDirectStock = allEmpresaStock
+                    .Where(s => s.AgrupamentoId == agr.Id && s.SchoolId == null)
+                    .GroupBy(s => new { s.EquipmentName, s.Type, Status = NormalizeStatus(s.Status) })
+                    .Select(g => new StockItemViewModel {
+                        SampleId = g.First().Id,
+                        Name = g.Key.EquipmentName,
+                        Type = g.Key.Type,
+                        Status = g.Key.Status,
+                        Location = $"Agrupamento: {agr.Name}",
+                        Quantity = g.Count()
+                    }).ToList();
+                agrGroup.DirectStock = agrDirectStock;
+
+                if (agr.Schools != null)
+                {
+                    foreach (var esc in agr.Schools)
+                    {
+                        var escStock = allEmpresaStock
+                            .Where(s => s.SchoolId == esc.Id)
+                            .GroupBy(s => new { s.EquipmentName, s.Type, Status = NormalizeStatus(s.Status) })
+                            .Select(g => new StockItemViewModel {
+                                SampleId = g.First().Id,
+                                Name = g.Key.EquipmentName,
+                                Type = g.Key.Type,
+                                Status = g.Key.Status,
+                                Location = $"Escola: {esc.Name}",
+                                Quantity = g.Count()
+                            }).ToList();
+
+                        equipsBySchool.TryGetValue(esc.Id, out var escEquipItems);
+
+                        if (escStock.Any() || (escEquipItems != null && escEquipItems.Any()))
+                        {
+                            agrGroup.Schools.Add(new EscolaStockGroup {
+                                EscolaName = esc.Name ?? "Sem Nome",
+                                EscolaId = esc.Id,
+                                Items = escStock,
+                                EquipmentItems = escEquipItems ?? new List<StockItemViewModel>()
+                            });
+                        }
+                    }
+                }
+
+                if (agrGroup.DirectStock.Any() || agrGroup.Schools.Any())
+                    AgrupamentoTree.Add(agrGroup);
+            }
+
+            // Total count for Stock Agrupamentos (tree)
+            CountStockAgrupamentos = AgrupamentoTree.Sum(a =>
+                a.DirectStock.Sum(i => i.Quantity) +
+                a.Schools.Sum(s => s.Items.Sum(i => i.Quantity) + s.EquipmentItems.Sum(i => i.Quantity))
+            );
 
             return Page();
         }
@@ -241,6 +339,12 @@ namespace AspnetCoreStarter.Pages.Admin
                 "avariado" or "indisponível" or "indisponivel" or "recolhido" => "Indisponível",
                 _ => "Disponível"
             };
+        }
+
+        private static string MapEquipamentoStatus(Equipamento e)
+        {
+            var estado = e.StatusEquipamentos?.OrderByDescending(s => s.Id).FirstOrDefault()?.Estado;
+            return NormalizeStatus(estado);
         }
 
         public async Task<IActionResult> OnPostLendAsync(int sampleId, int quantity, int? agrupamentoId, int? schoolId)
@@ -369,11 +473,28 @@ namespace AspnetCoreStarter.Pages.Admin
 
     public class StockItemViewModel
     {
-        public int SampleId { get; set; } // Reference ID for lookups
+        public int SampleId { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
         public string Status { get; set; }
         public string Location { get; set; }
         public int Quantity { get; set; }
+        public string? TechnicianName { get; set; }
+    }
+
+    public class AgrupamentoStockGroup
+    {
+        public int AgrupamentoId { get; set; }
+        public string AgrupamentoName { get; set; } = "";
+        public List<StockItemViewModel> DirectStock { get; set; } = new();
+        public List<EscolaStockGroup> Schools { get; set; } = new();
+    }
+
+    public class EscolaStockGroup
+    {
+        public int EscolaId { get; set; }
+        public string EscolaName { get; set; } = "";
+        public List<StockItemViewModel> Items { get; set; } = new();
+        public List<StockItemViewModel> EquipmentItems { get; set; } = new();
     }
 }

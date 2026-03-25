@@ -22,10 +22,13 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<Diretor> DirectorsList { get; set; } = new();
         public List<Coordenador> CoordinatorsList { get; set; } = new();
         public List<Professor> ProfessorsList { get; set; } = new();
+        public List<User> IndependentClientsList { get; set; } = new();
 
         public List<Agrupamento> Agrupamentos { get; set; } = new();
         public List<AspnetCoreStarter.Models.School> Schools { get; set; } = new();
         public List<Bloco> Blocos { get; set; } = new();
+        public List<Sala> Salas { get; set; } = new();
+        public List<Empresa> Empresas { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
         public int? FilterId { get; set; }
@@ -43,9 +46,14 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty]
         public string NewUserPassword { get; set; }
         [BindProperty]
+        public string NewUserRole { get; set; }
+        [BindProperty]
         public int? SelectedParentId { get; set; }
+        [BindProperty]
+        public int? NewUserEmpresaId { get; set; }
 
         [BindProperty]
+        public string? EditUserRole { get; set; }
         public int EditUserId { get; set; }
         [BindProperty]
         public string? EditUserName { get; set; }
@@ -53,8 +61,6 @@ namespace AspnetCoreStarter.Pages.Admin
         public string? EditUserEmail { get; set; }
         [BindProperty]
         public string? EditUserPassword { get; set; }
-        [BindProperty]
-        public string? EditUserRole { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -115,17 +121,48 @@ namespace AspnetCoreStarter.Pages.Admin
             CoordinatorsList = await coordinatorsQuery.ToListAsync();
             ProfessorsList = await professorsQuery.ToListAsync();
 
+            // Independent Clients: Users who are NOT directors, coordinators, professors or admins
+            var directorUserIds = await _context.Diretores.Select(d => d.UserId).ToListAsync();
+            var coordinatorUserIds = await _context.Coordenadores.Select(c => c.UserId).ToListAsync();
+            var professorUserIds = await _context.Professores.Select(p => p.UserId).ToListAsync();
+            var adminUserIds = await _context.Administradores.Select(a => a.UserId).ToListAsync();
+            
+            var excludeIds = directorUserIds.Union(coordinatorUserIds).Union(professorUserIds).Union(adminUserIds).ToList();
+
+            IndependentClientsList = await _context.Users
+                .Include(u => u.Empresa)
+                .Where(u => !excludeIds.Contains(u.Id))
+                .ToListAsync();
+
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
             Schools = await _context.Schools.ToListAsync();
             Blocos = await _context.Blocos.ToListAsync();
+            Salas = await _context.Salas.ToListAsync();
+            Empresas = await _context.Empresas.ToListAsync();
 
             return Page();
         }
 
         public async Task<IActionResult> OnPostAddDiretorAsync()
         {
+            NewUserRole = "Diretor";
+            return await OnPostAddUserAsync();
+        }
+
+        public async Task<IActionResult> OnPostAddUserAsync()
+        {
             if (string.IsNullOrEmpty(NewUserName) || string.IsNullOrEmpty(NewUserEmail) || string.IsNullOrEmpty(NewUserPassword))
+            {
+                TempData["ErrorMessage"] = "Todos os campos são obrigatórios.";
                 return RedirectToPage();
+            }
+
+            // check if user already exists
+            if (await _context.Users.AnyAsync(u => u.Email == NewUserEmail))
+            {
+                TempData["ErrorMessage"] = "Este email já está registado.";
+                return RedirectToPage();
+            }
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(NewUserPassword);
             var user = new User
@@ -140,17 +177,32 @@ namespace AspnetCoreStarter.Pages.Admin
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            var diretor = new Diretor
+            if (NewUserRole == "Diretor")
             {
-                UserId = user.Id,
-                AgrupamentoId = SelectedParentId
-            };
+                var record = new Diretor { UserId = user.Id, AgrupamentoId = SelectedParentId };
+                _context.Diretores.Add(record);
+            }
+            else if (NewUserRole == "Coordenador")
+            {
+                var record = new Coordenador { UserId = user.Id, SchoolId = SelectedParentId };
+                _context.Coordenadores.Add(record);
+            }
+            else if (NewUserRole == "Professor")
+            {
+                var record = new Professor { UserId = user.Id, BlocoId = SelectedParentId };
+                _context.Professores.Add(record);
+            }
+            else if (NewUserRole == "Cliente Independente")
+            {
+                user.EmpresaId = NewUserEmpresaId;
+                _context.Users.Update(user);
+            }
 
-            _context.Diretores.Add(diretor);
             await _context.SaveChangesAsync();
-
+            TempData["SuccessMessage"] = "Utilizador registado com sucesso.";
             return RedirectToPage();
         }
+
 
         public async Task<IActionResult> OnPostAddCoordenadorAsync()
         {
@@ -328,6 +380,10 @@ namespace AspnetCoreStarter.Pages.Admin
                 {
                     var record = await _context.Professores.FirstOrDefaultAsync(x => x.UserId == EditUserId);
                     if (record != null) record.BlocoId = SelectedParentId.Value;
+                }
+                else if (EditUserRole == "Cliente Independente")
+                {
+                    user.EmpresaId = SelectedParentId;
                 }
             }
 

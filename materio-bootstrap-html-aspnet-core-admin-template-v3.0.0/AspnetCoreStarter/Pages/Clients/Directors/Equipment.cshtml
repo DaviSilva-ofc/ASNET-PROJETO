@@ -45,7 +45,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Nome</th>
+                        <th>Artigo</th>
                         <th>Tipo</th>
                         <th>Nº Série</th>
                         <th>Estado</th>
@@ -91,7 +91,7 @@
                                         <button class="btn btn-sm btn-danger" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#modalSolicitarTicket" 
-                                                onclick="setEquipmentId(@item.Id, '@item.Name')">
+                                                onclick="setEquipmentId(@item.Id, '@item.Name', '@item.Type')">
                                             <i class='bx bx-plus-circle me-1'></i> Solicitar Ticket
                                         </button>
                                     }
@@ -115,20 +115,27 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Nome do Equipamento</label>
-                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por nome..." />
+                            <label class="form-label">Artigo</label>
+                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por artigo (ex: Computadores)..." />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tipo</label>
                             <select asp-for="FilterType" class="form-select">
                                 <option value="">Todos</option>
+                                <option value="Desktop">Desktop</option>
                                 <option value="Portátil">Portátil</option>
                                 <option value="Monitor">Monitor</option>
+                                <option value="Motherboard">Motherboard</option>
+                                <option value="Disco HDD">Disco HDD</option>
+                                <option value="Disco SSD">Disco SSD</option>
+                                <option value="Memória RAM">Memória RAM</option>
+                                <option value="Processador (CPU)">Processador (CPU)</option>
                                 <option value="Teclado">Teclado</option>
                                 <option value="Rato">Rato</option>
                                 <option value="Impressora">Impressora</option>
                                 <option value="Projetor">Projetor</option>
-                                <option value="Desktop">Desktop</option>
+                                <option value="Router">Router</option>
+                                <option value="Switch">Switch</option>
                                 <option value="Outro">Outro</option>
                             </select>
                         </div>
@@ -233,9 +240,9 @@
 
 @section PageScripts {
 <script>
-    function setEquipmentId(id, name) {
+    function setEquipmentId(id, name, type) {
         document.getElementById('modalEqId').value = id;
-        document.getElementById('modalEqName').innerText = name;
+        document.getElementById('modalEqName').innerText = name + (type ? ' (' + type + ')' : '');
     }
 
     function filterBlocos() {

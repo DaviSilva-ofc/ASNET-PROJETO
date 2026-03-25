@@ -25,8 +25,8 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         public int MyStockAlertsCount { get; set; }
         public int UnreadMessagesCount { get; set; }
 
-        public List<Ticket> RecentTickets { get; set; }
-        public List<StockTecnico> MyStock { get; set; }
+        public List<Ticket> RecentTickets { get; set; } = new();
+        public List<StockTecnico> MyStock { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {

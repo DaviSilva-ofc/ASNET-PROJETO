@@ -45,6 +45,12 @@ namespace AspnetCoreStarter.Models
 
         [Column("reset_token_expiry")]
         public DateTime? ResetTokenExpiry { get; set; }
+
+        [Column("id_empresa")]
+        public int? EmpresaId { get; set; }
+
+        [ForeignKey("EmpresaId")]
+        public virtual Empresa? Empresa { get; set; }
     }
 }
 

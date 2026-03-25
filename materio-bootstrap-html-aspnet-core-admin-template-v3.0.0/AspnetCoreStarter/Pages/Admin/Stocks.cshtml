@@ -102,6 +102,91 @@
             font-weight: bold !important;
         }
     }
+
+    /* ===== Tree styles (match Infrastructure) ===== */
+    .cursor-pointer { cursor: pointer; }
+
+    /* Infrastructure-like section panels */
+    .bg-light-section {
+        background-color: rgba(67, 89, 113, 0.02);
+        transition: all 0.3s ease;
+    }
+    .dark-style .bg-light-section,
+    [data-bs-theme="dark"] .bg-light-section {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+    .bg-light-section:hover {
+        background-color: rgba(67, 89, 113, 0.05);
+    }
+    .dark-style .bg-light-section:hover,
+    [data-bs-theme="dark"] .bg-light-section:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    /* Header buttons (same style as Infrastructure) */
+    .edit-header-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        padding: 5px;
+        border-radius: 0.375rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .edit-header-btn:hover {
+        background-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .infra-tree .tree-node {
+        position: relative;
+        padding: 4px 0;
+    }
+
+    /* Animation + styling for arrows (same idea as Infrastructure) */
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        font-weight: bold;
+        font-size: 1.15rem;
+        display: inline-block;
+        line-height: 1;
+        background-color: rgba(105, 108, 255, 0.15);
+        border: 1px solid rgba(105, 108, 255, 0.3);
+        border-radius: 4px;
+        padding: 4px;
+        margin-right: 8px;
+        color: var(--bs-primary);
+    }
+
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background-color: var(--bs-primary);
+        color: #fff;
+    }
+
+    .dark-style [data-bs-toggle="collapse"] i.ri-arrow-right-s-line,
+    [data-bs-theme="dark"] [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .dark-style [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line,
+    [data-bs-theme="dark"] [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        background-color: #696cff;
+        color: #fff;
+    }
+
+    /* Node colors */
+    .empresa-node { color: var(--bs-primary); }
+    .tecnico-node { color: var(--bs-warning); }
+    .tipo-node { color: #8592a3; }
+    .artigo-node { color: #a1acb8; }
+
+    .dark-style .tipo-node, [data-bs-theme="dark"] .tipo-node { color: #cbcbe2; }
+    .dark-style .artigo-node, [data-bs-theme="dark"] .artigo-node { color: #a1acb8; }
 </style>
 }
 
@@ -128,218 +213,405 @@
     </div>
 }
 
-    <!-- Cards de Resumo (Standard ASNET Style) -->
+    <!-- Cards de Resumo (apenas 2 tipos de stock) -->
     <div class="row g-3 mb-4">
-        <!-- Agrupamentos -->
-        <div class="col-6 col-lg-3 mt-0">
-            <div class="card stat-card h-100 shadow-sm border-0">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#696cff;">
-                        🏢
-                    </div>
-                    <div>
-                        <h4 class="stat-number">@Model.CountAgrupamentos</h4>
-                        <p class="stat-label">Stock Agrupamentos</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Escolas -->
-        <div class="col-6 col-lg-3 mt-0">
-            <div class="card stat-card h-100 shadow-sm border-0">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#71dd37;">
-                        🏫
-                    </div>
-                    <div>
-                        <h4 class="stat-number">@Model.CountEscolas</h4>
-                        <p class="stat-label">Stock Escolas</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Técnicos -->
-        <div class="col-6 col-lg-3 mt-0">
-            <div class="card stat-card h-100 shadow-sm border-0">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#ff3e1d;">
-                        🔧
-                    </div>
-                    <div>
-                        <h4 class="stat-number">@Model.CountTecnicos</h4>
-                        <p class="stat-label">Stock Técnicos</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Empresa -->
-        <div class="col-6 col-lg-3 mt-0">
+        <!-- Stock Empresa -->
+        <div class="col-12 col-lg-6 mt-0">
             <div class="card stat-card h-100 shadow-sm border-0">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="stat-icon" style="background:#03c3ec;">
                         💼
                     </div>
-                    <div>
-                        <h4 class="stat-number">@Model.CountEmpresa</h4>
-                        <p class="stat-label">Stock Central Empresa</p>
+                    <div class="w-100">
+                        <h4 class="stat-number">@Model.CountStockEmpresa</h4>
+                        <p class="stat-label">Stock Empresa (Central + com técnico)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Stock Agrupamentos -->
+        <div class="col-12 col-lg-6 mt-0">
+            <div class="card stat-card h-100 shadow-sm border-0">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#696cff;">
+                        🏢
+                    </div>
+                    <div class="w-100">
+                        <h4 class="stat-number">@Model.CountStockAgrupamentos</h4>
+                        <p class="stat-label">Stock Agrupamentos (agrupamentos + escolas + equipamentos)</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm mt-2">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Visão Geral de Inventário</h5>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
-                    <i class="ri-filter-3-line me-1"></i> Filtrar
+    <!-- ===== SECÇÃO 1: STOCK EMPRESA ===== -->
+    <div class="card shadow-sm border-0 mt-2 mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center cursor-pointer"
+             data-bs-toggle="collapse" data-bs-target="#stock-empresa-body" aria-expanded="true">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0 text-white me-3"><strong>💼 Stock Empresa</strong></h5>
+                <span class="badge bg-label-light text-white-50">Central + com técnico</span>
+            </div>
+            <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
+                <button class="edit-header-btn" data-bs-toggle="modal" data-bs-target="#modalAddStock" title="Adicionar Stock">
+                    <i class="ri-add-line"></i>
                 </button>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddStock">
-                    <i class="ri-add-line me-1"></i> Adicionar Stock
+                <button class="edit-header-btn" type="button" onclick="window.print()" title="Exportar PDF">
+                    <i class="ri-file-pdf-line"></i>
                 </button>
-                <button class="btn btn-outline-primary" onclick="window.print()">
-                    <i class="ri-file-pdf-line me-1"></i> Exportar PDF
-                </button>
+                <i class="ri-arrow-down-s-line text-white fs-4 ms-2"></i>
             </div>
         </div>
+        <div id="stock-empresa-body" class="collapse show">
+        <div class="card-body pt-4">
+            @{
+                var empresaItems = Model.EmpresaInventory ?? new List<AspnetCoreStarter.Pages.Admin.StockItemViewModel>();
+                var centralItems = empresaItems.Where(i => i.Location == "Stock Empresa").ToList();
+                var techItems = empresaItems.Where(i => i.Location == "com técnico").ToList();
+                var lentItems = empresaItems.Where(i => i.Status == "Emprestado").ToList();
+            }
 
-        <!-- Collapsible Filters -->
-        <div class="collapse @(Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null || Model.FilterStatus != null ? "show" : "")" id="collapseFilters">
-            <div class="card-body border-top">
-                <form method="get" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Artigo / Equipamento</label>
-                        <input type="text" name="SearchName" value="@Model.SearchName" class="form-control" placeholder="Procurar por nome..." />
+            @if (!empresaItems.Any())
+            {
+                <div class="text-center py-5 text-muted">Nenhum artigo no stock da empresa.</div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="border rounded p-3 h-100 bg-light-section">
+                            <div class="infra-tree">
+                                <div class="tree-node empresa-node mb-2">
+                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded"
+                                         data-bs-toggle="collapse" data-bs-target="#empresa-central"
+                                         aria-expanded="true">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                        <i class="ri-home-4-line me-1"></i> <strong>Stock Central</strong>
+                                        <span class="badge bg-label-primary ms-auto">@centralItems.Sum(i => i.Quantity) itens</span>
+                                    </div>
+
+                                    <div id="empresa-central" class="collapse show">
+                                        @{
+                                            var centralByType = centralItems
+                                                .GroupBy(i => i.Type ?? "Outros")
+                                                .OrderBy(g => g.Key)
+                                                .ToList();
+                                            var typeIdx = 0;
+                                        }
+                                        @foreach (var typeGroup in centralByType)
+                                        {
+                                            var typeId = $"empresa-central-type-{typeIdx}";
+                                            <div class="tree-node tipo-node ms-4 mt-2">
+                                                <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
+                                                     data-bs-toggle="collapse" data-bs-target="#@typeId"
+                                                     aria-expanded="false">
+                                                    <i class="ri-arrow-right-s-line"></i>
+                                                    <i class="ri-price-tag-3-line me-1"></i> <strong>@typeGroup.Key</strong>
+                                                    <span class="badge bg-label-info ms-auto">@typeGroup.Sum(i => i.Quantity)</span>
+                                                </div>
+
+                                                <div id="@typeId" class="collapse">
+                                                    @foreach (var item in typeGroup.OrderBy(i => i.Name))
+                                                    {
+                                                        <div class="tree-node artigo-node ms-4 mt-1 small">
+                                                            <div class="d-flex align-items-center p-1 rounded">
+                                                                <i class="ri-hard-drive-2-line me-1"></i>
+                                                                <span class="fw-semibold">@item.Name</span>
+                                                                <span class="badge bg-label-info ms-auto">@item.Quantity</span>
+                                                                <span class="badge ms-2 @(item.Status == "Disponível" ? "bg-label-success" : (item.Status == "Indisponível" ? "bg-label-danger" : "bg-label-warning"))">@item.Status</span>
+                                                                <div class="d-flex align-items-center gap-1 ms-2">
+                                                                    @if (item.Status == "Disponível")
+                                                                    {
+                                                                        <button type="button"
+                                                                                class="btn btn-sm btn-primary open-lend-modal"
+                                                                                data-bs-target="#modalLendReturn"
+                                                                                data-sample-id="@item.SampleId"
+                                                                                data-name="@item.Name"
+                                                                                data-type="@item.Type"
+                                                                                data-location="Stock Empresa"
+                                                                                data-quantity="@item.Quantity"
+                                                                                title="Requisitar">
+                                                                            📤
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button"
+                                                                            class="btn btn-sm btn-danger open-delete-modal"
+                                                                            data-bs-target="#modalDeleteStock"
+                                                                            data-sample-id="@item.SampleId"
+                                                                            data-name="@item.Name"
+                                                                            data-type="@item.Type"
+                                                                            data-location="Stock Empresa"
+                                                                            data-quantity="@item.Quantity"
+                                                                            title="Excluir">
+                                                                        🗑️
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            typeIdx++;
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Tipo</label>
-                        <select name="FilterType" class="form-select">
-                            <option value="">Todos</option>
-                            <option value="Portátil" selected="@(Model.FilterType == "Portátil" ? "selected" : null)">Portátil</option>
-                            <option value="Monitor" selected="@(Model.FilterType == "Monitor" ? "selected" : null)">Monitor</option>
-                            <option value="Teclado" selected="@(Model.FilterType == "Teclado" ? "selected" : null)">Teclado</option>
-                            <option value="Rato" selected="@(Model.FilterType == "Rato" ? "selected" : null)">Rato</option>
-                            <option value="Impressora" selected="@(Model.FilterType == "Impressora" ? "selected" : null)">Impressora</option>
-                            <option value="Projetor" selected="@(Model.FilterType == "Projetor" ? "selected" : null)">Projetor</option>
-                            <option value="Outro" selected="@(Model.FilterType == "Outro" ? "selected" : null)">Outro</option>
-                        </select>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="border rounded p-3 h-100 bg-light-section">
+                            <div class="infra-tree">
+                                <div class="tree-node tecnico-node mb-2">
+                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
+                                         data-bs-toggle="collapse" data-bs-target="#empresa-tecnicos"
+                                         aria-expanded="false">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                        <i class="ri-tools-line me-1"></i> <strong>Com Técnico</strong>
+                                        <span class="badge bg-label-warning ms-auto">@techItems.Sum(i => i.Quantity) itens</span>
+                                    </div>
+
+                                    <div id="empresa-tecnicos" class="collapse">
+                                        @{
+                                            var byTech = techItems
+                                                .GroupBy(i => string.IsNullOrWhiteSpace(i.TechnicianName) ? "Técnico (não identificado)" : i.TechnicianName!)
+                                                .OrderBy(g => g.Key)
+                                                .ToList();
+                                            var techIdx = 0;
+                                        }
+                                        @foreach (var techGroup in byTech)
+                                        {
+                                            var techId = $"empresa-tech-{techIdx}";
+                                            <div class="tree-node tecnico-node ms-4 mt-2">
+                                                <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
+                                                     data-bs-toggle="collapse" data-bs-target="#@techId"
+                                                     aria-expanded="false">
+                                                    <i class="ri-arrow-right-s-line"></i>
+                                                    <i class="ri-user-3-line me-1"></i> <strong>@techGroup.Key</strong>
+                                                    <span class="badge bg-label-warning ms-auto">@techGroup.Sum(i => i.Quantity)</span>
+                                                </div>
+
+                                                <div id="@techId" class="collapse">
+                                                    @{
+                                                        var techByType = techGroup
+                                                            .GroupBy(i => i.Type ?? "Outros")
+                                                            .OrderBy(g => g.Key)
+                                                            .ToList();
+                                                        var techTypeIdx = 0;
+                                                    }
+                                                    @foreach (var typeGroup in techByType)
+                                                    {
+                                                        var techTypeId = $"empresa-tech-{techIdx}-type-{techTypeIdx}";
+                                                        <div class="tree-node tipo-node ms-4 mt-2">
+                                                            <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
+                                                                 data-bs-toggle="collapse" data-bs-target="#@techTypeId"
+                                                                 aria-expanded="false">
+                                                                <i class="ri-arrow-right-s-line"></i>
+                                                                <i class="ri-price-tag-3-line me-1"></i> <strong>@typeGroup.Key</strong>
+                                                                <span class="badge bg-label-info ms-auto">@typeGroup.Sum(i => i.Quantity)</span>
+                                                            </div>
+
+                                                            <div id="@techTypeId" class="collapse">
+                                                                @foreach (var item in typeGroup.OrderBy(i => i.Name))
+                                                                {
+                                                                    <div class="tree-node artigo-node ms-4 mt-1 small">
+                                                                        <div class="d-flex align-items-center p-1 rounded">
+                                                                            <i class="ri-hard-drive-2-line me-1"></i>
+                                                                            <span class="fw-semibold">@item.Name</span>
+                                                                            <span class="badge bg-label-info ms-auto">@item.Quantity</span>
+                                                                            <span class="badge ms-2 @(item.Status == "Disponível" ? "bg-label-success" : (item.Status == "Indisponível" ? "bg-label-danger" : "bg-label-warning"))">@item.Status</span>
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        techTypeIdx++;
+                                                    }
+                                                </div>
+                                            </div>
+                                            techIdx++;
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Localização</label>
-                        <select name="FilterCategory" class="form-select">
-                            <option value="">Todas</option>
-                            <option value="Empresa" selected="@(Model.FilterCategory == "Empresa" ? "selected" : null)">Stock Empresa</option>
-                            <option value="Tecnico" selected="@(Model.FilterCategory == "Tecnico" ? "selected" : null)">Com Técnico</option>
-                            <option value="Agrupamento" selected="@(Model.FilterCategory == "Agrupamento" ? "selected" : null)">Stock Agrupamento</option>
-                            <option value="Escola" selected="@(Model.FilterCategory == "Escola" ? "selected" : null)">Stock Escola</option>
-                        </select>
+
+                    <div class="col-12 col-lg-4">
+                        <div class="border rounded p-3 h-100 bg-light-section">
+                            <div class="infra-tree">
+                                <div class="tree-node empresa-node mb-2">
+                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
+                                         data-bs-toggle="collapse" data-bs-target="#empresa-emprestados"
+                                         aria-expanded="false">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                        <i class="ri-inbox-unarchive-line me-1"></i> <strong>Requisições (Emprestados)</strong>
+                                        <span class="badge bg-label-info ms-auto">@lentItems.Sum(i => i.Quantity)</span>
+                                    </div>
+
+                                    <div id="empresa-emprestados" class="collapse">
+                                        @if (!lentItems.Any())
+                                        {
+                                            <div class="text-muted small ms-4 mt-2">Sem itens emprestados.</div>
+                                        }
+                                        else
+                                        {
+                                            var byDest = lentItems
+                                                .GroupBy(i => string.IsNullOrWhiteSpace(i.Location) ? "Destino desconhecido" : i.Location)
+                                                .OrderBy(g => g.Key)
+                                                .ToList();
+                                            var destIdx = 0;
+
+                                            foreach (var destGroup in byDest)
+                                            {
+                                                var destId = $"empresa-lent-dest-{destIdx}";
+                                                <div class="tree-node tipo-node ms-4 mt-2">
+                                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
+                                                         data-bs-toggle="collapse" data-bs-target="#@destId"
+                                                         aria-expanded="false">
+                                                        <i class="ri-arrow-right-s-line"></i>
+                                                        <i class="ri-map-pin-line me-1"></i> <strong>@destGroup.Key</strong>
+                                                        <span class="badge bg-label-info ms-auto">@destGroup.Sum(i => i.Quantity)</span>
+                                                    </div>
+
+                                                    <div id="@destId" class="collapse">
+                                                        @foreach (var item in destGroup.OrderBy(i => i.Name))
+                                                        {
+                                                            <div class="tree-node artigo-node ms-4 mt-1 small">
+                                                                <div class="d-flex align-items-center p-1 rounded">
+                                                                    <i class="ri-hard-drive-2-line me-1"></i>
+                                                                    <span class="fw-semibold">@item.Name</span>
+                                                                    <span class="badge bg-label-info ms-auto">@item.Quantity</span>
+                                                                    <span class="badge ms-2 bg-label-info">Emprestado</span>
+                                                                    <button type="button"
+                                                                            class="btn btn-sm btn-success text-white open-return-modal ms-2"
+                                                                            data-bs-target="#modalLendReturn"
+                                                                            data-sample-id="@item.SampleId"
+                                                                            data-name="@item.Name"
+                                                                            data-type="@item.Type"
+                                                                            data-location="@item.Location"
+                                                                            data-quantity="@item.Quantity"
+                                                                            title="Devolver">
+                                                                        📥
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                destIdx++;
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Estado</label>
-                        <select name="FilterStatus" class="form-select">
-                            <option value="">Todos</option>
-                            <option value="Disponível" selected="@(Model.FilterStatus == "Disponível" ? "selected" : null)">Disponível</option>
-                            <option value="Emprestado" selected="@(Model.FilterStatus == "Emprestado" ? "selected" : null)">Emprestado</option>
-                            <option value="Em uso" selected="@(Model.FilterStatus == "Em uso" ? "selected" : null)">Em uso</option>
-                            <option value="Indisponível" selected="@(Model.FilterStatus == "Indisponível" ? "selected" : null)">Indisponível</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
-                        @if (Model.SearchName != null || Model.FilterType != null || Model.FilterCategory != null || Model.FilterStatus != null)
-                        {
-                            <a asp-page="./Stocks" class="btn btn-outline-secondary">Limpar</a>
-                        }
-                    </div>
-                </form>
-            </div>
+                </div>
+            }
         </div>
-        <div class="table-responsive text-nowrap">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Artigo</th>
-                        <th>Tipo</th>
-                        <th>Localização</th>
-                        <th>Quantidade</th>
-                        <th>Estado</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Inventory.Any())
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">Nenhum artigo encontrado no stock.</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Model.Inventory)
-                        {
-                            <tr>
-                                <td><strong>@item.Name</strong></td>
-                                <td><span class="badge bg-label-secondary">@item.Type</span></td>
-                                <td>
-                                    @{
-                                        var locColor = "text-body";
-                                        if (item.Location.Contains("Empresa")) locColor = "text-primary fw-bold";
-                                        else if (item.Location.Contains("técnico")) locColor = "text-warning fw-bold";
-                                        else if (item.Location.Contains("agrupamento")) locColor = "text-info fw-bold";
-                                        else if (item.Location.Contains("escola")) locColor = "text-success fw-bold";
-                                    }
-                                    <span class="@locColor">@item.Location</span>
-                                </td>
-                                <td>@item.Quantity</td>
-                                <td>
-                                    <span class="badge @(item.Status == "Disponível" ? "bg-label-success" : (item.Status == "Emprestado" ? "bg-label-info" : (item.Status == "Indisponível" ? "bg-label-danger" : "bg-label-warning")))">
-                                        @item.Status
-                                    </span>
-                                </td>
-                                <td>
-                                    @if (item.Location == "Stock Empresa")
-                                    {
-                                            <button type="button" class="btn btn-sm btn-primary open-lend-modal d-flex align-items-center gap-1 mb-1"
-                                                    data-bs-target="#modalLendReturn"
-                                                    data-sample-id="@item.SampleId"
-                                                    data-name="@item.Name"
-                                                    data-type="@item.Type"
-                                                    data-location="@item.Location"
-                                                    data-quantity="@item.Quantity"
-                                                    title="Emprestar">
-                                                <span>📤 Emprestar</span>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger open-delete-modal d-flex align-items-center justify-content-center"
-                                                    data-bs-target="#modalDeleteStock"
-                                                    data-sample-id="@item.SampleId"
-                                                    data-name="@item.Name"
-                                                    data-type="@item.Type"
-                                                    data-location="@item.Location"
-                                                    data-quantity="@item.Quantity"
-                                                    title="Excluir">
-                                                <span>🗑️</span>
-                                            </button>
-                                    }
-                                    @if (item.Status == "Emprestado")
-                                    {
-                                            <button type="button" class="btn btn-sm btn-success text-white open-return-modal d-flex align-items-center gap-1"
-                                                    data-bs-target="#modalLendReturn"
-                                                    data-sample-id="@item.SampleId"
-                                                    data-name="@item.Name"
-                                                    data-type="@item.Type"
-                                                    data-location="@item.Location"
-                                                    data-quantity="@item.Quantity"
-                                                    title="Devolver">
-                                                <span>📥 Devolver</span>
-                                            </button>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+        </div>
+    </div>
+
+    <!-- ===== SECÇÃO 2: STOCK AGRUPAMENTOS ===== -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center cursor-pointer"
+             data-bs-toggle="collapse" data-bs-target="#stock-agrupamentos-body" aria-expanded="true">
+            <h5 class="mb-0 text-white"><strong>🏢 Stock Agrupamentos</strong></h5>
+            <i class="ri-arrow-down-s-line text-white fs-4"></i>
+        </div>
+        <div id="stock-agrupamentos-body" class="collapse show">
+        <div class="card-body pt-4">
+            @if (!Model.AgrupamentoTree.Any())
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="ri-archive-line fs-3 d-block mb-2"></i>
+                    Nenhum stock associado a agrupamentos.
+                </div>
+            }
+            else
+            {
+                @foreach (var agr in Model.AgrupamentoTree)
+                {
+                    <div class="mb-3 border rounded p-3 bg-light-section">
+                        <div class="infra-tree">
+                        <div class="tree-node empresa-node">
+                        <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#stockAgr-@agr.AgrupamentoId">
+                            <i class="ri-arrow-right-s-line"></i>
+                            <i class="ri-building-2-line me-1"></i>
+                            <strong>@agr.AgrupamentoName</strong>
+                            <span class="badge bg-label-primary ms-auto">@(agr.DirectStock.Sum(s => s.Quantity) + agr.Schools.Sum(e => e.Items.Sum(i => i.Quantity) + (e.EquipmentItems?.Sum(x => x.Quantity) ?? 0))) itens</span>
+                        </div>
+                        <div id="stockAgr-@agr.AgrupamentoId" class="collapse">
+                            @* Direct agrupamento stock *@
+                            @foreach (var item in agr.DirectStock)
+                            {
+                                <div class="tree-node artigo-node ms-4 mt-1 small">
+                                    <div class="d-flex align-items-center p-1 rounded">
+                                        <i class="ri-hard-drive-2-line me-1"></i>
+                                        <span class="fw-semibold">@item.Name</span>
+                                        <span class="badge bg-label-secondary ms-2">@item.Type</span>
+                                        <span class="badge bg-label-info ms-auto">@item.Quantity</span>
+                                        <span class="badge ms-2 @(item.Status == "Disponível" ? "bg-label-success" : "bg-label-warning")">@item.Status</span>
+                                    </div>
+                                </div>
+                            }
+
+                            @* Schools within this agrupamento *@
+                            @foreach (var esc in agr.Schools)
+                            {
+                                <div class="tree-node tecnico-node ms-4 mt-2">
+                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#stockEsc-@esc.EscolaId" aria-expanded="false">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                        <i class="ri-school-line me-1"></i>
+                                        <span class="fw-semibold">@esc.EscolaName</span>
+                                        <span class="badge bg-label-success ms-auto">@((esc.Items?.Sum(i => i.Quantity) ?? 0) + (esc.EquipmentItems?.Sum(i => i.Quantity) ?? 0)) itens</span>
+                                    </div>
+                                    <div id="stockEsc-@esc.EscolaId" class="collapse">
+                                        @if (esc.EquipmentItems != null && esc.EquipmentItems.Any())
+                                        {
+                                            <div class="text-muted small mt-2 mb-1">Equipamentos registados</div>
+                                            @foreach (var item in esc.EquipmentItems)
+                                            {
+                                                <div class="tree-node artigo-node ms-4 mt-1 small">
+                                                    <div class="d-flex align-items-center p-1 rounded">
+                                                        <i class="ri-computer-line me-1"></i>
+                                                        <span class="fw-semibold">@item.Name</span>
+                                                        <span class="badge bg-label-secondary ms-2">@item.Type</span>
+                                                        <span class="badge bg-label-info ms-auto">@item.Quantity</span>
+                                                        <span class="badge ms-2 @(item.Status == "Disponível" ? "bg-label-success" : "bg-label-warning")">@item.Status</span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+
+                                        @if (esc.Items != null && esc.Items.Any())
+                                        {
+                                            <div class="text-muted small mt-3 mb-1">Artigos em stock (atribuídos)</div>
+                                        @foreach (var item in esc.Items)
+                                        {
+                                            <div class="tree-node artigo-node ms-4 mt-1 small">
+                                                <div class="d-flex align-items-center p-1 rounded">
+                                                    <i class="ri-hard-drive-2-line me-1"></i>
+                                                    <span class="fw-semibold">@item.Name</span>
+                                                    <span class="badge bg-label-secondary ms-2">@item.Type</span>
+                                                    <span class="badge bg-label-info ms-auto">@item.Quantity</span>
+                                                    <span class="badge ms-2 @(item.Status == "Disponível" ? "bg-label-success" : "bg-label-warning")">@item.Status</span>
+                                                </div>
+                                            </div>
+                                        }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
         </div>
     </div>
 </div>
@@ -371,15 +643,27 @@
                         <input type="number" name="quantity" class="form-control" value="1" min="1" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Tipo / Categoria</label>
+                        <label class="form-label">Tipo Específico</label>
                         <select name="type" class="form-select" required>
                             <option value="">Selecione...</option>
+                            <option value="Desktop">Desktop</option>
                             <option value="Portátil">Portátil</option>
                             <option value="Monitor">Monitor</option>
+                            <option value="Motherboard">Motherboard</option>
+                            <option value="Disco HDD">Disco HDD</option>
+                            <option value="Disco SSD">Disco SSD</option>
+                            <option value="Memória RAM">Memória RAM</option>
+                            <option value="Processador (CPU)">Processador (CPU)</option>
+                            <option value="Placa Gráfica">Placa Gráfica</option>
+                            <option value="Fonte Alimentação">Fonte Alimentação</option>
                             <option value="Teclado">Teclado</option>
                             <option value="Rato">Rato</option>
                             <option value="Impressora">Impressora</option>
                             <option value="Projetor">Projetor</option>
+                            <option value="Router">Router</option>
+                            <option value="Switch">Switch</option>
+                            <option value="Access Point">Access Point</option>
+                            <option value="Cabo/Adaptador">Cabo/Adaptador</option>
                             <option value="Outro">Outro</option>
                         </select>
                     </div>
@@ -618,9 +902,9 @@
                 const modal = new bootstrap.Modal(modalElement);
 
                 if (mode === 'lend') {
-                    document.getElementById('lendReturnModalTitle').innerText = 'Emprestar Artigo';
-                    document.getElementById('lendReturnModalDesc').innerHTML = 'Selecione a quantidade de <strong>' + name + '</strong> a emprestar:';
-                    document.getElementById('modalSubmitBtn').innerText = 'Emprestar';
+                    document.getElementById('lendReturnModalTitle').innerText = 'Requisitar Artigo';
+                    document.getElementById('lendReturnModalDesc').innerHTML = 'Selecione a quantidade de <strong>' + name + '</strong> a requisitar:';
+                    document.getElementById('modalSubmitBtn').innerText = 'Requisitar';
                     document.getElementById('modalSubmitBtn').className = 'btn btn-info';
                     document.getElementById('lendReturnForm').action = '?handler=Lend';
                     document.getElementById('lendLocationFields').style.display = 'block';

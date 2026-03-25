@@ -59,6 +59,29 @@
     }
     
     .dark-style .btn-edit-subtle { color: #a1acb8 !important; }
+
+    /* Searchable select wrapper */
+    .select-search-wrapper { position: relative; }
+    .select-search-input {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--bs-border-color);
+        border-bottom: none;
+        border-radius: 0.375rem 0.375rem 0 0;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        outline: none;
+    }
+    .select-search-input:focus {
+        border-color: #696cff;
+        box-shadow: 0 0 0 0.2rem rgba(105,108,255,0.15);
+    }
+    .select-search-wrapper select {
+        border-radius: 0 0 0.375rem 0.375rem;
+    }
+    .select-search-wrapper select option.hidden-option { display: none; }
 </style>
 }
 
@@ -88,14 +111,8 @@
             <div class="d-flex flex-wrap align-items-center justify-content-between">
                 <h5 class="mb-2 mb-md-0 fw-bold text-primary"><i class="ri-user-settings-line me-2"></i>Gestão de Clientes</h5>
                 <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-primary btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddDiretor">
-                        <i class="ri-add-line me-1"></i> Novo Diretor
-                    </button>
-                    <button class="btn btn-success btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddCoordenador">
-                        <i class="ri-add-line me-1"></i> Novo Coordenador
-                    </button>
-                    <button class="btn btn-info btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddProfessor">
-                        <i class="ri-add-line me-1"></i> Novo Professor
+                    <button class="btn btn-primary btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddUser">
+                        <i class="ri-user-add-line me-1"></i> Novo Utilizador
                     </button>
                 </div>
             </div>
@@ -289,12 +306,63 @@
         </div>
     </div>
 
-    <!-- Modal Adicionar Diretor -->
-    <div class="modal fade" id="modalAddDiretor" tabindex="-1" aria-hidden="true">
+    <!-- Clientes Independentes Table -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Clientes Independentes</h5>
+            <span class="badge bg-label-warning">@Model.IndependentClientsList.Count Utilizadores</span>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Empresa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @foreach (var u in Model.IndependentClientsList)
+                    {
+                        <tr>
+                            <td><span class="badge bg-label-secondary">#@u.Id</span></td>
+                            <td><strong>@u.Username</strong></td>
+                            <td>@u.Email</td>
+                            <td>
+                                @if (u.Empresa != null)
+                                {
+                                    <span>@u.Empresa.Name</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sem Empresa</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <button type="button" class="btn-edit-subtle" title="Editar Cliente"
+                                            data-bs-toggle="modal" data-bs-target="#modalEditUser"
+                                            onclick="setEditUser('@u.Id', '@Html.Raw((u.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((u.Email ?? "").Replace("'", "\\'"))', 'Cliente Independente', '@u.EmpresaId')">✏️</button>
+                                    <form method="post" asp-page-handler="DeleteUser" asp-route-id="@u.Id" asp-route-role="Cliente Independente" onsubmit="return confirm('Remover este cliente?')">
+                                        <button type="submit" class="btn-delete-subtle" title="Eliminar Cliente">🗑️</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Utilizador (Unificado) -->
+    <div class="modal fade" id="modalAddUser" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form method="post" asp-page-handler="AddDiretor" class="modal-content">
+            <form id="formAddUser" method="post" asp-page-handler="AddUser" class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Novo Diretor</h5>
+                    <h5 class="modal-title">Novo Utilizador</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -311,103 +379,80 @@
                         <input type="password" asp-for="NewUserPassword" class="form-control" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Agrupamento</label>
-                        <select asp-for="SelectedParentId" class="form-select">
-                            <option value="">-- Selecione um Agrupamento --</option>
-                            @foreach (var item in Model.Agrupamentos)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
+                        <label class="form-label">Tipo de Utilizador</label>
+                        <select asp-for="NewUserRole" id="addUserRole" class="form-select" required onchange="toggleAddUserRoleFields()">
+                            <option value="">-- Selecione o Tipo --</option>
+                            <option value="Diretor">Diretor</option>
+                            <option value="Coordenador">Coordenador</option>
+                            <option value="Professor">Professor</option>
+                            <option value="Cliente Independente">Cliente Independente</option>
                         </select>
+                    </div>
+
+                    <!-- Dependent Field: Agrupamento for Diretor -->
+                    <div id="divAddDiretorAgrupamento" class="mb-3" style="display:none;">
+                        <label class="form-label text-primary fw-bold">Agrupamento</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar agrupamento..." oninput="filterSelect(this, 'addUserAgrupamento')" />
+                            <select asp-for="SelectedParentId" id="addUserAgrupamento" class="form-select">
+                                <option value="">-- Selecione um Agrupamento --</option>
+                                @foreach (var item in Model.Agrupamentos) {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dependent Field: Escola for Coordenador -->
+                    <div id="divAddCoordenadorEscola" class="mb-3" style="display:none;">
+                        <label class="form-label text-success fw-bold">Escola</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'addUserEscola')" />
+                            <select asp-for="SelectedParentId" id="addUserEscola" class="form-select">
+                                <option value="">-- Selecione uma Escola --</option>
+                                @foreach (var item in Model.Schools) {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dependent Field: Bloco for Professor -->
+                    <div id="divAddProfessorBloco" class="mb-3" style="display:none;">
+                        <label class="form-label text-info fw-bold">Bloco</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'addUserBloco')" />
+                            <select asp-for="SelectedParentId" id="addUserBloco" class="form-select">
+                                <option value="">-- Selecione um Bloco --</option>
+                                @foreach (var item in Model.Blocos) {
+                                    <option value="@item.Id">@item.Name (@item.School?.Name)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dependent Field: Empresa for Cliente Independente -->
+                    <div id="divAddUserEmpresa" class="mb-3" style="display:none;">
+                        <label class="form-label text-warning fw-bold">Empresa</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar empresa..." oninput="filterSelect(this, 'addUserEmpresa')" />
+                            <select asp-for="NewUserEmpresaId" id="addUserEmpresa" class="form-select">
+                                <option value="">-- Selecione uma Empresa --</option>
+                                @foreach (var item in Model.Empresas) {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-primary">Registrar Diretor</button>
+                    <button type="submit" class="btn btn-primary">Registrar Utilizador</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Adicionar Coordenador -->
-    <div class="modal fade" id="modalAddCoordenador" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-page-handler="AddCoordenador" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Novo Coordenador</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nome Completo</label>
-                        <input type="text" asp-for="NewUserName" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" asp-for="NewUserEmail" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Palavra-passe</label>
-                        <input type="password" asp-for="NewUserPassword" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Escola</label>
-                        <select asp-for="SelectedParentId" class="form-select">
-                            <option value="">-- Selecione uma Escola --</option>
-                            @foreach (var item in Model.Schools)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-success">Registrar Coordenador</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Adicionar Professor -->
-    <div class="modal fade" id="modalAddProfessor" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-page-handler="AddProfessor" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Novo Professor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nome Completo</label>
-                        <input type="text" asp-for="NewUserName" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" asp-for="NewUserEmail" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Palavra-passe</label>
-                        <input type="password" asp-for="NewUserPassword" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Bloco</label>
-                        <select asp-for="SelectedParentId" class="form-select">
-                            <option value="">-- Selecione um Bloco --</option>
-                            @foreach (var item in Model.Blocos)
-                            {
-                                <option value="@item.Id">@item.Name (@item.School?.Name)</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-info">Registrar Professor</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Modal Editar Utilizador -->
     <div class="modal fade" id="modalEditUser" tabindex="-1" aria-hidden="true">
@@ -434,33 +479,55 @@
                     </div>
                     <div class="mb-3" id="editAgrupamentoDiv" style="display:none;">
                         <label class="form-label fw-semibold">Agrupamento</label>
-                        <select name="SelectedParentId" class="form-select" id="editAgrupamentoSelect" disabled>
-                            <option value="">-- Sem Alteração --</option>
-                            @foreach (var item in Model.Agrupamentos)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar agrupamento..." oninput="filterSelect(this, 'editAgrupamentoSelect')" />
+                            <select name="SelectedParentId" class="form-select" id="editAgrupamentoSelect" disabled>
+                                <option value="">-- Sem Alteração --</option>
+                                @foreach (var item in Model.Agrupamentos)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3" id="editEscolaDiv" style="display:none;">
                         <label class="form-label fw-semibold">Escola</label>
-                        <select name="SelectedParentId" class="form-select" id="editEscolaSelect" disabled>
-                            <option value="">-- Sem Alteração --</option>
-                            @foreach (var item in Model.Schools)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'editEscolaSelect')" />
+                            <select name="SelectedParentId" class="form-select" id="editEscolaSelect" disabled>
+                                <option value="">-- Sem Alteração --</option>
+                                @foreach (var item in Model.Schools)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3" id="editBlocoDiv" style="display:none;">
                         <label class="form-label fw-semibold">Bloco</label>
-                        <select name="SelectedParentId" class="form-select" id="editBlocoSelect" disabled>
-                            <option value="">-- Sem Alteração --</option>
-                            @foreach (var item in Model.Blocos)
-                            {
-                                <option value="@item.Id">@item.Name (@item.School?.Name)</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'editBlocoSelect')" />
+                            <select name="SelectedParentId" class="form-select" id="editBlocoSelect" disabled>
+                                <option value="">-- Sem Alteração --</option>
+                                @foreach (var item in Model.Blocos)
+                                {
+                                    <option value="@item.Id">@item.Name (@item.School?.Name)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="editEmpresaDiv" style="display:none;">
+                        <label class="form-label fw-semibold">Empresa</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar empresa..." oninput="filterSelect(this, 'editEmpresaSelect')" />
+                            <select name="SelectedParentId" class="form-select" id="editEmpresaSelect" disabled>
+                                <option value="">-- Sem Alteração --</option>
+                                @foreach (var item in Model.Empresas)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -474,6 +541,34 @@
 
 @section PageScripts {
 <script>
+    // Filter select options by search input
+    function filterSelect(input, selectId) {
+        var filter = input.value.toLowerCase();
+        var select = document.getElementById(selectId);
+        var options = select.querySelectorAll('option');
+        options.forEach(function(opt) {
+            var text = opt.textContent.toLowerCase();
+            opt.style.display = text.includes(filter) ? '' : 'none';
+        });
+    }
+
+    // Reset search inputs when a modal is closed
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.modal').forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', function() {
+                modal.querySelectorAll('.select-search-input').forEach(function(inp) {
+                    inp.value = '';
+                    var wrapper = inp.closest('.select-search-wrapper');
+                    if (wrapper) {
+                        wrapper.querySelectorAll('select option').forEach(function(opt) {
+                            opt.style.display = '';
+                        });
+                    }
+                });
+            });
+        });
+    });
+
     function setEditUser(id, name, email, role, currentParentId) {
         document.getElementById('editUserId').value = id;
         document.getElementById('editUserName').value = name;
@@ -486,9 +581,11 @@
         document.getElementById('editAgrupamentoDiv').style.display = 'none';
         document.getElementById('editEscolaDiv').style.display = 'none';
         document.getElementById('editBlocoDiv').style.display = 'none';
+        document.getElementById('editEmpresaDiv').style.display = 'none';
         document.getElementById('editAgrupamentoSelect').disabled = true;
         document.getElementById('editEscolaSelect').disabled = true;
         document.getElementById('editBlocoSelect').disabled = true;
+        document.getElementById('editEmpresaSelect').disabled = true;
 
         // Show relevant dropdown and enable it (to avoid sending data for wrong role)
         if (role === 'Diretor') {
@@ -506,7 +603,69 @@
             var sel = document.getElementById('editBlocoSelect');
             sel.disabled = false;
             sel.value = currentParentId || '';
+        } else if (role === 'Cliente Independente') {
+            document.getElementById('editEmpresaDiv').style.display = 'block';
+            var sel = document.getElementById('editEmpresaSelect');
+            sel.disabled = false;
+            sel.value = currentParentId || '';
         }
     }
+
+    function toggleAddUserRoleFields() {
+        const role = document.getElementById('addUserRole').value;
+        const divAgr = document.getElementById('divAddDiretorAgrupamento');
+        const divEsc = document.getElementById('divAddCoordenadorEscola');
+        const divBlo = document.getElementById('divAddProfessorBloco');
+
+        const divEmp = document.getElementById('divAddUserEmpresa');
+ 
+         // Hide all first
+         divAgr.style.display = 'none';
+         divEsc.style.display = 'none';
+         divBlo.style.display = 'none';
+         divEmp.style.display = 'none';
+         
+         // Disable inner selects so ASP.NET binding doesn't get multiple values for SelectedParentId
+         document.getElementById('addUserAgrupamento').disabled = true;
+         document.getElementById('addUserEscola').disabled = true;
+         document.getElementById('addUserBloco').disabled = true;
+         document.getElementById('addUserEmpresa').disabled = true;
+
+        if (role === 'Diretor') {
+            divAgr.style.display = 'block';
+            document.getElementById('addUserAgrupamento').disabled = false;
+        } else if (role === 'Coordenador') {
+            divEsc.style.display = 'block';
+            document.getElementById('addUserEscola').disabled = false;
+        } else if (role === 'Professor') {
+            divBlo.style.display = 'block';
+            document.getElementById('addUserBloco').disabled = false;
+        } else if (role === 'Cliente Independente') {
+            document.getElementById('divAddUserEmpresa').style.display = 'block';
+            document.getElementById('addUserEmpresa').disabled = false;
+        }
+    }
+
+
+    // Director Assignment Warning
+    document.addEventListener('DOMContentLoaded', function() {
+        const formAddUser = document.getElementById('formAddUser');
+        const selectRole = document.getElementById('addUserRole');
+        const selectAgrupamento = document.getElementById('addUserAgrupamento');
+        const agrupamentosComDiretor = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DirectorsList.Select(d => d.AgrupamentoId).Where(id => id.HasValue).Distinct()));
+
+        if (formAddUser && selectAgrupamento) {
+            formAddUser.addEventListener('submit', function(e) {
+                if (selectRole.value === 'Diretor') {
+                    const selectedId = parseInt(selectAgrupamento.value);
+                    if (agrupamentosComDiretor.includes(selectedId)) {
+                        if (!confirm('Já existe um diretor neste agrupamento. Deseja prosseguir de qualquer forma?')) {
+                            e.preventDefault();
+                        }
+                    }
+                }
+            });
+        }
+    });
 </script>
 }

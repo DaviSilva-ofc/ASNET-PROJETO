@@ -9,6 +9,31 @@
     <link rel="stylesheet" href="~/vendor/libs/select2/select2.dist.css" />
 }
 
+@section PageStyles {
+<style>
+    /* Searchable select wrapper */
+    .select-search-wrapper { position: relative; }
+    .select-search-input {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--bs-border-color);
+        border-bottom: none;
+        border-radius: 0.375rem 0.375rem 0 0;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        outline: none;
+    }
+    .select-search-input:focus {
+        border-color: #696cff;
+        box-shadow: 0 0 0 0.2rem rgba(105,108,255,0.15);
+    }
+    .select-search-wrapper select {
+        border-radius: 0 0 0.375rem 0.375rem;
+    }
+</style>
+}
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Equipamentos</h4>
 
@@ -42,7 +67,7 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Nome</th>
+                        <th>Artigo</th>
                         <th>Tipo</th>
                         <th>Nº Série</th>
                         <th>Localização (Sala)</th>
@@ -79,33 +104,70 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Nome</label>
-                        <select name="NewEquipment.Name" class="form-select" required>
-                            <option value="">Selecione o nome...</option>
-                            <option value="Portátil Professor">Portátil Professor</option>
-                            <option value="Portátil Aluno">Portátil Aluno</option>
-                            <option value="Desktop Funcionário">Desktop Funcionário</option>
-                            <option value="Monitor Sala">Monitor Sala</option>
-                            <option value="Quadro Interativo">Quadro Interativo</option>
-                            <option value="Projetor Interativo">Projetor Interativo</option>
-                            <option value="Impressora Multifunções">Impressora Multifunções</option>
-                            <option value="Switch/Router">Switch/Router</option>
-                            <option value="Outro Equivalente">Outro Equivalente</option>
-                        </select>
+                        <label class="form-label">Artigo</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." oninput="filterSelect(this, 'regArtigo')" />
+                            <select name="NewEquipment.Name" id="regArtigo" class="form-select" required onchange="updateBrandsModels()">
+                                <option value="">Selecione o artigo...</option>
+                                <option value="Computadores">Computadores</option>
+                                <option value="Monitores">Monitores</option>
+                                <option value="Impressoras">Impressoras</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Componentes">Componentes</option>
+                                <option value="Periféricos">Periféricos</option>
+                                <option value="Projetores">Projetores</option>
+                                <option value="Quadros Interativos">Quadros Interativos</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Tipo</label>
-                        <select name="NewEquipment.Type" class="form-select" required>
-                            <option value="">Selecione o tipo...</option>
-                            <option value="Portátil">Portátil</option>
-                            <option value="Monitor">Monitor</option>
-                            <option value="Teclado">Teclado</option>
-                            <option value="Rato">Rato</option>
-                            <option value="Impressora">Impressora</option>
-                            <option value="Projetor">Projetor</option>
-                            <option value="Desktop">Desktop</option>
-                            <option value="Outro">Outro</option>
-                        </select>
+                        <label class="form-label">Tipo Específico</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." oninput="filterSelect(this, 'regTipo')" />
+                            <select name="NewEquipment.Type" id="regTipo" class="form-select" required>
+                                <option value="">Selecione o tipo...</option>
+                                <option value="Desktop">Desktop</option>
+                                <option value="Portátil">Portátil</option>
+                                <option value="Monitor">Monitor</option>
+                                <option value="Motherboard">Motherboard</option>
+                                <option value="Disco HDD">Disco HDD</option>
+                                <option value="Disco SSD">Disco SSD</option>
+                                <option value="Memória RAM">Memória RAM</option>
+                                <option value="Processador (CPU)">Processador (CPU)</option>
+                                <option value="Placa Gráfica">Placa Gráfica</option>
+                                <option value="Fonte Alimentação">Fonte Alimentação</option>
+                                <option value="Teclado">Teclado</option>
+                                <option value="Rato">Rato</option>
+                                <option value="Impressora">Impressora</option>
+                                <option value="Projetor">Projetor</option>
+                                <option value="Router">Router</option>
+                                <option value="Switch">Switch</option>
+                                <option value="Access Point">Access Point</option>
+                                <option value="Cabo/Adatador">Cabo/Adaptador</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Marca</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar marca..." oninput="filterSelect(this, 'regMarca')" />
+                                <select name="NewEquipment.Brand" id="regMarca" class="form-select" onchange="updateModels()">
+                                    <option value="">Selecione a marca...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Modelo</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar modelo..." oninput="filterSelect(this, 'regModelo')" />
+                                <select name="NewEquipment.Model" id="regModelo" class="form-select">
+                                    <option value="">Selecione o modelo...</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Nº Série</label>
@@ -113,43 +175,55 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Agrupamento</label>
-                        <select id="regAgrupamento" class="form-select select2" onchange="regFilterEscolas()">
-                            <option value="">Selecione o agrupamento...</option>
-                            @foreach (var agr in Model.AvailableAgrupamentos)
-                            {
-                                <option value="@agr.Id">@agr.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar agrupamento..." oninput="filterSelect(this, 'regAgrupamento')" />
+                            <select id="regAgrupamento" class="form-select" onchange="regFilterEscolas()">
+                                <option value="">Selecione o agrupamento...</option>
+                                @foreach (var agr in Model.AvailableAgrupamentos)
+                                {
+                                    <option value="@agr.Id">@agr.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Escola</label>
-                        <select id="regEscola" class="form-select select2" onchange="regFilterBlocos()">
-                            <option value="">Selecione a escola...</option>
-                            @foreach (var esc in Model.AvailableEscolas)
-                            {
-                                <option value="@esc.Id" data-agr="@esc.AgrupamentoId">@esc.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'regEscola')" />
+                            <select id="regEscola" class="form-select" onchange="regFilterBlocos()">
+                                <option value="">Selecione a escola...</option>
+                                @foreach (var esc in Model.AvailableEscolas)
+                                {
+                                    <option value="@esc.Id" data-agr="@esc.AgrupamentoId">@esc.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Bloco</label>
-                        <select id="regBloco" class="form-select select2" onchange="regFilterSalas()">
-                            <option value="">Selecione o bloco...</option>
-                            @foreach (var blc in Model.AvailableBlocos)
-                            {
-                                <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'regBloco')" />
+                            <select id="regBloco" class="form-select" onchange="regFilterSalas()">
+                                <option value="">Selecione o bloco...</option>
+                                @foreach (var blc in Model.AvailableBlocos)
+                                {
+                                    <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Sala</label>
-                        <select id="regSala" name="NewEquipment.RoomId" class="form-select select2" required>
-                            <option value="">Selecione a sala...</option>
-                            @foreach (var sala in Model.Rooms)
-                            {
-                                <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option>
-                            }
-                        </select>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar sala..." oninput="filterSelect(this, 'regSala')" />
+                            <select id="regSala" name="NewEquipment.RoomId" class="form-select" required>
+                                <option value="">Selecione a sala...</option>
+                                @foreach (var sala in Model.Rooms)
+                                {
+                                    <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -170,20 +244,27 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Nome do Equipamento</label>
-                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por nome..." />
+                            <label class="form-label">Artigo</label>
+                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por artigo (ex: Computadores)..." />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tipo</label>
                             <select asp-for="FilterType" class="form-select select2">
                                 <option value="">Todos</option>
+                                <option value="Desktop">Desktop</option>
                                 <option value="Portátil">Portátil</option>
                                 <option value="Monitor">Monitor</option>
+                                <option value="Motherboard">Motherboard</option>
+                                <option value="Disco HDD">Disco HDD</option>
+                                <option value="Disco SSD">Disco SSD</option>
+                                <option value="Memória RAM">Memória RAM</option>
+                                <option value="Processador (CPU)">Processador (CPU)</option>
                                 <option value="Teclado">Teclado</option>
                                 <option value="Rato">Rato</option>
                                 <option value="Impressora">Impressora</option>
                                 <option value="Projetor">Projetor</option>
-                                <option value="Desktop">Desktop</option>
+                                <option value="Router">Router</option>
+                                <option value="Switch">Switch</option>
                                 <option value="Outro">Outro</option>
                             </select>
                         </div>
@@ -252,16 +333,161 @@
 
 @section PageScripts {
 <script>
+    // Filter select options by search input
+    function filterSelect(input, selectId) {
+        var filter = input.value.toLowerCase();
+        var select = document.getElementById(selectId);
+        var options = select.querySelectorAll('option');
+        options.forEach(function(opt) {
+            var text = opt.textContent.toLowerCase();
+            opt.style.display = text.includes(filter) ? '' : 'none';
+        });
+    }
+
+    // Reset search inputs when a modal is closed
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Select2 for all select elements with class 'select2'
-        $('.select2').each(function() {
-            var $this = $(this);
-            $this.select2({
-                placeholder: $this.attr('placeholder') || 'Selecione uma opção',
-                dropdownParent: $this.closest('.modal') // Ensure dropdown works inside modals
+        document.querySelectorAll('.modal').forEach(function(modal) {
+            modal.addEventListener('hidden.bs.modal', function() {
+                modal.querySelectorAll('.select-search-input').forEach(function(inp) {
+                    inp.value = '';
+                    var wrapper = inp.closest('.select-search-wrapper');
+                    if (wrapper) {
+                        wrapper.querySelectorAll('select option').forEach(function(opt) {
+                            opt.style.display = '';
+                        });
+                    }
+                });
             });
         });
     });
+
+    // Brand/Model data by equipment category
+    var brandModelData = {
+        'Computadores': {
+            'HP': ['ProDesk 400 G7', 'ProDesk 600 G6', 'EliteDesk 800 G9', 'ProBook 450 G8', 'EliteBook 840 G8', 'EliteBook 850 G7', 'Pavilion 15', 'HP 250 G8', 'HP 255 G8', 'ZBook Fury 15 G8'],
+            'Dell': ['OptiPlex 3090', 'OptiPlex 5090', 'OptiPlex 7090', 'Latitude 3520', 'Latitude 5520', 'Latitude 7420', 'Inspiron 15 3000', 'Inspiron 15 5000', 'Vostro 3510', 'Vostro 5510'],
+            'Lenovo': ['ThinkCentre M70q', 'ThinkCentre M90q', 'ThinkPad L14', 'ThinkPad T14', 'ThinkPad X1 Carbon', 'IdeaCentre 3', 'IdeaPad 3', 'IdeaPad 5', 'V15 G2', 'V14 G2'],
+            'Asus': ['ExpertCenter D5', 'ExpertBook B1', 'VivoBook 15', 'ZenBook 14', 'ROG Strix G15', 'TUF Gaming F15'],
+            'Acer': ['Veriton X2', 'Veriton N4', 'Aspire 5', 'Aspire 3', 'TravelMate P2', 'TravelMate Spin B3', 'Extensa 15'],
+            'Apple': ['iMac 24"', 'Mac Mini M2', 'Mac Studio', 'MacBook Air M2', 'MacBook Pro 14"', 'MacBook Pro 16"'],
+            'MSI': ['PRO DP21', 'Modern 15', 'Prestige 14', 'GF63 Thin'],
+            'Toshiba': ['Dynabook Satellite Pro C50', 'Dynabook Tecra A50'],
+            'Fujitsu': ['ESPRIMO D738', 'ESPRIMO Q958', 'LIFEBOOK U7412', 'LIFEBOOK E5512']
+        },
+        'Monitores': {
+            'HP': ['P22h G5', 'P24h G5', 'E24 G5', 'E27 G5', 'M24f FHD', 'M27fw FHD', 'Z24f G3', 'Z27k G3'],
+            'Dell': ['E2222H', 'E2422H', 'E2722H', 'P2422H', 'P2722H', 'S2422HG', 'U2422H', 'U2722D', 'U3223QE'],
+            'Lenovo': ['ThinkVision T24i-30', 'ThinkVision T27i-30', 'ThinkVision S24e-20', 'L24q-35', 'D24-40'],
+            'Samsung': ['F24T350', 'F27T350', 'S24R350', 'S27R650', 'C24F390', 'C27F390'],
+            'LG': ['24MK430H', '24MP400', '27MP400', '27UL500', '27UK500', '24GN60R'],
+            'BenQ': ['GW2480', 'GW2780', 'BL2480T', 'BL2780T', 'EW2780'],
+            'AOC': ['24B2XH', '27B2H', '24G2', '27G2', 'Q27P2Q'],
+            'Asus': ['VA24DQ', 'VA27DQ', 'VZ24EHE', 'ProArt PA278QV'],
+            'Acer': ['K242HQL', 'V247Y', 'CB242Y', 'B247Y', 'Nitro VG240Y'],
+            'Philips': ['243V7QDSB', '273V7QDSB', '243B9', '276B9']
+        },
+        'Impressoras': {
+            'HP': ['LaserJet Pro M404dn', 'LaserJet Pro MFP M428fdw', 'LaserJet Enterprise M607dn', 'Color LaserJet Pro M454dn', 'Color LaserJet Pro MFP M479fdw', 'OfficeJet Pro 9010', 'DeskJet 2720', 'Smart Tank 515'],
+            'Brother': ['HL-L2350DW', 'HL-L2370DN', 'DCP-L2530DW', 'MFC-L2710DW', 'MFC-L2750DW', 'DCP-L3550CDW', 'MFC-L3750CDW'],
+            'Epson': ['EcoTank ET-2720', 'EcoTank ET-4760', 'WorkForce WF-2850', 'Expression Home XP-4100', 'EcoTank ET-2850'],
+            'Canon': ['PIXMA TS3350', 'PIXMA TS5350', 'i-SENSYS MF643Cdw', 'i-SENSYS MF445dw', 'i-SENSYS LBP226dw', 'MAXIFY GX7050'],
+            'Samsung': ['Xpress M2070W', 'Xpress C480FW', 'ProXpress M4020ND'],
+            'Xerox': ['B210', 'B215', 'B310', 'C230', 'C235', 'VersaLink B400', 'VersaLink C400'],
+            'Lexmark': ['MS431dn', 'MS531dw', 'MX431adn', 'CX431adw'],
+            'Kyocera': ['ECOSYS P2235dn', 'ECOSYS M2135dn', 'ECOSYS P5026cdw', 'TASKalfa 2553ci']
+        },
+        'Networking': {
+            'Cisco': ['Catalyst 1000-24T', 'Catalyst 2960-X', 'Catalyst 9200L', 'ISR 1100', 'ISR 4321', 'Meraki MR36', 'Meraki MS120-8', 'Meraki MX67'],
+            'TP-Link': ['TL-SG108', 'TL-SG1016D', 'TL-SG1024D', 'Archer AX50', 'Archer AX73', 'EAP245', 'EAP620 HD', 'Deco X60'],
+            'Ubiquiti': ['UniFi U6 Lite', 'UniFi U6 Pro', 'UniFi U6 LR', 'UniFi Switch 24', 'UniFi Switch Lite 16 PoE', 'UniFi Dream Machine', 'EdgeSwitch 24'],
+            'Netgear': ['GS108', 'GS308', 'GS316', 'WAX610', 'WAX620', 'RAX50', 'MS108UP'],
+            'D-Link': ['DGS-1100-08V2', 'DGS-1100-24V2', 'DAP-X2810', 'DIR-X1860', 'DMS-106XT'],
+            'MikroTik': ['hAP ac3', 'RB260GS', 'CRS326-24G-2S+', 'RB5009UG+S+IN', 'cAP ac'],
+            'Aruba': ['Instant On AP22', 'Instant On AP25', 'Instant On 1930 24G', 'CX 6100'],
+            'Zyxel': ['GS1200-5', 'GS1200-8', 'NWA110AX', 'XGS1930-28']
+        },
+        'Componentes': {
+            'Kingston': ['ValueRAM 8GB DDR4', 'FURY Beast 16GB DDR4', 'A400 240GB SSD', 'A400 480GB SSD', 'NV2 500GB NVMe', 'NV2 1TB NVMe'],
+            'Samsung': ['870 EVO 250GB', '870 EVO 500GB', '870 EVO 1TB', '980 500GB NVMe', '980 PRO 1TB NVMe', 'DDR4 8GB 3200MHz'],
+            'Crucial': ['BX500 240GB SSD', 'BX500 480GB SSD', 'MX500 500GB SSD', 'P3 500GB NVMe', 'P3 1TB NVMe', 'RAM 8GB DDR4 3200', 'RAM 16GB DDR4 3200'],
+            'Western Digital': ['Blue 1TB HDD', 'Blue 2TB HDD', 'Blue 500GB SSD', 'Blue SN570 500GB NVMe', 'Blue SN570 1TB NVMe', 'Black SN770 1TB NVMe'],
+            'Seagate': ['Barracuda 1TB HDD', 'Barracuda 2TB HDD', 'Barracuda 4TB HDD', 'IronWolf 4TB NAS'],
+            'Corsair': ['Vengeance LPX 8GB DDR4', 'Vengeance LPX 16GB DDR4', 'CV550 550W PSU', 'CX650M 650W PSU'],
+            'Intel': ['Core i3-12100', 'Core i5-12400', 'Core i5-13400', 'Core i7-12700', 'Core i7-13700'],
+            'AMD': ['Ryzen 3 4100', 'Ryzen 5 5600', 'Ryzen 5 5600G', 'Ryzen 7 5700G', 'Ryzen 7 5800X'],
+            'NVIDIA': ['GeForce GT 710', 'GeForce GT 1030', 'GeForce GTX 1650', 'GeForce RTX 3060'],
+            'Gigabyte': ['B550M DS3H', 'B660M DS3H', 'H610M H DDR4', 'A520M DS3H'],
+            'MSI': ['PRO B550M-A', 'PRO B660M-A', 'MAG B550 TOMAHAWK', 'PRO H610M-B'],
+            'EVGA': ['600 BR 600W PSU', '700 BR 700W PSU', 'SuperNOVA 650 G6']
+        },
+        'Periféricos': {
+            'Logitech': ['K120 Teclado', 'MK270 Combo', 'MK345 Combo', 'MK540 Combo', 'M185 Rato', 'M190 Rato', 'M330 Silent', 'B100 Rato', 'C270 Webcam', 'C920 HD Pro Webcam', 'H340 Headset', 'H390 Headset', 'Z150 Colunas'],
+            'Microsoft': ['Ergonomic Keyboard', 'Comfort Mouse 4500', 'Bluetooth Mouse', 'LifeCam HD-3000'],
+            'HP': ['125 Teclado', '125 Rato', '235 Combo Wireless', '330 Combo Wireless', '320 FHD Webcam'],
+            'Cherry': ['KC 1000 Teclado', 'DC 2000 Combo', 'STREAM Keyboard', 'GENTIX Rato'],
+            'Trust': ['Primo Teclado', 'Mydo Rato', 'Ody Combo', 'Trino Webcam HD'],
+            'Jabra': ['Evolve2 30 Headset', 'Evolve2 40 Headset', 'Speak 510'],
+            'Kensington': ['Pro Fit Rato Wireless', 'Orbit Trackball']
+        },
+        'Projetores': {
+            'Epson': ['EB-W06', 'EB-FH06', 'EB-X51', 'EB-2250U', 'EB-L200SW', 'EB-735Fi', 'EB-1485Fi'],
+            'BenQ': ['MH733', 'MH560', 'MW560', 'TH585P', 'EH600', 'LH720'],
+            'ViewSonic': ['PA503S', 'PA503W', 'PA503X', 'PX701HD', 'LS500WH'],
+            'Optoma': ['H190X', 'EH401', 'W381', 'ZH406ST'],
+            'NEC': ['ME402X', 'ME403U', 'P547UL', 'PA804UL'],
+            'Sony': ['VPL-EX455', 'VPL-PHZ12', 'VPL-FHZ66']
+        },
+        'Quadros Interativos': {
+            'SMART': ['Board MX075-V3', 'Board MX086-V3', 'Board 6000S', 'Board 7000 Pro'],
+            'Promethean': ['ActivPanel 9', 'ActivPanel 9 Premium', 'ActivPanel Elements'],
+            'ViewSonic': ['ViewBoard IFP5550', 'ViewBoard IFP6550', 'ViewBoard IFP7550', 'ViewBoard IFP8650'],
+            'Samsung': ['Flip WM55B', 'Flip WM75B', 'Flip Pro WM85B'],
+            'BenQ': ['RP6503', 'RP7503', 'RP8603'],
+            'Clevertouch': ['Impact Plus 65"', 'Impact Plus 75"', 'Impact Plus 86"']
+        },
+        'Outros': {
+            'Genérico': ['Outro Equipamento'],
+            'Sem Marca': ['Sem Modelo']
+        }
+    };
+
+    function updateBrandsModels() {
+        var artigo = document.getElementById('regArtigo').value;
+        var marcaSelect = document.getElementById('regMarca');
+        var modeloSelect = document.getElementById('regModelo');
+
+        marcaSelect.innerHTML = '<option value="">Selecione a marca...</option>';
+        modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
+
+        // Clear search inputs
+        var marcaWrapper = marcaSelect.closest('.select-search-wrapper');
+        if (marcaWrapper) marcaWrapper.querySelector('.select-search-input').value = '';
+        var modeloWrapper = modeloSelect.closest('.select-search-wrapper');
+        if (modeloWrapper) modeloWrapper.querySelector('.select-search-input').value = '';
+
+        if (artigo && brandModelData[artigo]) {
+            var brands = Object.keys(brandModelData[artigo]).sort();
+            brands.forEach(function(brand) {
+                marcaSelect.add(new Option(brand, brand));
+            });
+        }
+    }
+
+    function updateModels() {
+        var artigo = document.getElementById('regArtigo').value;
+        var marca = document.getElementById('regMarca').value;
+        var modeloSelect = document.getElementById('regModelo');
+
+        modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
+        var modeloWrapper = modeloSelect.closest('.select-search-wrapper');
+        if (modeloWrapper) modeloWrapper.querySelector('.select-search-input').value = '';
+
+        if (artigo && marca && brandModelData[artigo] && brandModelData[artigo][marca]) {
+            brandModelData[artigo][marca].forEach(function(model) {
+                modeloSelect.add(new Option(model, model));
+            });
+        }
+    }
 
     // Registration Modal Filters
     function regFilterEscolas() {
@@ -274,7 +500,6 @@
             if (opt.value === "") return;
             opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
         });
-        $(escSelect).trigger('change'); // Notify Select2
         regFilterBlocos();
     }
 
@@ -288,7 +513,6 @@
             if (opt.value === "") return;
             opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
         });
-        $(blcSelect).trigger('change'); // Notify Select2
         regFilterSalas();
     }
 
@@ -302,7 +526,6 @@
             if (opt.value === "") return;
             opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
-        $(salaSelect).trigger('change'); // Notify Select2
     }
 
     // Main Filter Modal Filters
@@ -316,7 +539,6 @@
             if (opt.value === "") return;
             opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
         });
-        $(escSelect).trigger('change'); // Notify Select2
         filterBlocos();
     }
 
@@ -330,7 +552,6 @@
             if (opt.value === "") return;
             opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
         });
-        $(blcSelect).trigger('change'); // Notify Select2
         filterSalas();
     }
 
@@ -344,7 +565,6 @@
             if (opt.value === "") return;
             opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
-        $(salaSelect).trigger('change'); // Notify Select2
     }
 </script>
 }

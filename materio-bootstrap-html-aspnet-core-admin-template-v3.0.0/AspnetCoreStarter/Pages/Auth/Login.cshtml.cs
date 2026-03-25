@@ -156,6 +156,15 @@ namespace AspnetCoreStarter.Pages.Auth
                 try { await _context.Database.ExecuteSqlRawAsync("UPDATE utilizadores SET status_conta = 'Pendente' WHERE status_conta IS NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_agrupamento INT NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_escola INT NULL;"); } catch { }
+                try { 
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS empresas (
+                            id_empresa INT AUTO_INCREMENT PRIMARY KEY,
+                            nome_empresa VARCHAR(100) NOT NULL,
+                            localizacao VARCHAR(255) NULL
+                        ) ENGINE=InnoDB;"); 
+                } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN id_empresa INT NULL;"); } catch { }
 
                 // Procurar por email ou username
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);

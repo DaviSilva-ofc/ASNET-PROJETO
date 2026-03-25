@@ -64,6 +64,7 @@
                         <th>Tipo</th>
                         <th>Período</th>
                         <th>Estado</th>
+                        <th>Urgência</th>
                         <th>Agrupamento</th>
                         <th>Ações</th>
                     </tr>
@@ -78,6 +79,30 @@
                                 <span class="badge @(item.ContractStatus == "Ativo" ? "bg-label-success" : "bg-label-warning")">
                                     @item.ContractStatus
                                 </span>
+                            </td>
+                            <td>
+                                @{
+                                    var urgClass = item.UrgencyLevel switch {
+                                        "Alto" => "bg-label-danger",
+                                        "Médio" => "bg-label-warning",
+                                        "Baixo" => "bg-label-success",
+                                        _ => "bg-label-secondary"
+                                    };
+                                    var urgTime = item.UrgencyLevel switch {
+                                        "Alto" => "4h",
+                                        "Médio" => "24h",
+                                        "Baixo" => "48h",
+                                        _ => ""
+                                    };
+                                }
+                                @if (!string.IsNullOrEmpty(item.UrgencyLevel))
+                                {
+                                    <span class="badge @urgClass">@item.UrgencyLevel <small class="opacity-75">(@urgTime)</small></span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/D</span>
+                                }
                             </td>
                             <td>@(item.Agrupamento?.Name ?? "N/A")</td>
                             <td>
@@ -131,6 +156,15 @@
                             {
                                 <option value="@agrup.Id">@agrup.Name</option>
                             }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nível de Urgência</label>
+                        <select asp-for="NewContract.UrgencyLevel" class="form-select" required>
+                            <option value="">-- Selecione o nível --</option>
+                            <option value="Baixo">&#x1F7E2; Baixo &mdash; Tempo de resposta: 48 horas</option>
+                            <option value="Médio">&#x1F7E1; Médio &mdash; Tempo de resposta: 24 horas</option>
+                            <option value="Alto">&#x1F534; Alto &mdash; Tempo de resposta: 4 horas</option>
                         </select>
                     </div>
                     <div class="mb-3">

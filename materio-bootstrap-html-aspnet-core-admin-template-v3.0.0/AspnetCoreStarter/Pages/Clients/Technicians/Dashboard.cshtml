@@ -39,7 +39,7 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="dash-title mb-1">Painel Técnico</h4>
-            <p class="text-muted mb-0">Bem-vindo, <span class="fw-bold text-primary">@User.Identity.Name</span></p>
+            <p class="text-muted mb-0">Bem-vindo, <span class="fw-bold text-primary">@User.Identity?.Name</span></p>
         </div>
         <div class="d-flex gap-2">
             <a href="/Admin/Tickets" class="btn btn-primary btn-sm">
@@ -126,7 +126,7 @@
                             @foreach (var t in Model.RecentTickets)
                             {
                                 <tr>
-                                    <td><strong>@t.School?.Name</strong></td>
+                                    <td><strong>@(t.School?.Name ?? "N/A")</strong></td>
                                     <td>
                                         <span class="badge @(t.Level?.Contains("Alto") == true ? "bg-label-danger" : "bg-label-info")">
                                             @t.Level
@@ -167,7 +167,7 @@
                             {
                                 <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <div>
-                                        <h6 class="mb-0">@s.ItemName</h6>
+                                        <h6 class="mb-0">@s.EquipmentName</h6>
                                         <small class="text-muted">@s.Description</small>
                                     </div>
                                     <span class="badge @(s.IsAvailable ? "bg-label-success" : "bg-label-danger")">

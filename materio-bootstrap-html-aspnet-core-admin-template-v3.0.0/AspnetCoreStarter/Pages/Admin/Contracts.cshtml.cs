@@ -76,6 +76,7 @@ namespace AspnetCoreStarter.Pages.Admin
 
                 Contracts = await query.ToListAsync();
                 Agrupamentos = await _context.Agrupamentos.ToListAsync();
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN nivel_urgencia VARCHAR(20) NULL;"); } catch { }
             }
             catch (System.Exception ex)
             {

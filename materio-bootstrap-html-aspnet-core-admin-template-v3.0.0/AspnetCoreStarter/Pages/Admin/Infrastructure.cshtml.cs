@@ -22,6 +22,13 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<User> AvailableDirectors { get; set; } = new();
         public List<User> AvailableCoordenadores { get; set; } = new();
         public List<User> AvailableProfessores { get; set; } = new();
+        public List<EmpresaViewModel> EmpresasInfra { get; set; } = new();
+
+        public class EmpresaViewModel
+        {
+            public Empresa Empresa { get; set; }
+            public List<User> Responsibles { get; set; } = new();
+        }
 
         // Existing properties for modals (kept for compatibility)
         public List<Agrupamento> Agrupamentos { get; set; } = new();
@@ -47,6 +54,20 @@ namespace AspnetCoreStarter.Pages.Admin
         public string? NewSalaName { get; set; }
         [BindProperty]
         public int? SelectedBlocoId { get; set; }
+
+        // Establishment Creation Properties (Migrated from Clients)
+        [BindProperty]
+        public string? NewEstabName { get; set; }
+        [BindProperty]
+        public string? NewEstabType { get; set; }
+        [BindProperty]
+        public int? NewEstabParentId { get; set; }
+        [BindProperty]
+        public string? NewEstabAddress { get; set; }
+        [BindProperty]
+        public int? NewEstabCoordinatorId { get; set; }
+        [BindProperty]
+        public int? NewEstabProfessorId { get; set; }
 
         // Edit Properties
         [BindProperty]
@@ -166,6 +187,22 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Distinct()
                 .ToListAsync();
 
+            // Fetch Empresas and their Responsibles (Admins)
+            var allEmpresas = await _context.Empresas.ToListAsync();
+            foreach (var emp in allEmpresas)
+            {
+                var responsibles = await _context.Users
+                    .Where(u => u.EmpresaId == emp.Id)
+                    .Where(u => _context.Administradores.Any(a => a.UserId == u.Id))
+                    .ToListAsync();
+
+                EmpresasInfra.Add(new EmpresaViewModel
+                {
+                    Empresa = emp,
+                    Responsibles = responsibles
+                });
+            }
+
             return Page();
         }
 
@@ -183,60 +220,89 @@ namespace AspnetCoreStarter.Pages.Admin
             return abbr.ToUpper();
         }
 
-        public async Task<IActionResult> OnPostAddAgrupamentoAsync()
+        public async Task<IActionResult> OnPostAddEstabelecimentoAsync()
         {
-            if (!string.IsNullOrEmpty(NewAgrupamentoName))
+            if (string.IsNullOrEmpty(NewEstabName) || string.IsNullOrEmpty(NewEstabType))
             {
-                _context.Agrupamentos.Add(new Agrupamento { Name = NewAgrupamentoName });
-                await _context.SaveChangesAsync();
+                TempData["ErrorMessage"] = "Nome e tipo são obrigatórios.";
+                return RedirectToPage();
             }
+
+            try
+            {
+                switch (NewEstabType)
+                {
+                    case "Agrupamento":
+                        _context.Agrupamentos.Add(new Agrupamento { Name = NewEstabName });
+                        break;
+                    case "Escola":
+                        var newSchool = new AspnetCoreStarter.Models.School 
+                        { 
+                            Name = NewEstabName, 
+                            AgrupamentoId = NewEstabParentId, 
+                            Address = string.IsNullOrWhiteSpace(NewEstabAddress) ? "N/A" : NewEstabAddress 
+                        };
+                        _context.Schools.Add(newSchool);
+                        await _context.SaveChangesAsync();
+
+                        if (NewEstabCoordinatorId.HasValue && NewEstabCoordinatorId.Value > 0)
+                        {
+                            var coordinatorRecord = await _context.Coordenadores.FirstOrDefaultAsync(c => c.UserId == NewEstabCoordinatorId.Value);
+                            if (coordinatorRecord != null)
+                            {
+                                coordinatorRecord.SchoolId = newSchool.Id;
+                                _context.Coordenadores.Update(coordinatorRecord);
+                            }
+                        }
+                        break;
+                    case "Bloco":
+                        _context.Blocos.Add(new Bloco { Name = NewEstabName, SchoolId = NewEstabParentId ?? 0 });
+                        break;
+                    case "Sala":
+                        var newSala = new Sala { Name = NewEstabName, BlockId = NewEstabParentId ?? 0 };
+                        if (NewEstabProfessorId.HasValue && NewEstabProfessorId.Value > 0)
+                        {
+                            newSala.ResponsibleProfessorId = NewEstabProfessorId.Value;
+                        }
+                        _context.Salas.Add(newSala);
+                        break;
+                    case "Empresa":
+                        _context.Empresas.Add(new Empresa { 
+                            Name = NewEstabName,
+                            Location = string.IsNullOrWhiteSpace(NewEstabAddress) ? null : NewEstabAddress
+                        });
+                        break;
+                    default:
+                        TempData["ErrorMessage"] = "Tipo de estabelecimento inválido.";
+                        return RedirectToPage();
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Estabelecimento criado com sucesso.";
+            }
+            catch (System.Exception ex)
+            {
+                TempData["ErrorMessage"] = "Erro ao criar estabelecimento: " + ex.Message;
+            }
+
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostAddSchoolAsync()
+        public async Task<IActionResult> OnPostDeleteEmpresaAsync(int id)
         {
-            if (!string.IsNullOrEmpty(NewSchoolName))
+            try
             {
-                var newSchool = new AspnetCoreStarter.Models.School 
-                { 
-                    Name = NewSchoolName, 
-                    Address = NewSchoolAddress ?? "N/A",
-                    AgrupamentoId = SelectedAgrupamentoId
-                };
-                
-                _context.Schools.Add(newSchool);
-                await _context.SaveChangesAsync();
-                
-                // Assign coordinator after school gets an ID
-                if (NewSchoolCoordinatorId.HasValue && NewSchoolCoordinatorId.Value > 0)
+                var item = await _context.Empresas.FindAsync(id);
+                if (item != null)
                 {
-                    var coordinatorRecord = await _context.Coordenadores.FirstOrDefaultAsync(c => c.UserId == NewSchoolCoordinatorId.Value);
-                    if (coordinatorRecord != null)
-                    {
-                        coordinatorRecord.SchoolId = newSchool.Id;
-                        await _context.SaveChangesAsync();
-                    }
+                    _context.Empresas.Remove(item);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Empresa removida com sucesso.";
                 }
             }
-            return RedirectToPage();
-        }
-
-        public async Task<IActionResult> OnPostAddBlocoAsync()
-        {
-            if (!string.IsNullOrEmpty(NewBlocoName) && SelectedSchoolId.HasValue)
+            catch (Exception)
             {
-                _context.Blocos.Add(new Bloco { Name = NewBlocoName, SchoolId = SelectedSchoolId.Value });
-                await _context.SaveChangesAsync();
-            }
-            return RedirectToPage();
-        }
-
-        public async Task<IActionResult> OnPostAddSalaAsync()
-        {
-            if (!string.IsNullOrEmpty(NewSalaName) && SelectedBlocoId.HasValue)
-            {
-                _context.Salas.Add(new Sala { Name = NewSalaName, BlockId = SelectedBlocoId.Value });
-                await _context.SaveChangesAsync();
+                TempData["ErrorMessage"] = "Não é possível remover esta empresa pois existem utilizadores ou dados vinculados a ela.";
             }
             return RedirectToPage();
         }

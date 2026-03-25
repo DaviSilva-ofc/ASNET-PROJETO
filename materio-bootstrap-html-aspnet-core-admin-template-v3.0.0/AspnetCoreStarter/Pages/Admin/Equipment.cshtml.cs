@@ -58,6 +58,28 @@ namespace AspnetCoreStarter.Pages.Admin
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Auth/Login");
 
+            // One-time data migration: normalize legacy equipment Artigo/Tipo values
+            try {
+                // Fix Monitors: Name="Monitor" + Type="Computadores" → Name="Monitores", Type="Monitor"
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE equipamentos SET nome_equipamento='Monitores', tipo='Monitor' WHERE LOWER(nome_equipamento)='monitor' AND LOWER(tipo)='computadores'");
+                // Fix Computadores: Name="Computador" + Type="Computadores" → Name="Computadores", Type="Desktop"
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE equipamentos SET nome_equipamento='Computadores', tipo='Desktop' WHERE LOWER(nome_equipamento)='computador' AND LOWER(tipo)='computadores'");
+                // Fix Switch: Name="Switch" + Type="Rede" → Name="Networking", Type="Switch"
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE equipamentos SET nome_equipamento='Networking', tipo='Switch' WHERE LOWER(nome_equipamento)='switch' AND LOWER(tipo)='rede'");
+                // Fix any remaining "Rede" type → "Switch"
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE equipamentos SET tipo='Switch' WHERE LOWER(tipo)='rede'");
+                // Fix any remaining singular "Computador" → "Computadores"
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE equipamentos SET nome_equipamento='Computadores' WHERE LOWER(nome_equipamento)='computador'");
+                // Fix any remaining singular "Monitor" → "Monitores"
+                await _context.Database.ExecuteSqlRawAsync(
+                    "UPDATE equipamentos SET nome_equipamento='Monitores' WHERE LOWER(nome_equipamento)='monitor'");
+            } catch { }
+
             var query = _context.Equipamentos
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
                 .AsQueryable();

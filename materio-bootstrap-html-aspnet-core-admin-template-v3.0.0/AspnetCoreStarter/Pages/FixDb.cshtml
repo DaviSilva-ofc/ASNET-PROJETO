@@ -1,0 +1,40 @@
+@page
+@using Microsoft.EntityFrameworkCore
+@inject AspnetCoreStarter.Data.AppDbContext _context
+
+@{
+    ViewData["Title"] = "Fix Database";
+    string result = "Aguardando execução...";
+    try
+    {
+        // Add Empresa column to utilizadores
+        _context.Database.ExecuteSqlRaw("ALTER TABLE utilizadores ADD COLUMN IF NOT EXISTS id_empresa INT NULL;");
+        
+        // Create empresas table if not exists with correct column names
+        _context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS empresas (
+                id_empresa INT AUTO_INCREMENT PRIMARY KEY,
+                nome_empresa VARCHAR(100) NOT NULL,
+                localizacao VARCHAR(255) NULL
+            );
+        ");
+        
+        result = "Sucesso: Coluna id_empresa adicionada e tabela empresas verificada.";
+    }
+    catch (Exception ex)
+    {
+        result = "Erro: " + ex.Message;
+    }
+}
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-body">
+            <h3>Resultado da Correção da Base de Dados</h3>
+            <div class="alert alert-info">
+                @result
+            </div>
+            <a href="/Auth/Login" class="btn btn-primary">Voltar para Login</a>
+        </div>
+    </div>
+</div>

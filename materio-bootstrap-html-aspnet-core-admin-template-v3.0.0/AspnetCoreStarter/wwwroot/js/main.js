@@ -314,6 +314,19 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // Auto-dismiss alerts after 5 seconds
+  function setupAlertAutoDismiss() {
+    const alerts = $('.alert-dismissible:not(.alert-important)');
+    alerts.each(function() {
+      const $alert = $(this);
+      setTimeout(() => {
+        $alert.fadeTo(500, 0).slideUp(500, function() {
+          $(this).remove();
+        });
+      }, 5000);
+    });
+  }
+
   // Init helpers & misc
   // --------------------
 
@@ -351,6 +364,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Init PerfectScrollbar in Navbar Dropdown (i.e notification)
   window.Helpers.initNavbarDropdownScrollbar();
+
+  // On window load
+  window.addEventListener('load', function () {
+    // Auto-dismiss alerts
+    setupAlertAutoDismiss();
+  });
 
   let horizontalMenuTemplate = document.querySelector("[data-template^='horizontal-menu']");
   if (horizontalMenuTemplate) {
