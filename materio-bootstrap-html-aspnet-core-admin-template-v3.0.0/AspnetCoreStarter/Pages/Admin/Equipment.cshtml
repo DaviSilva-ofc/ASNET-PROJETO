@@ -243,9 +243,15 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-12">
+                         <div class="col-12">
                             <label class="form-label">Artigo</label>
-                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por artigo (ex: Computadores)..." />
+                            <select asp-for="FilterName" class="form-select select2">
+                                <option value="">Qualquer Artigo</option>
+                                @foreach (var name in Model.UniqueEquipmentNames)
+                                {
+                                    <option value="@name">@name</option>
+                                }
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Tipo</label>
@@ -346,6 +352,14 @@
 
     // Reset search inputs when a modal is closed
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2 for filter fields
+        if (typeof jQuery !== 'undefined' && typeof jQuery.fn.select2 !== 'undefined') {
+            $('.select2').select2({
+                dropdownParent: $('#modalFiltros'),
+                width: '100%'
+            });
+        }
+
         document.querySelectorAll('.modal').forEach(function(modal) {
             modal.addEventListener('hidden.bs.modal', function() {
                 modal.querySelectorAll('.select-search-input').forEach(function(inp) {

@@ -103,10 +103,25 @@
     .tree-item {
         position: relative;
         padding: .35rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
     .tree-item > .tree-toggle {
         cursor: pointer;
         user-select: none;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        flex-grow: 1;
+    }
+    .badge-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        min-width: 26px;
     }
     /* ===== Dark mode Specific Enhancements ===== */
     .dark-style .modal-content,
@@ -157,7 +172,10 @@
     .tree-badge-sala   { background: var(--asnet-orange); }
 
     .tree-label { font-weight: 500; font-size: .88rem; }
-    .tree-children { display: none; }
+    .tree-children { 
+        display: none; 
+        flex-basis: 100%;
+    }
     .tree-children.show { display: block; }
 
     /* close / expand icon */
@@ -170,7 +188,6 @@
         font-size: .65rem;
         color: #999;
         background: #f3f3f3;
-        margin-left: .3rem;
         cursor: pointer;
         transition: transform .15s;
     }
@@ -309,9 +326,11 @@
                                     var agrupSchools = Model.AllSchools.Where(s => s.AgrupamentoId == agrup.Id).ToList();
                                     <li class="tree-item">
                                         <div class="tree-toggle" onclick="toggleTree(this)">
-                                            <span class="tree-badge tree-badge-agrup">@agrupSchools.Count</span>
+                                            <div class="badge-col">
+                                                <span class="tree-badge tree-badge-agrup">@agrupSchools.Count</span>
+                                                @if (agrupSchools.Any()) { <span class="tree-arrow">▶</span> }
+                                            </div>
                                             <span class="tree-label">@agrup.Name</span>
-                                            @if (agrupSchools.Any()) { <span class="tree-arrow">▶</span> }
                                         </div>
                                         @if (agrupSchools.Any())
                                         {
@@ -321,9 +340,11 @@
                                                     var schoolBlocos = Model.AllBlocos.Where(b => b.SchoolId == school.Id).ToList();
                                                     <li class="tree-item">
                                                         <div class="tree-toggle" onclick="toggleTree(this)">
-                                                            <span class="tree-badge tree-badge-school">@schoolBlocos.Count</span>
+                                                            <div class="badge-col">
+                                                                <span class="tree-badge tree-badge-school">@schoolBlocos.Count</span>
+                                                                @if (schoolBlocos.Any()) { <span class="tree-arrow">▶</span> }
+                                                            </div>
                                                             <span class="tree-label">@school.Name</span>
-                                                            @if (schoolBlocos.Any()) { <span class="tree-arrow">▶</span> }
                                                         </div>
                                                         @if (schoolBlocos.Any())
                                                         {
@@ -333,9 +354,11 @@
                                                                     var blocoSalas = Model.AllSalas.Where(s => s.BlockId == bloco.Id).ToList();
                                                                     <li class="tree-item">
                                                                         <div class="tree-toggle" onclick="toggleTree(this)">
-                                                                            <span class="tree-badge tree-badge-bloco">@blocoSalas.Count</span>
+                                                                            <div class="badge-col">
+                                                                                <span class="tree-badge tree-badge-bloco">@blocoSalas.Count</span>
+                                                                                @if (blocoSalas.Any()) { <span class="tree-arrow">▶</span> }
+                                                                            </div>
                                                                             <span class="tree-label">@bloco.Name</span>
-                                                                            @if (blocoSalas.Any()) { <span class="tree-arrow">▶</span> }
                                                                         </div>
                                                                         @if (blocoSalas.Any())
                                                                         {
@@ -343,7 +366,9 @@
                                                                                 @foreach (var sala in blocoSalas)
                                                                                 {
                                                                                     <li class="tree-item">
-                                                                                        <span class="tree-badge tree-badge-sala"><i class='bx bx-door-open' style="font-size:.7rem;"></i></span>
+                                                                                        <div class="badge-col">
+                                                                                            <span class="tree-badge tree-badge-sala"><i class='bx bx-door-open' style="font-size:.7rem;"></i></span>
+                                                                                        </div>
                                                                                         <span class="tree-label">@sala.Name</span>
                                                                                     </li>
                                                                                 }
@@ -623,6 +648,7 @@
                                                         <option value="Diretor">Diretor</option>
                                                         <option value="Coordenador">Coordenador</option>
                                                         <option value="Professor">Professor</option>
+                                                        <option value="Cliente Individual">Cliente Individual</option>
                                                     </select>
                                                 </div>
                                                 
@@ -711,10 +737,20 @@
                                                             }
                                                         </select>
                                                     </div>
+
+                                                    <!-- Cliente Individual: Empresa -->
+                                                    <div class="field-Cliente-Individual" style="display:none;">
+                                                        <select name="empresaId" class="form-select form-select-sm">
+                                                            <option value="">Selecionar Empresa...</option>
+                                                            @foreach (var emp in Model.Empresas) {
+                                                                <option value="@emp.Id">@emp.Name</option>
+                                                            }
+                                                        </select>
+                                                    </div>
                                                 </div>
 
                                                 <div class="d-flex gap-2">
-                                                    <button type="submit" class="btn btn-sm btn-success flex-grow-1">Aceitar</button>
+                                                    <button type="submit" id="btnApprove_@user.Id" class="btn btn-sm btn-success flex-grow-1" disabled>Aceitar</button>
                                                 </div>
                                             </form>
                                             <form method="post" asp-page-handler="Reject" asp-route-id="@user.Id">
@@ -824,14 +860,17 @@
     function toggleRoleOptions(selectEl, userId) {
         const role = selectEl.value;
         const container = document.getElementById('roleFields_' + userId);
+        const approveBtn = document.getElementById('btnApprove_' + userId);
         
         if (!role) {
             container.style.display = 'none';
+            if (approveBtn) approveBtn.disabled = true;
             // Remove required from all potential sub-fields
             container.querySelectorAll('select, input').forEach(el => el.required = false);
             return;
         }
 
+        if (approveBtn) approveBtn.disabled = false;
         container.style.display = 'block';
         
         // Hide all specific field groups and remove required
@@ -841,7 +880,7 @@
         });
 
         // Show the specific group and set required
-        const targetDiv = container.querySelector('.field-' + role);
+        const targetDiv = container.querySelector('.field-' + (role === 'Cliente Individual' ? 'Cliente-Individual' : role));
         if (targetDiv) {
             targetDiv.style.display = 'block';
             // Only make selects required (since tecnico areas are checkboxes)

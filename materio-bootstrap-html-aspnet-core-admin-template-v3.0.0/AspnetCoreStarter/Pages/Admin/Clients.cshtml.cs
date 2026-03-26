@@ -38,6 +38,10 @@ namespace AspnetCoreStarter.Pages.Admin
         public string? FilterEmail { get; set; }
         [BindProperty(SupportsGet = true)]
         public int? FilterAgrupamento { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string? FilterType { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public int? FilterEmpresa { get; set; }
 
         [BindProperty]
         public string NewUserName { get; set; }
@@ -54,6 +58,7 @@ namespace AspnetCoreStarter.Pages.Admin
 
         [BindProperty]
         public string? EditUserRole { get; set; }
+        [BindProperty]
         public int EditUserId { get; set; }
         [BindProperty]
         public string? EditUserName { get; set; }
@@ -117,22 +122,42 @@ namespace AspnetCoreStarter.Pages.Admin
                 professorsQuery = professorsQuery.Where(p => p.Bloco.School.AgrupamentoId == FilterAgrupamento.Value);
             }
 
-            DirectorsList = await directorsQuery.ToListAsync();
-            CoordinatorsList = await coordinatorsQuery.ToListAsync();
-            ProfessorsList = await professorsQuery.ToListAsync();
+            // Apply type filter — only load relevant sections
+            bool showDirectors     = string.IsNullOrEmpty(FilterType) || FilterType == "Diretor";
+            bool showCoordinators  = string.IsNullOrEmpty(FilterType) || FilterType == "Coordenador";
+            bool showProfessors    = string.IsNullOrEmpty(FilterType) || FilterType == "Professor";
+            bool showIndependent   = string.IsNullOrEmpty(FilterType) || FilterType == "Cliente Individual";
+
+            DirectorsList    = showDirectors    ? await directorsQuery.ToListAsync()    : new();
+            CoordinatorsList = showCoordinators ? await coordinatorsQuery.ToListAsync() : new();
+            ProfessorsList   = showProfessors   ? await professorsQuery.ToListAsync()   : new();
 
             // Independent Clients: Users who are NOT directors, coordinators, professors or admins
-            var directorUserIds = await _context.Diretores.Select(d => d.UserId).ToListAsync();
+            var directorUserIds    = await _context.Diretores.Select(d => d.UserId).ToListAsync();
             var coordinatorUserIds = await _context.Coordenadores.Select(c => c.UserId).ToListAsync();
-            var professorUserIds = await _context.Professores.Select(p => p.UserId).ToListAsync();
-            var adminUserIds = await _context.Administradores.Select(a => a.UserId).ToListAsync();
+            var professorUserIds   = await _context.Professores.Select(p => p.UserId).ToListAsync();
+            var adminUserIds       = await _context.Administradores.Select(a => a.UserId).ToListAsync();
             
             var excludeIds = directorUserIds.Union(coordinatorUserIds).Union(professorUserIds).Union(adminUserIds).ToList();
 
-            IndependentClientsList = await _context.Users
-                .Include(u => u.Empresa)
-                .Where(u => !excludeIds.Contains(u.Id))
-                .ToListAsync();
+            if (showIndependent)
+            {
+                var indQuery = _context.Users
+                    .Include(u => u.Empresa)
+                    .Where(u => !excludeIds.Contains(u.Id));
+
+                // Apply common text filters to independent clients too
+                if (FilterId.HasValue)
+                    indQuery = indQuery.Where(u => u.Id == FilterId.Value);
+                if (!string.IsNullOrEmpty(FilterName))
+                    indQuery = indQuery.Where(u => u.Username.Contains(FilterName));
+                if (!string.IsNullOrEmpty(FilterEmail))
+                    indQuery = indQuery.Where(u => u.Email.Contains(FilterEmail));
+                if (FilterEmpresa.HasValue && FilterEmpresa.Value > 0)
+                    indQuery = indQuery.Where(u => u.EmpresaId == FilterEmpresa.Value);
+
+                IndependentClientsList = await indQuery.ToListAsync();
+            }
 
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
             Schools = await _context.Schools.ToListAsync();
@@ -361,7 +386,11 @@ namespace AspnetCoreStarter.Pages.Admin
                 user.Email = EditUserEmail.Trim();
 
             if (!string.IsNullOrWhiteSpace(EditUserPassword))
-                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(EditUserPassword);
+            {
+                var hash = BCrypt.Net.BCrypt.HashPassword(EditUserPassword);
+                user.PasswordHash = hash;
+                user.Password = hash; // Ensure compatibility with systems using the old field
+            }
 
             // Role-specific reassignment (Agrupamento/School/Bloco)
             if (SelectedParentId.HasValue && SelectedParentId.Value > 0)

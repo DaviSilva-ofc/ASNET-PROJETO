@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -35,10 +36,25 @@ namespace AspnetCoreStarter.Models
         [ForeignKey("AgrupamentoId")]
         public Agrupamento? Agrupamento { get; set; }
 
+        [Column("id_escola")]
+        public int? SchoolId { get; set; }
+
+        [ForeignKey("SchoolId")]
+        public School? School { get; set; }
+
+        [Column("id_empresa")]
+        public int? EmpresaId { get; set; }
+
+        [ForeignKey("EmpresaId")]
+        public Empresa? Empresa { get; set; }
+
         [Column("id_admin")]
         public int? AdminId { get; set; }
 
         [ForeignKey("AdminId")]
         public Administrador? Admin { get; set; }
+
+        [Column("data_expiracao")]
+        public DateTime? ExpiryDate { get; set; }
     }
 }

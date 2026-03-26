@@ -83,7 +83,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             // Load items for the table grouped by identical properties
             var groupedItems = equips.GroupBy(e => new {
-                Name = e.Name ?? "Desconhecido",
+                Name = NormalizeEquipmentName(e.Name),
                 Category = e.Type ?? "Equipamento",
                 Location = $"{e.Room?.Name} ({e.Room?.Block?.School?.Name})",
                 Status = MapStatus(e)
@@ -98,6 +98,36 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             }).OrderBy(i => i.Location).ThenBy(i => i.Name).ToList();
 
             return Page();
+        }
+
+        private string NormalizeEquipmentName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "Desconhecido";
+            string normalized = name.Trim();
+            var pluralMaps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Computadores", "Computador" },
+                { "Monitores", "Monitor" },
+                { "Impressoras", "Impressora" },
+                { "Projetores", "Projetor" },
+                { "Televisores", "Televisão" },
+                { "Portáteis", "Portátil" },
+                { "Ratos", "Rato" },
+                { "Teclados", "Teclado" },
+                { "UPSs", "UPS" },
+                { "Switches", "Switch" },
+                { "Quadros Interativos", "Quadro Interativo" },
+                { "Mesas Interativas", "Mesa Interativa" }
+            };
+
+            if (pluralMaps.TryGetValue(normalized, out var singular)) return singular;
+
+            if (normalized.EndsWith("ores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("adores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("s", StringComparison.OrdinalIgnoreCase) && !normalized.EndsWith("ss", StringComparison.OrdinalIgnoreCase) && normalized.Length > 4)
+                return normalized.Substring(0, normalized.Length - 1);
+
+            return normalized;
         }
 
         private string MapStatus(Equipamento e)

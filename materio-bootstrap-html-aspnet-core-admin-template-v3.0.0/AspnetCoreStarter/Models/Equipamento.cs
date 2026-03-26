@@ -45,9 +45,13 @@ namespace AspnetCoreStarter.Models
 
         [Column("id_sala")]
         public int? RoomId { get; set; }
-
         [ForeignKey("RoomId")]
-        public Sala? Room { get; set; }
+        public virtual Sala? Room { get; set; }
+
+        [Column("id_empresa")]
+        public int? EmpresaId { get; set; }
+        [ForeignKey("EmpresaId")]
+        public virtual Empresa? Empresa { get; set; }
 
         [NotMapped]
         public string? Status => StatusEquipamentos?.OrderByDescending(s => s.Id).FirstOrDefault()?.Estado ?? "Disponível";

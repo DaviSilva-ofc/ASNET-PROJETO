@@ -22,12 +22,18 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<User> AvailableDirectors { get; set; } = new();
         public List<User> AvailableCoordenadores { get; set; } = new();
         public List<User> AvailableProfessores { get; set; } = new();
+        public List<User> AvailableIndividualClients { get; set; } = new();
         public List<EmpresaViewModel> EmpresasInfra { get; set; } = new();
 
         public class EmpresaViewModel
         {
             public Empresa Empresa { get; set; }
             public List<User> Responsibles { get; set; } = new();
+            public int TicketCount { get; set; }
+            public int ContractCount { get; set; }
+            public List<Equipamento> Equipments { get; set; } = new();
+            public string Abbreviation { get; set; } = "";
+            public int? IndividualClientId { get; set; }
         }
 
         // Existing properties for modals (kept for compatibility)
@@ -68,6 +74,8 @@ namespace AspnetCoreStarter.Pages.Admin
         public int? NewEstabCoordinatorId { get; set; }
         [BindProperty]
         public int? NewEstabProfessorId { get; set; }
+        [BindProperty]
+        public int? NewEstabIndividualClientId { get; set; }
 
         // Edit Properties
         [BindProperty]
@@ -94,6 +102,8 @@ namespace AspnetCoreStarter.Pages.Admin
         public string? EditSalaName { get; set; }
         [BindProperty]
         public int? EditResponsibleProfessorId { get; set; }
+        [BindProperty]
+        public int? EditIndividualClientId { get; set; }
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -109,6 +119,7 @@ namespace AspnetCoreStarter.Pages.Admin
             try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
             try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
             try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN id_empresa INT NULL;"); } catch { }
 
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
             Schools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();
@@ -187,7 +198,19 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Distinct()
                 .ToListAsync();
 
-            // Fetch Empresas and their Responsibles (Admins)
+            // Fetch Individual Clients (Users not in admin/director/coord/prof)
+            var exclDir = await _context.Diretores.Select(d => d.UserId).ToListAsync();
+            var exclCoo = await _context.Coordenadores.Select(c => c.UserId).ToListAsync();
+            var exclPro = await _context.Professores.Select(p => p.UserId).ToListAsync();
+            var exclAdm = await _context.Administradores.Select(a => a.UserId).ToListAsync();
+            var excludedIds = exclDir.Union(exclCoo).Union(exclPro).Union(exclAdm).ToList();
+            
+            AvailableIndividualClients = await _context.Users
+                .Where(u => !excludedIds.Contains(u.Id))
+                .OrderBy(u => u.Username)
+                .ToListAsync();
+
+            // Fetch Empresas and their details
             var allEmpresas = await _context.Empresas.ToListAsync();
             foreach (var emp in allEmpresas)
             {
@@ -196,10 +219,29 @@ namespace AspnetCoreStarter.Pages.Admin
                     .Where(u => _context.Administradores.Any(a => a.UserId == u.Id))
                     .ToListAsync();
 
+                var ticketCount = await _context.Tickets
+                    .CountAsync(t => (t.EquipamentoId.HasValue && _context.Equipamentos.Any(e => e.Id == t.EquipamentoId.Value && e.EmpresaId == emp.Id)));
+
+                var contractCount = await _context.Contratos.CountAsync(c => c.EmpresaId == emp.Id);
+                var equipments = await _context.Equipamentos.Where(e => e.EmpresaId == emp.Id).ToListAsync();
+
+                var indClientUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.EmpresaId == emp.Id && !_context.Administradores.Any(a => a.UserId == u.Id));
+
+                if (indClientUser != null)
+                {
+                    responsibles.Add(indClientUser);
+                }
+
                 EmpresasInfra.Add(new EmpresaViewModel
                 {
                     Empresa = emp,
-                    Responsibles = responsibles
+                    Responsibles = responsibles,
+                    TicketCount = ticketCount,
+                    ContractCount = contractCount,
+                    Equipments = equipments,
+                    Abbreviation = GetAbbreviation(emp.Name),
+                    IndividualClientId = indClientUser?.Id
                 });
             }
 
@@ -267,10 +309,21 @@ namespace AspnetCoreStarter.Pages.Admin
                         _context.Salas.Add(newSala);
                         break;
                     case "Empresa":
-                        _context.Empresas.Add(new Empresa { 
+                        var newEmpresa = new Empresa { 
                             Name = NewEstabName,
                             Location = string.IsNullOrWhiteSpace(NewEstabAddress) ? null : NewEstabAddress
-                        });
+                        };
+                        _context.Empresas.Add(newEmpresa);
+                        await _context.SaveChangesAsync();
+
+                        if (NewEstabIndividualClientId.HasValue && NewEstabIndividualClientId.Value > 0)
+                        {
+                            var clientUser = await _context.Users.FindAsync(NewEstabIndividualClientId.Value);
+                            if (clientUser != null)
+                            {
+                                clientUser.EmpresaId = newEmpresa.Id;
+                            }
+                        }
                         break;
                     default:
                         TempData["ErrorMessage"] = "Tipo de estabelecimento inválido.";
@@ -562,6 +615,44 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 user.Username = EditName;
                 await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditEmpresaAsync()
+        {
+            var item = await _context.Empresas.FindAsync(EditId);
+            if (item != null && !string.IsNullOrEmpty(EditName))
+            {
+                item.Name = EditName;
+                item.Location = string.IsNullOrWhiteSpace(EditAddress) ? null : EditAddress;
+                try 
+                {
+                    // Unlink previous individual clients if we are explicitly assigning a new one
+                    if (EditIndividualClientId.HasValue)
+                    {
+                        var currentClients = await _context.Users.Where(u => u.EmpresaId == item.Id).ToListAsync();
+                        foreach(var c in currentClients) 
+                        {
+                            // Avoid unlinking Admins, only unlink generic Users
+                            bool isAdmin = await _context.Administradores.AnyAsync(a => a.UserId == c.Id);
+                            if(!isAdmin) c.EmpresaId = null;
+                        }
+
+                        if(EditIndividualClientId.Value > 0)
+                        {
+                            var newClient = await _context.Users.FindAsync(EditIndividualClientId.Value);
+                            if(newClient != null) newClient.EmpresaId = item.Id;
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = $"A Empresa '{item.Name}' foi atualizada com sucesso.";
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = $"Erro ao atualizar empresa: {ex.Message}";
+                }
             }
             return RedirectToPage();
         }

@@ -9,6 +9,21 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Contratos</h4>
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible shadow-sm mb-4" role="alert">
+            <i class="bx bx-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible shadow-sm mb-4" role="alert">
+            <i class="bx bx-error-circle me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Lista de Contratos</h5>
@@ -62,10 +77,11 @@
                 <thead>
                     <tr>
                         <th>Tipo</th>
-                        <th>Período</th>
+                        <th>Expiração</th>
+                        <th>Período (meses)</th>
                         <th>Estado</th>
                         <th>Urgência</th>
-                        <th>Agrupamento</th>
+                        <th>Entidade</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -74,6 +90,21 @@
                     {
                         <tr>
                             <td><strong>@item.ContractType</strong></td>
+                            <td>
+                                @if (item.ExpiryDate.HasValue)
+                                {
+                                    var daysLeft = (item.ExpiryDate.Value - DateTime.Now).Days;
+                                    var badgeClass = daysLeft < 0 ? "bg-label-danger" : (daysLeft <= 30 ? "bg-label-warning" : "bg-label-secondary");
+                                    var label = daysLeft < 0 ? "Expirado" : (daysLeft == 0 ? "Expira hoje" : $"{daysLeft} dias");
+                                    
+                                    <div>@item.ExpiryDate.Value.ToString("dd/MM/yyyy")</div>
+                                    <small class="badge @badgeClass" style="font-size: 0.75rem;">@label</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/D</span>
+                                }
+                            </td>
                             <td>@item.Period</td>
                             <td>
                                 <span class="badge @(item.ContractStatus == "Ativo" ? "bg-label-success" : "bg-label-warning")">
@@ -104,18 +135,28 @@
                                     <span class="text-muted">N/D</span>
                                 }
                             </td>
-                            <td>@(item.Agrupamento?.Name ?? "N/A")</td>
                             <td>
-                                <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
-                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
-                                </form>
+                                @if (item.SchoolId.HasValue) { <span class="badge bg-label-info">🏫 @item.School?.Name</span> }
+                                else if (item.AgrupamentoId.HasValue) { <span class="badge bg-label-primary">🏛️ @item.Agrupamento?.Name</span> }
+                                else if (item.EmpresaId.HasValue) { <span class="badge bg-label-secondary">🏢 @item.Empresa?.Name</span> }
+                                else { <span class="text-muted">Desconhecido</span> }
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-sm" title="Editar Contrato"
+                                            data-bs-toggle="modal" data-bs-target="#modalEditContrato"
+                                            onclick="setEditContract('@item.Id', '@Html.Raw((item.ContractType ?? "").Replace("'", "\\'"))', '@Html.Raw((item.Period ?? "").Replace("'", "\\'"))', '@item.ContractStatus', '@item.AgrupamentoId', '@item.UrgencyLevel', '@Html.Raw((item.Description ?? "").Replace("'", "\\'"))', '@(item.ExpiryDate?.ToString("yyyy-MM-dd"))', '@item.SchoolId', '@item.EmpresaId')">✏️</button>
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
+                                        <button type="submit" class="btn btn-sm" title="Eliminar Contrato">🗑️</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
                     @if (!Model.Contracts.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-4">Nenhum contrato registado.</td>
+                            <td colspan="7" class="text-center py-4">Nenhum contrato registado.</td>
                         </tr>
                     }
                 </tbody>
@@ -149,14 +190,36 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Agrupamento</label>
-                        <select asp-for="NewContract.AgrupamentoId" class="form-select">
-                            <option value="">Selecione um agrupamento (opcional)</option>
-                            @foreach (var agrup in Model.Agrupamentos)
-                            {
-                                <option value="@agrup.Id">@agrup.Name</option>
-                            }
-                        </select>
+                        <label class="form-label">Entidade (Obrigatório selecionar uma)</label>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <select asp-for="NewContract.AgrupamentoId" id="newContractAgrupamento" class="form-select mb-2" onchange="filterSchools('newContractAgrupamento', 'newContractSchool')">
+                                    <option value="">-- Selecione Agrupamento --</option>
+                                    @foreach (var agrup in Model.Agrupamentos)
+                                    {
+                                        <option value="@agrup.Id">@agrup.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <select asp-for="NewContract.SchoolId" id="newContractSchool" class="form-select mb-2" onchange="filterSchools('newContractAgrupamento', 'newContractSchool')">
+                                    <option value="">-- Selecione Escola --</option>
+                                    @foreach (var school in Model.Schools)
+                                    {
+                                        <option value="@school.Id" data-agrupamento-id="@school.AgrupamentoId">@school.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <select asp-for="NewContract.EmpresaId" id="newContractEmpresa" class="form-select" onchange="filterSchools('newContractAgrupamento', 'newContractSchool')">
+                                    <option value="">-- Selecione Empresa --</option>
+                                    @foreach (var emp in Model.Empresas)
+                                    {
+                                        <option value="@emp.Id">@emp.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Nível de Urgência</label>
@@ -166,6 +229,10 @@
                             <option value="Médio">&#x1F7E1; Médio &mdash; Tempo de resposta: 24 horas</option>
                             <option value="Alto">&#x1F534; Alto &mdash; Tempo de resposta: 4 horas</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Expiração</label>
+                        <input type="date" asp-for="NewContract.ExpiryDate" class="form-control" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Arquivo de Contrato (PDF)</label>
@@ -182,4 +249,143 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Editar Contrato -->
+    <div class="modal fade" id="modalEditContrato" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="Edit" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">✏️ Editar Contrato</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editContractId" asp-for="EditContract.Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Contrato</label>
+                        <input type="text" id="editContractType" asp-for="EditContract.ContractType" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Período</label>
+                        <input type="text" id="editContractPeriod" asp-for="EditContract.Period" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Estado</label>
+                        <select id="editContractStatus" asp-for="EditContract.ContractStatus" class="form-select">
+                            <option value="Ativo">Ativo</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Finalizado">Finalizado</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Entidade</label>
+                        <select id="editContractAgrupamento" asp-for="EditContract.AgrupamentoId" class="form-select mb-2" onchange="filterSchools('editContractAgrupamento', 'editContractSchool')">
+                            <option value="">-- Agrupamento --</option>
+                            @foreach (var agrup in Model.Agrupamentos)
+                            {
+                                <option value="@agrup.Id">@agrup.Name</option>
+                            }
+                        </select>
+                        <select id="editContractSchool" asp-for="EditContract.SchoolId" class="form-select mb-2" onchange="filterSchools('editContractAgrupamento', 'editContractSchool')">
+                            <option value="">-- Escola --</option>
+                            @foreach (var school in Model.Schools)
+                            {
+                                <option value="@school.Id" data-agrupamento-id="@school.AgrupamentoId">@school.Name</option>
+                            }
+                        </select>
+                        <select id="editContractEmpresa" asp-for="EditContract.EmpresaId" class="form-select" onchange="filterSchools('editContractAgrupamento', 'editContractSchool')">
+                            <option value="">-- Empresa --</option>
+                            @foreach (var emp in Model.Empresas)
+                            {
+                                <option value="@emp.Id">@emp.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nível de Urgência</label>
+                        <select id="editContractUrgency" asp-for="EditContract.UrgencyLevel" class="form-select" required>
+                            <option value="Baixo">Baixo</option>
+                            <option value="Médio">Médio</option>
+                            <option value="Alto">Alto</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <textarea id="editContractDescription" asp-for="EditContract.Description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data de Expiração</label>
+                        <input type="date" id="editContractExpiry" asp-for="EditContract.ExpiryDate" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+@section PageScripts {
+<script>
+    function setEditContract(id, type, period, status, agrupId, urgency, desc, expiry, schoolId, empresaId) {
+        document.getElementById('editContractId').value = id;
+        document.getElementById('editContractType').value = type;
+        document.getElementById('editContractPeriod').value = period;
+        document.getElementById('editContractStatus').value = status;
+        document.getElementById('editContractAgrupamento').value = agrupId || '';
+        document.getElementById('editContractSchool').value = schoolId || '';
+        document.getElementById('editContractEmpresa').value = empresaId || '';
+        document.getElementById('editContractUrgency').value = urgency || 'Baixo';
+        document.getElementById('editContractDescription').value = desc;
+        document.getElementById('editContractExpiry').value = expiry || '';
+        
+        // Trigger filter after setting values
+        filterSchools('editContractAgrupamento', 'editContractSchool');
+    }
+
+    function filterSchools(agrupIdSelectId, schoolSelectId) {
+        const agrupSelect = document.getElementById(agrupIdSelectId);
+        const schoolSelect = document.getElementById(schoolSelectId);
+        const empresaSelectId = agrupIdSelectId.includes('new') ? 'newContractEmpresa' : 'editContractEmpresa';
+        const empresaSelect = document.getElementById(empresaSelectId);
+        
+        const agrupValue = agrupSelect.value;
+        const schoolValue = schoolSelect.value;
+        const empresaValue = empresaSelect.value;
+
+        // Mutual Exclusivity Logic
+        if (empresaValue) {
+            agrupSelect.disabled = true;
+            schoolSelect.disabled = true;
+        } else if (agrupValue || schoolValue) {
+            empresaSelect.disabled = true;
+            agrupSelect.disabled = false;
+            schoolSelect.disabled = false;
+        } else {
+            agrupSelect.disabled = false;
+            schoolSelect.disabled = false;
+            empresaSelect.disabled = false;
+        }
+
+        const options = schoolSelect.querySelectorAll('option');
+        options.forEach(opt => {
+            if (opt.value === "") {
+                opt.style.display = "block";
+                return;
+            }
+            const optAgrup = opt.getAttribute('data-agrupamento-id');
+            if (!agrupValue || optAgrup === agrupValue) {
+                opt.style.display = "block";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+
+        // If current selected school is now hidden, reset it
+        const currentSelected = schoolSelect.options[schoolSelect.selectedIndex];
+        if (currentSelected && currentSelected.style.display === "none") {
+            schoolSelect.value = "";
+        }
+    }
+</script>
+}

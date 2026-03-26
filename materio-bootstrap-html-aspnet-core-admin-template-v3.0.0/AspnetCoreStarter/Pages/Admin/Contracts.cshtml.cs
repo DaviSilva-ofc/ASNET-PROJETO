@@ -5,6 +5,7 @@ using AspnetCoreStarter.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
 namespace AspnetCoreStarter.Pages.Admin
@@ -20,9 +21,14 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public List<Contrato> Contracts { get; set; } = new();
         public List<Agrupamento> Agrupamentos { get; set; } = new();
+        public List<School> Schools { get; set; } = new();
+        public List<Empresa> Empresas { get; set; } = new();
 
         [BindProperty]
         public Contrato NewContract { get; set; } = new();
+
+        [BindProperty]
+        public Contrato? EditContract { get; set; }
 
         [BindProperty]
         public IFormFile? ContractFile { get; set; }
@@ -50,6 +56,10 @@ namespace AspnetCoreStarter.Pages.Admin
 
             try 
             {
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN nivel_urgencia VARCHAR(20) NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN data_expiracao DATETIME NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN id_escola INT NULL, ADD COLUMN id_empresa INT NULL;"); } catch { }
+
                 var query = _context.Contratos
                     .Include(c => c.Agrupamento)
                     .AsQueryable();
@@ -76,7 +86,8 @@ namespace AspnetCoreStarter.Pages.Admin
 
                 Contracts = await query.ToListAsync();
                 Agrupamentos = await _context.Agrupamentos.ToListAsync();
-                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN nivel_urgencia VARCHAR(20) NULL;"); } catch { }
+                Schools = await _context.Schools.ToListAsync();
+                Empresas = await _context.Empresas.ToListAsync();
             }
             catch (System.Exception ex)
             {
@@ -89,19 +100,52 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnPostAddAsync()
         {
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN nivel_urgencia VARCHAR(20) NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN data_expiracao DATETIME NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN id_escola INT NULL, ADD COLUMN id_empresa INT NULL;"); } catch { }
+
             if (ContractFile == null || ContractFile.Length == 0)
             {
                 ModelState.AddModelError("ContractFile", "Por favor, selecione um arquivo PDF.");
                 return Page();
             }
 
+            if (!NewContract.AgrupamentoId.HasValue && !NewContract.SchoolId.HasValue && !NewContract.EmpresaId.HasValue)
+            {
+                TempData["ErrorMessage"] = "É obrigatório selecionar um Agrupamento, Escola ou Empresa.";
+                return RedirectToPage();
+            }
+
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdStr, out int userId))
             {
                 NewContract.AdminId = userId;
-                // Note: File saving logic can be added here (e.g., saving to wwwroot/uploads)
                 _context.Contratos.Add(NewContract);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Contrato carregado com sucesso.";
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditAsync()
+        {
+            if (EditContract == null) return RedirectToPage();
+
+            var existing = await _context.Contratos.FindAsync(EditContract.Id);
+            if (existing != null)
+            {
+                existing.ContractType = EditContract.ContractType;
+                existing.Period = EditContract.Period;
+                existing.ContractStatus = EditContract.ContractStatus;
+                existing.AgrupamentoId = EditContract.AgrupamentoId;
+                existing.UrgencyLevel = EditContract.UrgencyLevel;
+                existing.Description = EditContract.Description;
+                existing.ExpiryDate = EditContract.ExpiryDate;
+                existing.SchoolId = EditContract.SchoolId;
+                existing.EmpresaId = EditContract.EmpresaId;
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Contrato atualizado com sucesso.";
             }
             return RedirectToPage();
         }
@@ -113,6 +157,7 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 _context.Contratos.Remove(item);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Contrato eliminado com sucesso.";
             }
             return RedirectToPage();
         }

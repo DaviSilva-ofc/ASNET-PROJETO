@@ -7,16 +7,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using AspnetCoreStarter.Services;
 
 namespace AspnetCoreStarter.Pages.Admin
 {
     public class DashboardModel : PageModel
     {
         private readonly AppDbContext _context;
+        private readonly IStockService _stockService;
 
-        public DashboardModel(AppDbContext context)
+        public DashboardModel(AppDbContext context, IStockService stockService)
         {
             _context = context;
+            _stockService = stockService;
         }
 
         public List<AspnetCoreStarter.Models.User> PendingUsers { get; set; }
@@ -44,6 +47,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<AspnetCoreStarter.Models.School> AllSchools { get; set; }
         public List<Bloco> AllBlocos { get; set; }
         public List<Sala> AllSalas { get; set; }
+        public List<Empresa> Empresas { get; set; }
 
         // Chart data — per-school equipment counts
         public List<string> SchoolNames { get; set; }
@@ -159,6 +163,7 @@ namespace AspnetCoreStarter.Pages.Admin
                     ) ENGINE=InnoDB;"); 
             } catch { }
             try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN password_hash VARCHAR(255) NULL;"); } catch { }
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN data_expiracao DATETIME NULL;"); } catch { }
             try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
             try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
             try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
@@ -177,20 +182,22 @@ namespace AspnetCoreStarter.Pages.Admin
             TotalUsers = await _context.Users.CountAsync();
             
             // New Metrics Logic
-            // 1. Contratos a expirar (using Periodo string - temporary logic: count all for now)
-            // Note: In a real scenario, we'd parse the 'Periodo' string to check expiration.
-            ExpiringContractsCount = await _context.Contratos.CountAsync(); 
+            // 1. Contratos a expirar (dentro de 30 dias)
+            var oneMonthFromNow = System.DateTime.Now.AddDays(30);
+            var today = System.DateTime.Now;
+            ExpiringContractsCount = await _context.Contratos
+                .Where(c => c.ExpiryDate != null && c.ExpiryDate >= today && c.ExpiryDate <= oneMonthFromNow)
+                .CountAsync(); 
 
-            // 2. Tickets pendentes (Tickets with status Pendente or no technician assigned)
+            // 2. Tickets pendentes
             PendingTicketsCount = await _context.Tickets
                 .Where(t => t.Status == "Pendente" || t.TechnicianId == null)
                 .CountAsync();
 
-            LowStockAlertsCount = await _context.StockEmpresa
-                .Where(s => !s.IsAvailable)
-                .CountAsync();
+            // (Calculated later in section 5 to be consistent)
+            LowStockAlertsCount = 0; 
 
-            // 4. Chat Notifications (Unread messages for the current admin)
+            // 4. Chat Notifications
             int currentUserId = int.Parse(userId);
             var unreadMessages = await _context.Mensagens
                 .Include(m => m.Sender)
@@ -210,8 +217,9 @@ namespace AspnetCoreStarter.Pages.Admin
             AllSchools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();
             AllBlocos = await _context.Blocos.Include(b => b.School).ToListAsync();
             AllSalas = await _context.Salas.Include(s => s.Block).ToListAsync();
+            Empresas = await _context.Empresas.ToListAsync();
 
-            // Per-school equipment counts for bar chart (keeping logic intact if needed elsewhere, though chart is removed)
+            // Per-school equipment counts
             SchoolNames = new List<string>();
             SchoolEquipmentCounts = new List<int>();
 
@@ -238,7 +246,7 @@ namespace AspnetCoreStarter.Pages.Admin
             TicketsConcluidoCount = await _context.Tickets.CountAsync(t => t.Status == "Concluido");
             TicketsPendenteCount = await _context.Tickets.CountAsync(t => t.Status == "Pendente");
 
-            // Line Chart Data grouped by Level
+            // Line Chart Data
             var allTickets = await _context.Tickets.ToListAsync();
             LineChartLabels = new List<string> { "Baixo", "Medio", "Alto" };
             LineChartPedidosData = new List<int>();
@@ -260,34 +268,40 @@ namespace AspnetCoreStarter.Pages.Admin
             ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locations);
 
             // 5. Low Stock Alerts Logic
-            // Group StockEmpresa by EquipmentName and count available items
-            var lowStockItems = await _context.StockEmpresa
+            var allAvailableStock = await _context.StockEmpresa
                 .Where(s => s.IsAvailable || s.Status == "Disponível")
-                .GroupBy(s => s.EquipmentName)
-                .Select(g => new LowStockItemViewModel
-                {
-                    Name = g.Key ?? "Sem Nome",
-                    AvailableCount = g.Count()
-                })
-                .Where(x => x.AvailableCount < 3)
                 .ToListAsync();
 
-            LowStockItems = lowStockItems;
+            var groupedStock = allAvailableStock
+                .GroupBy(s => new { Name = s.EquipmentName ?? "Sem Nome", Type = s.Type })
+                .Select(g => new LowStockItemViewModel
+                {
+                    Name = g.Key.Name,
+                    AvailableCount = g.Count(),
+                    Type = g.Key.Type
+                })
+                .ToList();
+
+            LowStockItems = groupedStock
+                .Where(x => _stockService.IsLowStock(x.Name, x.Type, x.AvailableCount))
+                .ToList();
+
+            LowStockAlertsCount = LowStockItems.Count;
 
             return Page();
         }
-        public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? blocoId)
+
+        public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? blocoId, int? empresaId)
         {
             if (string.IsNullOrEmpty(role))
             {
                 ModelState.AddModelError("", "O cargo é obrigatório para aprovação.");
-                return RedirectToPage(); // Or handle error message in TempData
+                return RedirectToPage();
             }
 
             var userFound = await _context.Users.FindAsync(id);
             if (userFound != null)
             {
-                // Create role-specific record based on the selected role
                 bool roleCreated = false;
                 switch (role)
                 {
@@ -299,19 +313,13 @@ namespace AspnetCoreStarter.Pages.Admin
                         break;
                     case "Tecnico":
                         if (string.IsNullOrEmpty(nivel)) break;
-                        // Consolidate multiple technical areas
                         var areas = new List<string>();
                         if (areaTecnica != null && areaTecnica.Length > 0)
-                        {
                             areas.AddRange(areaTecnica);
-                        }
                         if (!string.IsNullOrWhiteSpace(areaTecnicaOutros))
-                        {
                             areas.Add(areaTecnicaOutros.Trim());
-                        }
                         
                         string finalArea = string.Join(", ", areas);
-                        // Limit to schema VARCHAR length if necessary (optional safeguard)
                         if (finalArea.Length > 100) finalArea = finalArea.Substring(0, 97) + "...";
 
                         var tecnico = new Tecnico { UserId = id, AreaTecnica = finalArea, Nivel = nivel };
@@ -328,6 +336,12 @@ namespace AspnetCoreStarter.Pages.Admin
                         if (!blocoId.HasValue) break;
                         var professor = new Professor { UserId = id, BlocoId = blocoId };
                         _context.Professores.Add(professor);
+                        roleCreated = true;
+                        break;
+                    case "Cliente Individual":
+                        if (!empresaId.HasValue) break;
+                        userFound.EmpresaId = empresaId;
+                        _context.Users.Update(userFound);
                         roleCreated = true;
                         break;
                 }
@@ -357,5 +371,6 @@ namespace AspnetCoreStarter.Pages.Admin
     {
         public string Name { get; set; }
         public int AvailableCount { get; set; }
+        public string? Type { get; set; }
     }
 }

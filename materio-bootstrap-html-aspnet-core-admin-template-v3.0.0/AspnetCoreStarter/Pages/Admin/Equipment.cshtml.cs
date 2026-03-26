@@ -5,6 +5,7 @@ using AspnetCoreStarter.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace AspnetCoreStarter.Pages.Admin
 {
@@ -31,6 +32,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<Agrupamento> AvailableAgrupamentos { get; set; }
         public List<School> AvailableEscolas { get; set; }
         public List<Bloco> AvailableBlocos { get; set; }
+        public List<string> UniqueEquipmentNames { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
         public string? FilterName { get; set; }
@@ -58,27 +60,12 @@ namespace AspnetCoreStarter.Pages.Admin
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Auth/Login");
 
-            // One-time data migration: normalize legacy equipment Artigo/Tipo values
-            try {
-                // Fix Monitors: Name="Monitor" + Type="Computadores" → Name="Monitores", Type="Monitor"
-                await _context.Database.ExecuteSqlRawAsync(
-                    "UPDATE equipamentos SET nome_equipamento='Monitores', tipo='Monitor' WHERE LOWER(nome_equipamento)='monitor' AND LOWER(tipo)='computadores'");
-                // Fix Computadores: Name="Computador" + Type="Computadores" → Name="Computadores", Type="Desktop"
-                await _context.Database.ExecuteSqlRawAsync(
-                    "UPDATE equipamentos SET nome_equipamento='Computadores', tipo='Desktop' WHERE LOWER(nome_equipamento)='computador' AND LOWER(tipo)='computadores'");
-                // Fix Switch: Name="Switch" + Type="Rede" → Name="Networking", Type="Switch"
-                await _context.Database.ExecuteSqlRawAsync(
-                    "UPDATE equipamentos SET nome_equipamento='Networking', tipo='Switch' WHERE LOWER(nome_equipamento)='switch' AND LOWER(tipo)='rede'");
-                // Fix any remaining "Rede" type → "Switch"
-                await _context.Database.ExecuteSqlRawAsync(
-                    "UPDATE equipamentos SET tipo='Switch' WHERE LOWER(tipo)='rede'");
-                // Fix any remaining singular "Computador" → "Computadores"
-                await _context.Database.ExecuteSqlRawAsync(
-                    "UPDATE equipamentos SET nome_equipamento='Computadores' WHERE LOWER(nome_equipamento)='computador'");
-                // Fix any remaining singular "Monitor" → "Monitores"
-                await _context.Database.ExecuteSqlRawAsync(
-                    "UPDATE equipamentos SET nome_equipamento='Monitores' WHERE LOWER(nome_equipamento)='monitor'");
-            } catch { }
+            // Cleanup: Ensure data is normalized (singularized)
+            // Note: The global cleanup in Admin/Stocks.cshtml.cs will also handle this,
+            // but we do it here for data entry consistency.
+
+            // Ensure EmpresaId column exists
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN id_empresa INT NULL;"); } catch { }
 
             var query = _context.Equipamentos
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
@@ -136,6 +123,12 @@ namespace AspnetCoreStarter.Pages.Admin
             AvailableAgrupamentos = await _context.Agrupamentos.ToListAsync();
             AvailableEscolas = await _context.Schools.ToListAsync();
             AvailableBlocos = await _context.Blocos.ToListAsync();
+            UniqueEquipmentNames = await _context.Equipamentos
+                .Where(e => !string.IsNullOrEmpty(e.Name))
+                .Select(e => e.Name)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToListAsync();
 
             return Page();
         }
@@ -144,10 +137,41 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             if (ModelState.IsValid)
             {
+                NewEquipment.Name = NormalizeEquipmentName(NewEquipment.Name);
                 _context.Equipamentos.Add(NewEquipment);
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage();
+        }
+
+        private static string NormalizeEquipmentName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "Desconhecido";
+            string normalized = name.Trim();
+            var pluralMaps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Computadores", "Computador" },
+                { "Monitores", "Monitor" },
+                { "Impressoras", "Impressora" },
+                { "Projetores", "Projetor" },
+                { "Televisores", "Televisão" },
+                { "Portáteis", "Portátil" },
+                { "Ratos", "Rato" },
+                { "Teclados", "Teclado" },
+                { "UPSs", "UPS" },
+                { "Switches", "Switch" },
+                { "Quadros Interativos", "Quadro Interativo" },
+                { "Mesas Interativas", "Mesa Interativa" }
+            };
+
+            if (pluralMaps.TryGetValue(normalized, out var singular)) return singular;
+
+            if (normalized.EndsWith("ores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("adores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("s", StringComparison.OrdinalIgnoreCase) && !normalized.EndsWith("ss", StringComparison.OrdinalIgnoreCase) && normalized.Length > 4)
+                return normalized.Substring(0, normalized.Length - 1);
+
+            return normalized;
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)

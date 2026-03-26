@@ -464,9 +464,9 @@
                                                                                                  @foreach (var group in groupedEquips)
                                                                                                  {
                                                                                                      <div class="tree-node equip-node ms-4 mt-1 small">
-                                                                                                         <a asp-page="/Admin/Equipment" 
-                                                                                                            asp-route-FilterRoomId="@room.Id" 
-                                                                                                            asp-route-FilterType="@group.TypeName" 
+                                                                                                         <a asp-page="/Admin/Equipment"
+                                                                                                            asp-route-FilterRoomId="@room.Id"
+                                                                                                            asp-route-FilterType="@group.TypeName"
                                                                                                             class="text-secondary text-decoration-none">
                                                                                                              <i class="ri-computer-line me-1"></i> @group.TypeName (@group.Count)
                                                                                                          </a>
@@ -507,70 +507,147 @@
 
             <!-- Empresas Tab -->
             <div class="tab-pane fade" id="navs-empresas" role="tabpanel">
-                <div class="card shadow-none border-0 overflow-hidden">
-                    <div class="table-responsive text-nowrap">
-                        <table class="table table-hover">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th>Empresa</th>
-                                    <th>Responsável</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.EmpresasInfra.Any())
-                                {
-                                    @foreach (var empVm in Model.EmpresasInfra)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar avatar-sm me-3">
-                                                        <span class="avatar-initial rounded bg-label-primary">@empVm.Empresa.Name[0]</span>
-                                                    </div>
-                                                    <span class="fw-semibold">@empVm.Empresa.Name</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                @if (empVm.Responsibles.Any())
-                                                {
-                                                    @foreach (var res in empVm.Responsibles)
-                                                    {
-                                                        <div class="d-flex align-items-center mb-1">
-                                                            <i class="ri-user-settings-line me-1 text-primary small"></i>
-                                                            <span>@res.Username</span>
-                                                        </div>
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted italic small">Sem responsável (Admin) vinculado</span>
-                                                }
-                                            </td>
-                                            <td class="text-center">
-                                                <form method="post" asp-page-handler="DeleteEmpresa" asp-route-id="@empVm.Empresa.Id" onsubmit="return confirm('Tem certeza que deseja excluir esta empresa?');">
-                                                    <button type="submit" class="btn btn-sm btn-icon btn-text-danger rounded-pill" title="Excluir Empresa">
-                                                        <i class="ri-delete-bin-line"></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="3" class="text-center py-5">
-                                            <div class="text-muted mb-2">Nenhuma empresa registada.</div>
-                                            <button class="btn btn-sm btn-label-primary" data-bs-toggle="modal" data-bs-target="#modalAddEstabelecimento" onclick="setEstabType('Empresa')">
-                                                Criar Primeira Empresa
-                                            </button>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                <div class="row">
+        @foreach (var empVm in Model.EmpresasInfra)
+        {
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center cursor-pointer"
+                         data-bs-toggle="collapse" data-bs-target="#emp-@empVm.Empresa.Id">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 text-white me-3">
+                                <strong>@empVm.Empresa.Name - @(empVm.Responsibles.Any() ? string.Join(", ", empVm.Responsibles.Select(r => r.Username)) : "Sem Responsável")</strong>
+                            </h5>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                             <button type="button" class="edit-header-btn"
+                                     data-id="@empVm.Empresa.Id"
+                                     data-name="@empVm.Empresa.Name"
+                                     data-address="@empVm.Empresa.Location"
+                                     data-client="@empVm.IndividualClientId"
+                                     onclick="event.stopPropagation(); openEditEmpresa(this)"
+                                     title="Editar Empresa">
+                                 ✏️
+                             </button>
+                             <form method="post" asp-page-handler="DeleteEmpresa" asp-route-id="@empVm.Empresa.Id"
+                                  onsubmit="return confirm('Excluir esta empresa?');"
+                                  style="display:inline;" onclick="event.stopPropagation();">
+                                <button type="submit" class="edit-header-btn bg-transparent border-white ms-1" title="Excluir Empresa" style="opacity: 0.7;">
+                                    🗑️
+                                </button>
+                            </form>
+                            <i class="icon-base ri-arrow-down-s-line text-white fs-4 ms-2"></i>
+                        </div>
                     </div>
+                    <div id="emp-@empVm.Empresa.Id" class="collapse show">
+                        <div class="card-body pt-4">
+                            <div class="row">
+                                <!-- Coluna Tickets -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
+                                             data-bs-toggle="collapse" data-bs-target="#tickets-emp-@empVm.Empresa.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-ticket-2-line me-2"></i>Tickets</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="tickets-emp-@empVm.Empresa.Id" class="collapse show">
+                                            <h3 class="mb-1 text-primary">@empVm.TicketCount</h3>
+                                            <p class="text-muted small mb-2">Tickets ativos vinculados</p>
+                                            <a asp-page="./Tickets" asp-route-empresaId="@empVm.Empresa.Id" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                                                Gerir Tickets
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna Contratos -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
+                                             data-bs-toggle="collapse" data-bs-target="#contracts-emp-@empVm.Empresa.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-file-list-3-line me-2"></i>Contratos</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="contracts-emp-@empVm.Empresa.Id" class="collapse show">
+                                            <h3 class="mb-1 text-success">@empVm.ContractCount</h3>
+                                            <p class="text-muted small mb-2">Contratos registados para esta empresa</p>
+                                            <a asp-page="./Contracts" asp-route-empresaId="@empVm.Empresa.Id" class="btn btn-sm btn-outline-success w-100 mt-2">
+                                                Gerir Contratos
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna Empresa (Árvore) -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
+                                             data-bs-toggle="collapse" data-bs-target="#infra-emp-@empVm.Empresa.Id">
+                                            <h6 class="mb-0 fw-bold"><i class="icon-base ri-node-tree me-2"></i>Empresa</h6>
+                                            <i class="icon-base ri-arrow-down-s-line"></i>
+                                        </div>
+                                        <div id="infra-emp-@empVm.Empresa.Id" class="collapse show mt-3">
+                                            <div class="infra-tree">
+                                                <div class="tree-node director-node mb-2 d-flex align-items-center">
+                                                    <i class="icon-base ri-user-settings-line me-1"></i> 
+                                                    <strong>Responsável: @(empVm.Responsibles.Any() ? empVm.Responsibles.First().Username : "Admin Geral")</strong>
+                                                </div>
+                                                <div class="tree-node agrupamento-node">
+                                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-equips-emp-@empVm.Empresa.Id">
+                                                        <i class="icon-base ri-arrow-right-s-line"></i>
+                                                        <i class="icon-base ri-building-line me-1"></i> <strong>@empVm.Empresa.Name</strong>
+                                                    </div>
+
+                                                    <div id="tree-equips-emp-@empVm.Empresa.Id" class="collapse">
+                                                         @if (empVm.Equipments.Any())
+                                                         {
+                                                             var groupedEquips = empVm.Equipments
+                                                                 .GroupBy(e => !string.IsNullOrEmpty(e.Type) ? e.Type : (!string.IsNullOrEmpty(e.Name) ? e.Name : "Outros"))
+                                                                 .Select(g => new { TypeName = g.Key, Count = g.Count() })
+                                                                 .OrderBy(g => g.TypeName)
+                                                                 .ToList();
+
+                                                             @foreach (var group in groupedEquips)
+                                                             {
+                                                                 <div class="tree-node equip-node ms-4 mt-1 small">
+                                                                     <a asp-page="/Admin/Equipment"
+                                                                        asp-route-FilterEmpresaId="@empVm.Empresa.Id"
+                                                                        asp-route-FilterType="@group.TypeName"
+                                                                        class="text-secondary text-decoration-none">
+                                                                         <i class="ri-computer-line me-1"></i> @group.TypeName (@group.Count)
+                                                                     </a>
+                                                                 </div>
+                                                             }
+                                                         }
+                                                         else
+                                                         {
+                                                             <div class="ms-4 mt-1 small">
+                                                                 <span class="text-muted italic" style="font-size: 0.82rem;">Sem equipamentos vinculados diretamente</span>
+                                                             </div>
+                                                         }
+                                                     </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (!Model.EmpresasInfra.Any())
+        {
+            <div class="col-12">
+                <div class="card shadow-none border-0 text-center py-5">
+                    <div class="text-muted mb-2">Nenhuma empresa registada.</div>
+                    <button class="btn btn-sm btn-label-primary" data-bs-toggle="modal" data-bs-target="#modalAddEstabelecimento" onclick="setEstabType('Empresa')">
+                        Criar Primeira Empresa
+                    </button>
+                </div>
+            </div>
+        }
                 </div>
             </div>
         </div>
@@ -647,6 +724,20 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="mb-3" id="divEstabIndividualClient" style="display:none;">
+                        <label class="form-label">Cliente Individual (Opcional)</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar cliente individual..." oninput="filterSelect(this, 'estabIndividualClientSelect')" />
+                            <select asp-for="NewEstabIndividualClientId" class="form-select" id="estabIndividualClientSelect">
+                                <option value="0">-- Sem Cliente Vinculado --</option>
+                                @foreach (var client in Model.AvailableIndividualClients)
+                                {
+                                    <option value="@client.Id">@client.Username</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -658,6 +749,45 @@
 
 
     <!-- Edit Modals -->
+    <!-- Modal Edit Empresa -->
+    <div class="modal fade" id="modalEditEmpresa" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="EditEmpresa" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Empresa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="EditId" id="editEmpresaId" />
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Empresa</label>
+                        <input type="text" asp-for="EditName" id="editEmpresaName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Localização (Opcional)</label>
+                        <input type="text" asp-for="EditAddress" id="editEmpresaAddress" class="form-control" placeholder="Endereço da empresa" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Cliente Individual Vinculado</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar cliente individual..." oninput="filterSelect(this, 'editEmpresaIndividualClientId')" />
+                            <select asp-for="EditIndividualClientId" class="form-select" id="editEmpresaIndividualClientId">
+                                <option value="0">-- Sem Cliente Vinculado --</option>
+                                @foreach (var client in Model.AvailableIndividualClients)
+                                {
+                                    <option value="@client.Id">@client.Username</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Edit Agrupamento -->
     <div class="modal fade" id="modalEditAgrupamento" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -1195,6 +1325,22 @@
         modal.show();
     }
 
+    function openEditEmpresa(el) {
+        var id = el.getAttribute('data-id');
+        var name = el.getAttribute('data-name');
+        var address = el.getAttribute('data-address');
+        var clientId = el.getAttribute('data-client');
+
+        document.getElementById('editEmpresaId').value = id;
+        document.getElementById('editEmpresaName').value = name;
+        document.getElementById('editEmpresaAddress').value = address || '';
+        document.getElementById('editEmpresaIndividualClientId').value = clientId || 0;
+
+        var modalEl = document.getElementById('modalEditEmpresa');
+        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
     @* Notyf Notifications Logic *@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.notyfInitialized) return;
@@ -1260,6 +1406,7 @@
         const divAddress = document.getElementById('divEstabAddress');
         const divCoord = document.getElementById('divEstabCoordinator');
         const divProf = document.getElementById('divEstabProfessor');
+        const divIndClient = document.getElementById('divEstabIndividualClient');
         const nameInput = document.getElementById('NewEstabName');
         const searchParentInput = document.getElementById('searchParentInput');
 
@@ -1267,13 +1414,14 @@
         divAddress.style.display = 'none';
         divCoord.style.display = 'none';
         divProf.style.display = 'none';
+        if (divIndClient) divIndClient.style.display = 'none';
         parentSelect.innerHTML = '<option value="">-- Selecione --</option>';
         parentSelect.required = false;
 
         if (nameInput) {
             nameInput.placeholder = 'Ex: Escola Secundária X';
         }
-        
+
         if (searchParentInput) {
             searchParentInput.value = '';
             filterSelect(searchParentInput, 'estabParentSelect');
@@ -1316,6 +1464,7 @@
             parentSelect.required = true;
         } else if (type === 'Empresa') {
             divAddress.style.display = 'block';
+            if (divIndClient) divIndClient.style.display = 'block';
         }
     }
 </script>

@@ -65,6 +65,22 @@ namespace AspnetCoreStarter.Pages.Admin
             // Stock Empresa = central + com técnico (i.e., stock_empresa rows without agrupamento/escola).
             CountStockEmpresa = await _context.StockEmpresa.CountAsync(s => s.AgrupamentoId == null && s.SchoolId == null);
 
+            // 0. Cleanup: Normalize existing names in database (one-time logic per request is fine here)
+            var allStockRecords = await _context.StockEmpresa.Where(s => s.EquipmentName != null).ToListAsync();
+            bool dbChanged = false;
+            foreach (var s in allStockRecords)
+            {
+                var norm = NormalizeEquipmentName(s.EquipmentName);
+                if (s.EquipmentName != norm) { s.EquipmentName = norm; dbChanged = true; }
+            }
+            var allEquipInventory = await _context.Equipamentos.Where(e => e.Name != null).ToListAsync();
+            foreach (var e in allEquipInventory)
+            {
+                var norm = NormalizeEquipmentName(e.Name);
+                if (e.Name != norm) { e.Name = norm; dbChanged = true; }
+            }
+            if (dbChanged) await _context.SaveChangesAsync();
+
             // Load lookup lists for the modal
             AvailableAgrupamentos = await _context.Agrupamentos.ToListAsync();
             AvailableSchools = await _context.Schools.ToListAsync();
@@ -329,6 +345,43 @@ namespace AspnetCoreStarter.Pages.Admin
             return Page();
         }
 
+        private static string NormalizeEquipmentName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "Desconhecido";
+            
+            string normalized = name.Trim();
+            
+            // Map common plurals to singulars (Portuguese)
+            var pluralMaps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Computadores", "Computador" },
+                { "Monitores", "Monitor" },
+                { "Impressoras", "Impressora" },
+                { "Projetores", "Projetor" },
+                { "Televisores", "Televisão" },
+                { "Portáteis", "Portátil" },
+                { "Ratos", "Rato" },
+                { "Teclados", "Teclado" },
+                { "UPSs", "UPS" },
+                { "Switches", "Switch" },
+                { "Quadros Interativos", "Quadro Interativo" },
+                { "Mesas Interativas", "Mesa Interativa" }
+            };
+
+            if (pluralMaps.TryGetValue(normalized, out var singular))
+                return singular;
+
+            // Common suffix replacements if not in map
+            if (normalized.EndsWith("ores", StringComparison.OrdinalIgnoreCase)) 
+                return normalized.Substring(0, normalized.Length - 2); // Monitores -> Monitor
+            if (normalized.EndsWith("adores", StringComparison.OrdinalIgnoreCase))
+                return normalized.Substring(0, normalized.Length - 2); // Computadores -> Computador
+            if (normalized.EndsWith("s", StringComparison.OrdinalIgnoreCase) && !normalized.EndsWith("ss", StringComparison.OrdinalIgnoreCase) && normalized.Length > 4)
+                return normalized.Substring(0, normalized.Length - 1); // Generic plural-s removal, cautious
+
+            return normalized;
+        }
+
         private static string NormalizeStatus(string? raw)
         {
             return (raw ?? "").ToLower() switch
@@ -427,11 +480,13 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(name)) return RedirectToPage();
             if (quantity <= 0) quantity = 1;
 
+            string normalizedName = NormalizeEquipmentName(name);
+
             for (int i = 0; i < quantity; i++)
             {
                 var newStock = new StockEmpresa
                 {
-                    EquipmentName = name,
+                    EquipmentName = normalizedName,
                     Type = type,
                     Description = description,
                     IsAvailable = true,

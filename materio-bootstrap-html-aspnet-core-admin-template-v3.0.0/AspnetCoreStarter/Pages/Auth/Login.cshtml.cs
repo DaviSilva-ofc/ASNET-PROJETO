@@ -165,6 +165,7 @@ namespace AspnetCoreStarter.Pages.Auth
                         ) ENGINE=InnoDB;"); 
                 } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN id_empresa INT NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN nivel_urgencia VARCHAR(20) NULL;"); } catch { }
 
                 // Procurar por email ou username
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);

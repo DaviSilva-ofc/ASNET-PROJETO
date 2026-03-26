@@ -127,25 +127,46 @@
                     <label class="form-label fw-semibold">ID Utilizador</label>
                     <input type="number" asp-for="FilterId" class="form-control" placeholder="ID..." />
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">Nome</label>
                     <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por nome..." />
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-semibold">Email</label>
                     <input type="text" asp-for="FilterEmail" class="form-control" placeholder="Pesquisar por email..." />
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Agrupamento</label>
-                    <select asp-for="FilterAgrupamento" class="form-select">
-                        <option value="">-- Todos os Agrupamentos --</option>
-                        @foreach (var item in Model.Agrupamentos)
-                        {
-                            <option value="@item.Id">@item.Name</option>
-                        }
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Tipo de Cliente</label>
+                    <select asp-for="FilterType" class="form-select">
+                        <option value="">-- Todos os Tipos --</option>
+                        <option value="Diretor">Diretor</option>
+                        <option value="Coordenador">Coordenador</option>
+                        <option value="Professor">Professor</option>
+                        <option value="Cliente Individual">Cliente Individual</option>
                     </select>
                 </div>
-                <div class="col-md-1 d-flex gap-2">
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Agrupamento / Empresa</label>
+                    <select id="filterAgrupamentoEmpresa" class="form-select" name="_filter_group">
+                        <option value="">-- Todos --</option>
+                        <optgroup label="Agrupamentos">
+                            @foreach (var item in Model.Agrupamentos)
+                            {
+                                <option value="agr_@item.Id">@item.Name</option>
+                            }
+                        </optgroup>
+                        <optgroup label="Empresas">
+                            @foreach (var item in Model.Empresas)
+                            {
+                                <option value="emp_@item.Id">@item.Name</option>
+                            }
+                        </optgroup>
+                    </select>
+                    <!-- Hidden fields to hold the resolved values -->
+                    <input type="hidden" asp-for="FilterAgrupamento" id="hiddenFilterAgrupamento" />
+                    <input type="hidden" asp-for="FilterEmpresa" id="hiddenFilterEmpresa" />
+                </div>
+                <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary btn-icon" title="Filtrar">🔍</button>
                     <a asp-page="./Clients" class="btn btn-outline-secondary btn-icon" title="Limpar Filtros">❌</a>
                 </div>
@@ -153,7 +174,10 @@
         </div>
     </div>
 
+
     <!-- Diretores Table -->
+    @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Diretor")
+    {
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Diretores</h5>
@@ -203,8 +227,11 @@
             </table>
         </div>
     </div>
+    }
 
     <!-- Coordenadores Table -->
+    @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Coordenador")
+    {
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Coordenadores</h5>
@@ -254,8 +281,11 @@
             </table>
         </div>
     </div>
+    }
 
     <!-- Professores Table -->
+    @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Professor")
+    {
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Professores</h5>
@@ -305,8 +335,11 @@
             </table>
         </div>
     </div>
+    }
 
     <!-- Clientes Independentes Table -->
+    @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Cliente Individual")
+    {
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Clientes Independentes</h5>
@@ -356,6 +389,7 @@
             </table>
         </div>
     </div>
+    }
 
     <!-- Modal Adicionar Utilizador (Unificado) -->
     <div class="modal fade" id="modalAddUser" tabindex="-1" aria-hidden="true">
@@ -541,6 +575,33 @@
 
 @section PageScripts {
 <script>
+    // Combined Agrupamento/Empresa filter: resolve to correct hidden fields before submit
+    document.addEventListener('DOMContentLoaded', function () {
+        var combinedSelect = document.getElementById('filterAgrupamentoEmpresa');
+        if (combinedSelect) {
+            // Restore selection on page load from hidden fields
+            var hiddenAgr = document.getElementById('hiddenFilterAgrupamento');
+            var hiddenEmp = document.getElementById('hiddenFilterEmpresa');
+            if (hiddenAgr && hiddenAgr.value) {
+                combinedSelect.value = 'agr_' + hiddenAgr.value;
+            } else if (hiddenEmp && hiddenEmp.value) {
+                combinedSelect.value = 'emp_' + hiddenEmp.value;
+            }
+
+            // Before form submit, parse the selected value and populate hidden fields
+            combinedSelect.closest('form').addEventListener('submit', function () {
+                var val = combinedSelect.value;
+                hiddenAgr.value = '';
+                hiddenEmp.value = '';
+                if (val.startsWith('agr_')) {
+                    hiddenAgr.value = val.replace('agr_', '');
+                } else if (val.startsWith('emp_')) {
+                    hiddenEmp.value = val.replace('emp_', '');
+                }
+            });
+        }
+    });
+
     // Filter select options by search input
     function filterSelect(input, selectId) {
         var filter = input.value.toLowerCase();

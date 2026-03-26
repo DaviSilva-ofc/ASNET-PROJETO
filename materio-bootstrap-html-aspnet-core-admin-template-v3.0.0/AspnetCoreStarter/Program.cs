@@ -15,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // CONFIGURAR E-MAIL
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddTransient<IStockService, StockService>();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
