@@ -179,22 +179,6 @@
         </div>
     }
 
-    <!-- Creator Menu Card -->
-    <div class="card mb-4 border-primary shadow-sm">
-        <div class="card-body p-3">
-            <div class="d-flex flex-wrap align-items-center justify-content-between">
-                <h5 class="mb-2 mb-md-0 fw-bold text-primary"><i class="icon-base ri-tools-line me-2"></i>Gestão da Infraestrutura</h5>
-                <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-info btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalBloco">
-                        <i class="icon-base ri-add-line me-1"></i> Bloco
-                    </button>
-                    <button class="btn btn-warning btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSala">
-                        <i class="icon-base ri-add-line me-1"></i> Sala
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="row">
         @foreach (var client in Model.Clients)
@@ -292,7 +276,7 @@
                                                                                             data-school="@schoolVm.School.Id"
                                                                                             onclick="event.stopPropagation(); openEditBloco(this)"
                                                                                             title="Editar Bloco">
-                                                                                        <i class="ri-edit-line small"></i>
+                                                                                        ✏️
                                                                                     </button>
                                                                                     <form method="post" asp-page-handler="DeleteBloco" asp-route-id="@bloc.Id" 
                                                                                           onsubmit="return confirm('Excluir este bloco?');" 
@@ -320,7 +304,7 @@
                                                                                                         data-prof="@room.ResponsibleProfessorId"
                                                                                                         onclick="event.stopPropagation(); openEditSala(this)"
                                                                                                         title="Editar Sala">
-                                                                                                    <i class="ri-edit-line small"></i>
+                                                                                                    ✏️
                                                                                                 </button>
                                                                                                 <form method="post" asp-page-handler="DeleteSala" asp-route-id="@room.Id" 
                                                                                                       onsubmit="return confirm('Excluir esta sala?');" 
@@ -329,23 +313,46 @@
                                                                                                         🗑️
                                                                                                     </button>
                                                                                                 </form>
-                                                                                                <a asp-page="./Equipment" asp-route-roomId="@room.Id" class="btn btn-sm btn-icon btn-outline-info border-0 ms-1" title="Ver Equipamentos">
+                                                                                                <a asp-page="./Equipment" asp-route-FilterRoomId="@room.Id" class="btn btn-sm btn-icon btn-outline-info border-0 ms-1" title="Ver Equipamentos">
                                                                                                     <i class="ri-computer-line small"></i>
                                                                                                 </a>
                                                                                             </div>
                                                                                         </div>
                                                                                         
-                                                                                        <div id="tree-equips-@room.Id" class="collapse">
-                                                                                            @if (room.Equipments != null && room.Equipments.Any())
-                                                                                            {
-                                                                                                @foreach (var equip in room.Equipments)
+                                                                                            <div id="tree-equips-@room.Id" class="collapse">
+                                                                                                @if (room.Equipments != null && room.Equipments.Any())
                                                                                                 {
-                                                                                                    <div class="tree-node equip-node ms-4 mt-1 small">
-                                                                                                        <i class="ri-computer-line me-1"></i> @equip.Name 
-                                                                                                    </div>
+                                                                                                    var groupedEquips = room.Equipments
+                                                                                                        .GroupBy(e => e.Name)
+                                                                                                        .Select(g => new { Name = g.Key, Count = g.Count() })
+                                                                                                        .ToList();
+
+                                                                                                    foreach (var g in groupedEquips)
+                                                                                                    {
+                                                                                                        var label = g.Name;
+                                                                                                        if (g.Count > 1)
+                                                                                                        {
+                                                                                                            var pluralLabel = label;
+                                                                                                            if (label.EndsWith("r") || label.EndsWith("z") || label.EndsWith("n"))
+                                                                                                            {
+                                                                                                                pluralLabel += "es";
+                                                                                                            }
+                                                                                                            else if (label.EndsWith("l"))
+                                                                                                            {
+                                                                                                                pluralLabel = label.Substring(0, label.Length - 1) + "is";
+                                                                                                            }
+                                                                                                            else if (!label.EndsWith("s"))
+                                                                                                            {
+                                                                                                                pluralLabel += "s";
+                                                                                                            }
+                                                                                                            label = $"{pluralLabel} ({g.Count})";
+                                                                                                        }
+                                                                                                        <a asp-page="./Equipment" asp-route-FilterRoomId="@room.Id" asp-route-FilterName="@g.Name" class="tree-node equip-node ms-4 mt-1 small text-decoration-none d-block">
+                                                                                                            <i class="ri-computer-line me-1"></i> @label 
+                                                                                                        </a>
+                                                                                                    }
                                                                                                 }
-                                                                                            }
-                                                                                            else
+                                                                                                else
                                                                                             {
                                                                                                 <div class="ms-4 mt-1 small italic text-muted">
                                                                                                     Sem equipamentos
@@ -374,68 +381,6 @@
         }
     </div>
 
-    <!-- Modals -->
-    <div class="modal fade" id="modalBloco" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-page-handler="AddBloco" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Novo Bloco</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nome do Bloco</label>
-                        <input type="text" asp-for="NewBlocoName" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Escola</label>
-                        <select asp-for="SelectedSchoolId" class="form-select" required>
-                            @foreach (var client in Model.Clients) {
-                                @foreach (var schoolVm in client.Schools) {
-                                    <option value="@schoolVm.School.Id">@schoolVm.School.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalSala" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-page-handler="AddSala" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Nova Sala</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nome da Sala</label>
-                        <input type="text" asp-for="NewSalaName" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Bloco</label>
-                        <select asp-for="SelectedBlocoId" class="form-select" required>
-                            @foreach (var client in Model.Clients) {
-                                @foreach (var schoolVm in client.Schools) {
-                                    @foreach (var bloc in schoolVm.Blocos) {
-                                        <option value="@bloc.Id">@schoolVm.School.Name - @bloc.Name</option>
-                                    }
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Edit Modals -->
     <div class="modal fade" id="modalEditBloco" tabindex="-1" aria-hidden="true">

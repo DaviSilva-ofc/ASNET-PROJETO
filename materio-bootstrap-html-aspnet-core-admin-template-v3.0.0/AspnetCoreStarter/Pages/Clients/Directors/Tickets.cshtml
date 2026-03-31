@@ -26,23 +26,35 @@
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Solicitações de Suporte @(Model.MyAgrupamentoName != null ? $"- {Model.MyAgrupamentoName}" : "")</h5>
-            <div class="d-flex gap-3 align-items-center">
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoTicketGlobal">
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    <i class="ri-filter-3-line"></i> Filtros
+                </button>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoTicketGlobal">
                     <i class='bx bx-plus-circle me-1'></i> Novo Ticket
                 </button>
-                <form method="get" class="d-flex gap-2">
-                    <select name="FilterStatus" class="form-select form-select-sm" style="width: auto;">
-                        <option value="">Todos os Estados</option>
-                        <option value="Pedido" selected="@(Model.FilterStatus == "Pedido" ? "selected" : null)">Pedido</option>
-                        <option value="Pendente" selected="@(Model.FilterStatus == "Pendente" ? "selected" : null)">Pendente</option>
-                        <option value="Em Resolução" selected="@(Model.FilterStatus == "Em Resolução" ? "selected" : null)">Em Resolução</option>
-                        <option value="Fechado" selected="@(Model.FilterStatus == "Fechado" ? "selected" : null)">Fechado</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-outline-primary">Filtrar</button>
-                    <a asp-page="./Tickets" class="btn btn-sm btn-outline-secondary">Limpar</a>
-                </form>
             </div>
         </div>
+
+        @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados" || !string.IsNullOrEmpty(Model.FilterArticle) || !string.IsNullOrEmpty(Model.FilterType))
+        {
+            <div class="card-body py-2">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0" role="alert" style="padding: 0.6rem 1.2rem; background-color: #e7f3ff;">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-filter-3-line me-2 text-primary"></i>
+                        <span class="small text-primary fw-medium">
+                            Filtros ativos: 
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { <span class="badge bg-white text-primary border me-1">Estado: @Model.FilterStatus</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterArticle)) { <span class="badge bg-white text-primary border me-1">Artigo: @Model.FilterArticle</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterType)) { <span class="badge bg-white text-primary border me-1">Tipo: @Model.FilterType</span> }
+                        </span>
+                    </div>
+                    <a asp-page="./Tickets" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="ri-refresh-line me-1 small"></i> Limpar Filtros
+                    </a>
+                </div>
+            </div>
+        }
         <div class="table-responsive text-nowrap">
             <table class="table table-hover">
                 <thead>
@@ -77,7 +89,7 @@
                                 <td>
                                     @if (!string.IsNullOrEmpty(t.Level))
                                     {
-                                        <span class="badge @(t.Level.Contains("Alto") || t.Level.Contains("Crítico") ? "bg-label-danger" : (t.Level.Contains("Média") ? "bg-label-warning" : "bg-label-info"))">
+                                        <span class="badge @(t.Level.Contains("Alto") || t.Level.Contains("Extremo") ? "bg-label-danger" : (t.Level.Contains("Médio") ? "bg-label-warning" : "bg-label-info"))">
                                             @t.Level
                                         </span>
                                     }
@@ -90,10 +102,9 @@
                                     @{
                                         var statusClass = t.Status switch
                                         {
-                                            "Pedido" => "bg-label-primary",
                                             "Pendente" => "bg-label-warning",
                                             "Em Resolução" => "bg-label-info",
-                                            "Fechado" => "bg-label-success",
+                                            "Concluído" => "bg-label-success",
                                             _ => "bg-label-secondary"
                                         };
                                     }
@@ -111,79 +122,84 @@
 
 <!-- Modal Novo Ticket Global -->
 <div class="modal fade" id="modalNovoTicketGlobal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <form method="post" asp-page-handler="CreateTicket" class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Novo Ticket de Suporte</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-3">
-                    <!-- Agrupamento -->
-                    <div class="col-md-12">
-                        <label class="form-label">Agrupamento</label>
-                        <input type="text" class="form-control" value="@(Model.Agrupamento?.Name ?? "N/A")" readonly disabled />
-                    </div>
-
-                    <!-- Localização -->
-                    <div class="col-md-4">
-                        <label class="form-label">Escola</label>
-                        <select name="schoolId" id="ticketSchool" class="form-select" required onchange="filterTicketBlocks()">
-                            <option value="">Selecione a Escola</option>
-                            @if(Model.Schools != null) {
-                                foreach (var school in Model.Schools)
-                                {
-                                    <option value="@school.Id">@school.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Bloco</label>
-                        <select name="blockId" id="ticketBlock" class="form-select" required onchange="filterTicketRooms()">
-                            <option value="">Selecione o Bloco</option>
-                            @if(Model.Blocos != null) {
-                                foreach (var bloco in Model.Blocos)
-                                {
-                                    <option value="@bloco.Id" data-esc="@bloco.SchoolId" style="display:none;">@bloco.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Sala</label>
-                        <select name="roomId" id="ticketRoom" class="form-select" required>
-                            <option value="">Selecione a Sala</option>
-                            @if(Model.Salas != null) {
-                                foreach (var sala in Model.Salas)
-                                {
-                                    <option value="@sala.Id" data-blc="@sala.BlockId" style="display:none;">@sala.Name</option>
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <!-- Equipamento & Urgência -->
-                    <div class="col-md-6">
-                        <label class="form-label">Tipo de Equipamento</label>
-                        <select name="equipmentType" class="form-select" required>
-                            <option value="">Selecione o Tipo</option>
-                            @foreach (var type in Model.EquipmentTypes)
+                <div class="mb-3">
+                    <label class="form-label">Equipamento Avariado</label>
+                    @if (Model.eqId.HasValue)
+                    {
+                        <input type="hidden" asp-for="NewTicket.EquipamentoId" />
+                        <select id="selectEquipamentoDisabled" class="form-select bg-light" disabled>
+                            @foreach (var eq in Model.AvailableEquipment)
                             {
-                                <option value="@type">@type</option>
+                                <option value="@eq.Id" data-type="@eq.Type" data-school="@eq.Room?.Block?.SchoolId" selected="@(eq.Id == Model.eqId ? "selected" : null)">
+                                    @eq.Name (@eq.SerialNumber) - @eq.Type
+                                </option>
                             }
-                            <option value="Outro">Outro</option>
                         </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Nível de Urgência</label>
-                        <select name="level" class="form-select" required>
-                            <option value="Baixa">Baixa</option>
-                            <option value="Normal" selected>Normal</option>
-                            <option value="Alta">Alta</option>
-                            <option value="Crítico">Crítico</option>
+                    }
+                    else
+                    {
+                        <select asp-for="NewTicket.EquipamentoId" id="selectEquipamento" class="form-select" required onchange="updatePriorityLevels()">
+                            <option value="">Selecione um equipamento...</option>
+                            @foreach (var eq in Model.AvailableEquipment)
+                            {
+                                <option value="@eq.Id" data-type="@eq.Type" data-school="@eq.Room?.Block?.SchoolId">
+                                    @eq.Name (@eq.SerialNumber) - @eq.Type
+                                </option>
+                            }
                         </select>
-                    </div>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Escola / Local</label>
+                    @if (Model.eqId.HasValue)
+                    {
+                        <input type="hidden" asp-for="NewTicket.SchoolId" />
+                        <select class="form-select bg-light" disabled>
+                            @foreach (var s in Model.Schools)
+                            {
+                                <option value="@s.Id" selected="@(s.Id == Model.NewTicket.SchoolId ? "selected" : null)">@s.Name</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <select asp-for="NewTicket.SchoolId" id="selectSchool" class="form-select" required>
+                            <option value="">Selecione a escola...</option>
+                            @foreach (var s in Model.Schools)
+                            {
+                                <option value="@s.Id">@s.Name</option>
+                            }
+                        </select>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nível de Prioridade</label>
+                    <select asp-for="NewTicket.Level" id="selectPriority" class="form-select" required>
+                        <option value="Baixo">Baixo</option>
+                        <option value="Médio">Médio</option>
+                        <option value="Alto">Alto</option>
+                        <option value="Extremo">Extremo</option>
+                    </select>
+                    <div id="priorityHint" class="form-text text-muted small mt-1"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Período Preferencial</label>
+                    <select asp-for="NewTicket.Period" class="form-select" required>
+                        <option value="Manhã">Manhã</option>
+                        <option value="Tarde" selected>Tarde</option>
+                        <option value="Integral">Integral</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descrição do Problema</label>
+                    <textarea asp-for="NewTicket.Description" class="form-control" rows="3" required></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -193,31 +209,197 @@
         </form>
     </div>
 </div>
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Filtrar Tickets</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Estado do Ticket</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="Todos os Estados">Todos os Estados</option>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Em Resolução">Em Resolução</option>
+                                <option value="Concluído">Concluído</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Artigo</label>
+                            <select id="filterArtigo" asp-for="FilterArticle" class="form-select" onchange="filterTypesByArtigo()">
+                                <option value="">Todos</option>
+                                <option value="Computador">Computadores</option>
+                                <option value="Monitor">Monitores</option>
+                                <option value="Impressora">Impressoras</option>
+                                <option value="Projetor">Projetores</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Componente">Componentes</option>
+                                <option value="Periférico">Periféricos</option>
+                                <option value="Quadro Interativo">Quadros Interativos</option>
+                                <option value="Outro">Outros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Tipo</label>
+                            <select id="filterTipo" asp-for="FilterType" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Desktop" data-art="Computador">Desktop</option>
+                                <option value="Portátil" data-art="Computador">Portátil</option>
+                                <option value="Monitor" data-art="Monitor">Monitor</option>
+                                <option value="Motherboard" data-art="Componente">Motherboard</option>
+                                <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                                <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                                <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                                <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                                <option value="Teclado" data-art="Periférico">Teclado</option>
+                                <option value="Rato" data-art="Periférico">Rato</option>
+                                <option value="Impressora" data-art="Impressora">Impressora</option>
+                                <option value="Projetor" data-art="Projetor">Projetor</option>
+                                <option value="Router" data-art="Networking">Router</option>
+                                <option value="Switch" data-art="Networking">Switch</option>
+                                <option value="Outro" data-art="Outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @section PageScripts {
 <script>
-    // ===== Cascade Filtering for Tickets =====
-    function filterTicketBlocks() {
-        const escId = document.getElementById('ticketSchool').value;
-        const blcSelect = document.getElementById('ticketBlock');
-        const options = blcSelect.querySelectorAll('option:not([value=""])');
+    function filterTypesByArtigo() {
+        const artName = document.getElementById('filterArtigo').value;
+        const tipoSelect = document.getElementById('filterTipo');
+        const options = tipoSelect.querySelectorAll('option');
         
-        blcSelect.value = "";
+        tipoSelect.value = "";
+        
         options.forEach(opt => {
-            opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
+            if (opt.value === "") return;
+            const optArts = (opt.getAttribute('data-art') || "").split('|');
+            if (artName === "" || optArts.includes(artName)) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
         });
-        filterTicketRooms(); // cascade reset
     }
 
-    function filterTicketRooms() {
-        const blcId = document.getElementById('ticketBlock').value;
-        const salaSelect = document.getElementById('ticketRoom');
-        const options = salaSelect.querySelectorAll('option:not([value=""])');
+    function updatePriorityLevels() {
+        const selectEq = document.getElementById('selectEquipamento') || document.getElementById('selectEquipamentoDisabled');
+        const selectPri = document.getElementById('selectPriority');
+        const hint = document.getElementById('priorityHint');
         
-        salaSelect.value = "";
-        options.forEach(opt => {
-            opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
-        });
+        // Priority 1: Use server-side context if we are in a specific equipment flow
+        const eqId = "@Model.eqId";
+        if (eqId) {
+            @if (Model.eqId.HasValue) {
+                var eq = Model.AvailableEquipment.FirstOrDefault(e => e.Id == Model.eqId.Value);
+                if (eq != null) {
+                    @:processPriority("@eq.Type");
+                    @:return;
+                }
+            }
+        }
+
+        // Priority 2: Scrape from dropdown
+        let selectedOption = null;
+        if (selectEq && selectEq.selectedIndex !== -1) {
+            selectedOption = selectEq.options[selectEq.selectedIndex];
+        }
+        const type = selectedOption ? selectedOption.getAttribute('data-type') : '';
+        const schoolId = selectedOption ? selectedOption.getAttribute('data-school') : '';
+
+        // Sync and lock school dropdown
+        const selectSchool = document.getElementById('selectSchool');
+        if (schoolId && selectSchool) {
+            selectSchool.value = schoolId;
+            selectSchool.style.pointerEvents = "none";
+            selectSchool.style.backgroundColor = "#f8f9fa";
+            selectSchool.style.opacity = "0.7";
+        } else if (selectSchool) {
+            selectSchool.style.pointerEvents = "auto";
+            selectSchool.style.backgroundColor = "";
+            selectSchool.style.opacity = "1";
+        }
+
+        processPriority(type);
     }
+
+    function processPriority(type) {
+        const selectPri = document.getElementById('selectPriority');
+        const hint = document.getElementById('priorityHint');
+        console.log("Processing priority for type:", type);
+
+        if (!selectPri) return;
+
+        // Reset all options
+        for (let i = 0; i < selectPri.options.length; i++) {
+            selectPri.options[i].disabled = false;
+        }
+        hint.innerText = "";
+
+        if (!type) return;
+        const typeLower = type.toLowerCase().trim();
+
+        const disableByValue = (val) => {
+            for (let i = 0; i < selectPri.options.length; i++) {
+                if (selectPri.options[i].value === val) selectPri.options[i].disabled = true;
+            }
+        };
+
+        if (typeLower.includes('aio') || typeLower.includes('computador') || typeLower.includes('quadro interativo') || typeLower.includes('smartboard') || typeLower.includes('networking') || typeLower.includes('switch') || typeLower.includes('router') || typeLower.includes('access point') || typeLower.includes('firewall')) {
+            // Médio/Alto
+            if (selectPri.value === 'Baixo' || selectPri.value === 'Extremo') selectPri.value = 'Médio';
+            disableByValue('Baixo');
+            disableByValue('Extremo');
+            hint.innerText = "Prioridade: Médio / Alto.";
+        } else if (typeLower.includes('impressora') || typeLower.includes('monitor') || typeLower.includes('portátil') || typeLower.includes('laptop') || typeLower.includes('projetor') || typeLower.includes('televisao') || typeLower.includes('tv')) {
+            // Baixo/Médio
+            if (selectPri.value === 'Alto' || selectPri.value === 'Extremo') selectPri.value = 'Médio';
+            disableByValue('Alto');
+            disableByValue('Extremo');
+            hint.innerText = "Prioridade: Baixo / Médio.";
+        } else if (typeLower.includes('mesa interativa')) {
+            // Médio only
+            selectPri.value = 'Médio';
+            disableByValue('Baixo');
+            disableByValue('Alto');
+            disableByValue('Extremo');
+            hint.innerText = "Prioridade: Médio.";
+        } else if (typeLower.includes('servidor') || typeLower.includes('storage') || typeLower.includes('nas')) {
+            // Critical Infra fallback: Alto/Extremo
+            if (selectPri.value === 'Baixo' || selectPri.value === 'Médio') selectPri.value = 'Alto';
+            disableByValue('Baixo');
+            disableByValue('Médio');
+            hint.innerText = "Infraestrutura crítica: Alto / Extremo.";
+        }
+
+        console.log("Allowed priorities updated for:", typeLower);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-open modal if context is provided
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('eqId')) {
+            const myModalElement = document.getElementById('modalNovoTicketGlobal');
+            const myModal = new bootstrap.Modal(myModalElement);
+            myModal.show();
+            // Trigger priority check after modal is shown
+            myModalElement.addEventListener('shown.bs.modal', function () {
+                updatePriorityLevels();
+            });
+        }
+    });
 </script>
 }

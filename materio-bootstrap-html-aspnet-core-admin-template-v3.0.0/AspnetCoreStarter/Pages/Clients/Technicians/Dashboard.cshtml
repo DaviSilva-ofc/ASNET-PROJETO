@@ -128,14 +128,20 @@
                                 <tr>
                                     <td><strong>@(t.School?.Name ?? "N/A")</strong></td>
                                     <td>
-                                        <span class="badge @(t.Level?.Contains("Alto") == true ? "bg-label-danger" : "bg-label-info")">
+                                        <span class="badge @(t.Level?.Contains("Alto") == true || t.Level?.Contains("Extremo") == true ? "bg-label-danger" : (t.Level?.Contains("Médio") == true ? "bg-label-warning" : "bg-label-info"))">
                                             @t.Level
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge @(t.Status == "Fechado" ? "bg-label-success" : "bg-label-warning")">
-                                            @t.Status
-                                        </span>
+                                        @{
+                                            var stClass = t.Status switch {
+                                                "Pendente" => "bg-label-warning",
+                                                "Em Resolução" => "bg-label-info",
+                                                "Concluído" => "bg-label-success",
+                                                _ => "bg-label-secondary"
+                                            };
+                                        }
+                                        <span class="badge @stClass">@t.Status</span>
                                     </td>
                                     <td>@t.CreatedAt.ToString("dd/MM")</td>
                                 </tr>

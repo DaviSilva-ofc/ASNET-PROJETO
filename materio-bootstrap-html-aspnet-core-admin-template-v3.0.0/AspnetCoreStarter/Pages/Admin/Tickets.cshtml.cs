@@ -24,6 +24,15 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty(SupportsGet = true)]
         public string? FilterStatus { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public int? eqId { get; set; }
+
+        [BindProperty]
+        public Ticket NewTicket { get; set; } = new();
+
+        public List<School> AvailableSchools { get; set; } = new();
+        public List<Equipamento> AvailableEquipment { get; set; } = new();
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -42,6 +51,25 @@ namespace AspnetCoreStarter.Pages.Admin
             }
 
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+
+            AvailableSchools = await _context.Schools.OrderBy(s => s.Name).ToListAsync();
+            AvailableEquipment = await _context.Equipamentos
+                .Include(e => e.Room)
+                .ThenInclude(r => r.Block)
+                .Where(e => e.Status == "Avariado")
+                .OrderBy(e => e.Name)
+                .ToListAsync();
+
+            if (eqId.HasValue)
+            {
+                NewTicket.EquipamentoId = eqId.Value;
+                var eq = await _context.Equipamentos.Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).FirstOrDefaultAsync(e => e.Id == eqId.Value);
+                if (eq != null)
+                {
+                    NewTicket.SchoolId = eq.Room?.Block?.SchoolId;
+                    NewTicket.Description = $"Reparação de {eq.Name} (S/N: {eq.SerialNumber})";
+                }
+            }
 
             return Page();
         }
@@ -64,6 +92,28 @@ namespace AspnetCoreStarter.Pages.Admin
             }
 
             return RedirectToPage(new { FilterStatus = FilterStatus });
+        }
+
+        public async Task<IActionResult> OnPostCreateAsync()
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Falta preencher campos obrigatórios.";
+                return RedirectToPage();
+            }
+
+            var userId = HttpContext.Session.GetString("UserId");
+            if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int adminId))
+            {
+                NewTicket.AdminId = adminId;
+            }
+
+            NewTicket.Status = "Pendente";
+            _context.Tickets.Add(NewTicket);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Ticket criado com sucesso!";
+            return RedirectToPage();
         }
     }
 }

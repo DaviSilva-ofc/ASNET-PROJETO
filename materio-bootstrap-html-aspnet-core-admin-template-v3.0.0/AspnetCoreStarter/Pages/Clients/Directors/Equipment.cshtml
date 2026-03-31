@@ -12,7 +12,7 @@
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class='bx bx-check-circle me-1'></i> @Model.SuccessMessage
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
@@ -21,23 +21,37 @@
             <h5 class="mb-0">Inventário de Equipamentos</h5>
             <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
-                    🔍 Pesquisa e Filtros
+                    <i class="ri-filter-3-line me-1"></i> Filtros
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">
+                    <i class="ri-add-line me-1"></i> Novo Equipamento
                 </button>
             </div>
         </div>
         @{
+            var hasSpecificLocationFilter = Model.ActiveFilterRoom != null || Model.ActiveFilterBloco != null || Model.ActiveFilterEscola != null;
+            var hasAnyFilter = !string.IsNullOrEmpty(Model.FilterName) || !string.IsNullOrEmpty(Model.FilterType) || !string.IsNullOrEmpty(Model.FilterStatus) || hasSpecificLocationFilter;
+            
             var activeFilterText = "";
-            if (Model.ActiveFilterRoom != null) activeFilterText = $"sala: {Model.ActiveFilterRoom.Name}";
-            else if (Model.ActiveFilterBloco != null) activeFilterText = $"bloco: {Model.ActiveFilterBloco.Name}";
-            else if (Model.ActiveFilterEscola != null) activeFilterText = $"escola: {Model.ActiveFilterEscola.Name}";
-            else if (Model.ActiveFilterAgrupamento != null) activeFilterText = $"agrupamento: {Model.ActiveFilterAgrupamento.Name}";
+            if (Model.ActiveFilterRoom != null) activeFilterText = $"Sala: {Model.ActiveFilterRoom.Name}";
+            else if (Model.ActiveFilterBloco != null) activeFilterText = $"Bloco: {Model.ActiveFilterBloco.Name}";
+            else if (Model.ActiveFilterEscola != null) activeFilterText = $"Escola: {Model.ActiveFilterEscola.Name}";
         }
-        @if (!string.IsNullOrEmpty(activeFilterText))
+        @if (hasAnyFilter)
         {
-            <div class="card-body">
-                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert">
-                    <span>A visualizar equipamentos do <strong>@activeFilterText</strong></span>
-                    <a asp-page="./Equipment" class="btn btn-sm btn-info border-1 border-white">Limpar Filtro</a>
+            <div class="card-body border-top py-2 bg-light">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert" style="padding: 0.5rem 1rem;">
+                    <span class="small">
+                        <i class="ri-information-line me-1"></i>
+                        Filtros ativos: 
+                        <strong>
+                            @(!string.IsNullOrEmpty(Model.FilterName) ? $"Artigo: {Model.FilterName}, " : "")
+                            @(!string.IsNullOrEmpty(Model.FilterType) ? $"Tipo: {Model.FilterType}, " : "")
+                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}, " : "")
+                            @(!string.IsNullOrEmpty(activeFilterText) ? activeFilterText : "")
+                        </strong>
+                    </span>
+                    <a asp-page="./Equipment" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
                 </div>
             </div>
         }
@@ -48,17 +62,16 @@
                         <th>Artigo</th>
                         <th>Tipo</th>
                         <th>Nº Série</th>
+                        <th>Localização</th>
                         <th>Estado</th>
-                        <th>Localização (Sala)</th>
-                        <th>Escola</th>
-                        <th>Ações</th>
+                        <th class="px-3" style="width: 1px; white-space: nowrap; min-width: 160px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (Model.Equipments == null || !Model.Equipments.Any())
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-4">Nenhum equipamento encontrado.</td>
+                            <td colspan="6" class="text-center py-4 text-muted">Nenhum equipamento encontrado.</td>
                         </tr>
                     }
                     else
@@ -70,31 +83,68 @@
                                 <td>@item.Type</td>
                                 <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
                                 <td>
-                                    @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Indisponivel")
+                                    @if (item.Room != null)
                                     {
-                                        <span class="badge bg-label-danger">Indisponível</span>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-semibold">@item.Room.Name (@item.Room.Block?.Name)</span>
+                                            <small class="text-muted">@item.Room.Block?.School?.Name</small>
+                                        </div>
                                     }
-                                    else if (item.Status == "Em uso" || item.Status == "Em Uso")
+                                    else if (item.Empresa != null)
                                     {
-                                        <span class="badge bg-label-warning">Em uso</span>
+                                        <span class="text-warning"><i class="ri-building-4-line me-1"></i> @item.Empresa.Name</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-label-success">Disponível</span>
+                                        <span class="text-muted">N/A</span>
                                     }
                                 </td>
-                                <td>@item.Room?.Name (@item.Room?.Block?.Name)</td>
-                                <td>@item.Room?.Block?.School?.Name</td>
                                 <td>
-                                    @if (item.Status == "Avariado")
+                                    @if (item.Status != null && (item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Disponível", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Funcionando", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Em uso", StringComparison.OrdinalIgnoreCase)))
                                     {
-                                        <button class="btn btn-sm btn-danger" 
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#modalSolicitarTicket" 
-                                                onclick="setEquipmentId(@item.Id, '@item.Name', '@item.Type')">
-                                            <i class='bx bx-plus-circle me-1'></i> Solicitar Ticket
-                                        </button>
+                                        <span class="badge bg-label-success">A funcionar</span>
                                     }
+                                    else if (item.Status != null && (item.Status.Trim().Equals("Avariado", StringComparison.OrdinalIgnoreCase) || 
+                                             item.Status.Trim().Equals("Indisponível", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <span class="badge bg-label-danger">Avariado</span>
+                                    }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-warning">Em reparo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
+                                    }
+                                </td>
+                                <td class="px-3" style="width: 1px; white-space: nowrap;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (item.Status == "Em reparo")
+                                        {
+                                            <span class="text-muted small ps-2"><i class="ri-settings-line me-1"></i> Em Manutenção</span>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
+                                                @if (item.Status == "Avariado")
+                                                {
+                                                    <button type="submit" class="btn btn-sm text-success p-1" title="Marcar como A funcionar"><i class="ri-check-line"></i> A funcionar</button>
+                                                    <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary p-1" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
+                                                }
+                                                else
+                                                {
+                                                    <button type="submit" class="btn btn-sm text-warning p-1" title="Marcar como Avariado"><i class="ri-error-warning-line"></i> Avariar</button>
+                                                }
+                                            </form>
+                                        }
+                                        <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');" style="display:inline-block;">
+                                            <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar"><i class="ri-delete-bin-line"></i> Excluir</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -104,56 +154,204 @@
         </div>
     </div>
 
+    <!-- Modal Novo Equipamento -->
+    <div class="modal fade" id="modalEquipamento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="Add" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Registar Equipamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Artigo</label>
+                        <select asp-for="NewEquipment.Name" id="regArtigo" class="form-select" required onchange="updateSpecificTypes();">
+                            <option value="">Selecione o artigo...</option>
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Componentes">Componentes</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Quadros Interativos">Quadros Interativos</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Tipo Específico</label>
+                        <select asp-for="NewEquipment.Type" id="regTipo" class="form-select" required>
+                            <option value="">Selecione o tipo...</option>
+                            <option value="Desktop" data-artigo="Computadores">Desktop</option>
+                            <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                            <option value="Monitor" data-artigo="Monitores">Monitor</option>
+                            <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
+                            <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
+                            <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
+                            <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+                            <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
+                            <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+                            <option value="Rato" data-artigo="Periféricos">Rato</option>
+                            <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                            <option value="Projetor" data-artigo="Projetores">Projetor</option>
+                            <option value="Router" data-artigo="Networking">Router</option>
+                            <option value="Switch" data-artigo="Networking">Switch</option>
+                            <option value="Outro" data-artigo="Outros">Outro</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold small">Marca</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar marca..." oninput="filterSelect(this, 'regMarca')" />
+                                <select asp-for="NewEquipment.Brand" id="regMarca" class="form-select" onchange="updateModels()">
+                                    <option value="">Selecione a marca...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold small">Modelo</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar modelo..." oninput="filterSelect(this, 'regModelo')" />
+                                <select asp-for="NewEquipment.Model" id="regModelo" class="form-select">
+                                    <option value="">Selecione o modelo...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Nº Série</label>
+                        <input type="text" asp-for="NewEquipment.SerialNumber" class="form-control" required />
+                    </div>
+
+                    @* Hidden fields for location defaults since Directors only use Escola *@
+                    <input type="hidden" asp-for="LocationType" id="hdnLocationType" value="escola" />
+
+                    <div id="divLocEscola">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Escola</label>
+                            <select id="regEscola" class="form-select" onchange="regFilterBlocos()">
+                                <option value="">Selecione a escola...</option>
+                                @foreach (var esc in Model.AvailableEscolas)
+                                {
+                                    <option value="@esc.Id">@esc.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-semibold small">Bloco</label>
+                            <select id="regBloco" class="form-select" onchange="regFilterSalas()">
+                                <option value="">Selecione o bloco...</option>
+                                @foreach (var blc in Model.AvailableBlocos)
+                                {
+                                    <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-semibold small">Sala</label>
+                            <select id="regSala" asp-for="NewEquipment.RoomId" class="form-select">
+                                <option value="">Selecione a sala...</option>
+                                @foreach (var sala in Model.Rooms)
+                                {
+                                    <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @* Empresa location removed for Directors *@
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Registar Equipamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Filtros -->
     <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <form method="get" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Pesquisar Equipamentos</h5>
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Filtrar Equipamentos</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Artigo</label>
-                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por artigo (ex: Computadores)..." />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Tipo</label>
-                            <select asp-for="FilterType" class="form-select">
+                            <label class="form-label fw-semibold small">Artigo</label>
+                            <select id="filterArtigo" asp-for="FilterName" class="form-select" onchange="filterTypesByArtigo()">
                                 <option value="">Todos</option>
-                                <option value="Desktop">Desktop</option>
-                                <option value="Portátil">Portátil</option>
-                                <option value="Monitor">Monitor</option>
-                                <option value="Motherboard">Motherboard</option>
-                                <option value="Disco HDD">Disco HDD</option>
-                                <option value="Disco SSD">Disco SSD</option>
-                                <option value="Memória RAM">Memória RAM</option>
-                                <option value="Processador (CPU)">Processador (CPU)</option>
-                                <option value="Teclado">Teclado</option>
-                                <option value="Rato">Rato</option>
-                                <option value="Impressora">Impressora</option>
-                                <option value="Projetor">Projetor</option>
-                                <option value="Router">Router</option>
-                                <option value="Switch">Switch</option>
-                                <option value="Outro">Outro</option>
+                                <option value="Computador">Computadores</option>
+                                <option value="Monitor">Monitores</option>
+                                <option value="Impressora">Impressoras</option>
+                                <option value="Projetor">Projetores</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Componente">Componentes</option>
+                                <option value="Periférico">Periféricos</option>
+                                <option value="Quadro Interativo">Quadros Interativos</option>
+                                <option value="Outro">Outros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small">Tipo</label>
+                            <select id="filterTipo" asp-for="FilterType" class="form-select">
+                                <option value="">Todos</option>
+                                @* Standard types matching registration modal *@
+                                <option value="Desktop" data-art="Computador">Desktop</option>
+                                <option value="Portátil" data-art="Computador">Portátil</option>
+                                <option value="Monitor" data-art="Monitor">Monitor</option>
+                                <option value="Motherboard" data-art="Componente">Motherboard</option>
+                                <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                                <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                                <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                                <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                                <option value="Teclado" data-art="Periférico">Teclado</option>
+                                <option value="Rato" data-art="Periférico">Rato</option>
+                                <option value="Impressora" data-art="Impressora">Impressora</option>
+                                <option value="Projetor" data-art="Projetor">Projetor</option>
+                                <option value="Router" data-art="Networking">Router</option>
+                                <option value="Switch" data-art="Networking">Switch</option>
+                                <option value="Outro" data-art="Outro">Outro</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Estado</label>
+                            <label class="form-label fw-semibold small">Estado</label>
                             <select asp-for="FilterStatus" class="form-select">
                                 <option value="">Todos</option>
-                                <option value="Disponível">Disponível</option>
-                                <option value="Em uso">Em uso</option>
-                                <option value="Indisponível">Indisponível</option>
+                                <option value="A funcionar">A funcionar</option>
+                                <option value="Avariado">Avariado</option>
+                                <option value="Em reparo">Em reparo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Marca</label>
+                            <select asp-for="FilterBrand" class="form-select">
+                                <option value="">Todas</option>
+                                @foreach (var brand in Model.UniqueBrands)
+                                {
+                                    <option value="@brand">@brand</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mt-0">
+                            <label class="form-label fw-semibold small">Modelo</label>
+                            <select asp-for="FilterModel" class="form-select">
+                                <option value="">Todos</option>
+                                @foreach (var m in Model.UniqueModels)
+                                {
+                                    <option value="@m">@m</option>
+                                }
                             </select>
                         </div>
                         
                         <hr class="my-3">
-                        <h6>Localização</h6>
+                        <h6 class="mb-1 text-muted">Localização</h6>
                         
-                        <div class="col-12">
-                            <label class="form-label">Escola</label>
+                        <div class="col-12 mt-2">
+                            <label class="form-label fw-semibold small">Escola</label>
                             <select id="filterEscola" asp-for="FilterEscolaId" class="form-select" onchange="filterBlocos()">
                                 <option value="">Todas</option>
                                 @foreach (var esc in Model.AvailableEscolas)
@@ -163,7 +361,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Bloco</label>
+                            <label class="form-label fw-semibold small">Bloco</label>
                             <select id="filterBloco" asp-for="FilterBlocoId" class="form-select" onchange="filterSalas()">
                                 <option value="">Todos</option>
                                 @foreach (var blc in Model.AvailableBlocos)
@@ -173,7 +371,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Sala</label>
+                            <label class="form-label fw-semibold small">Sala</label>
                             <select id="filterSala" asp-for="FilterRoomId" class="form-select">
                                 <option value="">Todas</option>
                                 @foreach (var sala in Model.Rooms)
@@ -184,54 +382,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="reset" class="btn btn-outline-secondary" onclick="window.location.href='@Url.Page("./Equipment")'">Limpar Tudo</button>
-                    <button type="submit" class="btn btn-primary">🔍 Pesquisar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Solicitar Ticket -->
-    <div class="modal fade" id="modalSolicitarTicket" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="post" asp-page-handler="CreateTicket" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Solicitar Reparação</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="modalEqId" asp-for="NewTicket.EquipamentoId" />
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <p class="mb-2">A solicitar reparação para: <strong id="modalEqName">...</strong></p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Nível de Urgência</label>
-                            <select asp-for="NewTicket.Level" class="form-select" required>
-                                <option value="Baixo">Baixo</option>
-                                <option value="Normal" selected>Normal</option>
-                                <option value="Alto">Alto</option>
-                                <option value="Urgente">Urgente</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Período Preferencial</label>
-                            <select asp-for="NewTicket.Period" class="form-select" required>
-                                <option value="Manhã">Manhã</option>
-                                <option value="Tarde">Tarde</option>
-                                <option value="Integral">Integral</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Descrição da Avaria</label>
-                            <textarea asp-for="NewTicket.Description" class="form-control" rows="3" placeholder="Descreva o problema detalhadamente..." required></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Enviar Pedido</button>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
                 </div>
             </form>
         </div>
@@ -240,16 +393,186 @@
 
 @section PageScripts {
 <script>
-    function setEquipmentId(id, name, type) {
-        document.getElementById('modalEqId').value = id;
-        document.getElementById('modalEqName').innerText = name + (type ? ' (' + type + ')' : '');
+    const brandModelData = {
+        'Computadores': {
+            'HP': ['ProDesk 400 G7', 'ProDesk 600 G6', 'EliteDesk 800 G9', 'ProBook 450 G8', 'EliteBook 840 G8', 'EliteBook 850 G7', 'Pavilion 15', 'HP 250 G8', 'HP 255 G8', 'ZBook Fury 15 G8'],
+            'Dell': ['OptiPlex 3090', 'OptiPlex 5090', 'OptiPlex 7090', 'Latitude 3520', 'Latitude 5520', 'Latitude 7420', 'Inspiron 15 3000', 'Inspiron 15 5000', 'Vostro 3510', 'Vostro 5510'],
+            'Lenovo': ['ThinkCentre M70q', 'ThinkCentre M90q', 'ThinkPad L14', 'ThinkPad T14', 'ThinkPad X1 Carbon', 'IdeaCentre 3', 'IdeaPad 3', 'IdeaPad 5', 'V15 G2', 'V14 G2'],
+            'Asus': ['ExpertCenter D5', 'ExpertBook B1', 'VivoBook 15', 'ZenBook 14', 'ROG Strix G15', 'TUF Gaming F15'],
+            'Acer': ['Veriton X2', 'Veriton N4', 'Aspire 5', 'Aspire 3', 'TravelMate P2', 'TravelMate Spin B3', 'Extensa 15'],
+            'Apple': ['iMac 24"', 'Mac Mini M2', 'Mac Studio', 'MacBook Air M2', 'MacBook Pro 14"', 'MacBook Pro 16"'],
+            'MSI': ['PRO DP21', 'Modern 15', 'Prestige 14', 'GF63 Thin'],
+            'Toshiba': ['Dynabook Satellite Pro C50', 'Dynabook Tecra A50'],
+            'Fujitsu': ['ESPRIMO D738', 'ESPRIMO Q958', 'LIFEBOOK U7412', 'LIFEBOOK E5512']
+        },
+        'Monitores': {
+            'HP': ['P22h G5', 'P24h G5', 'E24 G5', 'E27 G5', 'M24f FHD', 'M27fw FHD', 'Z24f G3', 'Z27k G3'],
+            'Dell': ['E2222H', 'E2422H', 'E2722H', 'P2422H', 'P2722H', 'S2422HG', 'U2422H', 'U2722D', 'U3223QE'],
+            'Lenovo': ['ThinkVision T24i-30', 'ThinkVision T27i-30', 'ThinkVision S24e-20', 'L24q-35', 'D24-40'],
+            'Samsung': ['F24T350', 'F27T350', 'S24R350', 'S27R650', 'C24F390', 'C27F390'],
+            'LG': ['24MK430H', '24MP400', '27MP400', '27UL500', '27UK500', '24GN60R'],
+            'BenQ': ['GW2480', 'GW2780', 'BL2480T', 'BL2780T', 'EW2780'],
+            'AOC': ['24B2XH', '27B2H', '24G2', '27G2', 'Q27P2Q'],
+            'Asus': ['VA24DQ', 'VA27DQ', 'VZ24EHE', 'ProArt PA278QV'],
+            'Acer': ['K242HQL', 'V247Y', 'CB242Y', 'B247Y', 'Nitro VG240Y'],
+            'Philips': ['243V7QDSB', '273V7QDSB', '243B9', '276B9']
+        },
+        'Impressoras': {
+            'HP': ['LaserJet Pro M404dn', 'LaserJet Pro MFP M428fdw', 'LaserJet Enterprise M607dn', 'Color LaserJet Pro M454dn', 'Color LaserJet Pro MFP M479fdw', 'OfficeJet Pro 9010', 'DeskJet 2720', 'Smart Tank 515'],
+            'Brother': ['HL-L2350DW', 'HL-L2370DN', 'DCP-L2530DW', 'MFC-L2710DW', 'MFC-L2750DW', 'DCP-L3550CDW', 'MFC-L3750CDW'],
+            'Epson': ['EcoTank ET-2720', 'EcoTank ET-4760', 'WorkForce WF-2850', 'Expression Home XP-4100', 'EcoTank ET-2850'],
+            'Canon': ['PIXMA TS3350', 'PIXMA TS5350', 'i-SENSYS MF643Cdw', 'i-SENSYS MF445dw', 'i-SENSYS LBP226dw', 'MAXIFY GX7050'],
+            'Samsung': ['Xpress M2070W', 'Xpress C480FW', 'ProXpress M4020ND'],
+            'Xerox': ['B210', 'B215', 'B310', 'C230', 'C235', 'VersaLink B400', 'VersaLink C400'],
+            'Lexmark': ['MS431dn', 'MS531dw', 'MX431adn', 'CX431adw'],
+            'Kyocera': ['ECOSYS P2235dn', 'ECOSYS M2135dn', 'ECOSYS P5026cdw', 'TASKalfa 2553ci']
+        },
+        'Networking': {
+            'Cisco': ['Catalyst 1000-24T', 'Catalyst 2960-X', 'Catalyst 9200L', 'ISR 1100', 'ISR 4321', 'Meraki MR36', 'Meraki MS120-8', 'Meraki MX67'],
+            'TP-Link': ['TL-SG108', 'TL-SG1016D', 'TL-SG1024D', 'Archer AX50', 'Archer AX73', 'EAP245', 'EAP620 HD', 'Deco X60'],
+            'Ubiquiti': ['UniFi U6 Lite', 'UniFi U6 Pro', 'UniFi U6 LR', 'UniFi Switch 24', 'UniFi Switch Lite 16 PoE', 'UniFi Dream Machine', 'EdgeSwitch 24'],
+            'Netgear': ['GS108', 'GS308', 'GS316', 'WAX610', 'WAX620', 'RAX50', 'MS108UP'],
+            'D-Link': ['DGS-1100-08V2', 'DGS-1100-24V2', 'DAP-X2810', 'DIR-X1860', 'DMS-106XT'],
+            'MikroTik': ['hAP ac3', 'RB260GS', 'CRS326-24G-2S+', 'RB5009UG+S+IN', 'cAP ac'],
+            'Aruba': ['Instant On AP22', 'Instant On AP25', 'Instant On 1930 24G', 'CX 6100'],
+            'Zyxel': ['GS1200-5', 'GS1200-8', 'NWA110AX', 'XGS1930-28']
+        },
+        'Componentes': {
+            'Kingston': ['ValueRAM 8GB DDR4', 'FURY Beast 16GB DDR4', 'A400 240GB SSD', 'A400 480GB SSD', 'NV2 500GB NVMe', 'NV2 1TB NVMe'],
+            'Samsung': ['870 EVO 250GB', '870 EVO 500GB', '870 EVO 1TB', '980 500GB NVMe', '980 PRO 1TB NVMe', 'DDR4 8GB 3200MHz'],
+            'Crucial': ['BX500 240GB SSD', 'BX500 480GB SSD', 'MX500 500GB SSD', 'P3 500GB NVMe', 'P3 1TB NVMe', 'RAM 8GB DDR4 3200', 'RAM 16GB DDR4 3200'],
+            'Western Digital': ['Blue 1TB HDD', 'Blue 2TB HDD', 'Blue 500GB SSD', 'Blue SN570 500GB NVMe', 'Blue SN570 1TB NVMe', 'Black SN770 1TB NVMe'],
+            'Seagate': ['Barracuda 1TB HDD', 'Barracuda 2TB HDD', 'Barracuda 4TB HDD', 'IronWolf 4TB NAS'],
+            'Corsair': ['Vengeance LPX 8GB DDR4', 'Vengeance LPX 16GB DDR4', 'CV550 550W PSU', 'CX650M 650W PSU'],
+            'Intel': ['Core i3-12100', 'Core i5-12400', 'Core i5-13400', 'Core i7-12700', 'Core i7-13700'],
+            'AMD': ['Ryzen 3 4100', 'Ryzen 5 5600', 'Ryzen 5 5600G', 'Ryzen 7 5700G', 'Ryzen 7 5800X'],
+            'NVIDIA': ['GeForce GT 710', 'GeForce GT 1030', 'GeForce GTX 1650', 'GeForce RTX 3060'],
+            'Gigabyte': ['B550M DS3H', 'B660M DS3H', 'H610M H DDR4', 'A520M DS3H'],
+            'MSI': ['PRO B550M-A', 'PRO B660M-A', 'MAG B550 TOMAHAWK', 'PRO H610M-B'],
+            'EVGA': ['600 BR 600W PSU', '700 BR 700W PSU', 'SuperNOVA 650 G6']
+        },
+        'Periféricos': {
+            'Logitech': ['K120 Teclado', 'MK270 Combo', 'MK345 Combo', 'MK540 Combo', 'M185 Rato', 'M190 Rato', 'M330 Silent', 'B100 Rato', 'C270 Webcam', 'C920 HD Pro Webcam', 'H340 Headset', 'H390 Headset', 'Z150 Colunas'],
+            'Microsoft': ['Ergonomic Keyboard', 'Comfort Mouse 4500', 'Bluetooth Mouse', 'LifeCam HD-3000'],
+            'HP': ['125 Teclado', '125 Rato', '235 Combo Wireless', '330 Combo Wireless', '320 FHD Webcam'],
+            'Cherry': ['KC 1000 Teclado', 'DC 2000 Combo', 'STREAM Keyboard', 'GENTIX Rato'],
+            'Trust': ['Primo Teclado', 'Mydo Rato', 'Ody Combo', 'Trino Webcam HD'],
+            'Jabra': ['Evolve2 30 Headset', 'Evolve2 40 Headset', 'Speak 510'],
+            'Kensington': ['Pro Fit Rato Wireless', 'Orbit Trackball']
+        },
+        'Projetores': {
+            'Epson': ['EB-W06', 'EB-FH06', 'EB-X51', 'EB-2250U', 'EB-L200SW', 'EB-735Fi', 'EB-1485Fi'],
+            'BenQ': ['MH733', 'MH560', 'MW560', 'TH585P', 'EH600', 'LH720'],
+            'ViewSonic': ['PA503S', 'PA503W', 'PA503X', 'PX701HD', 'LS500WH'],
+            'Optoma': ['H190X', 'EH401', 'W381', 'ZH406ST'],
+            'NEC': ['ME402X', 'ME403U', 'P547UL', 'PA804UL'],
+            'Sony': ['VPL-EX455', 'VPL-PHZ12', 'VPL-FHZ66']
+        },
+        'Quadros Interativos': {
+            'SMART': ['Board MX075-V3', 'Board MX086-V3', 'Board 6000S', 'Board 7000 Pro'],
+            'Promethean': ['ActivPanel 9', 'ActivPanel 9 Premium', 'ActivPanel Elements'],
+            'ViewSonic': ['ViewBoard IFP5550', 'ViewBoard IFP6550', 'ViewBoard IFP7550', 'ViewBoard IFP8650'],
+            'Samsung': ['Flip WM55B', 'Flip WM75B', 'Flip Pro WM85B'],
+            'BenQ': ['RP6503', 'RP7503', 'RP8603'],
+            'Clevertouch': ['Impact Plus 65"', 'Impact Plus 75"', 'Impact Plus 86"']
+        },
+        'Outros': {
+            'Genérico': ['Outro Equipamento'],
+            'Sem Marca': ['Sem Modelo']
+        }
+    };
+
+    function filterSelect(input, selectId) {
+        if (!input) return;
+        const filter = input.value.toLowerCase();
+        const select = document.getElementById(selectId);
+        const options = select.querySelectorAll('option');
+        const artigo = document.getElementById('regArtigo')?.value;
+
+        options.forEach(option => {
+            if (option.value === "") return;
+            const matchesArtigo = !artigo || !option.hasAttribute('data-artigo') || option.getAttribute('data-artigo') === artigo;
+            const matchesSearch = option.text.toLowerCase().includes(filter);
+            option.style.display = (matchesArtigo && matchesSearch) ? 'block' : 'none';
+        });
+    }
+
+    function updateSpecificTypes() {
+        const artigo = document.getElementById('regArtigo').value;
+        const tipoSelect = document.getElementById('regTipo');
+        tipoSelect.value = "";
+        
+        const wrapper = tipoSelect.closest('.select-search-wrapper');
+        if (wrapper) {
+            const searchInput = wrapper.querySelector('.select-search-input');
+            filterSelect(searchInput, 'regTipo');
+        }
+    }
+
+    function updateBrandsModels() {
+        const artigo = document.getElementById('regArtigo').value;
+        const marcaSelect = document.getElementById('regMarca');
+        const modeloSelect = document.getElementById('regModelo');
+
+        marcaSelect.innerHTML = '<option value="">Selecione a marca...</option>';
+        modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
+
+        const marcaWrapper = marcaSelect.closest('.select-search-wrapper');
+        if (marcaWrapper) marcaWrapper.querySelector('.select-search-input').value = '';
+        const modeloWrapper = modeloSelect.closest('.select-search-wrapper');
+        if (modeloWrapper) modeloWrapper.querySelector('.select-search-input').value = '';
+
+        if (artigo && brandModelData[artigo]) {
+            const brands = Object.keys(brandModelData[artigo]).sort();
+            brands.forEach(brand => {
+                marcaSelect.add(new Option(brand, brand));
+            });
+        }
+    }
+
+    function updateModels() {
+        const artigo = document.getElementById('regArtigo').value;
+        const marca = document.getElementById('regMarca').value;
+        const modeloSelect = document.getElementById('regModelo');
+
+        modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
+        const modeloWrapper = modeloSelect.closest('.select-search-wrapper');
+        if (modeloWrapper) modeloWrapper.querySelector('.select-search-input').value = '';
+
+        if (artigo && marca && brandModelData[artigo] && brandModelData[artigo][marca]) {
+            brandModelData[artigo][marca].forEach(model => {
+                modeloSelect.add(new Option(model, model));
+            });
+        }
+    }
+
+    function regFilterBlocos() {
+        const escId = document.getElementById('regEscola').value;
+        const blcSelect = document.getElementById('regBloco');
+        const options = blcSelect.querySelectorAll('option');
+        blcSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
+        });
+        regFilterSalas();
+    }
+
+    function regFilterSalas() {
+        const blcId = document.getElementById('regBloco').value;
+        const salaSelect = document.getElementById('regSala');
+        const options = salaSelect.querySelectorAll('option');
+        salaSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
+        });
     }
 
     function filterBlocos() {
         const escId = document.getElementById('filterEscola').value;
         const blcSelect = document.getElementById('filterBloco');
         const options = blcSelect.querySelectorAll('option');
-        
         blcSelect.value = "";
         options.forEach(opt => {
             if (opt.value === "") return;
@@ -262,12 +585,36 @@
         const blcId = document.getElementById('filterBloco').value;
         const salaSelect = document.getElementById('filterSala');
         const options = salaSelect.querySelectorAll('option');
-        
         salaSelect.value = "";
         options.forEach(opt => {
             if (opt.value === "") return;
             opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
+    }
+
+    function filterTypesByArtigo() {
+        const artName = document.getElementById('filterArtigo').value;
+        const tipoSelect = document.getElementById('filterTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        
+        tipoSelect.value = "";
+        
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const optArts = (opt.getAttribute('data-art') || "").split('|');
+            if (artName === "" || optArts.includes(artName)) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
+    function toggleLocationType() {
+        const hdnLocType = document.getElementById('hdnLocationType');
+        if (hdnLocType) hdnLocType.value = "escola";
+        const divEscola = document.getElementById('divLocEscola');
+        if (divEscola) divEscola.style.display = 'block';
     }
 </script>
 }

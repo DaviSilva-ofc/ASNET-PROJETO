@@ -115,7 +115,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             TotalContratos = await _context.Contratos.CountAsync(c => c.AgrupamentoId == agrupamentoId);
             
             DamagedEquipmentCount = await _context.Equipamentos
-                .CountAsync(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value) && e.StatusEquipamentos.Any(s => s.Estado == "Avariado" || s.Estado == "Indisponível" || s.Estado == "Indisponivel"));
+                .CountAsync(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value) && e.Status == "Avariado");
 
             // Total Professores belonging to blocks in this Agrupamento
             TotalProfessores = await _context.Professores

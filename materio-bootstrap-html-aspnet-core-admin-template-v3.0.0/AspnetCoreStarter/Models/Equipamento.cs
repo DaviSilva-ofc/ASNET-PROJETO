@@ -53,8 +53,9 @@ namespace AspnetCoreStarter.Models
         [ForeignKey("EmpresaId")]
         public virtual Empresa? Empresa { get; set; }
 
-        [NotMapped]
-        public string? Status => StatusEquipamentos?.OrderByDescending(s => s.Id).FirstOrDefault()?.Estado ?? "Disponível";
+        [Column("status")]
+        [MaxLength(50)]
+        public string? Status { get; set; } = "A funcionar";
 
         public virtual ICollection<StatusEquipamento> StatusEquipamentos { get; set; } = new List<StatusEquipamento>();
     }

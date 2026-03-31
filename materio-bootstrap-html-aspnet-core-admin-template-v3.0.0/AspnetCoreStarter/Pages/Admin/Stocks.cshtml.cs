@@ -18,12 +18,15 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public int CountStockEmpresa { get; set; }
         public int CountStockAgrupamentos { get; set; }
+        public int CountStockEmpresasPrivadas { get; set; }
 
         public List<StockItemViewModel> Inventory { get; set; } = new();
         public List<StockItemViewModel> EmpresaInventory { get; set; } = new();
         public List<AgrupamentoStockGroup> AgrupamentoTree { get; set; } = new();
+        public List<EmpresaStockGroup> EmpresasPrivadasTree { get; set; } = new();
 
         public List<Agrupamento> AvailableAgrupamentos { get; set; } = new();
+        public List<Empresa> AvailableEmpresasPrivadas { get; set; } = new();
         public List<School> AvailableSchools { get; set; } = new();
         public List<User> AvailableTecnicos { get; set; } = new();
         public List<string> ExistingEquipmentNames { get; set; } = new();
@@ -57,6 +60,16 @@ namespace AspnetCoreStarter.Pages.Admin
             } catch { } // Ignore if exists
 
             try {
+                // Ensure id_empresa column exists for private company stock
+                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_empresa INT NULL;");
+            } catch { } // Ignore if exists
+
+            try {
+                // Add Foreign Key for id_empresa
+                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD CONSTRAINT FK_stock_empresa_empresas FOREIGN KEY (id_empresa) REFERENCES empresas(id_empresa);");
+            } catch { } // Ignore if exists
+
+            try {
                 await _context.Database.ExecuteSqlRawAsync("UPDATE stock_empresa SET status = 'Disponível' WHERE status IS NULL;");
                 await _context.Database.ExecuteSqlRawAsync("UPDATE stock_tecnico SET status = 'Disponível' WHERE status IS NULL;");
             } catch { }
@@ -84,6 +97,7 @@ namespace AspnetCoreStarter.Pages.Admin
             // Load lookup lists for the modal
             AvailableAgrupamentos = await _context.Agrupamentos.ToListAsync();
             AvailableSchools = await _context.Schools.ToListAsync();
+            AvailableEmpresasPrivadas = await _context.Empresas.OrderBy(e => e.Name).ToListAsync();
             AvailableTecnicos = await _context.Users
                 .Join(_context.Tecnicos, u => u.Id, t => t.UserId, (u, t) => u)
                 .ToListAsync();
@@ -107,6 +121,7 @@ namespace AspnetCoreStarter.Pages.Admin
                     .ThenInclude(t => t.User)
                 .Include(s => s.Agrupamento)
                 .Include(s => s.School)
+                .Include(s => s.Empresa)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
@@ -124,6 +139,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 string cat = "Empresa";
                 if (s.AgrupamentoId != null) { loc = $"stock agrupamento ({s.Agrupamento?.Name})"; cat = "Agrupamento"; }
                 else if (s.SchoolId != null) { loc = $"stock escola ({s.School?.Name})"; cat = "Escola"; }
+                else if (s.EmpresaId != null) { loc = $"stock empresa privada ({s.Empresa?.Name})"; cat = "EmpresaPrivada"; }
                 else if (s.TechnicianId != null || s.Technician != null) { loc = "com técnico"; cat = "Tecnico"; }
 
                 // Category Filter
@@ -342,6 +358,71 @@ namespace AspnetCoreStarter.Pages.Admin
                 a.Schools.Sum(s => s.Items.Sum(i => i.Quantity) + s.EquipmentItems.Sum(i => i.Quantity))
             );
 
+            // 6. Build Empresas Privadas tree
+            var allEmpresaPrivadaStock = await _context.StockEmpresa
+                .Include(s => s.Empresa)
+                .Where(s => s.EmpresaId != null)
+                .ToListAsync();
+
+            var equipsByEmpresa = await _context.Equipamentos
+                .Include(e => e.StatusEquipamentos)
+                .Include(e => e.Empresa)
+                .Where(e => e.EmpresaId != null)
+                .ToListAsync();
+
+            var equipsByEmpresaDict = equipsByEmpresa
+                .GroupBy(e => e.EmpresaId!.Value)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.GroupBy(e => new
+                        {
+                            Name = e.Name ?? "Desconhecido",
+                            Type = e.Type ?? "Equipamento",
+                            Status = MapEquipamentoStatus(e)
+                        })
+                        .Select(gg => new StockItemViewModel
+                        {
+                            Name = gg.Key.Name,
+                            Type = gg.Key.Type,
+                            Status = gg.Key.Status,
+                            Location = "Equipamento (Empresa)",
+                            Quantity = gg.Count()
+                        })
+                        .OrderBy(i => i.Name)
+                        .ToList()
+                );
+
+            foreach (var emp in AvailableEmpresasPrivadas)
+            {
+                var empGroup = new EmpresaStockGroup { EmpresaName = emp.Name ?? "Sem Nome", EmpresaId = emp.Id };
+
+                var empDirectStock = allEmpresaPrivadaStock
+                    .Where(s => s.EmpresaId == emp.Id)
+                    .GroupBy(s => new { s.EquipmentName, s.Type, Status = NormalizeStatus(s.Status) })
+                    .Select(g => new StockItemViewModel {
+                        SampleId = g.First().Id,
+                        Name = g.Key.EquipmentName,
+                        Type = g.Key.Type,
+                        Status = g.Key.Status,
+                        Location = $"Empresa: {emp.Name}",
+                        Quantity = g.Count()
+                    }).ToList();
+                
+                empGroup.Items = empDirectStock;
+
+                if (equipsByEmpresaDict.TryGetValue(emp.Id, out var empEquipItems))
+                {
+                    empGroup.EquipmentItems = empEquipItems;
+                }
+
+                if (empGroup.Items.Any() || empGroup.EquipmentItems.Any())
+                    EmpresasPrivadasTree.Add(empGroup);
+            }
+
+            CountStockEmpresasPrivadas = EmpresasPrivadasTree.Sum(e =>
+                e.Items.Sum(i => i.Quantity) + e.EquipmentItems.Sum(i => i.Quantity)
+            );
+
             return Page();
         }
 
@@ -400,7 +481,7 @@ namespace AspnetCoreStarter.Pages.Admin
             return NormalizeStatus(estado);
         }
 
-        public async Task<IActionResult> OnPostLendAsync(int sampleId, int quantity, int? agrupamentoId, int? schoolId)
+        public async Task<IActionResult> OnPostLendAsync(int sampleId, int quantity, int? agrupamentoId, int? schoolId, int? empresaPrivadaId)
         {
             if (quantity <= 0) return RedirectToPage();
 
@@ -431,6 +512,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 item.IsAvailable = false;
                 item.AgrupamentoId = agrupamentoId;
                 item.SchoolId = schoolId;
+                item.EmpresaId = empresaPrivadaId;
             }
 
             await _context.SaveChangesAsync();
@@ -468,6 +550,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 item.IsAvailable = true;
                 item.AgrupamentoId = null;
                 item.SchoolId = null;
+                item.EmpresaId = null;
             }
 
             await _context.SaveChangesAsync();
@@ -475,7 +558,7 @@ namespace AspnetCoreStarter.Pages.Admin
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostAddStockAsync(string name, string type, string description, string locationCategory, int? technicianId, int? agrupamentoId, int? schoolId, int quantity = 1)
+        public async Task<IActionResult> OnPostAddStockAsync(string name, string type, string description, string locationCategory, int? technicianId, int? agrupamentoId, int? schoolId, int? empresaPrivadaId, int quantity = 1)
         {
             if (string.IsNullOrEmpty(name)) return RedirectToPage();
             if (quantity <= 0) quantity = 1;
@@ -497,6 +580,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 if (locationCategory == "Tecnico") newStock.TechnicianId = technicianId;
                 else if (locationCategory == "Agrupamento") newStock.AgrupamentoId = agrupamentoId;
                 else if (locationCategory == "Escola") newStock.SchoolId = schoolId;
+                else if (locationCategory == "EmpresaPrivada") newStock.EmpresaId = empresaPrivadaId;
                 // "Empresa" means all are null
 
                 _context.StockEmpresa.Add(newStock);
@@ -549,6 +633,14 @@ namespace AspnetCoreStarter.Pages.Admin
     {
         public int EscolaId { get; set; }
         public string EscolaName { get; set; } = "";
+        public List<StockItemViewModel> Items { get; set; } = new();
+        public List<StockItemViewModel> EquipmentItems { get; set; } = new();
+    }
+
+    public class EmpresaStockGroup
+    {
+        public int EmpresaId { get; set; }
+        public string EmpresaName { get; set; } = "";
         public List<StockItemViewModel> Items { get; set; } = new();
         public List<StockItemViewModel> EquipmentItems { get; set; } = new();
     }

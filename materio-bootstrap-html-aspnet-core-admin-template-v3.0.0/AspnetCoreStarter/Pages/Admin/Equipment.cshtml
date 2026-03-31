@@ -36,6 +36,14 @@
 }
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Admin /</span> Equipamentos</h4>
+    
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-checkbox-circle-line me-1"></i> @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -53,13 +61,18 @@
             else if (Model.ActiveFilterBloco != null) activeFilterText = $"bloco: {Model.ActiveFilterBloco.Name}";
             else if (Model.ActiveFilterEscola != null) activeFilterText = $"escola: {Model.ActiveFilterEscola.Name}";
             else if (Model.ActiveFilterAgrupamento != null) activeFilterText = $"agrupamento: {Model.ActiveFilterAgrupamento.Name}";
+            else if (Model.ActiveFilterEmpresa != null) activeFilterText = $"empresa: {Model.ActiveFilterEmpresa.Name}";
         }
-        @if (!string.IsNullOrEmpty(activeFilterText))
+        @if (!string.IsNullOrEmpty(activeFilterText) || !string.IsNullOrEmpty(Model.FilterStatus))
         {
             <div class="card-body">
                 <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert">
                     <span>A visualizar equipamentos do <strong>@activeFilterText</strong></span>
-                    <a asp-page="./Equipment" class="btn btn-sm btn-info border-1 border-white">Limpar Filtro</a>
+                    @if (!string.IsNullOrEmpty(Model.FilterStatus))
+                    {
+                        <span class="badge bg-label-info me-1">Status: @Model.FilterStatus</span>
+                    }
+                    <a asp-page="./Equipment" class="btn btn-sm btn-outline-secondary ms-2">Limpar Tudo</a>
                 </div>
             </div>
         }
@@ -71,6 +84,7 @@
                         <th>Tipo</th>
                         <th>Nº Série</th>
                         <th>Localização (Sala)</th>
+                        <th>Status</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -81,11 +95,41 @@
                             <td><strong>@item.Name</strong></td>
                             <td>@item.Type</td>
                             <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
-                            <td>@item.Room?.Name (@item.Room?.Block?.Name)</td>
                             <td>
-                                <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');">
-                                    <button type="submit" class="btn btn-sm text-danger"><i class='bx bx-trash'></i></button>
-                                </form>
+                                @if (item.Room != null)
+                                {
+                                    <span>@item.Room.Name (@item.Room.Block?.Name)</span>
+                                }
+                                else if (item.Empresa != null)
+                                {
+                                    <span class="text-warning"><i class="ri-building-4-line me-1"></i> @item.Empresa.Name</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.Status == "Avariado") {
+                                    <span class="badge bg-label-danger">Avariado</span>
+                                } else {
+                                    <span class="badge bg-label-success">@(item.Status == "Funcionando" || string.IsNullOrEmpty(item.Status) ? "A funcionar" : item.Status)</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
+                                        @if (item.Status == "Avariado") {
+                                            <button type="submit" class="btn btn-sm text-success" title="Marcar como Funcional"><i class="ri-check-line"></i> Funcional</button>
+                                            <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
+                                        } else {
+                                            <button type="submit" class="btn btn-sm text-warning" title="Marcar como Avariado"><i class="ri-error-warning-line"></i> Avariar</button>
+                                        }
+                                    </form>
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');" style="display:inline-block;">
+                                        <button type="submit" class="btn btn-sm text-danger" title="Eliminar"><i class="ri-delete-bin-line"></i> Excluir</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -107,7 +151,7 @@
                         <label class="form-label">Artigo</label>
                         <div class="select-search-wrapper">
                             <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." oninput="filterSelect(this, 'regArtigo')" />
-                            <select name="NewEquipment.Name" id="regArtigo" class="form-select" required onchange="updateBrandsModels()">
+                            <select name="NewEquipment.Name" id="regArtigo" class="form-select" required onchange="updateBrandsModels(); updateSpecificTypes();">
                                 <option value="">Selecione o artigo...</option>
                                 <option value="Computadores">Computadores</option>
                                 <option value="Monitores">Monitores</option>
@@ -127,25 +171,26 @@
                             <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." oninput="filterSelect(this, 'regTipo')" />
                             <select name="NewEquipment.Type" id="regTipo" class="form-select" required>
                                 <option value="">Selecione o tipo...</option>
-                                <option value="Desktop">Desktop</option>
-                                <option value="Portátil">Portátil</option>
-                                <option value="Monitor">Monitor</option>
-                                <option value="Motherboard">Motherboard</option>
-                                <option value="Disco HDD">Disco HDD</option>
-                                <option value="Disco SSD">Disco SSD</option>
-                                <option value="Memória RAM">Memória RAM</option>
-                                <option value="Processador (CPU)">Processador (CPU)</option>
-                                <option value="Placa Gráfica">Placa Gráfica</option>
-                                <option value="Fonte Alimentação">Fonte Alimentação</option>
-                                <option value="Teclado">Teclado</option>
-                                <option value="Rato">Rato</option>
-                                <option value="Impressora">Impressora</option>
-                                <option value="Projetor">Projetor</option>
-                                <option value="Router">Router</option>
-                                <option value="Switch">Switch</option>
-                                <option value="Access Point">Access Point</option>
-                                <option value="Cabo/Adatador">Cabo/Adaptador</option>
-                                <option value="Outro">Outro</option>
+                                <option value="Desktop" data-artigo="Computadores">Desktop</option>
+                                <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                                <option value="Monitor" data-artigo="Monitores">Monitor</option>
+                                <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
+                                <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
+                                <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
+                                <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+                                <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
+                                <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
+                                <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
+                                <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+                                <option value="Rato" data-artigo="Periféricos">Rato</option>
+                                <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                                <option value="Projetor" data-artigo="Projetores">Projetor</option>
+                                <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
+                                <option value="Router" data-artigo="Networking">Router</option>
+                                <option value="Switch" data-artigo="Networking">Switch</option>
+                                <option value="Access Point" data-artigo="Networking">Access Point</option>
+                                <option value="Cabo/Adatador" data-artigo="Outros">Cabo/Adaptador</option>
+                                <option value="Outro" data-artigo="Outros">Outro</option>
                             </select>
                         </div>
                     </div>
@@ -173,56 +218,88 @@
                         <label class="form-label">Nº Série</label>
                         <input type="text" name="NewEquipment.SerialNumber" class="form-control" required />
                     </div>
+                    <!-- Location Type Toggle -->
                     <div class="mb-3">
-                        <label class="form-label">Agrupamento</label>
-                        <div class="select-search-wrapper">
-                            <input type="text" class="select-search-input" placeholder="Pesquisar agrupamento..." oninput="filterSelect(this, 'regAgrupamento')" />
-                            <select id="regAgrupamento" class="form-select" onchange="regFilterEscolas()">
-                                <option value="">Selecione o agrupamento...</option>
-                                @foreach (var agr in Model.AvailableAgrupamentos)
-                                {
-                                    <option value="@agr.Id">@agr.Name</option>
-                                }
-                            </select>
+                        <label class="form-label">Tipo de Localização</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="locToggle" id="locEscola" value="escola" checked autocomplete="off" onchange="toggleLocationType()">
+                            <label class="btn btn-outline-primary" for="locEscola"><i class="ri-school-line me-1"></i> Escola / Sala</label>
+                            <input type="radio" class="btn-check" name="locToggle" id="locEmpresa" value="empresa" autocomplete="off" onchange="toggleLocationType()">
+                            <label class="btn btn-outline-warning" for="locEmpresa"><i class="ri-building-4-line me-1"></i> Empresa</label>
+                        </div>
+                        <input type="hidden" asp-for="LocationType" id="hdnLocationType" value="escola" />
+                    </div>
+
+                    <!-- Escola/Sala Location Fields -->
+                    <div id="divLocEscola">
+                        <div class="mb-3">
+                            <label class="form-label">Agrupamento</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar agrupamento..." oninput="filterSelect(this, 'regAgrupamento')" />
+                                <select id="regAgrupamento" class="form-select" onchange="regFilterEscolas()">
+                                    <option value="">Selecione o agrupamento...</option>
+                                    @foreach (var agr in Model.AvailableAgrupamentos)
+                                    {
+                                        <option value="@agr.Id">@agr.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Escola</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'regEscola')" />
+                                <select id="regEscola" class="form-select" onchange="regFilterBlocos()">
+                                    <option value="">Selecione a escola...</option>
+                                    @foreach (var esc in Model.AvailableEscolas)
+                                    {
+                                        <option value="@esc.Id" data-agr="@esc.AgrupamentoId">@esc.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Bloco</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'regBloco')" />
+                                <select id="regBloco" class="form-select" onchange="regFilterSalas()">
+                                    <option value="">Selecione o bloco...</option>
+                                    @foreach (var blc in Model.AvailableBlocos)
+                                    {
+                                        <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sala</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar sala..." oninput="filterSelect(this, 'regSala')" />
+                                <select id="regSala" name="NewEquipment.RoomId" class="form-select" id="regSalaSelect">
+                                    <option value="">Selecione a sala...</option>
+                                    @foreach (var sala in Model.Rooms)
+                                    {
+                                        <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option>
+                                    }
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Escola</label>
-                        <div class="select-search-wrapper">
-                            <input type="text" class="select-search-input" placeholder="Pesquisar escola..." oninput="filterSelect(this, 'regEscola')" />
-                            <select id="regEscola" class="form-select" onchange="regFilterBlocos()">
-                                <option value="">Selecione a escola...</option>
-                                @foreach (var esc in Model.AvailableEscolas)
-                                {
-                                    <option value="@esc.Id" data-agr="@esc.AgrupamentoId">@esc.Name</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Bloco</label>
-                        <div class="select-search-wrapper">
-                            <input type="text" class="select-search-input" placeholder="Pesquisar bloco..." oninput="filterSelect(this, 'regBloco')" />
-                            <select id="regBloco" class="form-select" onchange="regFilterSalas()">
-                                <option value="">Selecione o bloco...</option>
-                                @foreach (var blc in Model.AvailableBlocos)
-                                {
-                                    <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Sala</label>
-                        <div class="select-search-wrapper">
-                            <input type="text" class="select-search-input" placeholder="Pesquisar sala..." oninput="filterSelect(this, 'regSala')" />
-                            <select id="regSala" name="NewEquipment.RoomId" class="form-select" required>
-                                <option value="">Selecione a sala...</option>
-                                @foreach (var sala in Model.Rooms)
-                                {
-                                    <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option>
-                                }
-                            </select>
+
+                    <!-- Empresa Location Fields -->
+                    <div id="divLocEmpresa" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">Empresa</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar empresa..." oninput="filterSelect(this, 'regEmpresaLoc')" />
+                                <select id="regEmpresaLoc" name="NewEquipment.EmpresaId" class="form-select" disabled>
+                                    <option value="">Selecione a empresa...</option>
+                                    @foreach (var emp in Model.AvailableEmpresas)
+                                    {
+                                        <option value="@emp.Id">@emp.Name</option>
+                                    }
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -274,13 +351,36 @@
                                 <option value="Outro">Outro</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status do Equipamento</label>
+                            <select asp-for="FilterStatus" class="form-select select2">
+                                <option value="">Todos os Status</option>
+                                <option value="Disponível">Disponível</option>
+                                <option value="Em uso">Em uso</option>
+                                <option value="Indisponível">Indisponível</option>
+                                <option value="Avariado">Avariado</option>
+                                <option value="Em Reparação">Em Reparação</option>
+                                <option value="Abatido">Abatido</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Nº Série</label>
                             <input type="text" asp-for="FilterSerialNumber" class="form-control" />
                         </div>
 
                         <hr class="my-3">
-                        <h6>Localização</h6>
+                        <h6>Localização e Empresa</h6>
+
+                        <div class="col-md-6 mb-3">
+                        <label class="form-label">Filtrar por Empresa</label>
+                        <select asp-for="FilterEmpresaId" class="form-select">
+                            <option value="">Todas as Empresas</option>
+                            @foreach (var emp in Model.AvailableEmpresas)
+                            {
+                                <option value="@emp.Id">@emp.Name</option>
+                            }
+                        </select>
+                    </div>
 
                         <div class="col-12">
                             <label class="form-label">Agrupamento</label>
@@ -339,14 +439,53 @@
 
 @section PageScripts {
 <script>
+    function toggleLocationType() {
+        const isEmpresa = document.getElementById('locEmpresa').checked;
+        const hdnLocType = document.getElementById('hdnLocationType');
+
+        const divEscola = document.getElementById('divLocEscola');
+        const divEmpresa = document.getElementById('divLocEmpresa');
+        const empresaSelect = document.getElementById('regEmpresaLoc');
+        const salaSelect = document.querySelector('[name="NewEquipment.RoomId"]');
+
+        if (isEmpresa) {
+            hdnLocType.value = 'empresa';
+            divEscola.style.display = 'none';
+            divEmpresa.style.display = 'block';
+            empresaSelect.disabled = false;
+            if (salaSelect) salaSelect.value = '';
+        } else {
+            hdnLocType.value = 'escola';
+            divEscola.style.display = 'block';
+            divEmpresa.style.display = 'none';
+            empresaSelect.disabled = true;
+            empresaSelect.value = '';
+        }
+    }
+
     // Filter select options by search input
     function filterSelect(input, selectId) {
         var filter = input.value.toLowerCase();
         var select = document.getElementById(selectId);
         var options = select.querySelectorAll('option');
+        
+        var currentArtigo = null;
+        if (selectId === 'regTipo') {
+            currentArtigo = document.getElementById('regArtigo').value;
+        }
+
         options.forEach(function(opt) {
+            if (opt.value === "") return;
             var text = opt.textContent.toLowerCase();
-            opt.style.display = text.includes(filter) ? '' : 'none';
+            var matchesSearch = text.includes(filter);
+            
+            var matchesArtigo = true;
+            if (currentArtigo) {
+                var targetArtigo = opt.getAttribute('data-artigo');
+                matchesArtigo = (targetArtigo === currentArtigo);
+            }
+
+            opt.style.display = (matchesSearch && matchesArtigo) ? '' : 'none';
         });
     }
 
@@ -464,6 +603,18 @@
             'Sem Marca': ['Sem Modelo']
         }
     };
+
+    function updateSpecificTypes() {
+        const artigo = document.getElementById('regArtigo').value;
+        const tipoSelect = document.getElementById('regTipo');
+        const options = tipoSelect.querySelectorAll('option');
+
+        tipoSelect.value = "";
+        
+        // Trigger filterSelect to update display based on BOTH artigo AND any current search
+        const tipoSearch = tipoSelect.closest('.select-search-wrapper').querySelector('.select-search-input');
+        filterSelect(tipoSearch, 'regTipo');
+    }
 
     function updateBrandsModels() {
         var artigo = document.getElementById('regArtigo').value;

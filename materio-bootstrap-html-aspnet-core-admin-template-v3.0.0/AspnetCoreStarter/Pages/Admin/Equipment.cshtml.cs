@@ -24,14 +24,18 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty]
         public Equipamento NewEquipment { get; set; }
 
+        public string? SuccessMessage { get; set; }
+
         public Sala ActiveFilterRoom { get; set; }
         public Bloco ActiveFilterBloco { get; set; }
         public School ActiveFilterEscola { get; set; }
         public Agrupamento ActiveFilterAgrupamento { get; set; }
+        public Empresa ActiveFilterEmpresa { get; set; }
 
         public List<Agrupamento> AvailableAgrupamentos { get; set; }
         public List<School> AvailableEscolas { get; set; }
         public List<Bloco> AvailableBlocos { get; set; }
+        public List<Empresa> AvailableEmpresas { get; set; }
         public List<string> UniqueEquipmentNames { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
@@ -55,8 +59,19 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty(SupportsGet = true)]
         public int? FilterRoomId { get; set; }
 
-        public async Task<IActionResult> OnGetAsync()
+        [BindProperty(SupportsGet = true)]
+        public int? FilterEmpresaId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterStatus { get; set; }
+
+        [BindProperty]
+        public string LocationType { get; set; } // "escola" or "empresa"
+
+        public async Task<IActionResult> OnGetAsync(string? success)
         {
+            if (!string.IsNullOrEmpty(success)) SuccessMessage = success;
+
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Auth/Login");
 
@@ -69,6 +84,7 @@ namespace AspnetCoreStarter.Pages.Admin
 
             var query = _context.Equipamentos
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
+                .Include(e => e.Empresa)
                 .AsQueryable();
 
             // Apply Filters (Case-insensitive and robust)
@@ -118,11 +134,23 @@ namespace AspnetCoreStarter.Pages.Admin
                 ActiveFilterAgrupamento = await _context.Agrupamentos.FindAsync(FilterAgrupamentoId.Value);
             }
 
+            if (FilterEmpresaId.HasValue)
+            {
+                query = query.Where(e => e.EmpresaId == FilterEmpresaId.Value);
+                ActiveFilterEmpresa = await _context.Empresas.FindAsync(FilterEmpresaId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(FilterStatus))
+            {
+                query = query.Where(e => e.Status == FilterStatus || e.StatusEquipamentos.Any(s => s.Estado == FilterStatus));
+            }
+
             Equipments = await query.ToListAsync();
             Rooms = await _context.Salas.ToListAsync();
             AvailableAgrupamentos = await _context.Agrupamentos.ToListAsync();
             AvailableEscolas = await _context.Schools.ToListAsync();
             AvailableBlocos = await _context.Blocos.ToListAsync();
+            AvailableEmpresas = await _context.Empresas.ToListAsync();
             UniqueEquipmentNames = await _context.Equipamentos
                 .Where(e => !string.IsNullOrEmpty(e.Name))
                 .Select(e => e.Name)
@@ -137,11 +165,22 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             if (ModelState.IsValid)
             {
+                // Ensure mutual exclusivity based on location type
+                if (LocationType == "empresa")
+                {
+                    NewEquipment.RoomId = null;
+                }
+                else
+                {
+                    NewEquipment.EmpresaId = null;
+                }
+
                 NewEquipment.Name = NormalizeEquipmentName(NewEquipment.Name);
                 _context.Equipamentos.Add(NewEquipment);
                 await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Equipamento registado com sucesso!" });
             }
-            return RedirectToPage();
+            return await OnGetAsync(null);
         }
 
         private static string NormalizeEquipmentName(string? name)
@@ -172,6 +211,24 @@ namespace AspnetCoreStarter.Pages.Admin
                 return normalized.Substring(0, normalized.Length - 1);
 
             return normalized;
+        }
+
+        public async Task<IActionResult> OnPostToggleStatusAsync(int id)
+        {
+            var item = await _context.Equipamentos.FindAsync(id);
+            if (item != null)
+            {
+                if (item.Status == "A funcionar" || item.Status == "Funcionando" || item.Status == "Disponível" || string.IsNullOrEmpty(item.Status))
+                {
+                    item.Status = "Avariado";
+                }
+                else
+                {
+                    item.Status = "A funcionar";
+                }
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)

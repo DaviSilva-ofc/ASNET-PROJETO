@@ -110,69 +110,37 @@
         <div class="card-body p-3">
             <div class="d-flex flex-wrap align-items-center justify-content-between">
                 <h5 class="mb-2 mb-md-0 fw-bold text-primary"><i class="ri-user-settings-line me-2"></i>Gestão de Clientes</h5>
-                <div class="d-flex flex-wrap gap-2">
-                    <button class="btn btn-primary btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddUser">
-                        <i class="ri-user-add-line me-1"></i> Novo Utilizador
-                    </button>
-                </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-outline-primary btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                            <i class="ri-filter-3-line me-1"></i> Filtros
+                        </button>
+                        <button class="btn btn-primary btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddUser">
+                            <i class="ri-user-add-line me-1"></i> Novo Utilizador
+                        </button>
+                    </div>
             </div>
         </div>
     </div>
 
-    <!-- Filters Card -->
-    <div class="card mb-4 shadow-sm border-0">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">ID Utilizador</label>
-                    <input type="number" asp-for="FilterId" class="form-control" placeholder="ID..." />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Nome</label>
-                    <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por nome..." />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Email</label>
-                    <input type="text" asp-for="FilterEmail" class="form-control" placeholder="Pesquisar por email..." />
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Tipo de Cliente</label>
-                    <select asp-for="FilterType" class="form-select">
-                        <option value="">-- Todos os Tipos --</option>
-                        <option value="Diretor">Diretor</option>
-                        <option value="Coordenador">Coordenador</option>
-                        <option value="Professor">Professor</option>
-                        <option value="Cliente Individual">Cliente Individual</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Agrupamento / Empresa</label>
-                    <select id="filterAgrupamentoEmpresa" class="form-select" name="_filter_group">
-                        <option value="">-- Todos --</option>
-                        <optgroup label="Agrupamentos">
-                            @foreach (var item in Model.Agrupamentos)
-                            {
-                                <option value="agr_@item.Id">@item.Name</option>
-                            }
-                        </optgroup>
-                        <optgroup label="Empresas">
-                            @foreach (var item in Model.Empresas)
-                            {
-                                <option value="emp_@item.Id">@item.Name</option>
-                            }
-                        </optgroup>
-                    </select>
-                    <!-- Hidden fields to hold the resolved values -->
-                    <input type="hidden" asp-for="FilterAgrupamento" id="hiddenFilterAgrupamento" />
-                    <input type="hidden" asp-for="FilterEmpresa" id="hiddenFilterEmpresa" />
-                </div>
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary btn-icon" title="Filtrar">🔍</button>
-                    <a asp-page="./Clients" class="btn btn-outline-secondary btn-icon" title="Limpar Filtros">❌</a>
-                </div>
-            </form>
+    <!-- Active Filters Bar -->
+    @if (Model.FilterId.HasValue || !string.IsNullOrEmpty(Model.FilterName) || !string.IsNullOrEmpty(Model.FilterEmail) || !string.IsNullOrEmpty(Model.FilterType) || Model.FilterAgrupamento.HasValue || Model.FilterEmpresa.HasValue)
+    {
+        <div class="alert alert-info d-flex justify-content-between align-items-center mb-4 shadow-sm" role="alert" style="padding: 0.5rem 1rem;">
+            <span class="small">
+                <i class="ri-information-line me-1"></i>
+                Filtros ativos:
+                <strong>
+                    @(Model.FilterId.HasValue ? $"ID: {Model.FilterId}, " : "")
+                    @(!string.IsNullOrEmpty(Model.FilterName) ? $"Nome: {Model.FilterName}, " : "")
+                    @(!string.IsNullOrEmpty(Model.FilterEmail) ? $"Email: {Model.FilterEmail}, " : "")
+                    @(!string.IsNullOrEmpty(Model.FilterType) ? $"Tipo: {Model.FilterType}, " : "")
+                    @(Model.FilterAgrupamento.HasValue ? $"Agrupamento ID: {Model.FilterAgrupamento}, " : "")
+                    @(Model.FilterEmpresa.HasValue ? $"Empresa ID: {Model.FilterEmpresa}" : "")
+                </strong>
+            </span>
+            <a asp-page="./Clients" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
         </div>
-    </div>
+    }
 
 
     <!-- Diretores Table -->
@@ -550,19 +518,6 @@
                             </select>
                         </div>
                     </div>
-                    <div class="mb-3" id="editEmpresaDiv" style="display:none;">
-                        <label class="form-label fw-semibold">Empresa</label>
-                        <div class="select-search-wrapper">
-                            <input type="text" class="select-search-input" placeholder="Pesquisar empresa..." oninput="filterSelect(this, 'editEmpresaSelect')" />
-                            <select name="SelectedParentId" class="form-select" id="editEmpresaSelect" disabled>
-                                <option value="">-- Sem Alteração --</option>
-                                @foreach (var item in Model.Empresas)
-                                {
-                                    <option value="@item.Id">@item.Name</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -571,6 +526,69 @@
             </form>
         </div>
     </div>
+
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Filtrar Clientes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold small">ID</label>
+                            <input type="number" asp-for="FilterId" class="form-control" placeholder="ID..." />
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold small">Nome</label>
+                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Pesquisar por nome..." />
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold small">Email</label>
+                            <input type="text" asp-for="FilterEmail" class="form-control" placeholder="Pesquisar por email..." />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Tipo de Cliente</label>
+                            <select asp-for="FilterType" class="form-select">
+                                <option value="">-- Todos os Tipos --</option>
+                                <option value="Diretor">Diretor</option>
+                                <option value="Coordenador">Coordenador</option>
+                                <option value="Professor">Professor</option>
+                                <option value="Cliente Individual">Cliente Individual</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Agrupamento / Empresa</label>
+                            <select id="filterAgrupamentoEmpresa" class="form-select" name="_filter_group">
+                                <option value="">-- Todos --</option>
+                                <optgroup label="Agrupamentos">
+                                    @foreach (var item in Model.Agrupamentos)
+                                    {
+                                        <option value="agr_@item.Id">@item.Name</option>
+                                    }
+                                </optgroup>
+                                <optgroup label="Empresas">
+                                    @foreach (var item in Model.Empresas)
+                                    {
+                                        <option value="emp_@item.Id">@item.Name</option>
+                                    }
+                                </optgroup>
+                            </select>
+                            <input type="hidden" asp-for="FilterAgrupamento" id="hiddenFilterAgrupamento" />
+                            <input type="hidden" asp-for="FilterEmpresa" id="hiddenFilterEmpresa" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 @section PageScripts {

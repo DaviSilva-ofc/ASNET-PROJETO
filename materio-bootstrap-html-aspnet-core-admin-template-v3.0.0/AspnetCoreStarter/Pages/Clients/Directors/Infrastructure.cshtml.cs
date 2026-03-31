@@ -27,14 +27,6 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<User> AvailableCoordenadores { get; set; } = new();
         public List<User> AvailableProfessores { get; set; } = new();
 
-        [BindProperty]
-        public string? NewBlocoName { get; set; }
-        [BindProperty]
-        public int? SelectedSchoolId { get; set; }
-        [BindProperty]
-        public string? NewSalaName { get; set; }
-        [BindProperty]
-        public int? SelectedBlocoId { get; set; }
 
         // Edit Properties
         [BindProperty]
@@ -155,39 +147,6 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
         // --- CRUD Handlers for Blocos and Salas ---
 
-        public async Task<IActionResult> OnPostAddBlocoAsync()
-        {
-            if (!string.IsNullOrEmpty(NewBlocoName) && SelectedSchoolId.HasValue)
-            {
-                // Safety check: ensure school belongs to director's agrupamento
-                var director = await GetDirectorAsync();
-                var school = await _context.Schools.FindAsync(SelectedSchoolId.Value);
-                if (school != null && director != null && school.AgrupamentoId == director.AgrupamentoId)
-                {
-                    _context.Blocos.Add(new Bloco { Name = NewBlocoName, SchoolId = SelectedSchoolId.Value });
-                    await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Bloco adicionado com sucesso.";
-                }
-            }
-            return RedirectToPage();
-        }
-
-        public async Task<IActionResult> OnPostAddSalaAsync()
-        {
-            if (!string.IsNullOrEmpty(NewSalaName) && SelectedBlocoId.HasValue)
-            {
-                // Safety check: ensure bloco's school belongs to director's agrupamento
-                var director = await GetDirectorAsync();
-                var bloco = await _context.Blocos.Include(b => b.School).FirstOrDefaultAsync(b => b.Id == SelectedBlocoId.Value);
-                if (bloco != null && director != null && bloco.School?.AgrupamentoId == director.AgrupamentoId)
-                {
-                    _context.Salas.Add(new Sala { Name = NewSalaName, BlockId = SelectedBlocoId.Value });
-                    await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Sala adicionada com sucesso.";
-                }
-            }
-            return RedirectToPage();
-        }
 
         public async Task<IActionResult> OnPostEditBlocoAsync()
         {

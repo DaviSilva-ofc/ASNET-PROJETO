@@ -4,9 +4,9 @@ using AspnetCoreStarter.Data;
 using AspnetCoreStarter.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
-using System.Linq;
 
 namespace AspnetCoreStarter.Pages.Clients.Directors
 {
@@ -20,100 +20,148 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         }
 
         public List<Ticket> Tickets { get; set; } = new();
-        public string? MyAgrupamentoName { get; set; }
-        public Agrupamento? Agrupamento { get; set; }
-        public List<AspnetCoreStarter.Models.School>? Schools { get; set; }
-        public List<Bloco>? Blocos { get; set; }
-        public List<Sala>? Salas { get; set; }
-        public List<string> EquipmentTypes { get; set; } = new();
+        public List<School> Schools { get; set; } = new();
+        public List<Equipamento> AvailableEquipment { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
         public string? FilterStatus { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public int? eqId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterArticle { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterType { get; set; }
+
+        public string? MyAgrupamentoName { get; set; }
+
+        [BindProperty]
+        public Ticket NewTicket { get; set; } = new();
+
         public async Task<IActionResult> OnGetAsync()
         {
-            if (User?.Identity == null || !User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
-            
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+            if (!User.Identity.IsAuthenticated || !User.IsInRole("Diretor")) 
+                return RedirectToPage("/Auth/Login");
 
-            // Find the director's agrupamento
-            var director = await _context.Diretores
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            // Correctly query the Diretores table for AgrupamentoId
+            var directorInfo = await _context.Diretores
                 .Include(d => d.Agrupamento)
                 .FirstOrDefaultAsync(d => d.UserId == userId);
 
-            if (director == null || director.AgrupamentoId == null)
+            if (directorInfo == null || directorInfo.AgrupamentoId == null)
             {
                 Tickets = new List<Ticket>();
                 return Page();
             }
 
-            int myAgrupamentoId = director.AgrupamentoId.Value;
-            Agrupamento = director.Agrupamento;
-            MyAgrupamentoName = Agrupamento?.Name;
+            int directorAgrupamentoId = directorInfo.AgrupamentoId.Value;
+            MyAgrupamentoName = directorInfo.Agrupamento?.Name;
 
             // Get schools in this agrupamento
             Schools = await _context.Schools
-                .Where(s => s.AgrupamentoId == myAgrupamentoId)
+                .Where(s => s.AgrupamentoId == directorAgrupamentoId)
                 .ToListAsync();
 
             var schoolIds = Schools.Select(s => s.Id).ToList();
 
-            Blocos = await _context.Blocos
-                .Where(b => schoolIds.Contains(b.SchoolId))
-                .ToListAsync();
-
-            var blocoIds = Blocos.Select(b => b.Id).ToList();
-
-            Salas = await _context.Salas
-                .Where(s => blocoIds.Contains(s.BlockId))
-                .ToListAsync();
-
-            EquipmentTypes = await _context.Equipamentos
-                .Where(e => !string.IsNullOrEmpty(e.Type))
-                .Select(e => e.Type)
-                .Distinct()
-                .ToListAsync();
-
+            // Filter tickets
             var query = _context.Tickets
                 .Include(t => t.School)
-                .Where(t => t.SchoolId.HasValue && schoolIds.Contains(t.SchoolId.Value))
-                .AsQueryable();
+                .Include(t => t.Equipamento)
+                .Where(t => t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value));
 
-            if (!string.IsNullOrEmpty(FilterStatus))
+            if (!string.IsNullOrEmpty(FilterStatus) && FilterStatus != "Todos os Estados")
             {
                 query = query.Where(t => t.Status == FilterStatus);
             }
 
-            Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+            var ticketList = await query.Include(t => t.Equipamento).ToListAsync();
+
+            if (!string.IsNullOrEmpty(FilterArticle))
+            {
+                ticketList = ticketList.Where(t => t.Equipamento != null && NormalizeEquipmentName(t.Equipamento.Name) == FilterArticle).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(FilterType))
+            {
+                ticketList = ticketList.Where(t => t.Equipamento != null && t.Equipamento.Type == FilterType).ToList();
+            }
+
+            Tickets = ticketList.OrderByDescending(t => t.CreatedAt).ToList();
+
+            // Handle eqId if present
+            if (eqId.HasValue)
+            {
+                var eq = await _context.Equipamentos
+                    .Include(e => e.Room)
+                        .ThenInclude(r => r.Block)
+                            .ThenInclude(b => b.School)
+                    .FirstOrDefaultAsync(e => e.Id == eqId.Value);
+
+                if (eq != null && eq.Room?.Block?.School != null)
+                {
+                    NewTicket.EquipamentoId = eq.Id;
+                    NewTicket.SchoolId = eq.Room.Block.School.Id;
+                }
+            }
+
+            // Available equipment for the "Novo Ticket" modal - ONLY AVARIADO
+            AvailableEquipment = await _context.Equipamentos
+                .Include(e => e.Room)
+                    .ThenInclude(r => r.Block)
+                        .ThenInclude(b => b.School)
+                .Where(e => e.Room != null && e.Room.Block != null && schoolIds.Contains(e.Room.Block.SchoolId))
+                .Where(e => e.Status == "Avariado")
+                .OrderBy(e => e.Room.Block.School.Name)
+                .ThenBy(e => e.Type)
+                .ToListAsync();
 
             return Page();
         }
 
-        public async Task<IActionResult> OnPostCreateTicketAsync(string level, string equipmentType, int schoolId, int blockId, int roomId)
+        private static string NormalizeEquipmentName(string? name)
         {
-            if (User?.Identity == null || !User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
-
-            var school = await _context.Schools.FindAsync(schoolId);
-            var block = await _context.Blocos.FindAsync(blockId);
-            var room = await _context.Salas.FindAsync(roomId);
-
-            string fullDescription = $"[Detalhes da Localização]\nTipo: {equipmentType}\nEscola: {school?.Name ?? "N/A"}\nBloco: {block?.Name ?? "N/A"}\nSala: {room?.Name ?? "N/A"}";
-
-            var ticket = new Ticket
+            if (string.IsNullOrWhiteSpace(name)) return "Desconhecido";
+            string normalized = name.Trim();
+            var pluralMaps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                Level = level,
-                Description = fullDescription,
-                Status = "Pedido",
-                SchoolId = schoolId,
-                AdminId = 1, // Dummy admin if required by constraints
-                CreatedAt = DateTime.UtcNow
+                { "Computadores", "Computador" },
+                { "Monitores", "Monitor" },
+                { "Impressoras", "Impressora" },
+                { "Projetores", "Projetor" },
+                { "Televisores", "Televisão" },
+                { "Portáteis", "Portátil" },
+                { "Ratos", "Rato" },
+                { "Teclados", "Teclado" },
+                { "UPSs", "UPS" },
+                { "Switches", "Switch" },
+                { "Quadros Interativos", "Quadro Interativo" },
+                { "Mesas Interativas", "Mesa Interativa" }
             };
 
-            _context.Tickets.Add(ticket);
+            if (pluralMaps.TryGetValue(normalized, out var singular)) return singular;
+            if (normalized.EndsWith("ores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("adores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("s", StringComparison.OrdinalIgnoreCase) && !normalized.EndsWith("ss", StringComparison.OrdinalIgnoreCase) && normalized.Length > 4)
+                return normalized.Substring(0, normalized.Length - 1);
+
+            return normalized;
+        }
+
+        public async Task<IActionResult> OnPostCreateTicketAsync()
+        {
+            // Standardizing status to "Pendente"
+            NewTicket.Status = "Pendente";
+            NewTicket.CreatedAt = System.DateTime.UtcNow;
+
+            _context.Tickets.Add(NewTicket);
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Ticket de suporte submetido com sucesso!";
             return RedirectToPage();
         }
     }

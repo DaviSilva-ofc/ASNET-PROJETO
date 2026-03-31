@@ -122,6 +122,14 @@ namespace AspnetCoreStarter.Pages.Admin
                 professorsQuery = professorsQuery.Where(p => p.Bloco.School.AgrupamentoId == FilterAgrupamento.Value);
             }
 
+            // Mutual exclusion: if an Empresa consists of independent clients, hide other types
+            if (FilterEmpresa.HasValue && FilterEmpresa.Value > 0)
+            {
+                directorsQuery = directorsQuery.Where(d => false);
+                coordinatorsQuery = coordinatorsQuery.Where(c => false);
+                professorsQuery = professorsQuery.Where(p => false);
+            }
+
             // Apply type filter — only load relevant sections
             bool showDirectors     = string.IsNullOrEmpty(FilterType) || FilterType == "Diretor";
             bool showCoordinators  = string.IsNullOrEmpty(FilterType) || FilterType == "Coordenador";
@@ -155,6 +163,10 @@ namespace AspnetCoreStarter.Pages.Admin
                     indQuery = indQuery.Where(u => u.Email.Contains(FilterEmail));
                 if (FilterEmpresa.HasValue && FilterEmpresa.Value > 0)
                     indQuery = indQuery.Where(u => u.EmpresaId == FilterEmpresa.Value);
+
+                // Mutual exclusion: if an Agrupamento is selected, hide independent clients
+                if (FilterAgrupamento.HasValue && FilterAgrupamento.Value > 0)
+                    indQuery = indQuery.Where(u => false);
 
                 IndependentClientsList = await indQuery.ToListAsync();
             }

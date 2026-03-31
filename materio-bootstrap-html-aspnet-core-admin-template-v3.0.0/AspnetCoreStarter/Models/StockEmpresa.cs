@@ -51,5 +51,11 @@ namespace AspnetCoreStarter.Models
 
         [ForeignKey("AdminId")]
         public virtual Administrador? Admin { get; set; }
+
+        [Column("id_empresa")]
+        public int? EmpresaId { get; set; }
+
+        [ForeignKey("EmpresaId")]
+        public virtual Empresa? Empresa { get; set; }
     }
 }

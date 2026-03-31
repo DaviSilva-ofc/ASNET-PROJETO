@@ -352,7 +352,7 @@
                                                             data-name="@client.DirectorName"
                                                             onclick="openEditDirector(this)"
                                                             title="Editar Nome do Diretor">
-                                                        <i class="tf-icons ri-edit-line small"></i>
+                                                        ✏️
                                                     </button>
                                                 </div>
                                                 <div class="tree-node agrupamento-node">
@@ -379,7 +379,7 @@
                                                                                 data-coordinator="@schoolVm.CoordinatorUserId"
                                                                                 onclick="event.stopPropagation(); openEditSchool(this)"
                                                                                 title="Editar Escola">
-                                                                            <i class="tf-icons ri-edit-line small"></i>
+                                                                            ✏️
                                                                         </button>
                                                                         <form method="post" asp-page-handler="DeleteSchool" asp-route-id="@schoolVm.School.Id"
                                                                               onsubmit="return confirm('Excluir esta escola?');"
@@ -406,7 +406,7 @@
                                                                                             data-school="@schoolVm.School.Id"
                                                                                             onclick="event.stopPropagation(); openEditBloco(this)"
                                                                                             title="Editar Bloco">
-                                                                                        <i class="tf-icons ri-edit-line small"></i>
+                                                                                        ✏️
                                                                                     </button>
                                                                                     <form method="post" asp-page-handler="DeleteBloco" asp-route-id="@bloc.Id"
                                                                                           onsubmit="return confirm('Excluir este bloco?');"
@@ -437,7 +437,7 @@
                                                                                                         data-bloc="@bloc.Id"
                                                                                                         onclick="event.stopPropagation(); openEditSala(this)"
                                                                                                         title="Editar Sala">
-                                                                                                    <i class="tf-icons ri-edit-line small"></i>
+                                                                                                    ✏️
                                                                                                 </button>
                                                                                                 <form method="post" asp-page-handler="DeleteSala" asp-route-id="@room.Id"
                                                                                                       onsubmit="return confirm('Excluir esta sala?');"

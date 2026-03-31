@@ -32,22 +32,43 @@
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
+    @if (!string.IsNullOrEmpty(Request.Query["success"]))
+    {
+        <div class="alert alert-success alert-dismissible d-flex align-items-center mb-4" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i>
+            <div>@Request.Query["success"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Diretor /</span> Stocks</h4>
-        <form method="get" class="d-flex align-items-center gap-2">
-            <select asp-for="FilterEscolaId" class="form-select w-auto" onchange="this.form.submit()">
-                <option value="">Todas as Escolas</option>
-                @foreach (var esc in Model.AvailableSchools)
-                {
-                    <option value="@esc.Id">@esc.Name</option>
-                }
-            </select>
-            @if (Model.FilterEscolaId.HasValue)
-            {
-                <a asp-page="./Stocks" class="btn btn-outline-secondary btn-icon"><i class="ri-close-line"></i></a>
-            }
-        </form>
     </div>
+
+    @{
+        var hasAnyFilter = Model.FilterEscolaId.HasValue || Model.FilterSalaId.HasValue || 
+                          !string.IsNullOrEmpty(Model.FilterArticle) || !string.IsNullOrEmpty(Model.FilterType) || 
+                          !string.IsNullOrEmpty(Model.FilterStatus);
+    }
+
+    @if (hasAnyFilter)
+    {
+        <div class="alert alert-info alert-dismissible d-flex justify-content-between align-items-center mb-4 shadow-sm" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="ri-information-line me-2 ri-xl"></i>
+                <div>
+                    <span class="fw-semibold">Filtros ativos:</span>
+                    <span class="small ms-1">
+                        @(!string.IsNullOrEmpty(Model.FilterArticle) ? $"Artigo: {Model.FilterArticle}, " : "")
+                        @(!string.IsNullOrEmpty(Model.FilterType) ? $"Tipo: {Model.FilterType}, " : "")
+                        @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}, " : "")
+                        @(Model.FilterEscolaId.HasValue ? "Localização específica selecionada" : "")
+                    </span>
+                </div>
+            </div>
+            <a asp-page="./Stocks" class="btn btn-sm btn-info border-1 border-white text-white">Limpar Filtros</a>
+        </div>
+    }
 
     <div class="row">
         <div class="col-md-6 col-lg-3 mb-4">
@@ -108,6 +129,15 @@
         </div>
     </div>
 
+    <div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+        <button type="button" class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+            <i class="ri-filter-3-line me-1"></i> Filtros
+        </button>
+        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoPedido">
+            <i class="ri-add-line me-1"></i> Novo Pedido de Stock
+        </button>
+    </div>
+
     <div class="card shadow-sm mt-2">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Visão Geral de Equipamentos e Inventário</h5>
@@ -121,13 +151,14 @@
                         <th>Localização</th>
                         <th>Quantidade</th>
                         <th>Estado</th>
+                        <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (!Model.Items.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">Nenhum artigo encontrado no agrupamento.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">Nenhum artigo encontrado no agrupamento com os filtros selecionados.</td>
                         </tr>
                     }
                     else
@@ -140,9 +171,33 @@
                                 <td>@item.Location</td>
                                 <td>@item.Quantity</td>
                                 <td>
-                                    <span class="badge @(item.Status == "Disponível" ? "bg-label-success" : (item.Status == "Indisponível" ? "bg-label-danger" : "bg-label-warning"))">
-                                        @item.Status
-                                    </span>
+                                    @if (item.Status != null && (item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Disponível", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Funcionando", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Em uso", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <span class="badge bg-label-success">A funcionar</span>
+                                    }
+                                    else if (item.Status != null && (item.Status.Trim().Equals("Avariado", StringComparison.OrdinalIgnoreCase) || 
+                                             item.Status.Trim().Equals("Indisponível", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <span class="badge bg-label-danger">Avariado</span>
+                                    }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-warning">Em reparo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-secondary">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            onclick="openLoanModal('@item.Name', '@item.Category')"
+                                            title="Solicitar Empréstimo">
+                                        <i class="ri-hand-coin-line me-1"></i> Solicitar
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -151,4 +206,262 @@
             </table>
         </div>
     </div>
+
+
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Filtrar Stocks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Artigo</label>
+                            <select id="filterArtigo" asp-for="FilterArticle" class="form-select" onchange="filterTypesByArtigo()">
+                                <option value="">Todos</option>
+                                <option value="Computador">Computadores</option>
+                                <option value="Monitor">Monitores</option>
+                                <option value="Impressora">Impressoras</option>
+                                <option value="Projetor">Projetores</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Componente">Componentes</option>
+                                <option value="Periférico">Periféricos</option>
+                                <option value="Quadro Interativo">Quadros Interativos</option>
+                                <option value="Outro">Outros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Tipo</label>
+                            <select id="filterTipo" asp-for="FilterType" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Desktop" data-art="Computador">Desktop</option>
+                                <option value="Portátil" data-art="Computador">Portátil</option>
+                                <option value="Monitor" data-art="Monitor">Monitor</option>
+                                <option value="Motherboard" data-art="Componente">Motherboard</option>
+                                <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                                <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                                <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                                <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                                <option value="Teclado" data-art="Periférico">Teclado</option>
+                                <option value="Rato" data-art="Periférico">Rato</option>
+                                <option value="Impressora" data-art="Impressora">Impressora</option>
+                                <option value="Projetor" data-art="Projetor">Projetor</option>
+                                <option value="Router" data-art="Networking">Router</option>
+                                <option value="Switch" data-art="Networking">Switch</option>
+                                <option value="Outro" data-art="Outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Escola</label>
+                            <select asp-for="FilterEscolaId" class="form-select" id="filtEscola" onchange="filterRooms()">
+                                <option value="">Todas as Escolas</option>
+                                @foreach (var esc in Model.AvailableSchools)
+                                {
+                                    <option value="@esc.Id">@esc.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Sala</label>
+                            <select asp-for="FilterSalaId" class="form-select" id="filtSala">
+                                <option value="">Todas as Salas</option>
+                                @foreach (var sala in Model.AvailableRooms)
+                                {
+                                    <option value="@sala.Id" data-esc="@sala.Block?.SchoolId">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" : "")</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Estado</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="">Todos</option>
+                                @foreach (var stat in Model.UniqueStatuses)
+                                {
+                                    <option value="@stat">@stat</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Solicitar Empréstimo -->
+    <div class="modal fade" id="modalEmprestimo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-page-handler="RequestLoan" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Solicitar Empréstimo de Equipamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="itemName" id="loanItemName" />
+                    <input type="hidden" name="itemType" id="loanItemType" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Artigo Selecionado</label>
+                        <p class="form-control-plaintext fw-bold" id="txtItemDisplay"></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Quantidade Necessária</label>
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Notas Adicionais (Finalidade, Prazo, etc.)</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Explique por que precisa deste equipamento..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Pedido ao Administrador</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Novo Pedido de Stock -->
+    <div class="modal fade" id="modalNovoPedido" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-page-handler="RequestLoan" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Novo Pedido de Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Artigo</label>
+                        <select name="itemName" id="newReqArtigo" class="form-select" required onchange="filterNewRequestTypes()">
+                            <option value="">Selecione o artigo...</option>
+                            <option value="Computador">Computadores</option>
+                            <option value="Monitor">Monitores</option>
+                            <option value="Impressora">Impressoras</option>
+                            <option value="Projetor">Projetores</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Componente">Componentes</option>
+                            <option value="Periférico">Periféricos</option>
+                            <option value="Quadro Interativo">Quadros Interativos</option>
+                            <option value="Outro">Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Tipo</label>
+                        <select name="itemType" id="newReqTipo" class="form-select" required>
+                            <option value="">Selecione o tipo...</option>
+                            <option value="Desktop" data-art="Computador">Desktop</option>
+                            <option value="Portátil" data-art="Computador">Portátil</option>
+                            <option value="Monitor" data-art="Monitor">Monitor</option>
+                            <option value="Motherboard" data-art="Componente">Motherboard</option>
+                            <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                            <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                            <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                            <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                            <option value="Teclado" data-art="Periférico">Teclado</option>
+                            <option value="Rato" data-art="Periférico">Rato</option>
+                            <option value="Impressora" data-art="Impressora">Impressora</option>
+                            <option value="Projetor" data-art="Projetor">Projetor</option>
+                            <option value="Router" data-art="Networking">Router</option>
+                            <option value="Switch" data-art="Networking">Switch</option>
+                            <option value="Outro" data-art="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Quantidade</label>
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Motivo do Pedido</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Descreva a necessidade..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Solicitar Equipamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+@section PageScripts {
+<script>
+    function filterRooms() {
+        var escId = document.getElementById('filtEscola').value;
+        var roomSelect = document.getElementById('filtSala');
+        var options = roomSelect.options;
+
+        roomSelect.value = "";
+        
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            if (opt.value === "") continue;
+            
+            var escData = opt.getAttribute('data-esc');
+            if (escId === "" || escData === escId) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        }
+    }
+
+    function openLoanModal(name, type) {
+        document.getElementById('loanItemName').value = name;
+        document.getElementById('loanItemType').value = type;
+        document.getElementById('txtItemDisplay').innerText = name + " - " + type;
+        
+        var modal = new bootstrap.Modal(document.getElementById('modalEmprestimo'));
+        modal.show();
+    }
+
+    function filterTypesByArtigo() {
+        const artName = document.getElementById('filterArtigo').value;
+        const tipoSelect = document.getElementById('filterTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        
+        tipoSelect.value = "";
+        
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const optArts = (opt.getAttribute('data-art') || "").split('|');
+            if (artName === "" || optArts.includes(artName)) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
+    function filterNewRequestTypes() {
+        const artName = document.getElementById('newReqArtigo').value;
+        const tipoSelect = document.getElementById('newReqTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        
+        tipoSelect.value = "";
+        
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const optArts = (opt.getAttribute('data-art') || "").split('|');
+            if (artName === "" || optArts.includes(artName)) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
+    // Initialize filters on load
+    window.addEventListener('DOMContentLoaded', function() {
+        filterRooms();
+    });
+</script>
+}

@@ -274,6 +274,7 @@
     </div>
 
     <!-- Navigation Tabs -->
+
     <div class="nav-align-top mb-4">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
@@ -284,6 +285,11 @@
             <li class="nav-item">
                 <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-agrupamentos" aria-controls="navs-agrupamentos" aria-selected="false">
                     <i class="tf-icons ri-organization-chart me-1"></i> Stock Agrupamentos
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-empresasprivadas" aria-controls="navs-empresasprivadas" aria-selected="false">
+                    <i class="tf-icons ri-building-4-line me-1"></i> Stock Empresas Privadas
                 </button>
             </li>
         </ul>
@@ -550,8 +556,72 @@
                     }
                 </div>
             </div>
+
+            <!-- Stock Empresas Privadas Tab -->
+            <div class="tab-pane fade" id="navs-empresasprivadas" role="tabpanel">
+                <div class="row">
+                    @foreach (var emp in Model.EmpresasPrivadasTree)
+                    {
+                        <div class="col-12 mb-4">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center cursor-pointer"
+                                     data-bs-toggle="collapse" data-bs-target="#stock-emp-@emp.EmpresaId">
+                                    <div class="d-flex align-items-center">
+                                        <h5 class="mb-0 text-white me-3"><strong> @emp.EmpresaName</strong></h5>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h4 class="mb-0 text-white fw-bold me-2">@(emp.Items.Sum(i => i.Quantity) + emp.EquipmentItems.Sum(i => i.Quantity))</h4>
+                                        <i class="ri-arrow-down-s-line text-white fs-4"></i>
+                                    </div>
+                                </div>
+                                <div id="stock-emp-@emp.EmpresaId" class="collapse @(Model.EmpresasPrivadasTree.FirstOrDefault() == emp ? "show" : "")">
+                                    <div class="card-body pt-4">
+                                        <div class="row">
+                                            <div class="col-12 mb-3">
+                                                <div class="border rounded p-3 h-100 bg-light-section">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
+                                                         data-bs-toggle="collapse" data-bs-target="#items-emp-@emp.EmpresaId">
+                                                        <h6 class="mb-0 fw-bold"><i class="ri-archive-line me-2"></i>Artigos & Equipamentos</h6>
+                                                        <i class="ri-arrow-down-s-line"></i>
+                                                    </div>
+                                                    <div id="items-emp-@emp.EmpresaId" class="collapse show mt-3">
+                                                        <div class="infra-tree">
+                                                            @if (emp.EquipmentItems != null && emp.EquipmentItems.Any()) {
+                                                                @foreach (var item in emp.EquipmentItems) {
+                                                                    <div class="tree-node article-node small mb-1">
+                                                                        <div class="d-flex align-items-center p-1 rounded">
+                                                                            <i class="ri-computer-line me-2"></i> @item.Name
+                                                                            <span class="badge bg-label-primary ms-auto">@item.Quantity</span>
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                            }
+                                                            @if (emp.Items != null && emp.Items.Any()) {
+                                                                @if(emp.EquipmentItems != null && emp.EquipmentItems.Any()) { <hr class="my-2" /> }
+                                                                @foreach (var item in emp.Items) {
+                                                                    <div class="tree-node article-node small mb-1">
+                                                                        <div class="d-flex align-items-center p-1 rounded">
+                                                                            <i class="ri-hard-drive-2-line me-2"></i>
+                                                                            <span class="text-secondary small me-1">(@item.Type)</span>
+                                                                            <span class="fw-semibold">@item.Name</span>
+                                                                            <span class="badge bg-label-info ms-auto">@item.Quantity</span>
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
-    </div>
 </div>
 </div>
 
@@ -613,6 +683,7 @@
                             <option value="Tecnico">Com Técnico</option>
                             <option value="Agrupamento">Stock Agrupamento</option>
                             <option value="Escola">Stock Escola</option>
+                            <option value="EmpresaPrivada">Stock Empresa Privada</option>
                         </select>
                     </div>
 
@@ -642,6 +713,16 @@
                             <option value="">Selecione a escola...</option>
                             @foreach (var s in Model.AvailableSchools) {
                                 <option value="@s.Id" data-agr="@s.AgrupamentoId">@s.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div id="addStock_EmpresaPrivada" class="mb-3 add-stock-loc" style="display:none;">
+                        <label class="form-label">Empresa Privada</label>
+                        <select name="empresaPrivadaId" class="form-select select2">
+                            <option value="">Selecione a empresa...</option>
+                            @foreach (var ep in Model.AvailableEmpresasPrivadas) {
+                                <option value="@ep.Id">@ep.Name</option>
                             }
                         </select>
                     </div>
@@ -677,8 +758,15 @@
                     <input type="hidden" name="location" id="modalInputLocation" />
 
                     <div class="mb-3" id="lendLocationFields">
-                        <label class="form-label">Local de Destino</label>
-                        <select name="agrupamentoId" id="lendAgrupamentoId" class="form-select mb-2" onchange="filterLendSchools()" required>
+                        <label class="form-label">Tipo de Destino</label>
+                        <select id="lendLocationType" class="form-select mb-2" onchange="toggleLendLocationType(this.value)">
+                            <option value="agrupamento">Agrupamento / Escola</option>
+                            <option value="empresaPrivada">Empresa Privada</option>
+                        </select>
+
+                        <div id="lendAgrupamentoContainer">
+                            <label class="form-label">Local de Destino</label>
+                            <select name="agrupamentoId" id="lendAgrupamentoId" class="form-select mb-2" onchange="filterLendSchools()" required>
                             <option value="">Selecione o Agrupamento...</option>
                             @foreach (var a in Model.AvailableAgrupamentos) {
                                 <option value="@a.Id">@a.Name</option>
@@ -690,6 +778,17 @@
                                 <option value="@s.Id" data-agr="@s.AgrupamentoId">@s.Name</option>
                             }
                         </select>
+                        </div>
+                        
+                        <div id="lendEmpresaPrivadaContainer" style="display:none;">
+                            <label class="form-label">Empresa Privada</label>
+                            <select name="empresaPrivadaId" id="lendEmpresaPrivadaId" class="form-select">
+                                <option value="">Selecione a Empresa...</option>
+                                @foreach (var ep in Model.AvailableEmpresasPrivadas) {
+                                    <option value="@ep.Id">@ep.Name</option>
+                                }
+                            </select>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -788,6 +887,26 @@
         });
     }
 
+    function toggleLendLocationType(type) {
+        if (type === 'agrupamento') {
+            document.getElementById('lendAgrupamentoContainer').style.display = 'block';
+            document.getElementById('lendEmpresaPrivadaContainer').style.display = 'none';
+            document.getElementById('lendAgrupamentoId').required = true;
+            document.getElementById('lendSchoolId').required = true;
+            if(document.getElementById('lendEmpresaPrivadaId')) {
+                document.getElementById('lendEmpresaPrivadaId').required = false;
+            }
+        } else {
+            document.getElementById('lendAgrupamentoContainer').style.display = 'none';
+            document.getElementById('lendEmpresaPrivadaContainer').style.display = 'block';
+            document.getElementById('lendAgrupamentoId').required = false;
+            document.getElementById('lendSchoolId').required = false;
+            if(document.getElementById('lendEmpresaPrivadaId')) {
+                document.getElementById('lendEmpresaPrivadaId').required = true;
+            }
+        }
+    }
+
     function filterLendSchools() {
         const agrId = document.getElementById('lendAgrupamentoId').value;
         const schoolSelect = document.getElementById('lendSchoolId');
@@ -856,8 +975,9 @@
                     document.getElementById('modalSubmitBtn').className = 'btn btn-info';
                     document.getElementById('lendReturnForm').action = '?handler=Lend';
                     document.getElementById('lendLocationFields').style.display = 'block';
-                    document.getElementById('lendAgrupamentoId').required = true;
-                    document.getElementById('lendSchoolId').required = true;
+                    
+                    document.getElementById('lendLocationType').value = 'agrupamento';
+                    toggleLendLocationType('agrupamento');
                 } else {
                     document.getElementById('lendReturnModalTitle').innerText = 'Devolução de Artigo';
                     document.getElementById('lendReturnModalDesc').innerHTML = 'Selecione a quantidade de <strong>' + name + '</strong> que foi devolvida:';
@@ -867,6 +987,9 @@
                     document.getElementById('lendLocationFields').style.display = 'none';
                     document.getElementById('lendAgrupamentoId').required = false;
                     document.getElementById('lendSchoolId').required = false;
+                    if(document.getElementById('lendEmpresaPrivadaId')) {
+                        document.getElementById('lendEmpresaPrivadaId').required = false;
+                    }
                 }
             });
         }

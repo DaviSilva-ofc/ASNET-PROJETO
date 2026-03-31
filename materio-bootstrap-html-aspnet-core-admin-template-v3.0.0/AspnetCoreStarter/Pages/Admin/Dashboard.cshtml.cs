@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using AspnetCoreStarter.Services;
+using System;
 
 namespace AspnetCoreStarter.Pages.Admin
 {
@@ -31,14 +32,14 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<AspnetCoreStarter.Models.User> RecentMessageSenders { get; set; }
         public List<LowStockItemViewModel> LowStockItems { get; set; } = new();
 
-        public int TicketsPedidoCount { get; set; }
-        public int TicketsConcluidoCount { get; set; }
         public int TicketsPendenteCount { get; set; }
+        public int TicketsEmResolucaoCount { get; set; }
+        public int TicketsConcluidoCount { get; set; }
 
-        public List<int> LineChartPedidosData { get; set; }
-        public List<int> LineChartPendentesData { get; set; }
-        public List<int> LineChartConcluidosData { get; set; }
-        public List<string> LineChartLabels { get; set; }
+        public List<string> MonthlyLabels { get; set; } = new();
+        public List<int> MonthlyPendentesData { get; set; } = new();
+        public List<int> MonthlyEmResolucaoData { get; set; } = new();
+        public List<int> MonthlyConcluidosData { get; set; } = new();
 
         public string ClientLocationsJson { get; set; }
 
@@ -50,8 +51,8 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<Empresa> Empresas { get; set; }
 
         // Chart data — per-school equipment counts
-        public List<string> SchoolNames { get; set; }
-        public List<int> SchoolEquipmentCounts { get; set; }
+        public List<string> SchoolNames { get; set; } = new();
+        public List<int> SchoolEquipmentCounts { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -63,139 +64,20 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(userId) || userRole != "Admin")
                 return RedirectToPage("/Index");
 
-            // Temporary fix for missing tables and columns in MySQL
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS contratos (
-                        id_contrato INT AUTO_INCREMENT PRIMARY KEY,
-                        periodo VARCHAR(50),
-                        tipo_contrato VARCHAR(50),
-                        status_contrato VARCHAR(50),
-                        descricao TEXT,
-                        id_agrupamento INT,
-                        id_admin INT,
-                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento),
-                        FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS diretores (
-                        id_diretores INT AUTO_INCREMENT PRIMARY KEY,
-                        id_utilizador INT,
-                        id_agrupamento INT,
-                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
-                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS coordenadores (
-                        id_coordenadores INT AUTO_INCREMENT PRIMARY KEY,
-                        id_utilizador INT,
-                        id_escola INT,
-                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
-                        FOREIGN KEY (id_escola) REFERENCES escolas(id_escola)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS professores (
-                        id_professores INT AUTO_INCREMENT PRIMARY KEY,
-                        id_utilizador INT,
-                        id_bloco INT,
-                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
-                        FOREIGN KEY (id_bloco) REFERENCES blocos(id_bloco)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS tecnicos (
-                        id_utilizador INT PRIMARY KEY,
-                        especialidade VARCHAR(100),
-                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS administradores (
-                        id_utilizador INT PRIMARY KEY,
-                        id_agrupamento INT,
-                        FOREIGN KEY (id_utilizador) REFERENCES utilizadores(id_utilizador),
-                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS stock_empresa (
-                        id_stock INT AUTO_INCREMENT PRIMARY KEY,
-                        nome_equipamento VARCHAR(100),
-                        tipo VARCHAR(100),
-                        descricao TEXT,
-                        disponivel BOOLEAN DEFAULT TRUE,
-                        id_tecnico INT,
-                        id_admin INT,
-                        FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS stock_tecnico (
-                        id_stock_tecnico INT AUTO_INCREMENT PRIMARY KEY,
-                        id_tecnico INT,
-                        nome_equipamento VARCHAR(100),
-                        descricao TEXT,
-                        disponivel BOOLEAN DEFAULT TRUE,
-                        FOREIGN KEY (id_tecnico) REFERENCES tecnicos(id_utilizador)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS mensagens (
-                        id_mensagem INT AUTO_INCREMENT PRIMARY KEY,
-                        id_remetente INT,
-                        id_destinatario INT,
-                        conteudo TEXT,
-                        data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        lida BOOLEAN DEFAULT FALSE,
-                        FOREIGN KEY (id_remetente) REFERENCES utilizadores(id_utilizador),
-                        FOREIGN KEY (id_destinatario) REFERENCES utilizadores(id_utilizador)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN password_hash VARCHAR(255) NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN data_expiracao DATETIME NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("UPDATE utilizadores SET status_conta = 'Pendente' WHERE status_conta IS NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_agrupamento INT NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_escola INT NULL;"); } catch { }
-
-            // Pending users
-            PendingUsers = await _context.Users
-                .Where(u => u.AccountStatus == "Pendente")
-                .ToListAsync();
-
             // Totals
             TotalUsers = await _context.Users.CountAsync();
             
-            // New Metrics Logic
             // 1. Contratos a expirar (dentro de 30 dias)
-            var oneMonthFromNow = System.DateTime.Now.AddDays(30);
-            var today = System.DateTime.Now;
+            var oneMonthFromNow = DateTime.Now.AddDays(30);
+            var today = DateTime.Now;
             ExpiringContractsCount = await _context.Contratos
                 .Where(c => c.ExpiryDate != null && c.ExpiryDate >= today && c.ExpiryDate <= oneMonthFromNow)
                 .CountAsync(); 
 
             // 2. Tickets pendentes
             PendingTicketsCount = await _context.Tickets
-                .Where(t => t.Status == "Pendente" || t.TechnicianId == null)
+                .Where(t => t.Status == "Pendente")
                 .CountAsync();
-
-            // (Calculated later in section 5 to be consistent)
-            LowStockAlertsCount = 0; 
 
             // 4. Chat Notifications
             int currentUserId = int.Parse(userId);
@@ -223,18 +105,17 @@ namespace AspnetCoreStarter.Pages.Admin
             SchoolNames = new List<string>();
             SchoolEquipmentCounts = new List<int>();
 
-            var schools = await _context.Schools.ToListAsync();
-            foreach (var school in schools)
+            foreach (var school in AllSchools)
             {
                 SchoolNames.Add(school.Name ?? "Sem Nome");
-                var blocoIds = await _context.Blocos
+                var blocoIds = AllBlocos
                     .Where(b => b.SchoolId == school.Id)
                     .Select(b => b.Id)
-                    .ToListAsync();
-                var salaIds = await _context.Salas
+                    .ToList();
+                var salaIds = AllSalas
                     .Where(s => blocoIds.Contains(s.BlockId))
                     .Select(s => s.Id)
-                    .ToListAsync();
+                    .ToList();
                 var equipCount = await _context.Equipamentos
                     .Where(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value))
                     .CountAsync();
@@ -242,22 +123,28 @@ namespace AspnetCoreStarter.Pages.Admin
             }
 
             // Ticket Status Chart Data
-            TicketsPedidoCount = await _context.Tickets.CountAsync(t => t.Status == "Pedido");
-            TicketsConcluidoCount = await _context.Tickets.CountAsync(t => t.Status == "Concluido");
             TicketsPendenteCount = await _context.Tickets.CountAsync(t => t.Status == "Pendente");
+            TicketsEmResolucaoCount = await _context.Tickets.CountAsync(t => t.Status == "Em Resolução");
+            TicketsConcluidoCount = await _context.Tickets.CountAsync(t => t.Status == "Concluído");
 
-            // Line Chart Data
-            var allTickets = await _context.Tickets.ToListAsync();
-            LineChartLabels = new List<string> { "Baixo", "Medio", "Alto" };
-            LineChartPedidosData = new List<int>();
-            LineChartPendentesData = new List<int>();
-            LineChartConcluidosData = new List<int>();
+            // Monthly Trend Data (Last 6 Months)
+            MonthlyLabels = new List<string>();
+            MonthlyPendentesData = new List<int>();
+            MonthlyEmResolucaoData = new List<int>();
+            MonthlyConcluidosData = new List<int>();
 
-            foreach (var label in LineChartLabels)
+            for (int i = 5; i >= 0; i--)
             {
-                LineChartPedidosData.Add(allTickets.Count(t => t.Level == label && t.Status == "Pedido"));
-                LineChartPendentesData.Add(allTickets.Count(t => t.Level == label && t.Status == "Pendente"));
-                LineChartConcluidosData.Add(allTickets.Count(t => t.Level == label && t.Status == "Concluido"));
+                var monthDate = DateTime.Now.AddMonths(-i);
+                var monthLabel = monthDate.ToString("MMM", new System.Globalization.CultureInfo("pt-PT"));
+                MonthlyLabels.Add(monthLabel);
+
+                var startOfMonth = new DateTime(monthDate.Year, monthDate.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1);
+
+                MonthlyPendentesData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && t.Status == "Pendente"));
+                MonthlyEmResolucaoData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && t.Status == "Em Resolução"));
+                MonthlyConcluidosData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && t.Status == "Concluído"));
             }
 
             // Client Locations for Map
@@ -287,6 +174,11 @@ namespace AspnetCoreStarter.Pages.Admin
                 .ToList();
 
             LowStockAlertsCount = LowStockItems.Count;
+
+            // Pending users
+            PendingUsers = await _context.Users
+                .Where(u => u.AccountStatus == "Pendente")
+                .ToListAsync();
 
             return Page();
         }

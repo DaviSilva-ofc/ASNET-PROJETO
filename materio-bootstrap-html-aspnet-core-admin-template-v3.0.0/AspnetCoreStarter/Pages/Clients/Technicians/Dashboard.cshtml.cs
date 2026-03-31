@@ -41,7 +41,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             // Counts
             TotalTicketsCount = await _context.Tickets.CountAsync();
             MyTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId);
-            PendingTicketsCount = await _context.Tickets.CountAsync(t => t.Status == "Pedido" || t.Status == "Pendente");
+            PendingTicketsCount = await _context.Tickets.CountAsync(t => t.Status == "Pendente");
             
             MyStockAlertsCount = await _context.StockTecnico
                 .Where(s => s.TechnicianId == userId && !s.IsAvailable)

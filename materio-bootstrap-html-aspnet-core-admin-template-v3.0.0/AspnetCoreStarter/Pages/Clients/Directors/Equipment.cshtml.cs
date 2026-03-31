@@ -25,6 +25,12 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         [BindProperty]
         public Ticket NewTicket { get; set; } = new();
 
+        [BindProperty]
+        public Equipamento NewEquipment { get; set; } = new();
+
+        [BindProperty]
+        public string LocationType { get; set; } = "escola";
+
         public string SuccessMessage { get; set; }
 
         public Sala ActiveFilterRoom { get; set; }
@@ -35,9 +41,19 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<Agrupamento> AvailableAgrupamentos { get; set; } = new();
         public List<AspnetCoreStarter.Models.School> AvailableEscolas { get; set; } = new();
         public List<Bloco> AvailableBlocos { get; set; } = new();
+        public List<Empresa> AvailableEmpresas { get; set; } = new();
+        public List<string> UniqueEquipmentNames { get; set; } = new();
+        public List<string> UniqueBrands { get; set; } = new();
+        public List<string> UniqueModels { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
         public string? FilterName { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterBrand { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterModel { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public string? FilterType { get; set; }
@@ -57,6 +73,9 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         [BindProperty(SupportsGet = true)]
         public int? FilterRoomId { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public int? FilterEmpresaId { get; set; }
+
         public async Task<IActionResult> OnGetAsync(string? success)
         {
             if (User?.Identity == null || !User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -67,7 +86,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
             // Find the director's agrupamento
-            var director = await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == userId);
+            var director = await _context.Diretores.Include(d => d.User).FirstOrDefaultAsync(d => d.UserId == userId);
             if (director == null || director.AgrupamentoId == null)
             {
                 Equipments = new List<Equipamento>();
@@ -76,19 +95,31 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             int myAgrupamentoId = director.AgrupamentoId.Value;
 
-            var query = _context.Equipamentos
+            int? myEmpresaId = director.User?.EmpresaId;
+
+            var queryFull = _context.Equipamentos
                 .Include(e => e.StatusEquipamentos)
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
-                .Where(e => e.Room != null && e.Room.Block.School.AgrupamentoId == myAgrupamentoId) // Stay within director's agrupamento
+                .Include(e => e.Empresa)
+                .Where(e => (e.Room != null && e.Room.Block.School.AgrupamentoId == myAgrupamentoId))
                 .AsQueryable();
+
+            var query = queryFull;
 
             // Apply Search Filters (Case-insensitive and robust)
             if (!string.IsNullOrEmpty(FilterName)) 
             {
-                var nameLower = FilterName.ToLower();
-                query = query.Where(e => e.Name.ToLower().Contains(nameLower) || 
-                                         (e.Brand != null && e.Brand.ToLower().Contains(nameLower)) || 
-                                         (e.Model != null && e.Model.ToLower().Contains(nameLower)));
+                query = query.Where(e => e.Name == FilterName);
+            }
+
+            if (!string.IsNullOrEmpty(FilterBrand))
+            {
+                query = query.Where(e => e.Brand == FilterBrand);
+            }
+
+            if (!string.IsNullOrEmpty(FilterModel))
+            {
+                query = query.Where(e => e.Model == FilterModel);
             }
 
             if (!string.IsNullOrEmpty(FilterType)) 
@@ -108,7 +139,21 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 query = query.Where(e => e.SerialNumber != null && e.SerialNumber.ToLower().Contains(snLower));
             }
 
-            if (!string.IsNullOrEmpty(FilterStatus)) query = query.Where(e => e.StatusEquipamentos.Any(s => s.Estado == FilterStatus));
+            if (!string.IsNullOrEmpty(FilterStatus))
+            {
+                if (FilterStatus == "A funcionar")
+                {
+                    query = query.Where(e => e.Status == "A funcionar" || e.Status == "Disponível" || e.Status == "Funcionando" || e.Status == "Em uso" || string.IsNullOrEmpty(e.Status));
+                }
+                else if (FilterStatus == "Avariado")
+                {
+                    query = query.Where(e => e.Status == "Avariado" || e.Status == "Indisponível");
+                }
+                else if (FilterStatus == "Em reparo")
+                {
+                    query = query.Where(e => e.Status == "Em reparo");
+                }
+            }
 
             // Apply Location Filters (limited to their agrupamento)
             if (FilterRoomId.HasValue)
@@ -138,10 +183,70 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var blocoIds = AvailableBlocos.Select(b => b.Id).ToList();
             
             Rooms = await _context.Salas.Where(s => blocoIds.Contains(s.BlockId)).ToListAsync();
+            AvailableEmpresas = await _context.Empresas.ToListAsync();
+            
+            // Get unique values for filter dropdowns based on Agrupamento scope
+            var scopedEquipments = await queryFull.ToListAsync();
 
+            UniqueEquipmentNames = scopedEquipments.Select(e => e.Name).Where(n => !string.IsNullOrEmpty(n)).Distinct().OrderBy(n => n).ToList();
+            UniqueBrands = scopedEquipments.Select(e => e.Brand).Where(b => !string.IsNullOrEmpty(b)).Distinct().OrderBy(b => b).ToList();
+            UniqueModels = scopedEquipments.Select(e => e.Model).Where(m => !string.IsNullOrEmpty(m)).Distinct().OrderBy(m => m).ToList();
+            
             ActiveFilterAgrupamento = AvailableAgrupamentos.FirstOrDefault();
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostAddAsync()
+        {
+            if (ModelState.IsValid)
+            {
+                // Ensure mutual exclusivity based on location type
+                if (LocationType == "empresa")
+                {
+                    NewEquipment.RoomId = null;
+                }
+                else
+                {
+                    NewEquipment.EmpresaId = null;
+                }
+
+                NewEquipment.Name = NormalizeEquipmentName(NewEquipment.Name);
+                _context.Equipamentos.Add(NewEquipment);
+                await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Equipamento registado com sucesso!" });
+            }
+            return await OnGetAsync(null);
+        }
+
+        private static string NormalizeEquipmentName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return "Desconhecido";
+            string normalized = name.Trim();
+            var pluralMaps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Computadores", "Computador" },
+                { "Monitores", "Monitor" },
+                { "Impressoras", "Impressora" },
+                { "Projetores", "Projetor" },
+                { "Televisores", "Televisão" },
+                { "Portáteis", "Portátil" },
+                { "Ratos", "Rato" },
+                { "Teclados", "Teclado" },
+                { "UPSs", "UPS" },
+                { "Switches", "Switch" },
+                { "Quadros Interativos", "Quadro Interativo" },
+                { "Mesas Interativas", "Mesa Interativa" }
+            };
+
+            if (pluralMaps.TryGetValue(normalized, out var singular)) return singular;
+
+            if (normalized.EndsWith("ores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("adores", StringComparison.OrdinalIgnoreCase)) return normalized.Substring(0, normalized.Length - 2);
+            if (normalized.EndsWith("s", StringComparison.OrdinalIgnoreCase) && !normalized.EndsWith("ss", StringComparison.OrdinalIgnoreCase) && normalized.Length > 4)
+                return normalized.Substring(0, normalized.Length - 1);
+
+            return normalized;
         }
 
         public async Task<IActionResult> OnPostCreateTicketAsync()
@@ -158,11 +263,53 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             NewTicket.SchoolId = equipment.Room.Block.SchoolId;
             NewTicket.Status = "Pedido";
             NewTicket.CreatedAt = DateTime.UtcNow;
+            NewTicket.Description = $"Pedido de reparação para {equipment.Name} ({equipment.SerialNumber}) em {equipment.Room.Name}";
 
             _context.Tickets.Add(NewTicket);
+            
+            // Mark equipment as damaged if it wasn't already
+            if (equipment.Status != "Avariado")
+            {
+                equipment.Status = "Avariado";
+            }
+            
             await _context.SaveChangesAsync();
+            return RedirectToPage(new { success = "Ticket solicitado com sucesso!" });
+        }
 
-            return RedirectToPage(new { success = "Ticket de reparação solicitado com sucesso!" });
+        public async Task<IActionResult> OnPostToggleStatusAsync(int id)
+        {
+            var item = await _context.Equipamentos.FindAsync(id);
+            if (item != null)
+            {
+                // If the equipment is 'Em reparo', the Director cannot edit it.
+                if (item.Status == "Em reparo")
+                {
+                    return RedirectToPage();
+                }
+
+                if (item.Status == "A funcionar" || item.Status == "Disponível" || string.IsNullOrEmpty(item.Status))
+                {
+                    item.Status = "Avariado";
+                }
+                else
+                {
+                    item.Status = "A funcionar";
+                }
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostDeleteAsync(int id)
+        {
+            var item = await _context.Equipamentos.FindAsync(id);
+            if (item != null)
+            {
+                _context.Equipamentos.Remove(item);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage();
         }
     }
 }
