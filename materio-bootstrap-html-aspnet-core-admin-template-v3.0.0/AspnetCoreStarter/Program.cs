@@ -44,6 +44,9 @@ builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddRazorPages();
 #endif
 
+// SIGNALR
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // GARANTIR QUE A BASE DE DADOS E TABELAS EXISTEM
@@ -95,5 +98,8 @@ app.MapGet("/", context =>
 });
 
 app.MapRazorPages();
+
+// MAP SIGNALR HUB
+app.MapHub<AspnetCoreStarter.Hubs.ChatHub>("/chatHub");
 
 app.Run();

@@ -1,0 +1,376 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Coordinators.CoordinatorTicketsModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Tickets de Suporte";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Coordenador /</span> Tickets</h4>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center bg-light bg-opacity-10">
+            <h5 class="mb-0">Histórico de Pedidos de Assistência - @Model.MySchool?.Name</h5>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    <i class="ri-filter-3-line"></i> Filtros
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoTicket">
+                    <i class="bx bx-plus me-1"></i> Novo Ticket
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados" || !string.IsNullOrEmpty(Model.FilterArticle) || !string.IsNullOrEmpty(Model.FilterType))
+        {
+            <div class="card-body py-2">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0" role="alert" style="padding: 0.6rem 1.2rem; background-color: #e7f3ff;">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-filter-3-line me-2 text-primary"></i>
+                        <span class="small text-primary fw-medium">
+                            Filtros ativos: 
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { <span class="badge bg-white text-primary border me-1">Estado: @Model.FilterStatus</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterArticle)) { <span class="badge bg-white text-primary border me-1">Artigo: @Model.FilterArticle</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterType)) { <span class="badge bg-white text-primary border me-1">Tipo: @Model.FilterType</span> }
+                        </span>
+                    </div>
+                    <a asp-page="./Tickets" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="ri-refresh-line me-1 small"></i> Limpar Filtros
+                    </a>
+                </div>
+            </div>
+        }
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Equipamento</th>
+                        <th>Título / Descrição</th>
+                        <th>Data</th>
+                        <th>Estado</th>
+                        <th>Técnico</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @if (Model.Tickets == null || !Model.Tickets.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">Nenhum ticket registado para esta escola.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var ticket in Model.Tickets)
+                        {
+                            <tr>
+                                <td><span class="fw-bold">#@ticket.Id</span></td>
+                                <td>
+                                    <small class="text-muted">@ticket.Equipamento?.Name</small><br>
+                                    @ticket.Equipamento?.Brand @ticket.Equipamento?.Model
+                                </td>
+                                <td>
+                                    @{
+                                        var badgeColor = ticket.Level switch
+                                        {
+                                            "Alto" or "Extremo" => "bg-label-danger",
+                                            "Médio" => "bg-label-warning",
+                                            _ => "bg-label-info"
+                                        };
+                                    }
+                                    <span class="badge @badgeColor">@ticket.Level</span>
+                                    <div class="small text-muted text-truncate" style="max-width: 300px;">@ticket.Description</div>
+                                    @if (!string.IsNullOrEmpty(ticket.Period))
+                                    {
+                                        <div class="small"><i class="bx bx-time-five me-1"></i>Preferência: <span class="badge bg-label-secondary">@ticket.Period</span></div>
+                                    }
+                                </td>
+                                <td>@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    @switch (ticket.Status)
+                                    {
+                                        case "Pendente":
+                                        case "Pedido": <span class="badge bg-label-warning text-uppercase">Pendente</span> break;
+                                        case "Em Resolução": <span class="badge bg-label-info text-uppercase">Em Resolução</span> break;
+                                        case "Concluído": <span class="badge bg-label-success text-uppercase">Concluído</span> break;
+                                        case "Cancelado": <span class="badge bg-label-secondary text-uppercase">Cancelado</span> break;
+                                        default: <span class="badge bg-label-primary text-uppercase">@ticket.Status</span> break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (ticket.Technician != null)
+                                    {
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-xs me-2">
+                                                <span class="avatar-initial rounded-circle bg-label-primary">@(ticket.Technician.Username?.Substring(0, 1).ToUpper())</span>
+                                            </div>
+                                            <span>@ticket.Technician.Username</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">A aguardar atribuição</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Ticket -->
+<div class="modal fade" id="modalNovoTicket" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">Novo Ticket de Assistência</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-page-handler="CreateTicket">
+                <div class="modal-body">
+                    <input type="hidden" asp-for="NovoTicket.SchoolId" value="@Model.MySchool?.Id" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Equipamento</label>
+                        <select class="form-select" asp-for="NovoTicket.EquipamentoId" id="selectEquipamento" required onchange="updatePriorityLevels()">
+                            <option value="">Selecione um equipamento...</option>
+                            @foreach (var eq in Model.EquipamentosDisponiveis)
+                            {
+                                <option value="@eq.Id" data-type="@eq.Type" selected="@(Model.EqId == eq.Id)">
+                                    @eq.Name (@eq.Brand @eq.Model) - @eq.Room?.Name
+                                </option>
+                            }
+                        </select>
+                        <div class="form-text small">Apenas equipamentos com estado 'Avariado' ou 'Indisponível' são listados.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Nível de Urgência</label>
+                        <select asp-for="NovoTicket.Level" id="selectPriority" class="form-select" required>
+                            <option value="Baixo">Baixo</option>
+                            <option value="Médio" selected>Médio</option>
+                            <option value="Alto">Alto</option>
+                            <option value="Extremo">Extremo</option>
+                        </select>
+                        <div id="priorityHint" class="form-text text-muted small mt-1"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Período Preferencial</label>
+                        <select asp-for="NovoTicket.Period" class="form-select" required>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde" selected>Tarde</option>
+                            <option value="Integral">Integral</option>
+                        </select>
+                        <div class="form-text small">Indique o horário de preferência para a intervenção técnica.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase">Descrição do Problema</label>
+                        <textarea class="form-control" asp-for="NovoTicket.Description" id="ticketDescription" rows="3" placeholder="Descreva o problema detalhadamente..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary shadow-sm">Criar Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Modal Filtros -->
+<div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="get" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">Filtrar Tickets</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold small text-uppercase mb-1">Estado do Ticket</label>
+                        <select asp-for="FilterStatus" class="form-select">
+                            <option value="Todos os Estados">Todos os Estados</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Em Resolução">Em Resolução</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-uppercase mb-1">Artigo</label>
+                        <select id="filterArtigo" asp-for="FilterArticle" class="form-select" onchange="filterTypesByArtigo()">
+                            <option value="">Todos</option>
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Servidores/Infra">Servidores/Infra</option>
+                            <option value="Componentes">Componentes</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Quadros Interativos">Quadros Interativos</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold small text-uppercase mb-1">Tipo</label>
+                        <select id="filterTipo" asp-for="FilterType" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Desktop" data-art="Computadores">Desktop</option>
+                            <option value="Portátil" data-art="Computadores">Portátil</option>
+                            <option value="AIO" data-art="Computadores">AIO</option>
+                            <option value="Laptop" data-art="Computadores">Laptop</option>
+                            <option value="Monitor" data-art="Monitores">Monitor</option>
+                            <option value="Televisão" data-art="Monitores">Televisão</option>
+                            <option value="TV" data-art="Monitores">TV</option>
+                            <option value="Motherboard" data-art="Componentes">Motherboard</option>
+                            <option value="Disco HDD" data-art="Componentes">Disco HDD</option>
+                            <option value="Disco SSD" data-art="Componentes">Disco SSD</option>
+                            <option value="Memória RAM" data-art="Componentes">Memória RAM</option>
+                            <option value="Processador (CPU)" data-art="Componentes">Processador (CPU)</option>
+                            <option value="Placa Gráfica" data-art="Componentes">Placa Gráfica</option>
+                            <option value="Fonte Alimentação" data-art="Componentes">Fonte Alimentação</option>
+                            <option value="Teclado" data-art="Periféricos">Teclado</option>
+                            <option value="Rato" data-art="Periféricos">Rato</option>
+                            <option value="Impressora" data-art="Impressoras">Impressora</option>
+                            <option value="Projetor" data-art="Projetores">Projetor</option>
+                            <option value="Quadro Interativo" data-art="Quadros Interativos">Quadro Interativo</option>
+                            <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
+                            <option value="Router" data-art="Networking">Router</option>
+                            <option value="Switch" data-art="Networking">Switch</option>
+                            <option value="Access Point" data-art="Networking">Access Point</option>
+                            <option value="Firewall" data-art="Networking">Firewall</option>
+                            <option value="Servidor" data-art="Servidores/Infra">Servidor</option>
+                            <option value="Storage" data-art="Servidores/Infra">Storage</option>
+                            <option value="NAS" data-art="Servidores/Infra">NAS</option>
+                            <option value="Cabo/Adatador" data-art="Outros">Cabo/Adaptador</option>
+                            <option value="Outro" data-art="Outros">Outro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section PageScripts {
+    <script>
+        function filterTypesByArtigo() {
+            const artName = document.getElementById('filterArtigo').value;
+            const tipoSelect = document.getElementById('filterTipo');
+            const options = tipoSelect.querySelectorAll('option');
+            
+            tipoSelect.value = "";
+            
+            options.forEach(opt => {
+                if (opt.value === "") return;
+                const optArts = (opt.getAttribute('data-art') || "").split('|');
+                if (artName === "" || optArts.includes(artName)) {
+                    opt.style.display = 'block';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+        }
+
+        function updatePriorityLevels() {
+            const selectEq = document.getElementById('selectEquipamento');
+            if (!selectEq) return;
+            const selectedOption = selectEq.options[selectEq.selectedIndex];
+            const type = selectedOption ? selectedOption.getAttribute('data-type') : '';
+            processPriority(type);
+        }
+
+        function processPriority(type) {
+            const selectPri = document.getElementById('selectPriority');
+            const hint = document.getElementById('priorityHint');
+            console.log("Processing priority for type:", type);
+
+            if (!selectPri) return;
+
+            // Reset all options
+            for (let i = 0; i < selectPri.options.length; i++) {
+                selectPri.options[i].disabled = false;
+            }
+            hint.innerText = "";
+
+            if (!type) return;
+            const typeLower = type.toLowerCase().trim();
+
+            const disableByValue = (val) => {
+                for (let i = 0; i < selectPri.options.length; i++) {
+                    if (selectPri.options[i].value === val) selectPri.options[i].disabled = true;
+                }
+            };
+
+            if (typeLower.includes('aio') || typeLower.includes('computador') || typeLower.includes('desktop') || typeLower.includes('portátil') || typeLower.includes('laptop')) {
+                // Médio ONLY (as requested)
+                selectPri.value = 'Médio';
+                disableByValue('Baixo');
+                disableByValue('Alto');
+                disableByValue('Extremo');
+                hint.innerText = "Prioridade: Médio.";
+            } else if (typeLower.includes('quadro interativo') || typeLower.includes('smartboard') || typeLower.includes('networking') || typeLower.includes('switch') || typeLower.includes('router') || typeLower.includes('access point') || typeLower.includes('firewall')) {
+                // Médio/Alto
+                if (selectPri.value === 'Baixo' || selectPri.value === 'Extremo') selectPri.value = 'Médio';
+                disableByValue('Baixo');
+                disableByValue('Extremo');
+                hint.innerText = "Prioridade: Médio / Alto.";
+            } else if (typeLower.includes('impressora') || typeLower.includes('monitor') || typeLower.includes('projetor') || typeLower.includes('televisao') || typeLower.includes('tv')) {
+                // Baixo/Médio
+                if (selectPri.value === 'Alto' || selectPri.value === 'Extremo') selectPri.value = 'Médio';
+                disableByValue('Alto');
+                disableByValue('Extremo');
+                hint.innerText = "Prioridade: Baixo / Médio.";
+            } else if (typeLower.includes('mesa interativa')) {
+                // Médio only
+                selectPri.value = 'Médio';
+                disableByValue('Baixo');
+                disableByValue('Alto');
+                disableByValue('Extremo');
+                hint.innerText = "Prioridade: Médio.";
+            } else if (typeLower.includes('servidor') || typeLower.includes('storage') || typeLower.includes('nas')) {
+                // Critical Infra fallback: Alto/Extremo
+                if (selectPri.value === 'Baixo' || selectPri.value === 'Médio') selectPri.value = 'Alto';
+                disableByValue('Baixo');
+                disableByValue('Médio');
+                hint.innerText = "Infraestrutura crítica: Alto / Extremo.";
+            }
+
+            console.log("Allowed priorities updated for:", typeLower);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if there's an EqId to auto-open
+            @if (Model.EqId.HasValue)
+            {
+                <text>
+                var myModalElement = document.getElementById('modalNovoTicket');
+                var myModal = new bootstrap.Modal(myModalElement);
+                myModal.show();
+                
+                // Trigger priority update after modal is ready
+                myModalElement.addEventListener('shown.bs.modal', function () {
+                    updatePriorityLevels();
+                });
+                </text>
+            }
+        });
+    </script>
+}

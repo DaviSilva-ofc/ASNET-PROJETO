@@ -116,25 +116,151 @@
                                     <span class="badge bg-label-success">@(item.Status == "Funcionando" || string.IsNullOrEmpty(item.Status) ? "A funcionar" : item.Status)</span>
                                 }
                             </td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <div class="d-flex align-items-center gap-2">
                                     <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
-                                        @if (item.Status == "Avariado") {
+                                        @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
+                                        {
                                             <button type="submit" class="btn btn-sm text-success" title="Marcar como Funcional"><i class="ri-check-line"></i> Funcional</button>
                                             <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
-                                        } else {
+                                        }
+                                        else
+                                        {
                                             <button type="submit" class="btn btn-sm text-warning" title="Marcar como Avariado"><i class="ri-error-warning-line"></i> Avariar</button>
                                         }
                                     </form>
-                                    <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza?');" style="display:inline-block;">
-                                        <button type="submit" class="btn btn-sm text-danger" title="Eliminar"><i class="ri-delete-bin-line"></i> Excluir</button>
-                                    </form>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <button type="button" class="btn btn-sm text-primary p-1" title="Editar"
+                                                onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId')">
+                                            <i class="bx bx-edit"></i> ✏️
+                                        </button>
+                                        <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
+                                            <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar"><i class="bx bx-trash"></i> 🗑️</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    @* Modal Editar Equipamento *@
+    <div class="modal fade" id="modalEditarEquipamento" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="Edit">
+                    <input type="hidden" asp-for="NewEquipment.Id" id="editId" />
+                    <input type="hidden" asp-for="LocationType" id="editLocationType" value="escola" />
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bx bx-edit me-2"></i>Editar Equipamento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Artigo</label>
+                                <div class="select-search-wrapper">
+                                    <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." onkeyup="filterSelect(this, 'editArtigo')">
+                                    <select asp-for="NewEquipment.Name" id="editArtigo" class="form-select" required onchange="updateBrandsModels('edit')">
+                                        <option value="">Selecione...</option>
+                                        @foreach (var name in Model.UniqueEquipmentNames)
+                                        {
+                                            <option value="@name">@name</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo Específico</label>
+                                <div class="select-search-wrapper">
+                                    <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." onkeyup="filterSelect(this, 'editTipo')">
+                                    <select asp-for="NewEquipment.Type" id="editTipo" class="form-select" required>
+                                        <option value="">Selecione o tipo...</option>
+                                        <option value="Desktop" data-artigo="Computadores">Desktop</option>
+                                        <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                                        <option value="AIO" data-artigo="Computadores">AIO</option>
+                                        <option value="Laptop" data-artigo="Computadores">Laptop</option>
+                                        <option value="Monitor" data-artigo="Monitores">Monitor</option>
+                                        <option value="Televisão" data-artigo="Monitores">Televisão</option>
+                                        <option value="TV" data-artigo="Monitores">TV</option>
+                                        <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
+                                        <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
+                                        <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
+                                        <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+                                        <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
+                                        <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
+                                        <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
+                                        <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+                                        <option value="Rato" data-artigo="Periféricos">Rato</option>
+                                        <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                                        <option value="Projetor" data-artigo="Projetores">Projetor</option>
+                                        <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
+                                        <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
+                                        <option value="Router" data-artigo="Networking">Router</option>
+                                        <option value="Switch" data-artigo="Networking">Switch</option>
+                                        <option value="Access Point" data-artigo="Networking">Access Point</option>
+                                        <option value="Firewall" data-artigo="Networking">Firewall</option>
+                                        <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+                                        <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
+                                        <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+                                        <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
+                                        <option value="Outro" data-artigo="Outros">Outro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Marca</label>
+                                <div class="select-search-wrapper">
+                                    <input type="text" class="select-search-input" placeholder="Pesquisar marca..." onkeyup="filterSelect(this, 'editMarca')">
+                                    <select asp-for="NewEquipment.Brand" id="editMarca" class="form-select" required onchange="updateModels('edit')">
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Modelo</label>
+                                <div class="select-search-wrapper">
+                                    <input type="text" class="select-search-input" placeholder="Pesquisar modelo..." onkeyup="filterSelect(this, 'editModelo')">
+                                    <select asp-for="NewEquipment.Model" id="editModelo" class="form-select" required>
+                                        <option value="">Selecione a marca primeiro...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Nº Série</label>
+                                <input type="text" asp-for="NewEquipment.SerialNumber" id="editSerial" class="form-control" required />
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Sala (Opcional se for Empresa)</label>
+                                <select asp-for="NewEquipment.RoomId" id="editSala" class="form-select">
+                                    <option value="">Nenhuma / Empresa</option>
+                                    @foreach (var sala in Model.Rooms)
+                                    {
+                                        <option value="@sala.Id">@sala.Name (@(sala.Block?.Name ?? "N/A"))</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Empresa (Opcional se for Sala)</label>
+                                <select asp-for="NewEquipment.EmpresaId" id="editEmpresa" class="form-select">
+                                    <option value="">Nenhuma / Escola</option>
+                                    @foreach (var emp in Model.AvailableEmpresas)
+                                    {
+                                        <option value="@emp.Id">@emp.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -157,6 +283,7 @@
                                 <option value="Monitores">Monitores</option>
                                 <option value="Impressoras">Impressoras</option>
                                 <option value="Networking">Networking</option>
+                                <option value="Servidores/Infra">Servidores/Infra</option>
                                 <option value="Componentes">Componentes</option>
                                 <option value="Periféricos">Periféricos</option>
                                 <option value="Projetores">Projetores</option>
@@ -173,7 +300,11 @@
                                 <option value="">Selecione o tipo...</option>
                                 <option value="Desktop" data-artigo="Computadores">Desktop</option>
                                 <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                                <option value="AIO" data-artigo="Computadores">AIO</option>
+                                <option value="Laptop" data-artigo="Computadores">Laptop</option>
                                 <option value="Monitor" data-artigo="Monitores">Monitor</option>
+                                <option value="Televisão" data-artigo="Monitores">Televisão</option>
+                                <option value="TV" data-artigo="Monitores">TV</option>
                                 <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
                                 <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
                                 <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
@@ -186,9 +317,14 @@
                                 <option value="Impressora" data-artigo="Impressoras">Impressora</option>
                                 <option value="Projetor" data-artigo="Projetores">Projetor</option>
                                 <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
+                                <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
                                 <option value="Router" data-artigo="Networking">Router</option>
                                 <option value="Switch" data-artigo="Networking">Switch</option>
                                 <option value="Access Point" data-artigo="Networking">Access Point</option>
+                                <option value="Firewall" data-artigo="Networking">Firewall</option>
+                                <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+                                <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
+                                <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
                                 <option value="Cabo/Adatador" data-artigo="Outros">Cabo/Adaptador</option>
                                 <option value="Outro" data-artigo="Outros">Outro</option>
                             </select>
@@ -551,13 +687,20 @@
         },
         'Networking': {
             'Cisco': ['Catalyst 1000-24T', 'Catalyst 2960-X', 'Catalyst 9200L', 'ISR 1100', 'ISR 4321', 'Meraki MR36', 'Meraki MS120-8', 'Meraki MX67'],
+            'Fortinet': ['FortiGate 40F', 'FortiGate 60F', 'FortiGate 80F'],
             'TP-Link': ['TL-SG108', 'TL-SG1016D', 'TL-SG1024D', 'Archer AX50', 'Archer AX73', 'EAP245', 'EAP620 HD', 'Deco X60'],
             'Ubiquiti': ['UniFi U6 Lite', 'UniFi U6 Pro', 'UniFi U6 LR', 'UniFi Switch 24', 'UniFi Switch Lite 16 PoE', 'UniFi Dream Machine', 'EdgeSwitch 24'],
             'Netgear': ['GS108', 'GS308', 'GS316', 'WAX610', 'WAX620', 'RAX50', 'MS108UP'],
             'D-Link': ['DGS-1100-08V2', 'DGS-1100-24V2', 'DAP-X2810', 'DIR-X1860', 'DMS-106XT'],
             'MikroTik': ['hAP ac3', 'RB260GS', 'CRS326-24G-2S+', 'RB5009UG+S+IN', 'cAP ac'],
-            'Aruba': ['Instant On AP22', 'Instant On AP25', 'Instant On 1930 24G', 'CX 6100'],
-            'Zyxel': ['GS1200-5', 'GS1200-8', 'NWA110AX', 'XGS1930-28']
+            'Aruba': ['Instant On AP22', 'Instant On AP25', 'Instant On 1930 24G', 'CX 6100']
+        },
+        'Servidores/Infra': {
+            'Dell': ['PowerEdge T150', 'PowerEdge T350', 'PowerEdge R250', 'PowerEdge R350'],
+            'HP': ['ProLiant ML30 Gen10', 'ProLiant ML110 Gen10', 'ProLiant DL360 Gen10', 'ProLiant DL380 Gen10'],
+            'Lenovo': ['ThinkSystem ST50', 'ThinkSystem ST250', 'ThinkSystem SR250L'],
+            'Synology': ['DiskStation DS220+', 'DiskStation DS420+', 'DiskStation DS920+', 'RackStation RS820+'],
+            'QNAP': ['TS-251D', 'TS-451D2', 'TS-453D', 'TS-653D']
         },
         'Componentes': {
             'Kingston': ['ValueRAM 8GB DDR4', 'FURY Beast 16GB DDR4', 'A400 240GB SSD', 'A400 480GB SSD', 'NV2 500GB NVMe', 'NV2 1TB NVMe'],
@@ -616,13 +759,23 @@
         filterSelect(tipoSearch, 'regTipo');
     }
 
-    function updateBrandsModels() {
-        var artigo = document.getElementById('regArtigo').value;
-        var marcaSelect = document.getElementById('regMarca');
-        var modeloSelect = document.getElementById('regModelo');
+    function updateBrandsModels(prefix = 'reg') {
+        const artigo = document.getElementById(prefix + 'Artigo').value;
+        const marcaSelect = document.getElementById(prefix + 'Marca');
+        const modeloSelect = document.getElementById(prefix + 'Modelo');
+        const tipoSelect = document.getElementById(prefix + 'Tipo');
 
         marcaSelect.innerHTML = '<option value="">Selecione a marca...</option>';
         modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
+
+        // Filter specific types in the dropdown
+        if (tipoSelect) {
+            Array.from(tipoSelect.options).forEach(opt => {
+                if (opt.value === "") return;
+                const dataArt = opt.getAttribute('data-artigo');
+                opt.style.display = (!artigo || !dataArt || dataArt === artigo) ? 'block' : 'none';
+            });
+        }
 
         // Clear search inputs
         var marcaWrapper = marcaSelect.closest('.select-search-wrapper');
@@ -638,10 +791,10 @@
         }
     }
 
-    function updateModels() {
-        var artigo = document.getElementById('regArtigo').value;
-        var marca = document.getElementById('regMarca').value;
-        var modeloSelect = document.getElementById('regModelo');
+    function updateModels(prefix = 'reg') {
+        const artigo = document.getElementById(prefix + 'Artigo').value;
+        const marca = document.getElementById(prefix + 'Marca').value;
+        const modeloSelect = document.getElementById(prefix + 'Modelo');
 
         modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
         var modeloWrapper = modeloSelect.closest('.select-search-wrapper');
@@ -652,6 +805,35 @@
                 modeloSelect.add(new Option(model, model));
             });
         }
+    }
+
+    function openEditModal(id, name, type, brand, model, serial, roomId, empId) {
+        document.getElementById('editId').value = id;
+        
+        // Set Artigo and trigger brands update
+        const artSelect = document.getElementById('editArtigo');
+        artSelect.value = name;
+        updateBrandsModels('edit');
+
+        // Set Marca and trigger models update
+        const marcaSelect = document.getElementById('editMarca');
+        marcaSelect.value = brand;
+        updateModels('edit');
+
+        // Set others
+        document.getElementById('editModelo').value = model;
+        document.getElementById('editTipo').value = type;
+        document.getElementById('editSerial').value = serial;
+        document.getElementById('editSala').value = roomId || "";
+        document.getElementById('editEmpresa').value = empId || "";
+
+        // Determine LocationType for the POST
+        const locType = empId ? "empresa" : "escola";
+        const locIdInput = document.getElementById('editLocationType');
+        if (locIdInput) locIdInput.value = locType;
+
+        var modal = new bootstrap.Modal(document.getElementById('modalEditarEquipamento'));
+        modal.show();
     }
 
     // Registration Modal Filters

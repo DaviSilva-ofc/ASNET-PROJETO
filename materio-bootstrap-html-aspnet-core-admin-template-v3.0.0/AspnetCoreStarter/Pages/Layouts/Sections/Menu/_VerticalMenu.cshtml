@@ -110,6 +110,45 @@
           </a>
         </li>
       }
+      else if (User.IsInRole("Coordenador"))
+      {
+        <li class='menu-item@(currentPage == "/Clients/Coordinators/Dashboard" ? " active" : "")'>
+          <a asp-page="/Clients/Coordinators/Dashboard" class="menu-link">
+            <i class="menu-icon icon-base ri-dashboard-line"></i>
+            <div>Visão Geral</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Coordinators/Infrastructure" ? " active" : "")'>
+          <a asp-page="/Clients/Coordinators/Infrastructure" class="menu-link">
+            <i class="menu-icon icon-base ri-government-line"></i>
+            <div>Infraestrutura</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Coordinators/Equipment" ? " active" : "")'>
+          <a asp-page="/Clients/Coordinators/Equipment" class="menu-link">
+            <i class="menu-icon icon-base ri-computer-line"></i>
+            <div>Equipamentos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Coordinators/Stocks" ? " active" : "")'>
+          <a asp-page="/Clients/Coordinators/Stocks" class="menu-link">
+            <i class="menu-icon icon-base ri-archive-line"></i>
+            <div>Stocks</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Coordinators/Tickets" ? " active" : "")'>
+          <a asp-page="/Clients/Coordinators/Tickets" class="menu-link">
+            <i class="menu-icon icon-base ri-ticket-line"></i>
+            <div>Tickets</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Coordinators/Chat" ? " active" : "")'>
+          <a asp-page="/Clients/Coordinators/Chat" class="menu-link">
+            <i class="menu-icon icon-base ri-chat-3-line"></i>
+            <div>Chat</div>
+          </a>
+        </li>
+      }
       else if (User.IsInRole("Admin"))
       {
         <li class='menu-item@(currentPage == "/Admin/Dashboard" ? " active" : "")'>

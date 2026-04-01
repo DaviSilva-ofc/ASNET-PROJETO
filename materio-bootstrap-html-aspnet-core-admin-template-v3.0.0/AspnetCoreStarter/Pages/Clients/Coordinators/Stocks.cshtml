@@ -1,5 +1,5 @@
 @page
-@model AspnetCoreStarter.Pages.Clients.Directors.DirectorStocksModel
+@model AspnetCoreStarter.Pages.Clients.Coordinators.CoordinatorStocksModel
 @{
     Layout = "Layouts/_ContentNavbarLayout";
     ViewData["Title"] = "Stocks";
@@ -100,7 +100,7 @@
     }
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Diretor /</span> Stocks</h4>
+        <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Coordenador /</span> Stocks</h4>
     </div>
 
     @{
@@ -120,7 +120,7 @@
                         <h6 class="mb-0">Escolas</h6>
                     </div>
                     <h4 class="ms-1">@Model.CountEscolas</h4>
-                    <p class="text-muted small mb-0">Total de escolas no agrupamento</p>
+                    <p class="text-muted small mb-0">Total de escolas atribuídas</p>
                 </div>
             </div>
         </div>
@@ -223,7 +223,7 @@
                     @if (!Model.Items.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">Nenhum artigo encontrado no agrupamento com os filtros selecionados.</td>
+                            <td colspan="6" class="text-center py-5 text-muted">Nenhum artigo encontrado na sua escola.</td>
                         </tr>
                     }
                     else
@@ -362,41 +362,6 @@
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
                     <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Solicitar Empréstimo -->
-    <div class="modal fade" id="modalEmprestimo" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-page-handler="RequestLoan" class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title">Solicitar Empréstimo de Equipamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="itemName" id="loanItemName" />
-                    <input type="hidden" name="itemType" id="loanItemType" />
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-uppercase">Artigo Selecionado</label>
-                        <p class="form-control-plaintext fw-bold" id="txtItemDisplay"></p>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-uppercase">Quantidade Necessária</label>
-                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-uppercase">Notas Adicionais (Finalidade, Prazo, etc.)</label>
-                        <textarea name="notes" class="form-control" rows="3" placeholder="Explique por que precisa deste equipamento..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Enviar Pedido ao Administrador</button>
                 </div>
             </form>
         </div>
@@ -562,15 +527,6 @@
                 opt.style.display = "none";
             }
         }
-    }
-
-    function openLoanModal(name, type) {
-        document.getElementById('loanItemName').value = name;
-        document.getElementById('loanItemType').value = type;
-        document.getElementById('txtItemDisplay').innerText = name + " - " + type;
-        
-        var modal = new bootstrap.Modal(document.getElementById('modalEmprestimo'));
-        modal.show();
     }
 
     function openEditStatusModal(nameEncoded, roomId, statusEncoded, qty) {

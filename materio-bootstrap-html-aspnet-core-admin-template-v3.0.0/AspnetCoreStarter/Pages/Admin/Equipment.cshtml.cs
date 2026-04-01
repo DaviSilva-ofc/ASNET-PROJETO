@@ -238,8 +238,38 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 _context.Equipamentos.Remove(item);
                 await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Equipamento excluído com sucesso!" });
             }
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditAsync()
+        {
+            if (!ModelState.IsValid) return RedirectToPage(new { success = "Erro ao validar dados do equipamento" });
+
+            var equip = await _context.Equipamentos.FindAsync(NewEquipment.Id);
+            if (equip == null) return RedirectToPage(new { success = "Equipamento não encontrado" });
+
+            // Update fields
+            equip.Name = NewEquipment.Name;
+            equip.Type = NewEquipment.Type;
+            equip.Brand = NewEquipment.Brand;
+            equip.Model = NewEquipment.Model;
+            equip.SerialNumber = NewEquipment.SerialNumber;
+            
+            if (LocationType == "empresa")
+            {
+                equip.EmpresaId = NewEquipment.EmpresaId;
+                equip.RoomId = null;
+            }
+            else
+            {
+                equip.RoomId = NewEquipment.RoomId;
+                equip.EmpresaId = null;
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { success = "Equipamento atualizado com sucesso!" });
         }
     }
 }

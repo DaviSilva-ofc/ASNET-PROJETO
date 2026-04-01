@@ -28,21 +28,31 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Solicitações de Suporte</h5>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
                     <i class="ri-filter-3-line"></i> Filtros
                 </button>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovoTicket">
-                    <i class="ri-add-line"></i> Novo Ticket
+                <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoTicket">
+                    <i class='bx bx-plus-circle me-1'></i> Criar Ticket
                 </button>
             </div>
         </div>
 
-        @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados")
+        @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados" || !string.IsNullOrEmpty(Model.FilterArticle) || !string.IsNullOrEmpty(Model.FilterType))
         {
             <div class="card-body py-2">
-                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert" style="padding: 0.5rem 1rem;">
-                    <span class="small">A visualizar tickets com estado: <strong>@Model.FilterStatus</strong></span>
-                    <a asp-page="./Tickets" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0" role="alert" style="padding: 0.6rem 1.2rem; background-color: #e7f3ff;">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-filter-3-line me-2 text-primary"></i>
+                        <span class="small text-primary fw-medium">
+                            Filtros ativos: 
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { <span class="badge bg-white text-primary border me-1">Estado: @Model.FilterStatus</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterArticle)) { <span class="badge bg-white text-primary border me-1">Artigo: @Model.FilterArticle</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterType)) { <span class="badge bg-white text-primary border me-1">Tipo: @Model.FilterType</span> }
+                        </span>
+                    </div>
+                    <a asp-page="./Tickets" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="ri-refresh-line me-1 small"></i> Limpar Filtros
+                    </a>
                 </div>
             </div>
         }
@@ -104,16 +114,27 @@
                                 </td>
                                 <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                 <td>
-                                    <form method="post" asp-page-handler="UpdateStatus" class="d-inline-flex gap-2">
-                                        <input type="hidden" name="id" value="@t.Id" />
-                                        <input type="hidden" name="FilterStatus" value="@Model.FilterStatus" />
-                                        <select name="newStatus" class="form-select form-select-sm" style="width: 140px;" onchange="this.form.submit()">
-                                            <option value="" disabled selected>Alterar Estado</option>
-                                            <option value="Pendente" disabled="@(t.Status == "Pendente" ? "disabled" : null)">Pendente</option>
-                                            <option value="Em Resolução" disabled="@(t.Status == "Em Resolução" ? "disabled" : null)">Em Resolução</option>
-                                            <option value="Concluído" disabled="@(t.Status == "Concluído" ? "disabled" : null)">Concluído</option>
-                                        </select>
-                                    </form>
+                                    @if(t.Level == "Empréstimo" && t.Status == "Pedido")
+                                    {
+                                        <form method="post" asp-page-handler="HandleLoanRequest" class="d-inline-flex gap-2">
+                                            <input type="hidden" name="id" value="@t.Id" />
+                                            <button type="submit" name="actionType" value="Aprovar" class="btn btn-sm btn-success px-2 py-1" title="Aprovar Pedido de Stock"><i class="ri-check-line me-1"></i>Aprovar</button>
+                                            <button type="submit" name="actionType" value="Recusar" class="btn btn-sm btn-danger px-2 py-1" title="Recusar Pedido de Stock"><i class="ri-close-line me-1"></i>Recusar</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-page-handler="UpdateStatus" class="d-inline-flex gap-2">
+                                            <input type="hidden" name="id" value="@t.Id" />
+                                            <input type="hidden" name="FilterStatus" value="@Model.FilterStatus" />
+                                            <select name="newStatus" class="form-select form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                                                <option value="" disabled selected>Alterar Estado</option>
+                                                <option value="Pendente" disabled="@(t.Status == "Pendente" ? "disabled" : null)">Pendente</option>
+                                                <option value="Em Resolução" disabled="@(t.Status == "Em Resolução" ? "disabled" : null)">Em Resolução</option>
+                                                <option value="Concluído" disabled="@(t.Status == "Concluído" ? "disabled" : null)">Concluído</option>
+                                            </select>
+                                        </form>
+                                    }
                                 </td>
                             </tr>
                         }
@@ -214,26 +235,79 @@
     </div>
     <!-- Modal Filtros -->
     <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <form method="get" class="modal-content">
                 <div class="modal-header border-bottom">
                     <h5 class="modal-title">Filtrar Tickets</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-0">
-                        <label class="form-label small fw-bold">Estado do Ticket</label>
-                        <select name="FilterStatus" class="form-select">
-                            <option value="Todos os Estados">Todos os Estados</option>
-                            <option value="Pendente" selected="@(Model.FilterStatus == "Pendente" ? "selected" : null)">Pendente</option>
-                            <option value="Em Resolução" selected="@(Model.FilterStatus == "Em Resolução" ? "selected" : null)">Em Resolução</option>
-                            <option value="Concluído" selected="@(Model.FilterStatus == "Concluído" ? "selected" : null)">Concluído</option>
-                        </select>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Estado do Ticket</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="Todos os Estados">Todos os Estados</option>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Em Resolução">Em Resolução</option>
+                                <option value="Concluído">Concluído</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Artigo</label>
+                            <select id="filterArtigo" asp-for="FilterArticle" class="form-select" onchange="filterTypesByArtigo()">
+                                <option value="">Todos</option>
+                                <option value="Computadores">Computadores</option>
+                                <option value="Monitores">Monitores</option>
+                                <option value="Impressoras">Impressoras</option>
+                                <option value="Projetores">Projetores</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Servidores/Infra">Servidores/Infra</option>
+                                <option value="Componentes">Componentes</option>
+                                <option value="Periféricos">Periféricos</option>
+                                <option value="Quadros Interativos">Quadros Interativos</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Tipo</label>
+                            <select id="filterTipo" asp-for="FilterType" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Desktop" data-art="Computadores">Desktop</option>
+                                <option value="Portátil" data-art="Computadores">Portátil</option>
+                                <option value="AIO" data-art="Computadores">AIO</option>
+                                <option value="Laptop" data-art="Computadores">Laptop</option>
+                                <option value="Monitor" data-art="Monitores">Monitor</option>
+                                <option value="Televisão" data-art="Monitores">Televisão</option>
+                                <option value="TV" data-art="Monitores">TV</option>
+                                <option value="Motherboard" data-art="Componentes">Motherboard</option>
+                                <option value="Disco HDD" data-art="Componentes">Disco HDD</option>
+                                <option value="Disco SSD" data-art="Componentes">Disco SSD</option>
+                                <option value="Memória RAM" data-art="Componentes">Memória RAM</option>
+                                <option value="Processador (CPU)" data-art="Componentes">Processador (CPU)</option>
+                                <option value="Placa Gráfica" data-art="Componentes">Placa Gráfica</option>
+                                <option value="Fonte Alimentação" data-art="Componentes">Fonte Alimentação</option>
+                                <option value="Teclado" data-art="Periféricos">Teclado</option>
+                                <option value="Rato" data-art="Periféricos">Rato</option>
+                                <option value="Impressora" data-art="Impressoras">Impressora</option>
+                                <option value="Projetor" data-art="Projetores">Projetor</option>
+                                <option value="Quadro Interativo" data-art="Quadros Interativos">Quadro Interativo</option>
+                                <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
+                                <option value="Router" data-art="Networking">Router</option>
+                                <option value="Switch" data-art="Networking">Switch</option>
+                                <option value="Access Point" data-art="Networking">Access Point</option>
+                                <option value="Firewall" data-art="Networking">Firewall</option>
+                                <option value="Servidor" data-art="Servidores/Infra">Servidor</option>
+                                <option value="Storage" data-art="Servidores/Infra">Storage</option>
+                                <option value="NAS" data-art="Servidores/Infra">NAS</option>
+                                <option value="Cabo/Adatador" data-art="Outros">Cabo/Adaptador</option>
+                                <option value="Outro" data-art="Outros">Outro</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Aplicar Filtros</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
                 </div>
             </form>
         </div>
@@ -242,8 +316,27 @@
 
 @section PageScripts {
 <script>
+    function filterTypesByArtigo() {
+        const artName = document.getElementById('filterArtigo').value;
+        const tipoSelect = document.getElementById('filterTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        
+        tipoSelect.value = "";
+        
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const optArts = (opt.getAttribute('data-art') || "").split('|');
+            if (artName === "" || optArts.includes(artName)) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
     function updatePriorityLevels() {
         const selectEq = document.getElementById('selectEquipamento') || document.getElementById('selectEquipamentoDisabled');
+        if (!selectEq) return;
         const selectPri = document.getElementById('selectPriority');
         const hint = document.getElementById('priorityHint');
         
@@ -305,13 +398,20 @@
             }
         };
 
-        if (typeLower.includes('aio') || typeLower.includes('computador') || typeLower.includes('quadro interativo') || typeLower.includes('smartboard') || typeLower.includes('networking') || typeLower.includes('switch') || typeLower.includes('router') || typeLower.includes('access point') || typeLower.includes('firewall')) {
+        if (typeLower.includes('aio') || typeLower.includes('computador') || typeLower.includes('desktop') || typeLower.includes('portátil') || typeLower.includes('laptop')) {
+            // Médio ONLY (as requested)
+            selectPri.value = 'Médio';
+            disableByValue('Baixo');
+            disableByValue('Alto');
+            disableByValue('Extremo');
+            hint.innerText = "Prioridade: Médio.";
+        } else if (typeLower.includes('quadro interativo') || typeLower.includes('smartboard') || typeLower.includes('networking') || typeLower.includes('switch') || typeLower.includes('router') || typeLower.includes('access point') || typeLower.includes('firewall')) {
             // Médio/Alto
             if (selectPri.value === 'Baixo' || selectPri.value === 'Extremo') selectPri.value = 'Médio';
             disableByValue('Baixo');
             disableByValue('Extremo');
             hint.innerText = "Prioridade: Médio / Alto.";
-        } else if (typeLower.includes('impressora') || typeLower.includes('monitor') || typeLower.includes('portátil') || typeLower.includes('laptop') || typeLower.includes('projetor') || typeLower.includes('televisao') || typeLower.includes('tv')) {
+        } else if (typeLower.includes('impressora') || typeLower.includes('monitor') || typeLower.includes('projetor') || typeLower.includes('televisao') || typeLower.includes('tv')) {
             // Baixo/Médio
             if (selectPri.value === 'Alto' || selectPri.value === 'Extremo') selectPri.value = 'Médio';
             disableByValue('Alto');

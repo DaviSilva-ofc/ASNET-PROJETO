@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using AspnetCoreStarter.Data;
 using AspnetCoreStarter.Models;
+using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,6 +27,12 @@ namespace AspnetCoreStarter.Pages.Admin
 
         [BindProperty(SupportsGet = true)]
         public int? eqId { get; set; }
+        
+        [BindProperty(SupportsGet = true)]
+        public string? FilterArticle { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterType { get; set; }
 
         [BindProperty]
         public Ticket NewTicket { get; set; } = new();
@@ -43,11 +50,22 @@ namespace AspnetCoreStarter.Pages.Admin
             var query = _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Admin)
+                .Include(t => t.Equipamento)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(FilterStatus) && FilterStatus != "Todos os Estados")
             {
                 query = query.Where(t => t.Status == FilterStatus);
+            }
+
+            if (!string.IsNullOrEmpty(FilterArticle))
+            {
+                query = query.Where(t => t.Equipamento != null && t.Equipamento.Name == FilterArticle);
+            }
+
+            if (!string.IsNullOrEmpty(FilterType))
+            {
+                query = query.Where(t => t.Equipamento != null && t.Equipamento.Type == FilterType);
             }
 
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
@@ -114,6 +132,30 @@ namespace AspnetCoreStarter.Pages.Admin
 
             TempData["SuccessMessage"] = "Ticket criado com sucesso!";
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostHandleLoanRequestAsync(int id, string actionType)
+        {
+            if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
+
+            var ticket = await _context.Tickets.FindAsync(id);
+            if (ticket == null || ticket.Level != "Empréstimo" || ticket.Status != "Pedido") 
+                return RedirectToPage();
+
+            if (actionType == "Aprovar")
+            {
+                ticket.Status = "Concluído";
+                ticket.Description += "\n\n[RESOLVIDO: PEDIDO APROVADO - O Administrador irá providenciar o stock.]";
+            }
+            else
+            {
+                ticket.Status = "Recusado";
+                ticket.Description += "\n\n[RESOLVIDO: PEDIDO RECUSADO]";
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"Pedido de Stock {actionType.ToLower()} com sucesso!";
+            return RedirectToPage(new { FilterStatus = FilterStatus });
         }
     }
 }

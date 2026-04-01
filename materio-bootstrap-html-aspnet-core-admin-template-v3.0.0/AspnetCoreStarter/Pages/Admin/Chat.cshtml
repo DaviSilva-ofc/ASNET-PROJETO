@@ -54,15 +54,23 @@
                     </div>
 
                     <!-- Mensagens -->
-                    <div id="chatWindow" class="flex-grow-1 p-3 overflow-auto bg-white" style="background-image: radial-gradient(#eee 1px, transparent 1px); background-size: 20px 20px;">
+                    <div id="chatWindow" class="flex-grow-1 p-3 overflow-auto bg-white">
                         <div id="messageContainer" class="d-flex flex-column gap-3">
                             @foreach (var msg in Model.Messages)
                             {
                                 bool isMe = msg.SenderId == Model.CurrentUserId;
-                                <div class="@(isMe ? "align-self-end text-white bg-primary" : "align-self-start bg-light") p-2 rounded-3 shadow-sm" 
-                                     style="max-width: 70%;" data-msg-id="@msg.Id">
-                                    <p class="mb-0 small">@msg.Content</p>
-                                    <small class="@(isMe ? "text-white-50" : "text-muted") x-small">@msg.CreatedAt.ToString("HH:mm")</small>
+                                <div class="message-wrapper d-flex @(isMe ? "justify-content-end" : "justify-content-start") align-items-center w-100 mb-3" data-msg-id="@msg.Id">
+                                    <div class="@(isMe ? "text-white bg-primary" : "bg-light") p-2 rounded-3 shadow-sm msg-bubble" 
+                                         style="max-width: 70%;">
+                                        <p class="mb-0 small">@msg.Content</p>
+                                        <small class="@(isMe ? "text-white-50" : "text-muted") x-small">@msg.CreatedAt.ToString("HH:mm")</small>
+                                    </div>
+                                    @if (isMe)
+                                    {
+                                        <button class="btn btn-link btn-sm p-0 ms-2 delete-msg-btn" onclick="deleteMsg(@msg.Id)" title="Apagar">
+                                            🗑️
+                                        </button>
+                                    }
                                 </div>
                             }
                         </div>
@@ -100,26 +108,74 @@
 </div>
 
 @section PageScripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 <script>
     const chatWindow = document.getElementById('chatWindow');
     const messageContainer = document.getElementById('messageContainer');
     const chatForm = document.getElementById('chatForm');
     const messageInput = document.getElementById('messageInput');
     const receiverId = document.getElementById('receiverId')?.value;
-    let lastMessageId = 0;
+
+    const currentUserId = "@Model.CurrentUserId";
 
     const scrollToBottom = () => {
         if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
     };
 
-    const updateLastMessageId = () => {
-        const lastMsg = messageContainer?.lastElementChild;
-        if (lastMsg) lastMessageId = parseInt(lastMsg.getAttribute('data-msg-id'));
+    // Initialize SignalR
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chatHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("ReceiveMessage", function (msg) {
+        // Only show if it's from the person we are chatting with OR if it's from us
+        const isFromSelectedContact = msg.senderId == receiverId;
+        const isFromMe = msg.isMe;
+
+        if (isFromSelectedContact || isFromMe) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `message-wrapper d-flex ${isFromMe ? 'justify-content-end' : 'justify-content-start'} align-items-center w-100 mb-3 animate__animated animate__fadeInUp`;
+            wrapper.setAttribute('data-msg-id', msg.id);
+
+            wrapper.innerHTML = `
+                <div class="${isFromMe ? 'text-white bg-primary' : 'bg-light'} p-2 rounded-3 shadow-sm msg-bubble" style="max-width: 70%;">
+                    <p class="mb-0 small">${msg.content}</p>
+                    <small class="${isFromMe ? 'text-white-50' : 'text-muted'} x-small">${msg.createdAt}</small>
+                </div>
+                ${isFromMe ? `<button class="btn btn-link btn-sm p-0 ms-2 delete-msg-btn" onclick="deleteMsg(${msg.id})" title="Apagar">🗑️</button>` : ''}
+            `;
+            messageContainer.appendChild(wrapper);
+            scrollToBottom();
+        }
+    });
+
+    connection.on("MessageDeleted", function (msgId) {
+        const msgElement = document.querySelector(`.message-wrapper[data-msg-id="${msgId}"]`);
+        if (msgElement) {
+            msgElement.classList.add('animate__animated', 'animate__fadeOut');
+            setTimeout(() => msgElement.remove(), 500);
+        }
+    });
+
+    window.deleteMsg = async function(msgId) {
+        if (confirm("Deseja apagar esta mensagem para todos?")) {
+            try {
+                const errorMessage = await connection.invoke("DeleteMessage", msgId);
+                if (errorMessage) {
+                    alert(errorMessage);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Erro de conexão ao apagar mensagem: " + err.toString());
+            }
+        }
     };
+
+    connection.start().catch(err => console.error(err.toString()));
 
     if (chatForm) {
         scrollToBottom();
-        updateLastMessageId();
 
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -129,51 +185,14 @@
             messageInput.value = '';
 
             try {
-                const response = await fetch('?handler=SendMessage', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({ ReceiverId: parseInt(receiverId), Content: content })
-                });
-
-                if (response.ok) {
-                    await fetchNewMessages();
-                }
+                // Send via SignalR
+                await connection.invoke("SendMessage", parseInt(receiverId), content);
             } catch (err) {
                 console.error('Error sending message:', err);
+                // Fallback or error message
+                alert("Erro ao enviar mensagem. Tente novamente.");
             }
         });
-
-        const fetchNewMessages = async () => {
-            try {
-                const response = await fetch(`?handler=FetchMessages&contactId=${receiverId}&lastMessageId=${lastMessageId}`);
-                if (response.ok) {
-                    const messages = await response.json();
-                    if (messages.length > 0) {
-                        messages.forEach(msg => {
-                            const msgDiv = document.createElement('div');
-                            msgDiv.className = msg.isMe ? 'align-self-end text-white bg-primary p-2 rounded-3 shadow-sm' : 'align-self-start bg-light p-2 rounded-3 shadow-sm';
-                            msgDiv.style.maxWidth = '70%';
-                            msgDiv.setAttribute('data-msg-id', msg.id);
-                            
-                            msgDiv.innerHTML = `
-                                <p class="mb-0 small">${msg.content}</p>
-                                <small class="${msg.isMe ? 'text-white-50' : 'text-muted'} x-small">${msg.createdAt}</small>
-                            `;
-                            messageContainer.appendChild(msgDiv);
-                            lastMessageId = msg.id;
-                        });
-                        scrollToBottom();
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching messages:', err);
-            }
-        };
-
-        setInterval(fetchNewMessages, 5000);
     }
 </script>
 }
@@ -186,4 +205,9 @@
     .dark-style .border-bottom, .dark-style .border-end, .dark-style .border-top,
     [data-bs-theme="dark"] .border-bottom, [data-bs-theme="dark"] .border-end, [data-bs-theme="dark"] .border-top 
     { border-color: rgba(255,255,255,0.1) !important; }
+
+    /* Delete Button Hover Effect */
+    .message-wrapper .delete-msg-btn { opacity: 0; transition: opacity 0.2s; text-decoration: none; border: none; font-size: 1.1rem; }
+    .message-wrapper:hover .delete-msg-btn { opacity: 1; }
+    .delete-msg-btn:hover { transform: scale(1.2); }
 </style>

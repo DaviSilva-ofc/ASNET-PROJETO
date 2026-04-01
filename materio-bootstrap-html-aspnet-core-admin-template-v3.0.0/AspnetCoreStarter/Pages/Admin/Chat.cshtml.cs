@@ -29,22 +29,28 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToPage("/Auth/Login");
             CurrentUserId = int.Parse(userIdStr);
 
-            // Load contacts (Users who have chatted with us, or all Directors for start)
-            // For now, let's load all Directors as potential contacts for the tech support
+            // Load contacts: All Directors and anyone who has chatted with us
             var directors = await _context.Diretores
                 .Include(d => d.User)
                 .Where(d => d.User != null)
                 .Select(d => d.User!)
                 .ToListAsync();
             
-            // Also include anyone who sent us a message
-            var messagedUsers = await _context.Mensagens
+            var messagedUserIds = await _context.Mensagens
                 .Where(m => m.ReceiverId == CurrentUserId || m.SenderId == CurrentUserId)
-                .Select(m => m.SenderId == CurrentUserId ? m.Receiver : m.Sender)
+                .Select(m => m.SenderId == CurrentUserId ? m.ReceiverId : m.SenderId)
                 .Distinct()
                 .ToListAsync();
 
-            Contacts = directors.Union(messagedUsers).Where(u => u.Id != CurrentUserId).ToList();
+            var messagedUsers = await _context.Users
+                .Where(u => messagedUserIds.Contains(u.Id))
+                .ToListAsync();
+
+            Contacts = directors.Concat(messagedUsers)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .Where(u => u.Id != CurrentUserId)
+                .ToList();
 
             if (contactId.HasValue)
             {

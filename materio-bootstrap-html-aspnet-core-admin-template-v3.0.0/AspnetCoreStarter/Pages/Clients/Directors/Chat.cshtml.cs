@@ -16,7 +16,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             _context = context;
         }
 
-        public List<User> Technicians { get; set; } = new();
+        public List<User> Contacts { get; set; } = new();
         public List<Mensagem> Messages { get; set; } = new();
         public int CurrentUserId { get; set; }
         public int? SelectedTechId { get; set; }
@@ -30,11 +30,20 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             CurrentUserId = int.Parse(userIdStr);
 
             // Load all technicians
-            Technicians = await _context.Tecnicos
+            var technicians = await _context.Tecnicos
                 .Include(t => t.User)
                 .Where(t => t.User != null)
                 .Select(t => t.User!)
                 .ToListAsync();
+
+            // Load all administrators
+            var administrators = await _context.Users
+                .Join(_context.Administradores, u => u.Id, a => a.UserId, (u, a) => u)
+                .ToListAsync();
+
+            Contacts = technicians.Concat(administrators)
+                .Where(u => u.Id != CurrentUserId)
+                .ToList();
 
             if (techId.HasValue)
             {

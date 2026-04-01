@@ -42,6 +42,9 @@ namespace AspnetCoreStarter.Models
         [ForeignKey("EquipamentoId")]
         public Equipamento? Equipamento { get; set; }
 
+        [ForeignKey("TechnicianId")]
+        public virtual User? Technician { get; set; }
+
         [Column("status")]
         [MaxLength(50)]
         public string? Status { get; set; } = "Pedido";

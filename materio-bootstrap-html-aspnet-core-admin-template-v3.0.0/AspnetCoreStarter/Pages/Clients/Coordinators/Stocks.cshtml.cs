@@ -7,14 +7,15 @@ using AspnetCoreStarter.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using System;
 
-namespace AspnetCoreStarter.Pages.Clients.Directors
+namespace AspnetCoreStarter.Pages.Clients.Coordinators
 {
-    public class DirectorStocksModel : PageModel
+    public class CoordinatorStocksModel : PageModel
     {
         private readonly AppDbContext _context;
 
-        public DirectorStocksModel(AppDbContext context)
+        public CoordinatorStocksModel(AppDbContext context)
         {
             _context = context;
         }
@@ -45,7 +46,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<Sala> AvailableRooms { get; set; } = new();
         public List<string> UniqueStatuses { get; set; } = new();
 
-        public List<DirectorStockItemViewModel> Items { get; set; } = new();
+        public List<CoordinatorStockItemViewModel> Items { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -54,62 +55,45 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
-            // Find director's agrupamento
-            var director = await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == userId);
-            if (director == null || director.AgrupamentoId == null)
-            {
-                return Page();
-            }
+            var coord = await _context.Coordenadores
+                .Include(c => c.School)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (coord == null || coord.SchoolId == null) return Page();
 
             if (Request.Query.ContainsKey("success"))
             {
                 SuccessMessage = Request.Query["success"];
             }
 
-            int agrId = director.AgrupamentoId.Value;
+            int mySchoolId = coord.SchoolId.Value;
 
-            // Stats for the director
-            AvailableSchools = await _context.Schools.Where(s => s.AgrupamentoId == agrId).ToListAsync();
-            var schoolIds = AvailableSchools.Select(s => s.Id).ToList();
-            
-            if (FilterEscolaId.HasValue)
-            {
-                schoolIds = new List<int> { FilterEscolaId.Value };
-            }
+            AvailableSchools = await _context.Schools.Where(s => s.Id == mySchoolId).ToListAsync();
+            CountEscolas = 1;
 
-            CountEscolas = AvailableSchools.Count;
-
-            var blocks = await _context.Blocos.Where(b => schoolIds.Contains(b.SchoolId)).ToListAsync();
+            var blocks = await _context.Blocos.Where(b => b.SchoolId == mySchoolId).ToListAsync();
             var blockIds = blocks.Select(b => b.Id).ToList();
 
-            var rooms = await _context.Salas.Where(r => blockIds.Contains(r.BlockId)).ToListAsync();
-            var roomIds = rooms.Select(r => r.Id).ToList();
-            CountSalas = rooms.Count;
+            AvailableRooms = await _context.Salas.Where(r => blockIds.Contains(r.BlockId)).ToListAsync();
+            var roomIds = AvailableRooms.Select(r => r.Id).ToList();
+            CountSalas = AvailableRooms.Count;
 
             var equips = await _context.Equipamentos
                 .Include(e => e.StatusEquipamentos)
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
-                        .ThenInclude(b => b.School)
                 .Where(e => e.RoomId.HasValue && roomIds.Contains(e.RoomId.Value))
                 .ToListAsync();
             CountEquipamentos = equips.Count;
 
-            CountTickets = await _context.Tickets.CountAsync(t => t.SchoolId.HasValue && schoolIds.Contains(t.SchoolId.Value));
+            CountTickets = await _context.Tickets.CountAsync(t => t.SchoolId.HasValue && t.SchoolId.Value == mySchoolId);
 
-            var schoolIdsRecursive = AvailableSchools.Select(s => s.Id).ToList();
-            var blocksAll = await _context.Blocos.Where(b => schoolIdsRecursive.Contains(b.SchoolId)).ToListAsync();
-            var blockIdsAll = blocksAll.Select(b => b.Id).ToList();
-            AvailableRooms = await _context.Salas.Where(r => blockIdsAll.Contains(r.BlockId)).ToListAsync();
-
-            // Get all possible pairs for cascading filters before applying any other filters
             var baseQuery = _context.Equipamentos
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                         .ThenInclude(b => b.School)
                 .Where(e => e.RoomId.HasValue && roomIds.Contains(e.RoomId.Value));
 
-            var allEquips = await baseQuery.ToListAsync();
             var equipsQuery = baseQuery.AsQueryable();
 
             if (FilterSalaId.HasValue) equipsQuery = equipsQuery.Where(e => e.RoomId == FilterSalaId.Value);
@@ -129,7 +113,6 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 equipsTemp = equipsTemp.Where(e => MapStatus(e) == FilterStatus).ToList();
             }
 
-            // Load items for the table grouped by identical properties
             var groupedItems = equipsTemp.GroupBy(e => new {
                 Name = NormalizeEquipmentName(e.Name),
                 Category = e.Type ?? "Equipamento",
@@ -138,7 +121,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 Status = MapStatus(e)
             });
 
-            Items = groupedItems.Select(g => new DirectorStockItemViewModel {
+            Items = groupedItems.Select(g => new CoordinatorStockItemViewModel {
                 Name = g.Key.Name,
                 Category = g.Key.Category,
                 Location = g.Key.Location,
@@ -199,15 +182,16 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
-            var director = await _context.Diretores
-                .Include(d => d.Agrupamento)
+            var coord = await _context.Coordenadores
+                .Include(d => d.School)
+                    .ThenInclude(s => s.Agrupamento)
                 .FirstOrDefaultAsync(d => d.UserId == userId);
 
-            if (director == null) return Page();
+            if (coord == null) return Page();
 
             var ticket = new Ticket
             {
-                Description = $"PEDIDO DE EMPRÉSTIMO DE STOCK:\nItem: {itemName}\nTipo: {itemType}\nQuantidade: {quantity}\nAgrupamento: {director.Agrupamento?.Name}\nNotas: {notes}\n\n[DATA:{{\"ItemName\":\"{itemName}\",\"ItemType\":\"{itemType}\",\"Quantity\":{quantity},\"AgrupamentoId\":{director.AgrupamentoId}}}]",
+                Description = $"PEDIDO DE EMPRÉSTIMO DE STOCK:\nItem: {itemName}\nTipo: {itemType}\nQuantidade: {quantity}\nAgrupamento: {coord.School?.Agrupamento?.Name}\nEscola Solicitante: {coord.School?.Name}\nNotas: {notes}\n\n[DATA:{{\"ItemName\":\"{itemName}\",\"ItemType\":\"{itemType}\",\"Quantity\":{quantity},\"AgrupamentoId\":{coord.School?.AgrupamentoId}}}]",
                 Status = "Pedido",
                 CreatedAt = DateTime.UtcNow,
                 Level = "Empréstimo"
@@ -224,14 +208,14 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
-            var director = await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == userId);
-            if (director == null || director.AgrupamentoId == null) return RedirectToPage();
+            var coord = await _context.Coordenadores.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (coord == null || coord.SchoolId == null) return RedirectToPage();
 
-            int myAgrupamentoId = director.AgrupamentoId.Value;
+            int mySchoolId = coord.SchoolId.Value;
 
             var query = _context.Equipamentos
-                .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
-                .Where(e => e.Room != null && e.Room.Block.School.AgrupamentoId == myAgrupamentoId);
+                .Include(e => e.Room).ThenInclude(r => r.Block)
+                .Where(e => e.Room != null && e.Room.Block.SchoolId == mySchoolId);
 
             if (roomId.HasValue)
                 query = query.Where(e => e.RoomId == roomId.Value);
@@ -260,14 +244,14 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
-            var director = await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == userId);
-            if (director == null || director.AgrupamentoId == null) return RedirectToPage();
+            var coord = await _context.Coordenadores.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (coord == null || coord.SchoolId == null) return RedirectToPage();
 
-            int myAgrupamentoId = director.AgrupamentoId.Value;
+            int mySchoolId = coord.SchoolId.Value;
 
             var query = _context.Equipamentos
-                .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
-                .Where(e => e.Room != null && e.Room.Block.School.AgrupamentoId == myAgrupamentoId);
+                .Include(e => e.Room).ThenInclude(r => r.Block)
+                .Where(e => e.Room != null && e.Room.Block.SchoolId == mySchoolId);
 
             if (roomId.HasValue)
                 query = query.Where(e => e.RoomId == roomId.Value);
@@ -287,7 +271,8 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             return RedirectToPage(new { success = "Equipamentos excluídos com sucesso!" });
         }
     }
-    public class DirectorStockItemViewModel
+
+    public class CoordinatorStockItemViewModel
     {
         public string? Name { get; set; }
         public string? Category { get; set; }

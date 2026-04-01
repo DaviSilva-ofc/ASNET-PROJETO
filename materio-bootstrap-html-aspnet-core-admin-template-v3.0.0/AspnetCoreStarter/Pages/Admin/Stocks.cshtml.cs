@@ -24,6 +24,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<StockItemViewModel> EmpresaInventory { get; set; } = new();
         public List<AgrupamentoStockGroup> AgrupamentoTree { get; set; } = new();
         public List<EmpresaStockGroup> EmpresasPrivadasTree { get; set; } = new();
+        public List<Ticket> PendingRequests { get; set; } = new();
 
         public List<Agrupamento> AvailableAgrupamentos { get; set; } = new();
         public List<Empresa> AvailableEmpresasPrivadas { get; set; } = new();
@@ -108,6 +109,13 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Union(_context.Equipamentos.Where(e => e.Name != null).Select(e => e.Name!))
                 .Distinct()
                 .OrderBy(n => n)
+                .ToListAsync();
+
+            PendingRequests = await _context.Tickets
+                .Include(t => t.School)
+                .Include(t => t.Admin)
+                .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
+                .OrderBy(t => t.CreatedAt)
                 .ToListAsync();
 
             // 2. Aggregate Inventory with Filters
@@ -608,6 +616,74 @@ namespace AspnetCoreStarter.Pages.Admin
             TempData["Success"] = $"Sucesso: {itemsToDelete.Count} item(ns) excluído(s).";
             return RedirectToPage();
         }
+
+        public async Task<IActionResult> OnPostApproveLoanRequestAsync(int ticketId)
+        {
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null || ticket.Status != "Pedido") return RedirectToPage();
+
+            int dataStartIndex = ticket.Description?.IndexOf("[DATA:") ?? -1;
+            if (dataStartIndex != -1)
+            {
+                var dataStr = ticket.Description!.Substring(dataStartIndex + 6);
+                dataStr = dataStr.Substring(0, dataStr.IndexOf("]"));
+                
+                var data = System.Text.Json.JsonSerializer.Deserialize<LoanRequestData>(dataStr);
+                if (data != null)
+                {
+                    // Find available items in Central Stock
+                    var availableItems = await _context.StockEmpresa
+                        .Where(s => s.EquipmentName == data.ItemName && s.Type == data.ItemType)
+                        .Where(s => (s.SchoolId == null || s.SchoolId <= 0) && (s.AgrupamentoId == null || s.AgrupamentoId <= 0) && (s.TechnicianId == null || s.TechnicianId <= 0))
+                        .Where(s => s.Status == "Disponível" || s.Status == "disponivel" || s.Status == null || s.IsAvailable == true)
+                        .Take(data.Quantity)
+                        .ToListAsync();
+
+                    if (availableItems.Count < data.Quantity)
+                    {
+                        TempData["Error"] = $"Stock insuficiente no armazém central. Necessita {data.Quantity}, mas apenas {availableItems.Count} estão disponíveis.";
+                        return RedirectToPage();
+                    }
+
+                    foreach (var item in availableItems)
+                    {
+                        item.Status = "Emprestado";
+                        item.IsAvailable = false;
+                        item.AgrupamentoId = data.AgrupamentoId;
+                    }
+
+                    ticket.Status = "Concluído";
+                    ticket.Description += "\n\n[RESOLVIDO: PEDIDO APROVADO - Equipamentos transferidos automaticamente.]";
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Pedido de Empréstimo Aprovado! Os equipamentos foram transferidos para o Agrupamento.";
+                    return RedirectToPage();
+                }
+            }
+
+            TempData["Error"] = "Formato de Pedido Inválido.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRejectLoanRequestAsync(int ticketId)
+        {
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null) return RedirectToPage();
+            
+            ticket.Status = "Recusado";
+            ticket.Description += "\n\n[RESOLVIDO: PEDIDO RECUSADO pelo Administrador.]";
+            await _context.SaveChangesAsync();
+            
+            TempData["Success"] = "Pedido de Empréstimo Recusado com sucesso.";
+            return RedirectToPage();
+        }
+    }
+
+    public class LoanRequestData 
+    {
+        public string? ItemName { get; set; }
+        public string? ItemType { get; set; }
+        public int Quantity { get; set; }
+        public int AgrupamentoId { get; set; }
     }
 
     public class StockItemViewModel

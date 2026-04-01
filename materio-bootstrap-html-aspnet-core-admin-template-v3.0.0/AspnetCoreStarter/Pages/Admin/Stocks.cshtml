@@ -414,6 +414,46 @@
                                             </div>
                                             <div id="empresa-requisicoes-collapse" class="collapse show mt-3">
                                                 <div class="infra-tree">
+                                                    @if(Model.PendingRequests != null && Model.PendingRequests.Any()) {
+                                                        <div class="mb-3">
+                                                            <div class="d-flex align-items-center p-1 rounded fw-bold text-warning cursor-pointer mb-1" style="font-size: 0.85rem;"
+                                                                 data-bs-toggle="collapse" data-bs-target="#pending-requests-collapse">
+                                                                <i class="ri-arrow-right-s-line me-1" style="font-size:1.1rem; color: var(--bs-warning);"></i>
+                                                                <i class="ri-error-warning-line me-1"></i> Pedidos Pendentes
+                                                                <span class="badge bg-label-warning ms-auto">@Model.PendingRequests.Count</span>
+                                                            </div>
+                                                            <div id="pending-requests-collapse" class="collapse ms-3">
+                                                                @foreach(var req in Model.PendingRequests) {
+                                                                    var reqCollapseId = $"req-details-{req.Id}";
+                                                                    var reqDesc = req.Description?.Contains("[DATA:") == true ? req.Description.Substring(0, req.Description.IndexOf("[DATA:")).Trim() : req.Description;
+                                                                    <div class="tree-node tipo-node mt-1">
+                                                                        <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
+                                                                             data-bs-toggle="collapse" data-bs-target="#@reqCollapseId">
+                                                                            <i class="ri-arrow-right-s-line"></i>
+                                                                            <i class="ri-inbox-line me-1"></i>
+                                                                            <span class="fw-semibold">Ticket #@req.Id</span>
+                                                                            <span class="text-muted ms-2 small">@req.CreatedAt.ToString("dd/MMM HH:mm")</span>
+                                                                        </div>
+                                                                        <div id="@reqCollapseId" class="collapse ms-4 mt-1">
+                                                                            <div class="p-2 rounded border border-warning-subtle" style="font-size: 0.80rem; white-space: pre-wrap; background: rgba(255,171,0,0.04);">
+                                                                                @reqDesc
+                                                                            </div>
+                                                                            <form method="post" class="d-flex gap-1 mt-1">
+                                                                                <input type="hidden" name="ticketId" value="@req.Id" />
+                                                                                <button type="submit" asp-page-handler="ApproveLoanRequest" class="btn btn-sm btn-success flex-grow-1 py-1">
+                                                                                    <i class="ri-check-line me-1"></i>Emprestar
+                                                                                </button>
+                                                                                <button type="submit" asp-page-handler="RejectLoanRequest" class="btn btn-sm btn-danger flex-grow-1 py-1">
+                                                                                    <i class="ri-close-line me-1"></i>Recusar
+                                                                                </button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+
                                                     @foreach (var destGroup in lentItems.GroupBy(i => i.Location ?? "Desconhecido").OrderBy(g => g.Key))
                                                     {
                                                         var destId = $"empresa-lent-{destGroup.Key.Replace(" ", "-")}";

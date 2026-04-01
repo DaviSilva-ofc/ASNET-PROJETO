@@ -255,6 +255,10 @@ namespace AspnetCoreStarter.Pages.Auth
                 {
                     return RedirectToPage("/Clients/Technicians/Dashboard");
                 }
+                if (role == "Coordenador")
+                {
+                    return RedirectToPage("/Clients/Coordinators/Dashboard");
+                }
 
                 return RedirectToPage("/frontpages/LandingPage");
             }

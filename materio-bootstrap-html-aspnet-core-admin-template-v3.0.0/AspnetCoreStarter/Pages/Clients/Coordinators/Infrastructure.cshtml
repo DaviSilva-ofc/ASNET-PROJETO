@@ -1,0 +1,197 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Coordinators.CoordinatorInfrastructureModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Infraestrutura da Escola";
+}
+
+@section PageStyles {
+<style>
+    .dark-style .card-header h5,
+    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+
+    .infra-tree .tree-node {
+        position: relative;
+        padding: 4px 0;
+    }
+
+    .tree-node i {
+        font-size: 1.1rem;
+        vertical-align: middle;
+        opacity: 0.8;
+    }
+
+    .cursor-pointer { cursor: pointer; }
+
+    /* Animation for arrows */
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        font-weight: bold;
+        color: var(--bs-primary);
+        font-size: 1.4rem;
+        display: inline-block;
+        line-height: 1;
+        background-color: rgba(105, 108, 255, 0.15);
+        border: 1px solid rgba(105, 108, 255, 0.3);
+        border-radius: 4px;
+        padding: 4px;
+        margin-right: 8px;
+    }
+
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background-color: var(--bs-primary);
+        color: #fff;
+    }
+
+    .dark-style [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .dark-style [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        background-color: #696cff;
+        color: #fff;
+    }
+
+    .school-node { color: var(--bs-success); }
+    .bloc-node { color: var(--bs-info); }
+    .room-node { color: var(--bs-warning); }
+    .equip-node { color: #a1acb8; }
+
+    .dark-style .school-node { color: #71dd37; }
+    .dark-style .bloc-node { color: #03c3ec; }
+    .dark-style .room-node { color: #ffab00; }
+    .dark-style .equip-node { color: #707186; }
+
+    .bg-light-section {
+        background-color: rgba(67, 89, 113, 0.02);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .dark-style .bg-light-section { background-color: rgba(255, 255, 255, 0.03); }
+    
+    .hover-bg:hover {
+        background-color: rgba(105, 108, 255, 0.08);
+    }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="mb-4">
+        <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Coordenador /</span> Infraestrutura</h4>
+    </div>
+
+    <div class="card shadow-sm border-0 overflow-hidden">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <i class="ri-government-line fs-3 me-3 text-white"></i>
+                <div>
+                    <h5 class="mb-0 text-white fw-bold">@Model.MySchool?.Name</h5>
+                    <small class="text-white-50">Vista Gerencial da Unidade Escolar</small>
+                </div>
+            </div>
+            <span class="badge bg-label-light text-white">@Model.MyBlocks.Count Blocos</span>
+        </div>
+        
+        <div class="card-body pt-4">
+            @if (Model.MyBlocks == null || !Model.MyBlocks.Any())
+            {
+                <div class="text-center py-5">
+                    <div class="avatar avatar-xl bg-label-secondary mb-3 mx-auto">
+                        <i class="ri-information-line fs-1"></i>
+                    </div>
+                    <h5>Sem Dados de Infraestrutura</h5>
+                    <p class="text-muted">Ainda não foram registados blocos ou salas para esta unidade.</p>
+                </div>
+            }
+            else
+            {
+                <div class="infra-tree px-2">
+                    @foreach (var bloco in Model.MyBlocks.OrderBy(b => b.Name))
+                    {
+                        <div class="tree-node bloc-node mb-3 pb-3 border-bottom last-child-no-border">
+                            <div class="d-flex align-items-center cursor-pointer p-2 rounded hover-bg" 
+                                 data-bs-toggle="collapse" data-bs-target="#tree-rooms-@bloco.Id">
+                                <i class="ri-arrow-right-s-line"></i>
+                                <div class="avatar avatar-sm bg-label-info rounded me-3">
+                                    <i class="ri-building-2-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 fw-bold text-info">@bloco.Name</h6>
+                                    <small class="text-muted">@bloco.Rooms.Count Salas registadas</small>
+                                </div>
+                            </div>
+
+                            <div id="tree-rooms-@bloco.Id" class="collapse ms-5 mt-2">
+                                <div class="row g-3">
+                                    @foreach (var sala in bloco.Rooms.OrderBy(r => r.Name))
+                                    {
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="tree-node room-node p-2 rounded bg-light-section border-start border-3 border-warning">
+                                                <div class="d-flex align-items-center justify-content-between cursor-pointer" 
+                                                     data-bs-toggle="collapse" data-bs-target="#tree-equips-@sala.Id">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="ri-door-open-line me-2 fs-5"></i>
+                                                        <span class="fw-semibold small">@sala.Name</span>
+                                                    </div>
+                                                    <i class="ri-arrow-right-s-line text-muted opacity-50 fs-6"></i>
+                                                </div>
+
+                                                <div id="tree-equips-@sala.Id" class="collapse mt-2 ps-2 border-start ms-2">
+                                                    @if (sala.Equipments != null && sala.Equipments.Any())
+                                                    {
+                                                        var groupedEquips = sala.Equipments
+                                                            .GroupBy(e => e.Name)
+                                                            .Select(g => new { Name = g.Key, Count = g.Count() })
+                                                            .ToList();
+
+                                                        foreach (var g in groupedEquips)
+                                                        {
+                                                            var label = g.Name;
+                                                            if (g.Count > 1)
+                                                            {
+                                                                var pluralLabel = label;
+                                                                if (label.EndsWith("r") || label.EndsWith("z") || label.EndsWith("n")) pluralLabel += "es";
+                                                                else if (label.EndsWith("l")) pluralLabel = label.Substring(0, label.Length - 1) + "is";
+                                                                else if (!label.EndsWith("s")) pluralLabel += "s";
+                                                                label = $"{pluralLabel} ({g.Count})";
+                                                            }
+                                                            <a asp-page="./Equipment" asp-route-FilterRoomId="@sala.Id" asp-route-FilterName="@g.Name" 
+                                                               class="tree-node equip-node d-block text-decoration-none py-1 hover-bg px-2 rounded">
+                                                                <i class="ri-computer-line me-2 small"></i><span style="font-size: 0.75rem;">@label</span>
+                                                            </a>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="ps-2 py-1 small text-muted italic" style="font-size: 0.7rem;">
+                                                            Sem equipamentos
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @* Help Alert *@
+    <div class="alert alert-info d-flex align-items-center mt-4 border-0 shadow-sm" role="alert">
+        <span class="alert-icon me-3 bg-info text-white p-2 rounded">
+            <i class="ri-question-line fs-4"></i>
+        </span>
+        <div>
+            <strong>Dica de Navegação:</strong> Clique nos blocos para expandir e visualizar as salas. Cada sala possui um link direto para a gestão de equipamentos associados.
+        </div>
+    </div>
+</div>
+
+<style>
+    .last-child-no-border:last-child { border-bottom: none !important; }
+</style>
