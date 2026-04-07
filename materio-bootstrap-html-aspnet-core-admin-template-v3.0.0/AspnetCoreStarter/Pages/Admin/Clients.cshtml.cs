@@ -226,7 +226,16 @@ namespace AspnetCoreStarter.Pages.Admin
             }
             else if (NewUserRole == "Professor")
             {
-                var record = new Professor { UserId = user.Id, BlocoId = SelectedParentId };
+                var record = new Professor { UserId = user.Id };
+                if (SelectedParentId.HasValue && SelectedParentId.Value > 0)
+                {
+                    var sala = await _context.Salas.FindAsync(SelectedParentId.Value);
+                    if (sala != null)
+                    {
+                        record.BlocoId = sala.BlockId;
+                        sala.ResponsibleProfessorId = user.Id;
+                    }
+                }
                 _context.Professores.Add(record);
             }
             else if (NewUserRole == "Cliente Independente")
@@ -291,9 +300,18 @@ namespace AspnetCoreStarter.Pages.Admin
 
             var professor = new Professor
             {
-                UserId = user.Id,
-                BlocoId = SelectedParentId
+                UserId = user.Id
             };
+
+            if (SelectedParentId.HasValue && SelectedParentId.Value > 0)
+            {
+                var sala = await _context.Salas.FindAsync(SelectedParentId.Value);
+                if (sala != null)
+                {
+                    professor.BlocoId = sala.BlockId;
+                    sala.ResponsibleProfessorId = user.Id;
+                }
+            }
 
             _context.Professores.Add(professor);
             await _context.SaveChangesAsync();
@@ -420,7 +438,21 @@ namespace AspnetCoreStarter.Pages.Admin
                 else if (EditUserRole == "Professor")
                 {
                     var record = await _context.Professores.FirstOrDefaultAsync(x => x.UserId == EditUserId);
-                    if (record != null) record.BlocoId = SelectedParentId.Value;
+                    if (record != null)
+                    {
+                        var sala = await _context.Salas.FindAsync(SelectedParentId.Value);
+                        if (sala != null)
+                        {
+                            record.BlocoId = sala.BlockId;
+                            
+                            // Clear previous room responsibility
+                            var oldSalas = await _context.Salas.Where(s => s.ResponsibleProfessorId == EditUserId).ToListAsync();
+                            foreach(var os in oldSalas) os.ResponsibleProfessorId = null;
+                            
+                            // Set new responsibility
+                            sala.ResponsibleProfessorId = EditUserId;
+                        }
+                    }
                 }
                 else if (EditUserRole == "Cliente Independente")
                 {

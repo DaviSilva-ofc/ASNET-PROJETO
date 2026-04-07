@@ -83,7 +83,17 @@
                                 <td>@t.School?.Name</td>
                                 <td>
                                     <div class="text-wrap" style="max-width: 300px;">
-                                        @t.Description
+                                        @{
+                                            var desc = t.Description ?? "";
+                                            var cutAt = desc.Length;
+                                            foreach (var marker in new[] { "( [DATA:", "[DATA:", "[RESOLVIDO:", "( IDATA:" })
+                                            {
+                                                var idx = desc.IndexOf(marker);
+                                                if (idx >= 0 && idx < cutAt) cutAt = idx;
+                                            }
+                                            desc = desc.Substring(0, cutAt).Trim();
+                                        }
+                                        @desc
                                     </div>
                                 </td>
                                 <td>

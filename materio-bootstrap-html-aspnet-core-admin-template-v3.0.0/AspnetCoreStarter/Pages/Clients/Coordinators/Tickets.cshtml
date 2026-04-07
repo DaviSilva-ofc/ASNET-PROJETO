@@ -87,7 +87,17 @@
                                         };
                                     }
                                     <span class="badge @badgeColor">@ticket.Level</span>
-                                    <div class="small text-muted text-truncate" style="max-width: 300px;">@ticket.Description</div>
+                                    @{
+                                        var descCoord = ticket.Description ?? "";
+                                        var cutAtCoord = descCoord.Length;
+                                        foreach (var marker in new[] { "( [DATA:", "[DATA:", "[RESOLVIDO:", "( IDATA:" })
+                                        {
+                                            var idx = descCoord.IndexOf(marker);
+                                            if (idx >= 0 && idx < cutAtCoord) cutAtCoord = idx;
+                                        }
+                                        descCoord = descCoord.Substring(0, cutAtCoord).Trim();
+                                    }
+                                    <div class="small text-muted text-truncate" style="max-width: 300px;">@descCoord</div>
                                     @if (!string.IsNullOrEmpty(ticket.Period))
                                     {
                                         <div class="small"><i class="bx bx-time-five me-1"></i>Preferência: <span class="badge bg-label-secondary">@ticket.Period</span></div>

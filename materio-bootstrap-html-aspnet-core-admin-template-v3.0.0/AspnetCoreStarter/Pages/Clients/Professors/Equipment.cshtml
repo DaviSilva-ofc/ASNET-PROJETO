@@ -1,0 +1,210 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Professors.EquipmentModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Equipamentos";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Professor /</span> Equipamentos</h4>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Inventário de Equipamentos</h5>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    <i class="ri-filter-3-line me-1"></i> Filtros
+                </button>
+                <button class="btn btn-primary" onclick="alert('Funcionalidade administrativa.')">
+                    <i class="ri-add-line me-1"></i> Novo Equipamento
+                </button>
+            </div>
+        </div>
+
+        @{
+            var activeEQFilterText = "";
+            if (Model.SalaId.HasValue) {
+                var sala = Model.MyRooms.FirstOrDefault(r => r.Id == Model.SalaId.Value);
+                if (sala != null) activeEQFilterText = $"sala: {sala.Name}";
+            }
+            var hasAnyFilter = !string.IsNullOrEmpty(Model.FilterName) || !string.IsNullOrEmpty(Model.FilterStatus) || !string.IsNullOrEmpty(activeEQFilterText);
+        }
+        @if (hasAnyFilter)
+        {
+            <div class="card-body border-top py-2 bg-light dark-bg-adjust">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert" style="padding: 0.5rem 1rem;">
+                    <span class="small">
+                        <i class="ri-information-line me-1"></i>
+                        Filtros ativos: 
+                        <strong>
+                            @(!string.IsNullOrEmpty(Model.FilterName) ? $"Artigo: {Model.FilterName}, " : "")
+                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}, " : "")
+                            @(!string.IsNullOrEmpty(activeEQFilterText) ? activeEQFilterText : "")
+                        </strong>
+                    </span>
+                    <a asp-page="./Equipment" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
+                </div>
+            </div>
+        }
+
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Artigo</th>
+                        <th>Tipo</th>
+                        <th>Nº Série</th>
+                        <th>Localização</th>
+                        <th>Estado</th>
+                        <th class="px-3" style="width: 1px; white-space: nowrap; min-width: 210px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Equipments == null || !Model.Equipments.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">Nenhum equipamento encontrado.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Equipments)
+                        {
+                            <tr>
+                                <td><strong>@item.Name</strong></td>
+                                <td>@item.Type</td>
+                                <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
+                                <td>
+                                    @if (item.Room != null)
+                                    {
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-semibold">@item.Room.Name (@item.Room.Block?.Name)</span>
+                                            <small class="text-muted">@item.Room.Block?.School?.Name</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Status != null && (item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Disponível", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Funcionando", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("Em uso", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <span class="badge bg-label-success">A funcionar</span>
+                                    }
+                                    else if (item.Status != null && (item.Status.Trim().Equals("Avariado", StringComparison.OrdinalIgnoreCase) || 
+                                             item.Status.Trim().Equals("Indisponível", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <span class="badge bg-label-danger">Avariado</span>
+                                    }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-warning">Em reparo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
+                                    }
+                                </td>
+                                <td style="white-space: nowrap;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (item.Status == "Em reparo")
+                                        {
+                                            <span class="text-muted small ps-2"><i class="ri-settings-line me-1"></i> Em Manutenção</span>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
+                                                @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
+                                                {
+                                                    <button type="submit" class="btn btn-sm text-success" title="Marcar como A funcionar"><i class="ri-check-line"></i> Funcional</button>
+                                                    
+                                                    @if (Model.EquipmentWithActiveTickets.Contains(item.Id))
+                                                    {
+                                                        <span class="badge bg-label-warning ms-2"><i class="ri-ticket-line me-1"></i> Ticket Ativo</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <button type="submit" class="btn btn-sm text-warning" title="Marcar como Avariado"><i class="ri-error-warning-line"></i> Avariar</button>
+                                                }
+                                            </form>
+                                        }
+                                        
+                                        <div class="d-flex align-items-center gap-1 ms-2">
+                                            <button type="button" class="btn btn-sm text-primary p-1" title="Editar" onclick="alert('Modo de leitura. Apenas administradores podem editar.');"><i class="bx bx-edit"></i> ✏️</button>
+                                            <button type="button" class="btn btn-sm text-danger p-1" title="Eliminar" onclick="alert('Modo de leitura. Apenas administradores podem apagar.');"><i class="bx bx-trash"></i> 🗑️</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Filtrar Equipamentos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">Artigo</label>
+                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Procurar artigo... Ex: Monitor">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small">Estado</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="A funcionar">A funcionar</option>
+                                <option value="Avariado">Avariado</option>
+                                <option value="Em reparo">Em reparo</option>
+                            </select>
+                        </div>
+                        
+                        <hr class="my-3">
+                        <h6 class="mb-1 text-muted">Localização</h6>
+                        
+                        <div class="col-12 mt-2">
+                            <label class="form-label fw-semibold small">As Minhas Salas</label>
+                            <select asp-for="SalaId" class="form-select">
+                                <option value="">Todas</option>
+                                @foreach (var room in Model.MyRooms)
+                                {
+                                    <option value="@room.Id">@room.Name (@room.Block?.School?.Name)</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+@section PageScripts {
+<style>
+    [data-bs-theme="dark"] .dark-bg-adjust {
+        background-color: #2b2c40 !important;
+    }
+</style>
+}

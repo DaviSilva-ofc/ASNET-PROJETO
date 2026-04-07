@@ -1,0 +1,358 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Professors.DashboardModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Dashboard Professor";
+}
+
+@section VendorStyles {
+<link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+}
+
+@section VendorScripts {
+<script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+}
+
+@section PageStyles {
+<style>
+    :root {
+        --dash-bg: #232333;
+        --dash-card-bg: #2b2c40;
+        --dash-text: #a3adbb;
+        --dash-title: #f5f5f9;
+        --dash-border: rgba(255, 255, 255, 0.08);
+        --asnet-orange: #f89223;
+        --asnet-blue: #696cff;
+        --asnet-green: #71dd37;
+        --asnet-pink: #e7305b;
+        --asnet-teal: #03c3ec;
+    }
+
+    [data-bs-theme="dark"] {
+        --dash-bg: #232333;
+        --dash-card-bg: #2b2c40;
+    }
+
+    .container-xxl {
+        padding-top: 2rem !important;
+    }
+
+    .page-header-title {
+        color: var(--dash-title);
+        font-size: 1.375rem;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--dash-border);
+        padding-bottom: 1rem;
+    }
+    .page-header-title .text-muted { color: #7071a4 !important; }
+
+    /* Stat Cards */
+    .stat-card {
+        background: var(--dash-card-bg) !important;
+        border: none !important;
+        border-radius: 6px !important;
+        box-shadow: 0 0.125rem 0.25rem 0 rgba(0, 0, 0, 0.2) !important;
+        transition: transform .2s;
+    }
+    .stat-card:hover { transform: translateY(-4px); }
+    
+    .stat-icon {
+        width: 42px; height: 42px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.25rem;
+        color: #fff;
+    }
+    .stat-number { font-size: 1.5rem; font-weight: 500; margin: 0; color: #fff; }
+    .stat-label  { font-size: .8rem; color: #7071a4; margin: 0; text-transform: uppercase; font-weight: 600; }
+
+    /* Action Cards */
+    .action-card {
+        background: var(--dash-card-bg) !important;
+        border: none !important;
+        border-radius: 6px !important;
+        border-left: 4px solid transparent !important;
+        box-shadow: 0 0.125rem 0.25rem 0 rgba(0, 0, 0, 0.2) !important;
+    }
+    .big-number { font-size: 2.25rem; font-weight: 600; color: #fff; line-height: 1.2; }
+    .card-subtitle-custom { color: #7071a4; font-size: 0.875rem; }
+
+    /* Table & Chart cards */
+    .asnet-table-card, .chart-card {
+        background: var(--dash-card-bg) !important;
+        border: none !important;
+        border-radius: 6px !important;
+        box-shadow: 0 0.125rem 0.25rem 0 rgba(0, 0, 0, 0.2) !important;
+    }
+    
+    .card-header-flex {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: none;
+    }
+
+    .asnet-table th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #7071a4;
+        padding: 1rem 1.25rem !important;
+        background: #2f3349;
+        border: none !important;
+    }
+    .asnet-table td {
+        padding: 0.75rem 1.25rem !important;
+        border-bottom: 1px solid var(--dash-border) !important;
+        color: #a3adbb;
+        font-size: 0.8125rem;
+    }
+
+    .btn-asnet-orange { background: var(--asnet-orange) !important; color: #fff !important; font-weight: 500; border-radius: 6px; }
+    .btn-asnet-blue { background: var(--asnet-blue) !important; color: #fff !important; font-weight: 500; border-radius: 6px; }
+    .btn-asnet-green { background: var(--asnet-green) !important; color: #fff !important; font-weight: 500; border-radius: 6px; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1">
+    <div class="page-header-title d-flex justify-content-between align-items-end">
+        <div>
+            <span class="text-muted fw-light">Professor /</span> Dashboard
+        </div>
+        <a href="/Clients/Professors/Infrastructure" class="btn btn-asnet-orange btn-sm">
+            <i class="ri-node-tree me-1"></i> Minha Rede
+        </a>
+    </div>
+
+    <!-- Stat mini-cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background: var(--asnet-blue);">
+                        <i class="ri-door-open-line"></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.TotalSalas</p>
+                        <p class="stat-label">Minhas Salas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background: var(--asnet-teal);">
+                        <i class="ri-computer-line"></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.TotalEquipamentos</p>
+                        <p class="stat-label">Equipamentos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background: var(--asnet-orange);">
+                        <i class="ri-customer-service-2-line"></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.PendingTicketsCount</p>
+                        <p class="stat-label">Tickets Abertos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background: var(--asnet-pink);">
+                        <i class="ri-error-warning-line"></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.DamagedEquipmentCount</p>
+                        <p class="stat-label">Avarias</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Messages Card -->
+        <div class="col-lg-6">
+            <div class="card action-card h-100" style="border-left-color: var(--asnet-green) !important;">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-4">
+                            <div class="stat-icon" style="background: var(--asnet-green);">
+                                <i class="ri-chat-3-line"></i>
+                            </div>
+                            <h6 class="mb-0 fw-bold text-white">Mensagens de Suporte</h6>
+                        </div>
+                        <div class="big-number mb-1">@Model.TotalUnreadMessages<span class="fs-6 text-success ms-2">novas</span></div>
+                        <p class="card-subtitle-custom">Aguardam a sua resposta no chat direto.</p>
+                    </div>
+                    <a href="/Clients/Professors/Chat" class="btn btn-asnet-green w-100 mt-4">
+                        <i class="ri-reply-line me-1"></i> Ir para o Chat
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem Report Card -->
+        <div class="col-lg-6">
+            <div class="card action-card h-100" style="border-left-color: var(--asnet-blue) !important;">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-4">
+                            <div class="stat-icon" style="background: var(--asnet-blue);">
+                                <i class="ri-error-warning-line"></i>
+                            </div>
+                            <h6 class="mb-0 fw-bold text-white">Equipamentos em Falha</h6>
+                        </div>
+                        <div class="big-number mb-1">@Model.DamagedEquipmentCount <span class="fs-6 text-primary ms-1">por reportar</span></div>
+                        <p class="card-subtitle-custom">Existem equipamentos marcados como avariados que aguardam submissão.</p>
+                    </div>
+                    <a href="/Clients/Professors/Tickets?openModal=1" class="btn btn-asnet-blue w-100 mt-4">
+                        <i class="ri-add-circle-line me-1"></i> Criar Novo Ticket
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card chart-card">
+                <div class="card-header-flex pb-0">
+                    <h5 class="mb-0 text-white fw-bold"><i class="ri-pulse-line me-2 text-primary"></i>Tendência de Tickets (6 Meses)</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div id="ticketTrendChart" style="min-height: 250px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Table -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card asnet-table-card">
+                <div class="card-header-flex">
+                    <h5 class="mb-0 text-white fw-bold"><i class="ri-history-line me-2 text-info"></i>Atividade Recente</h5>
+                    <a href="/Clients/Professors/Tickets" class="btn btn-xs btn-label-primary">Ver histórico completo</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table asnet-table">
+                        <thead>
+                            <tr>
+                                <th>TICKET</th>
+                                <th>EQUIPAMENTO</th>
+                                <th>DATA / HORA</th>
+                                <th>ESTADO</th>
+                                <th class="text-center">AÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentTickets != null && Model.RecentTickets.Any())
+                            {
+                                @foreach (var ticket in Model.RecentTickets)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-label-secondary">#@ticket.Id</span></td>
+                                        <td>
+                                            <div class="fw-bold text-white">@ticket.Equipamento?.Name</div>
+                                            <small class="text-muted">@ticket.Equipamento?.Room?.Name</small>
+                                        </td>
+                                        <td>@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @if (ticket.Status == "Pedido" || ticket.Status == "Pendente")
+                                            {
+                                                <span class="badge bg-label-warning">Aguardando Técnico</span>
+                                            }
+                                            else if (ticket.Status == "Em andamento" || ticket.Status == "Atribuído")
+                                            {
+                                                <span class="badge bg-label-info">Em Reparação</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-label-success">Resolvido</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="/Clients/Professors/Chat?ticketId=@ticket.Id" class="btn btn-icon btn-sm btn-label-warning"><i class="ri-chat-3-line"></i></a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">Sem atividade recente a reportar.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chartOptions = {
+            series: [{
+                name: 'Tickets',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartMonthlyData ?? new List<int>()))
+            }],
+            chart: {
+                height: 250,
+                type: 'area',
+                toolbar: { show: false },
+                zoom: { enabled: false },
+                foreColor: '#7071a4',
+                fontFamily: 'Public Sans'
+            },
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 3, colors: ['#696cff'] },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.5,
+                    opacityTo: 0.1,
+                    stops: [0, 90, 100],
+                    colorStops: [
+                        { offset: 0, color: '#696cff', opacity: 0.4 },
+                        { offset: 100, color: '#696cff', opacity: 0 }
+                    ]
+                }
+            },
+            grid: {
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                padding: { top: 0, bottom: 0, left: 10, right: 10 }
+            },
+            xaxis: {
+                categories: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartLabels ?? new List<string>())),
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: { labels: { offsetX: -10 } },
+            legend: { show: false },
+            colors: ['#696cff'],
+            tooltip: { theme: 'dark' }
+        };
+
+        const chart = new ApexCharts(document.querySelector("#ticketTrendChart"), chartOptions);
+        chart.render();
+    });
+</script>
+}

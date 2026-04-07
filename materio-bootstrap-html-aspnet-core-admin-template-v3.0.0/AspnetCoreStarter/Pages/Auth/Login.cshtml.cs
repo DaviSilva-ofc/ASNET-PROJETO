@@ -260,6 +260,11 @@ namespace AspnetCoreStarter.Pages.Auth
                     return RedirectToPage("/Clients/Coordinators/Dashboard");
                 }
 
+                if (role == "Professor")
+                {
+                    return RedirectToPage("/Clients/Professors/Dashboard");
+                }
+
                 return RedirectToPage("/frontpages/LandingPage");
             }
             catch (Exception ex)

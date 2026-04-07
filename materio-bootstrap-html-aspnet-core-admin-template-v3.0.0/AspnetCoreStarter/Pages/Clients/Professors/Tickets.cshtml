@@ -1,0 +1,235 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Professors.ProfessorTicketsModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Tickets";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Professor /</span> Tickets</h4>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Gestão de Tickets</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    <i class="ri-filter-3-line"></i> Filtros
+                </button>
+                <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTicket">
+                    <i class='bx bx-plus-circle me-1'></i> Novo Ticket
+                </button>
+            </div>
+        </div>
+
+        @if (Model.SalaId.HasValue || (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados"))
+        {
+            <div class="card-body py-2">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0" role="alert" style="padding: 0.6rem 1.2rem; background-color: #e7f3ff;">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-filter-3-line me-2 text-primary"></i>
+                        <span class="small text-primary fw-medium">
+                            Filtros ativos: 
+                            @if (Model.SalaId.HasValue) { 
+                                var sala = Model.MyRooms.FirstOrDefault(r => r.Id == Model.SalaId.Value);
+                                <span class="badge bg-white text-primary border me-1">Sala: @(sala?.Name ?? "N/A")</span> 
+                            }
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { <span class="badge bg-white text-primary border me-1">Estado: @Model.FilterStatus</span> }
+                        </span>
+                    </div>
+                    <a asp-page="./Tickets" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="ri-refresh-line me-1 small"></i> Limpar Filtros
+                    </a>
+                </div>
+            </div>
+        }
+
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Sala / Escola</th>
+                        <th>Assunto / Descrição</th>
+                        <th>Prioridade</th>
+                        <th>Estado</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.MyTickets == null || !Model.MyTickets.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">Nenhum ticket encontrado.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var t in Model.MyTickets)
+                        {
+                            <tr>
+                                <td>#@t.Id</td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-medium">@t.Equipamento?.Room?.Name</span>
+                                        <small class="text-muted">@t.Equipamento?.Room?.Block?.School?.Name</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-wrap" style="max-width: 300px;">
+                                        <span class="d-block fw-bold text-dark mb-1">@t.Equipamento?.Name</span>
+                                        @{
+                                            var desc = t.Description ?? "";
+                                            var cutAt = desc.Length;
+                                            foreach (var marker in new[] { "( [DATA:", "[DATA:", "[RESOLVIDO:", "( IDATA:" })
+                                            {
+                                                var idx = desc.IndexOf(marker);
+                                                if (idx >= 0 && idx < cutAt) cutAt = idx;
+                                            }
+                                            desc = desc.Substring(0, cutAt).Trim();
+                                        }
+                                        <small class="text-muted">@desc</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(t.Level))
+                                    {
+                                        var levelClass = t.Level switch {
+                                            "Baixo" => "bg-label-info",
+                                            "Médio" => "bg-label-warning",
+                                            "Alto" => "bg-label-danger",
+                                            "Extremo" => "bg-label-danger animate-pulse",
+                                            _ => "bg-label-secondary"
+                                        };
+                                        <span class="badge @levelClass">@t.Level</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var statusClass = t.Status switch
+                                        {
+                                            "Pedido" => "bg-label-warning",
+                                            "Pendente" => "bg-label-warning",
+                                            "Em Resolução" => "bg-label-info",
+                                            "Em andamento" => "bg-label-info",
+                                            "Concluído" => "bg-label-success",
+                                            _ => "bg-label-secondary"
+                                        };
+                                        var statusText = t.Status == "Pedido" ? "Aguardando" : t.Status;
+                                    }
+                                    <span class="badge @statusClass">@statusText</span>
+                                </td>
+                                <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Ticket -->
+<div class="modal fade" id="modalTicket" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="CreateTicket" class="modal-content shadow-lg border-0" style="border-radius: 8px;">
+            <div class="modal-header border-bottom pb-3">
+                <h5 class="modal-title fw-bold"><i class="ri-ticket-2-line me-2 text-success"></i>Novo Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Equipamento Avariado</label>
+                    <select asp-for="NewTicket.EquipamentoId" class="form-select bg-transparent" required>
+                        <option value="">Selecione um equipamento...</option>
+                        @foreach (var eq in Model.AvailableEquipment)
+                        {
+                            <option value="@eq.Id">
+                                @eq.Name - @eq.SerialNumber (@eq.Room?.Name)
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nível de Prioridade</label>
+                    <select asp-for="NewTicket.Level" class="form-select bg-transparent" required>
+                        <option value="Baixo">Baixo</option>
+                        <option value="Médio">Médio</option>
+                        <option value="Alto">Alto</option>
+                        <option value="Extremo">Extremo</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Período Preferencial</label>
+                    <select asp-for="NewTicket.Period" class="form-select bg-transparent" required>
+                        <option value="Manhã">Manhã</option>
+                        <option value="Tarde" selected>Tarde</option>
+                        <option value="Integral">Integral</option>
+                    </select>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label fw-semibold small">DESCRIÇÃO DA ANOMALIA</label>
+                    <textarea asp-for="NewTicket.Description" class="form-control bg-transparent" rows="3" placeholder="Ex: O monitor não liga..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top pt-3">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Submeter Ticket</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Filtros -->
+<div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="get" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">Filtrar Tickets</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold small text-uppercase mb-1">Minhas Salas</label>
+                        <select asp-for="SalaId" class="form-select">
+                            <option value="">Todas as minhas salas</option>
+                            @foreach (var room in Model.MyRooms)
+                            {
+                                <option value="@room.Id">@room.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold small text-uppercase mb-1">Estado do Ticket</label>
+                        <select asp-for="FilterStatus" class="form-select">
+                            <option value="Todos os Estados">Todos os Estados</option>
+                            <option value="Pedido">Aguardando Técnico</option>
+                            <option value="Em andamento">Em Reparação</option>
+                            <option value="Concluído">Resolvido</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section PageScripts {
+<script>
+    $(document).ready(function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('eqId') || urlParams.has('openModal')) {
+            var myModal = new bootstrap.Modal(document.getElementById('modalTicket'));
+            myModal.show();
+        }
+    });
+</script>
+}

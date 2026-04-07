@@ -595,6 +595,7 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 item.Name = EditName;
                 item.BlockId = EditParentId.Value;
+                item.ResponsibleProfessorId = EditResponsibleProfessorId;
                 try 
                 {
                     await _context.SaveChangesAsync();

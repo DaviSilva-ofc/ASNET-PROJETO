@@ -435,6 +435,7 @@
                                                                                                         data-id="@room.Id"
                                                                                                         data-name="@room.Name"
                                                                                                         data-bloc="@bloc.Id"
+                                                                                                        data-professor="@room.ResponsibleProfessorId"
                                                                                                         onclick="event.stopPropagation(); openEditSala(this)"
                                                                                                         title="Editar Sala">
                                                                                                     ✏️
@@ -1022,6 +1023,19 @@
                             </select>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Professor Responsável</label>
+                        <div class="select-search-wrapper">
+                            <input type="text" class="select-search-input" placeholder="Pesquisar professor..." oninput="filterSelect(this, 'editSalaProfessorId')" />
+                            <select asp-for="EditResponsibleProfessorId" id="editSalaProfessorId" class="form-select">
+                                <option value="">-- Sem Professor --</option>
+                                @foreach (var prof in Model.AvailableProfessores)
+                                {
+                                    <option value="@prof.Id">@prof.Username</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">Guardar</button>
@@ -1303,10 +1317,12 @@
         var id = el.getAttribute('data-id');
         var name = el.getAttribute('data-name');
         var blocoId = el.getAttribute('data-bloc');
+        var professorId = el.getAttribute('data-professor');
 
         document.getElementById('editSalaId').value = id;
         document.getElementById('editSalaName').value = name;
         document.getElementById('editSalaBlocoId').value = blocoId;
+        document.getElementById('editSalaProfessorId').value = professorId || "";
 
         var modalEl = document.getElementById('modalEditSala');
         var modal = bootstrap.Modal.getOrCreateInstance(modalEl);

@@ -1,0 +1,287 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Professors.InfrastructureModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Minhas Salas";
+}
+
+@section PageStyles {
+<style>
+    :root {
+        --dash-bg: #232333;
+        --dash-card-bg: #2b2c40;
+        --dash-text: #a3adbb;
+        --dash-title: #f5f5f9;
+        --dash-border: rgba(255, 255, 255, 0.08);
+        --asnet-orange: #f89223;
+        --asnet-green: #71dd37;
+        --asnet-blue: #696cff;
+    }
+
+    [data-bs-theme="dark"] {
+        --dash-bg: #232333;
+        --dash-card-bg: #2b2c40;
+    }
+
+    .container-xxl {
+        padding-top: 2rem !important;
+    }
+
+    .page-header-title {
+        color: var(--dash-title);
+        font-size: 1.375rem;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--dash-border);
+        padding-bottom: 1rem;
+    }
+    .page-header-title .text-muted { color: #7071a4 !important; }
+
+    .infra-card {
+        background: var(--dash-card-bg) !important;
+        border: none !important;
+        border-radius: 6px !important;
+        box-shadow: 0 0.125rem 0.25rem 0 rgba(0, 0, 0, 0.2) !important;
+        overflow: hidden;
+    }
+
+    .infra-banner {
+        background: var(--asnet-orange) !important;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .stat-box {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--dash-border);
+        border-radius: 6px;
+        padding: 1.5rem;
+        transition: transform 0.2s;
+        height: 100%;
+    }
+    .stat-box:hover { transform: translateY(-3px); }
+
+    .stat-icon {
+        width: 42px; height: 42px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .tree-panel {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .node-item {
+        margin-left: 1rem;
+        padding: 0.5rem 0;
+        position: relative;
+        border-left: 1px solid var(--dash-border);
+        padding-left: 1.2rem;
+    }
+    .node-item:last-child { border-left-color: transparent; }
+    .node-item::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 1.2rem;
+        width: 1rem; height: 1px;
+        background: var(--dash-border);
+    }
+    
+    .node-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+    }
+
+    .room-action-btn {
+        background: #3c3f56;
+        color: var(--asnet-orange);
+        border: none;
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .room-action-btn:hover { background: var(--asnet-orange); color: #fff; }
+
+    .big-stat { font-size: 2.2rem; font-weight: 700; line-height: 1; margin-bottom: 0.5rem; }
+    
+    .btn-asnet-orange { 
+        background: var(--asnet-orange) !important; 
+        color: #fff !important; 
+        font-weight: 500; 
+        border-radius: 6px; 
+        border: none; 
+        padding: 0.45rem 1rem; 
+    }
+</style>
+}
+
+<div class="container-xxl flex-grow-1">
+    <div class="page-header-title d-flex justify-content-between align-items-end">
+        <div>
+            <span class="text-muted fw-light">Professor /</span> Minhas Salas
+        </div>
+        <a href="/Clients/Professors/Equipment" class="btn btn-asnet-orange">
+            <i class="ri-computer-line me-2"></i> Ver Equipamentos
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Overview Cards -->
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-icon bg-label-warning">🎫</div>
+                <div class="big-stat text-warning">@Model.TotalTickets</div>
+                <div class="text-muted small fw-bold uppercase">Tickets Ativos</div>
+                <div class="mt-4 pt-3 border-top border-secondary opacity-25">
+                    <a href="/Clients/Professors/Tickets" class="text-warning small text-decoration-none fw-bold">Ver todos <i class="ri-arrow-right-line"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-icon bg-label-info">💻</div>
+                <div class="big-stat text-info">@Model.TotalEquipments</div>
+                <div class="text-muted small fw-bold uppercase">Equipamentos Totais</div>
+                <div class="mt-4 pt-3 border-top border-secondary opacity-25">
+                    <a href="/Clients/Professors/Equipment" class="text-info small text-decoration-none fw-bold">Gerir inventário <i class="ri-arrow-right-line"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-box">
+                <div class="stat-icon bg-label-success">🚪</div>
+                <div class="big-stat text-success">@Model.MySalas.Count</div>
+                <div class="text-muted small fw-bold uppercase">Salas sob Supervisão</div>
+                <div class="mt-4 pt-3 border-top border-secondary opacity-25">
+                    <a href="#" class="text-success small text-decoration-none fw-bold">Rede Verificada <i class="ri-check-line"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-12">
+            <div class="card infra-card">
+                <div class="infra-banner">
+                    <h5 class="mb-0 text-white fw-medium">@Model.Agrupamento?.Name</h5>
+                    <p class="mb-0 text-white small">Estrutura organizacional e acesso rápido por sala.</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Hierarchy Tree -->
+                        <div class="col-lg-6">
+                            <h6 class="mb-4 fw-bold uppercase small text-muted"><i class="ri-node-tree me-2"></i>Minha Rede de Salas</h6>
+                            <div class="tree-panel">
+                                @if (Model.MySalas.Any())
+                                {
+                                    @foreach (var schoolGroup in Model.MySalas.GroupBy(s => s.Block.School.Id))
+                                    {
+                                        var school = schoolGroup.First().Block.School;
+                                        <div class="mb-3">
+                                            <div class="node-header cursor-pointer" data-bs-toggle="collapse" data-bs-target="#tree-school-@school.Id" onclick="this.querySelector('.arrow-icon').classList.toggle('ri-arrow-down-s-line'); this.querySelector('.arrow-icon').classList.toggle('ri-arrow-right-s-line');">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="ri-arrow-down-s-line fs-5 text-success arrow-icon"></i>
+                                                    <span class="fw-bold text-white">@school.Name</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="tree-school-@school.Id" class="collapse show mt-2">
+                                                @foreach (var blockGroup in schoolGroup.GroupBy(s => s.BlockId))
+                                                {
+                                                    var block = blockGroup.First().Block;
+                                                    <div class="node-item">
+                                                        <div class="node-header cursor-pointer" data-bs-toggle="collapse" data-bs-target="#tree-block-@block.Id" onclick="this.querySelector('.arrow-icon').classList.toggle('ri-arrow-down-s-line'); this.querySelector('.arrow-icon').classList.toggle('ri-arrow-right-s-line');">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <i class="ri-arrow-down-s-line fs-5 text-primary arrow-icon"></i>
+                                                                <span class="fw-semibold small">@block.Name</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div id="tree-block-@block.Id" class="collapse show mt-2">
+                                                    
+                                                    @foreach (var sala in blockGroup)
+                                                    {
+                                                        <div class="node-item">
+                                                            <div class="node-header d-flex justify-content-between cursor-pointer" data-bs-toggle="collapse" data-bs-target="#tree-equips-@sala.Id" onclick="this.querySelector('.arrow-icon').classList.toggle('ri-arrow-down-s-line'); this.querySelector('.arrow-icon').classList.toggle('ri-arrow-right-s-line');">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <i class="ri-arrow-right-s-line fs-5 text-warning arrow-icon"></i>
+                                                                    <span class="text-warning fw-bold small">@sala.Name</span>
+                                                                </div>
+                                                                <div class="d-flex gap-2">
+                                                                    <a asp-page="/Clients/Professors/Tickets" asp-route-SalaId="@sala.Id" class="room-action-btn" title="Tickets" onclick="event.stopPropagation();">
+                                                                        🎫
+                                                                    </a>
+                                                                    <a asp-page="/Clients/Professors/Equipment" asp-route-SalaId="@sala.Id" class="room-action-btn" title="Equipamentos" onclick="event.stopPropagation();">
+                                                                        💻
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                            <div id="tree-equips-@sala.Id" class="collapse">
+                                                                @if (sala.Equipments != null && sala.Equipments.Any())
+                                                                {
+                                                                    var groupedEquips = sala.Equipments.GroupBy(e => e.Name).Select(g => new { Name = g.Key, Count = g.Count() }).ToList();
+                                                                    foreach (var g in groupedEquips)
+                                                                    {
+                                                                        var label = g.Name;
+                                                                        if (g.Count > 1) label = $"{label} ({g.Count})";
+                                                                        <a asp-page="./Equipment" asp-route-SalaId="@sala.Id" asp-route-FilterName="@g.Name" class="node-item text-muted small text-decoration-none d-block ms-4 my-1">
+                                                                            <i class="ri-computer-line me-1 opacity-75"></i> @label 
+                                                                        </a>
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="node-item text-muted small fst-italic ms-4 my-1">Sem equipamentos</div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="p-5 text-center text-muted">
+                                        <i class="ri-error-warning-line ri-2x opacity-25"></i>
+                                        <p class="mt-2">Sem salas atribuídas.</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Sidebar Info -->
+                        <div class="col-lg-6 border-start border-secondary ps-lg-5">
+                            <h6 class="mb-4 fw-bold uppercase small text-white"><i class="ri-information-line me-2"></i>Informação de Apoio</h6>
+                            <div class="p-4" style="background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid var(--dash-border);">
+                                <h6 class="fw-bold mb-3 text-white">Assistência Técnica</h6>
+                                <p class="small text-light mb-4 opacity-75 text-justify">
+                                    Selecione a sala correspondente na árvore ao lado para filtrar equipamentos. 
+                                    Reporte avarias diretamente no inventário para abertura de tickets.
+                                </p>
+                                <div class="d-grid">
+                                    <a href="/Clients/Professors/Chat" class="btn btn-asnet-orange text-white fw-bold">
+                                        <i class="ri-chat-3-line me-2"></i> Abrir Chat de Suporte
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

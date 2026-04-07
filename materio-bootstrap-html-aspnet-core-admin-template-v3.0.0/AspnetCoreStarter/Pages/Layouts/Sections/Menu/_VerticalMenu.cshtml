@@ -149,6 +149,39 @@
           </a>
         </li>
       }
+      else if (User.IsInRole("Professor"))
+      {
+        <li class='menu-item@(currentPage == "/Clients/Professors/Dashboard" ? " active" : "")'>
+          <a asp-page="/Clients/Professors/Dashboard" class="menu-link">
+            <i class="menu-icon icon-base ri-dashboard-line"></i>
+            <div>Visão Geral</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Professors/Infrastructure" ? " active" : "")'>
+          <a asp-page="/Clients/Professors/Infrastructure" class="menu-link">
+            <i class="menu-icon icon-base ri-government-line"></i>
+            <div>Minhas Salas</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Professors/Equipment" ? " active" : "")'>
+          <a asp-page="/Clients/Professors/Equipment" class="menu-link">
+            <i class="menu-icon icon-base ri-computer-line"></i>
+            <div>Equipamentos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Professors/Tickets" ? " active" : "")'>
+          <a asp-page="/Clients/Professors/Tickets" class="menu-link">
+            <i class="menu-icon icon-base ri-ticket-line"></i>
+            <div>Meus Tickets</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Professors/Chat" ? " active" : "")'>
+          <a asp-page="/Clients/Professors/Chat" class="menu-link">
+            <i class="menu-icon icon-base ri-chat-3-line"></i>
+            <div>Chat</div>
+          </a>
+        </li>
+      }
       else if (User.IsInRole("Admin"))
       {
         <li class='menu-item@(currentPage == "/Admin/Dashboard" ? " active" : "")'>
