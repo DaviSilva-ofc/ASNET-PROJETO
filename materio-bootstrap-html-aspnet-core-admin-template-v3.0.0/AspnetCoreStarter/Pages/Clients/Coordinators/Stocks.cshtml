@@ -249,9 +249,9 @@
                                     {
                                         <span class="badge bg-label-danger">Avariado</span>
                                     }
-                                    else if (item.Status != null && item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase))
+                                    else if (item.Status != null && item.Status.Trim().Equals("Emprestado", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        <span class="badge bg-label-warning">Em reparo</span>
+                                        <span class="badge bg-label-primary">Emprestado</span>
                                     }
                                     else
                                     {
@@ -279,7 +279,134 @@
             </table>
         </div>
     </div>
+    
+    @* Artigos Emprestados pelo Agrupamento *@
+    <div class="card shadow-sm mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="ri-hand-coin-line me-2 text-primary"></i>Artigos Emprestados</h5>
+            <span class="badge bg-label-primary">@Model.BorrowedItems.Count artigo(s)</span>
+        </div>
+        <div class="table-responsive">
+            @if (!Model.BorrowedItems.Any())
+            {
+                <div class="text-center py-4 text-muted small">
+                    <i class="ri-information-line me-1"></i> Não existem artigos emprestados no momento.
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Artigo</th>
+                            <th>Tipo</th>
+                            <th>Detalhes</th>
+                            <th class="text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var stock in Model.BorrowedItems)
+                        {
+                            <tr>
+                                <td><strong>@stock.Name</strong></td>
+                                <td><span class="badge bg-label-info">@stock.Type</span></td>
+                                <td class="small text-muted">
+                                    @if(stock.IsAdminLoan) {
+                                        <span class="badge bg-label-danger"><i class="ri-admin-line me-1"></i> Admin</span>
+                                    } else {
+                                        <span class="badge bg-label-secondary"><i class="ri-community-line me-1"></i> Agrupamento</span>
+                                    }
+                                    <div class="mt-1">@stock.Details</div>
+                                </td>
+                                <td class="text-center">
+                                    <form method="post" asp-page-handler="ReturnItem">
+                                        <input type="hidden" name="idWithPrefix" value="@stock.IdWithPrefix" />
+                                        <button type="submit" class="btn btn-sm btn-warning">
+                                            <i class="ri-arrow-go-back-line me-1"></i> Devolver
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
 
+    @* Meus Pedidos de Stock *@
+    <div class="card shadow-sm mt-4 mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="ri-send-plane-line me-2 text-primary"></i>Meus Pedidos de Stock</h5>
+            <span class="badge bg-label-primary">@Model.MyRequests.Count pedido(s)</span>
+        </div>
+        <div class="table-responsive">
+            @if (!Model.MyRequests.Any())
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="ri-inbox-line fs-1 d-block mb-2"></i>
+                    Ainda não efetuou nenhum pedido de stock.
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Artigo</th>
+                            <th>Tipo</th>
+                            <th>Qtd</th>
+                            <th>Notas</th>
+                            <th>Estado</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in Model.MyRequests)
+                        {
+                            <tr>
+                                <td class="text-muted small">@req.Id</td>
+                                <td><strong>@req.ItemName</strong></td>
+                                <td><span class="badge bg-label-secondary">@req.ItemType</span></td>
+                                <td>@req.Quantity</td>
+                                <td class="text-muted small">@(req.Notes?.Length > 50 ? req.Notes.Substring(0, 50) + "..." : req.Notes)</td>
+                                <td>
+                                    @switch (req.Status)
+                                    {
+                                        case "Pendente_Diretor":
+                                            <span class="badge bg-label-warning"><i class="ri-time-line me-1"></i>Aguarda Diretor</span>
+                                            break;
+                                        case "Pendente_Admin":
+                                            <span class="badge bg-label-info"><i class="ri-arrow-up-line me-1"></i>Escalado ao Admin</span>
+                                            break;
+                                        case "Atendido":
+                                            <span class="badge bg-label-success"><i class="ri-checkbox-circle-line me-1"></i>Atendido</span>
+                                            break;
+                                        case "Recusado":
+                                            <span class="badge bg-label-danger"><i class="ri-close-circle-line me-1"></i>Recusado</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-label-secondary">@req.Status</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-muted small">@req.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(req.DirectorNotes))
+                            {
+                                <tr class="table-light">
+                                    <td colspan="7" class="text-muted small ps-4">
+                                        <i class="ri-chat-1-line me-1"></i><em>Nota: @req.DirectorNotes</em>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
 
     <!-- Modal Filtros -->
     <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
@@ -370,7 +497,7 @@
     <!-- Modal Novo Pedido de Stock -->
     <div class="modal fade" id="modalNovoPedido" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-page-handler="RequestLoan" class="modal-content">
+            <form method="post" asp-page-handler="CreateStockRequest" class="modal-content">
                 <div class="modal-header border-bottom">
                     <h5 class="modal-title">Novo Pedido de Stock</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

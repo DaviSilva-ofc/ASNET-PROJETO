@@ -63,6 +63,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
                 .Include(t => t.Admin)
                 .Include(t => t.Technician)
                 .Where(t => t.SchoolId == coord.SchoolId)
+                .Where(t => t.Level != "Empréstimo") // pedidos de empréstimo geridos no painel de Stocks
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(FilterStatus) && FilterStatus != "Todos os Estados")
@@ -82,9 +83,14 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
+            var eqIdsWithActiveTickets = await _context.Tickets
+                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
+                .Select(t => t.EquipamentoId!.Value)
+                .ToListAsync();
+
             EquipamentosDisponiveis = await _context.Equipamentos
                 .Include(e => e.Room)
-                .Where(e => e.Room != null && e.Room.Block.SchoolId == coord.SchoolId && (e.Status == "Avariado" || e.Status == "Indisponível"))
+                .Where(e => e.Room != null && e.Room.Block.SchoolId == coord.SchoolId && (e.Status == "Avariado" || e.Status == "Indisponível") && !eqIdsWithActiveTickets.Contains(e.Id))
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 
@@ -112,6 +118,20 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToPage("/Auth/Login");
+
+            if (NovoTicket.EquipamentoId.HasValue)
+            {
+                var alreadyOpen = await _context.Tickets.AnyAsync(t =>
+                    t.EquipamentoId == NovoTicket.EquipamentoId &&
+                    t.Status != "Concluído" && t.Status != "Recusado" &&
+                    t.Level != "Empréstimo");
+
+                if (alreadyOpen)
+                {
+                    TempData["ErrorMessage"] = "Já existe um ticket ativo para este equipamento. Aguarde a conclusão antes de criar outro.";
+                    return RedirectToPage();
+                }
+            }
 
             NovoTicket.AdminId = int.Parse(userIdStr);
             NovoTicket.Status = "Pedido";

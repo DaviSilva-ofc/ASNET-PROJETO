@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "bpBBt2F+0ik=",
+  "success": true,
+  "projectFilePath": "c:\\Users\\Estagio\\Documents\\GitHub\\ASNET-PROJETO\\FixDB\\FixDB.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Estagio\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\Estagio\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.2\\microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\Estagio\\.nuget\\packages\\mysqlconnector\\2.5.0\\mysqlconnector.2.5.0.nupkg.sha512"
+  ],
+  "logs": []
+}

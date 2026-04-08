@@ -5,6 +5,35 @@
     ViewData["Title"] = "Tickets";
 }
 
+@section PageStyles {
+<style>
+    .active-filters-bar {
+        padding: 0.6rem 1.2rem;
+        background-color: #f0f7ff;
+        transition: all 0.3s ease;
+    }
+    .dark-style .active-filters-bar,
+    [data-bs-theme="dark"] .active-filters-bar {
+        background-color: rgba(3, 195, 236, 0.08) !important;
+        border: 1px solid rgba(3, 195, 236, 0.2) !important;
+    }
+    .filter-badge {
+        background-color: #fff;
+        color: #03c3ec !important;
+        border: 1px solid rgba(3, 195, 236, 0.3) !important;
+    }
+    .dark-style .filter-badge,
+    [data-bs-theme="dark"] .filter-badge {
+        background-color: #2b2c40 !important;
+        color: #03c3ec !important;
+        border-color: rgba(3, 195, 236, 0.4) !important;
+    }
+    .text-filters-blue {
+        color: #03c3ec !important;
+    }
+</style>
+}
+
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Professor /</span> Tickets</h4>
 
@@ -24,19 +53,27 @@
         @if (Model.SalaId.HasValue || (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados"))
         {
             <div class="card-body py-2">
-                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0" role="alert" style="padding: 0.6rem 1.2rem; background-color: #e7f3ff;">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0 active-filters-bar" role="alert">
                     <div class="d-flex align-items-center">
-                        <i class="ri-filter-3-line me-2 text-primary"></i>
-                        <span class="small text-primary fw-medium">
+                        <i class="ri-filter-3-line me-2 text-filters-blue"></i>
+                        <span class="small text-filters-blue fw-medium">
                             Filtros ativos: 
                             @if (Model.SalaId.HasValue) { 
                                 var sala = Model.MyRooms.FirstOrDefault(r => r.Id == Model.SalaId.Value);
-                                <span class="badge bg-white text-primary border me-1">Sala: @(sala?.Name ?? "N/A")</span> 
+                                <span class="badge filter-badge me-1">Sala: @(sala?.Name ?? "N/A")</span> 
                             }
-                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { <span class="badge bg-white text-primary border me-1">Estado: @Model.FilterStatus</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { 
+                                var displayStatus = Model.FilterStatus switch {
+                                    "Em andamento" => "Em Reparação",
+                                    "Concluído" => "Resolvido",
+                                    "Pedido" => "A aguardar",
+                                    _ => Model.FilterStatus
+                                };
+                                <span class="badge filter-badge me-1">Estado: @displayStatus</span> 
+                            }
                         </span>
                     </div>
-                    <a asp-page="./Tickets" class="btn btn-sm btn-primary rounded-pill px-3">
+                    <a asp-page="./Tickets" class="btn btn-sm btn-outline-info rounded-pill px-3">
                         <i class="ri-refresh-line me-1 small"></i> Limpar Filtros
                     </a>
                 </div>
@@ -118,7 +155,7 @@
                                             "Concluído" => "bg-label-success",
                                             _ => "bg-label-secondary"
                                         };
-                                        var statusText = t.Status == "Pedido" ? "Aguardando" : t.Status;
+                                        var statusText = t.Status == "Pedido" ? "A aguardar" : t.Status;
                                     }
                                     <span class="badge @statusClass">@statusText</span>
                                 </td>
@@ -143,11 +180,11 @@
             <div class="modal-body p-4">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Equipamento Avariado</label>
-                    <select asp-for="NewTicket.EquipamentoId" class="form-select bg-transparent" required>
+                    <select asp-for="NewTicket.EquipamentoId" id="selectEquipamento" class="form-select bg-transparent" required onchange="updatePriorityLevels()">
                         <option value="">Selecione um equipamento...</option>
                         @foreach (var eq in Model.AvailableEquipment)
                         {
-                            <option value="@eq.Id">
+                            <option value="@eq.Id" data-type="@eq.Type">
                                 @eq.Name - @eq.SerialNumber (@eq.Room?.Name)
                             </option>
                         }
@@ -155,12 +192,13 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Nível de Prioridade</label>
-                    <select asp-for="NewTicket.Level" class="form-select bg-transparent" required>
+                    <select asp-for="NewTicket.Level" id="selectPriority" class="form-select bg-transparent" required>
                         <option value="Baixo">Baixo</option>
                         <option value="Médio">Médio</option>
                         <option value="Alto">Alto</option>
                         <option value="Extremo">Extremo</option>
                     </select>
+                    <div id="priorityHint" class="form-text text-muted small mt-1"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Período Preferencial</label>
@@ -207,7 +245,7 @@
                         <label class="form-label fw-semibold small text-uppercase mb-1">Estado do Ticket</label>
                         <select asp-for="FilterStatus" class="form-select">
                             <option value="Todos os Estados">Todos os Estados</option>
-                            <option value="Pedido">Aguardando Técnico</option>
+                            <option value="Pedido">A aguardar Técnico</option>
                             <option value="Em andamento">Em Reparação</option>
                             <option value="Concluído">Resolvido</option>
                         </select>
@@ -224,12 +262,98 @@
 
 @section PageScripts {
 <script>
+    function updatePriorityLevels() {
+        const selectEq = document.getElementById('selectEquipamento');
+        const selectPri = document.getElementById('selectPriority');
+        const hint = document.getElementById('priorityHint');
+        
+        if (!selectEq || !selectPri) return;
+        
+        const selectedOption = selectEq.options[selectEq.selectedIndex];
+        const type = selectedOption ? (selectedOption.getAttribute('data-type') || "") : "";
+        const typeLower = type.toLowerCase().trim();
+
+        // 1. Reset: Enable and show all options first
+        for (let i = 0; i < selectPri.options.length; i++) {
+            selectPri.options[i].disabled = false;
+            selectPri.options[i].hidden = false;
+        }
+        if (hint) hint.innerText = "";
+
+        if (!typeLower) return;
+
+        // Helper to restrict to specific values
+        const restrictTo = (allowedValues) => {
+            let matches = false;
+            for (let i = 0; i < selectPri.options.length; i++) {
+                const opt = selectPri.options[i];
+                if (!allowedValues.includes(opt.value)) {
+                    opt.disabled = true;
+                    opt.hidden = true;
+                } else {
+                    matches = true;
+                }
+            }
+            // If current value is now disabled, switch to first allowed
+            if (allowedValues.length > 0 && !allowedValues.includes(selectPri.value)) {
+                selectPri.value = allowedValues[0];
+            }
+        };
+
+        // 2. Priority Logic based on broader keywords
+        const isComputer = typeLower.includes('computador') || typeLower.includes('pc') || typeLower.includes('desktop') || 
+                           typeLower.includes('portátil') || typeLower.includes('laptop') || typeLower.includes('aio') || 
+                           typeLower.includes('all-in-one') || typeLower.includes('estação') || typeLower.includes('workstation');
+        
+        const isCritical = typeLower.includes('servidor') || typeLower.includes('server') || typeLower.includes('storage') || 
+                           typeLower.includes('nas') || typeLower.includes('firewall');
+
+        const isNetwork = typeLower.includes('networking') || typeLower.includes('switch') || typeLower.includes('router') || 
+                          typeLower.includes('access point') || typeLower.includes('ap') || typeLower.includes('wi-fi') || 
+                          typeLower.includes('quadro interativo') || typeLower.includes('smartboard');
+
+        const isPeripheral = typeLower.includes('impressora') || typeLower.includes('monitor') || typeLower.includes('projetor') || 
+                             typeLower.includes('televisao') || typeLower.includes('tv') || typeLower.includes('ecrã') || 
+                             typeLower.includes('teclado') || typeLower.includes('rato');
+
+        if (isComputer) {
+            restrictTo(['Médio']);
+        } else if (isCritical) {
+            restrictTo(['Alto', 'Extremo']);
+        } else if (isNetwork) {
+            restrictTo(['Médio', 'Alto']);
+        } else if (isPeripheral) {
+            restrictTo(['Baixo', 'Médio']);
+        } else if (typeLower.includes('mesa interativa')) {
+            restrictTo(['Médio']);
+        }
+    }
+
     $(document).ready(function () {
         const urlParams = new URLSearchParams(window.location.search);
+        const modalElement = document.getElementById('modalTicket');
+        if (!modalElement) return;
+
         if (urlParams.has('eqId') || urlParams.has('openModal')) {
-            var myModal = new bootstrap.Modal(document.getElementById('modalTicket'));
+            var myModal = new bootstrap.Modal(modalElement);
             myModal.show();
+            // Trigger check after modal is fully rendered
+            modalElement.addEventListener('shown.bs.modal', function () {
+                updatePriorityLevels();
+            }, { once: true });
         }
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            const hint = document.getElementById('priorityHint');
+            if (hint) hint.innerText = "";
+            const selectPri = document.getElementById('selectPriority');
+            if (selectPri) {
+                for (let i = 0; i < selectPri.options.length; i++) {
+                    selectPri.options[i].disabled = false;
+                    selectPri.options[i].hidden = false;
+                }
+            }
+        });
     });
 </script>
 }

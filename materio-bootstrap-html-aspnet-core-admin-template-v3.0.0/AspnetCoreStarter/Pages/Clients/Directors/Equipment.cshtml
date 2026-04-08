@@ -90,7 +90,7 @@
                         <th>Nº Série</th>
                         <th>Localização</th>
                         <th>Estado</th>
-                        <th class="px-3" style="width: 1px; white-space: nowrap; min-width: 210px;">Ações</th>
+                        <th class="ps-3" style="width: 500px; min-width: 500px; white-space: nowrap;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,8 +147,8 @@
                                         <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
                                     }
                                 </td>
-                                <td style="white-space: nowrap;">
-                                    <div class="d-flex align-items-center gap-2">
+                                <td style="width: 500px; min-width: 500px; white-space: nowrap; padding-right: 60px !important;">
+                                    <div class="d-flex align-items-center justify-content-start gap-2">
                                         @if (item.Status == "Em reparo")
                                         {
                                             <span class="text-muted small ps-2"><i class="ri-settings-line me-1"></i> Em Manutenção</span>
@@ -159,7 +159,19 @@
                                                 @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
                                                 {
                                                     <button type="submit" class="btn btn-sm text-success" title="Marcar como A funcionar"><i class="ri-check-line"></i> Funcional</button>
-                                                    <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
+                                                    
+                                                    @if (Model.EquipmentWithActiveTickets.Contains(item.Id))
+                                                    {
+                                                        <span class="text-info small ps-2" title="Já existe um ticket ativo para este equipamento">
+                                                            <i class="ri-history-line me-1"></i> Ticket em curso
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket">
+                                                            <i class="ri-add-circle-line"></i> Solicitar Ticket
+                                                        </a>
+                                                    }
                                                 }
                                                 else
                                                 {
@@ -170,7 +182,7 @@
 
                                         <div class="d-flex align-items-center gap-1">
                                             <button type="button" class="btn btn-sm text-primary p-1" title="Editar"
-                                                    onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId')">
+                                                    onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId', '@item.Status')">
                                                 <i class="bx bx-edit"></i> ✏️
                                             </button>
                                             <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
@@ -289,6 +301,16 @@
                                 </select>
                             </div>
                             <div class="col-md-12">
+                                <label class="form-label">Estado do Equipamento</label>
+                                <select asp-for="NewEquipment.Status" id="editStatus" class="form-select" required>
+                                    <option value="A funcionar">A funcionar</option>
+                                    <option value="Armazenado">Armazenado</option>
+                                    <option value="Avariado">Avariado</option>
+                                    <option value="Indisponível">Indisponível</option>
+                                    <option value="Em Reparação">Em Reparação</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
                                 <label class="form-label">Empresa (Opcional se for Sala)</label>
                                 <select asp-for="NewEquipment.EmpresaId" id="editEmpresa" class="form-select">
                                     <option value="">Nenhuma / Escola</option>
@@ -398,6 +420,14 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Nº Série</label>
                         <input type="text" asp-for="NewEquipment.SerialNumber" class="form-control" placeholder="Ex: SN-2024-001" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-primary fw-semibold small">Estado Inicial</label>
+                        <select asp-for="NewEquipment.Status" class="form-select border-primary" required>
+                            <option value="A funcionar" selected>A funcionar</option>
+                            <option value="Armazenado">Armazenado (Stock)</option>
+                            <option value="Avariado">Avariado</option>
+                        </select>
                     </div>
 
                     <input type="hidden" asp-for="LocationType" id="hdnLocationType" value="escola" />
@@ -783,7 +813,7 @@
         filterSalas();
     }
 
-    function openEditModal(id, name, type, brand, model, serial, roomId, empId) {
+    function openEditModal(id, name, type, brand, model, serial, roomId, empId, status) {
         document.getElementById('editId').value = id;
         
         // Set Artigo and trigger brands update
@@ -802,6 +832,12 @@
         document.getElementById('editSerial').value = serial;
         document.getElementById('editSala').value = roomId || "";
         document.getElementById('editEmpresa').value = empId || "";
+
+        const statusSelect = document.getElementById('editStatus');
+        if (statusSelect) {
+            if (status === "Funcionando" || !status) status = "A funcionar";
+            statusSelect.value = status;
+        }
 
         var modal = new bootstrap.Modal(document.getElementById('modalEditarEquipamento'));
         modal.show();

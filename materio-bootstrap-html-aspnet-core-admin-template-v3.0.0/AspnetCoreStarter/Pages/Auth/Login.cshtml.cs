@@ -166,6 +166,26 @@ namespace AspnetCoreStarter.Pages.Auth
                 } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN id_empresa INT NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN nivel_urgencia VARCHAR(20) NULL;"); } catch { }
+                try {
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        CREATE TABLE IF NOT EXISTS pedidos_stock (
+                            id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+                            nome_artigo VARCHAR(100) NOT NULL,
+                            tipo_artigo VARCHAR(100),
+                            quantidade INT DEFAULT 1,
+                            notas TEXT,
+                            id_coordenador INT,
+                            id_escola INT,
+                            id_agrupamento INT,
+                            status VARCHAR(50) DEFAULT 'Pendente_Diretor',
+                            notas_diretor TEXT,
+                            data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                            FOREIGN KEY (id_coordenador) REFERENCES utilizadores(id_utilizador),
+                            FOREIGN KEY (id_escola) REFERENCES escolas(id_escola),
+                            FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
+                        ) ENGINE=InnoDB;");
+                } catch { }
 
                 // Procurar por email ou username
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == Email || u.Username == Email);

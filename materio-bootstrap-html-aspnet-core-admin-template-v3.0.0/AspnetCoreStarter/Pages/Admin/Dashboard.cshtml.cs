@@ -31,6 +31,8 @@ namespace AspnetCoreStarter.Pages.Admin
         public int TotalUnreadMessages { get; set; }
         public List<AspnetCoreStarter.Models.User> RecentMessageSenders { get; set; }
         public List<LowStockItemViewModel> LowStockItems { get; set; } = new();
+        public List<PedidoStock> EscalatedRequests { get; set; } = new();
+        public List<StockEmpresa> GlobalStock { get; set; } = new();
 
         public int TicketsPendenteCount { get; set; }
         public int TicketsEmResolucaoCount { get; set; }
@@ -180,7 +182,67 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Where(u => u.AccountStatus == "Pendente")
                 .ToListAsync();
 
+            // Load escalated requests (only those pending admin action — fulfilled ones are removed)
+            EscalatedRequests = await _context.PedidosStock
+                .Include(p => p.School)
+                .Include(p => p.Agrupamento)
+                .Include(p => p.RequestedBy)
+                .Where(p => p.Status == "Pendente_Admin")
+                .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+                .ToListAsync();
+
+            // Load global stock (available items with no school assigned)
+            GlobalStock = await _context.StockEmpresa
+                .Where(s => s.SchoolId == null && (s.IsAvailable || s.Status == "Armazenado" || s.Status == "Disponível"))
+                .ToListAsync();
+
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostFulfillEscalatedRequestAsync(int requestId, int[] selectedStockIds, string? adminNotes)
+        {
+            var request = await _context.PedidosStock.FindAsync(requestId);
+            if (request == null) return RedirectToPage();
+
+            if (selectedStockIds != null && selectedStockIds.Length > 0)
+            {
+                var items = await _context.StockEmpresa
+                    .Where(s => selectedStockIds.Contains(s.Id))
+                    .ToListAsync();
+
+                var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int? currentAdminId = int.TryParse(userIdStr, out int id) ? id : null;
+
+                foreach (var item in items)
+                {
+                    item.AgrupamentoId = request.AgrupamentoId;
+                    item.SchoolId = request.SchoolId;
+                    item.Status = "Emprestado";
+                    item.IsAvailable = false;
+                    item.AdminId = currentAdminId; // Mark as Admin loan
+                }
+            }
+
+            // Remove the request entirely — when returned, it was already deleted from the list
+            _context.PedidosStock.Remove(request);
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Emprestado com sucesso!";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRejectEscalatedRequestAsync(int requestId, string? adminNotes)
+        {
+            var request = await _context.PedidosStock.FindAsync(requestId);
+            if (request == null) return RedirectToPage();
+
+            request.Status = "Recusado";
+            request.DirectorNotes = adminNotes;
+            request.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Pedido recusado pelo Administrador.";
+            return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? blocoId, int? empresaId)

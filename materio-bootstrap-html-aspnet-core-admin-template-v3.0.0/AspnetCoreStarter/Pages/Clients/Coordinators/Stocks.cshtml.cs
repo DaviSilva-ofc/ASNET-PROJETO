@@ -46,7 +46,9 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
         public List<Sala> AvailableRooms { get; set; } = new();
         public List<string> UniqueStatuses { get; set; } = new();
 
-        public List<CoordinatorStockItemViewModel> Items { get; set; } = new();
+        public List<CoordinatorStockTableItemViewModel> Items { get; set; } = new();
+        public List<PedidoStock> MyRequests { get; set; } = new();
+        public List<CoordinatorBorrowedItemViewModel> BorrowedItems { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -67,6 +69,32 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             }
 
             int mySchoolId = coord.SchoolId.Value;
+
+            // Ensure pedidos_stock table exists
+            try { await _context.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS pedidos_stock (
+                    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+                    nome_artigo VARCHAR(100) NOT NULL,
+                    tipo_artigo VARCHAR(100),
+                    quantidade INT NOT NULL DEFAULT 1,
+                    notas TEXT,
+                    id_coordenador INT,
+                    id_escola INT,
+                    id_agrupamento INT,
+                    status VARCHAR(50) DEFAULT 'Pendente_Diretor',
+                    notas_diretor TEXT,
+                    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (id_coordenador) REFERENCES utilizadores(id_utilizador),
+                    FOREIGN KEY (id_escola) REFERENCES escolas(id_escola),
+                    FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento)
+                ) ENGINE=InnoDB;"); } catch { }
+
+            // Load past requests by this coordinator for this school (hide fulfilled ones as they move to Borrowed)
+            MyRequests = await _context.PedidosStock
+                .Where(p => p.SchoolId == mySchoolId && p.Status != "Atendido")
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
 
             AvailableSchools = await _context.Schools.Where(s => s.Id == mySchoolId).ToListAsync();
             CountEscolas = 1;
@@ -121,7 +149,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
                 Status = MapStatus(e)
             });
 
-            Items = groupedItems.Select(g => new CoordinatorStockItemViewModel {
+            Items = groupedItems.Select(g => new CoordinatorStockTableItemViewModel {
                 Name = g.Key.Name,
                 Category = g.Key.Category,
                 Location = g.Key.Location,
@@ -129,6 +157,41 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
                 Quantity = g.Count(),
                 Status = g.Key.Status
             }).OrderBy(i => i.Location).ThenBy(i => i.Name).ToList();
+
+            // Load items borrowed from the Agrupamento
+            var borrowedCentralStock = await _context.StockEmpresa
+                .Where(s => s.SchoolId == mySchoolId && s.Status == "Emprestado")
+                .ToListAsync();
+
+            var borrowedEquips = await _context.Equipamentos
+                .Include(e => e.Room).ThenInclude(r => r.Block)
+                .Include(e => e.StatusEquipamentos)
+                .Where(e => e.Room != null && e.Room.Block.SchoolId == mySchoolId)
+                .ToListAsync();
+
+            var onlyBorrowedEquips = borrowedEquips
+                .Where(e => {
+                    var lastStatus = e.StatusEquipamentos?.OrderByDescending(s => s.Id).FirstOrDefault()?.Estado ?? "";
+                    return lastStatus.Contains("Emprestado", StringComparison.OrdinalIgnoreCase);
+                }).ToList();
+
+            BorrowedItems = borrowedCentralStock.Select(s => new CoordinatorBorrowedItemViewModel
+            {
+                IdWithPrefix = $"se_{s.Id}",
+                Name = s.EquipmentName,
+                Type = s.Type,
+                Details = (s.AdminId != null || s.AgrupamentoId == null || s.AgrupamentoId != coord.School?.AgrupamentoId) 
+                          ? "Emprestado pelo Administrador" 
+                          : "Do Stock do Agrupamento",
+                IsAdminLoan = (s.AdminId != null || s.AgrupamentoId == null || s.AgrupamentoId != coord.School?.AgrupamentoId)
+            }).Concat(onlyBorrowedEquips.Select(e => new CoordinatorBorrowedItemViewModel
+            {
+                IdWithPrefix = $"eq_{e.Id}",
+                Name = NormalizeEquipmentName(e.Name),
+                Type = e.Type,
+                Details = $"Originalmente na sala {e.Room?.Name}",
+                IsAdminLoan = false // Equipment is always school/agrupamento level in this context
+            })).ToList();
 
             return Page();
         }
@@ -169,6 +232,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             return estado.ToLower() switch
             {
+                var s when s.Contains("emprestado") => "Emprestado",
                 "disponível" or "disponivel" or "armazenado" => "Armazenado",
                 "a funcionar" or "funcionando" or "em uso" => "A funcionar",
                 "avariado" or "indisponível" or "indisponivel" or "recolhido" => "Avariado",
@@ -177,7 +241,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             };
         }
 
-        public async Task<IActionResult> OnPostRequestLoanAsync(string? itemName, string? itemType, int quantity, string notes)
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
@@ -187,21 +251,28 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
                     .ThenInclude(s => s.Agrupamento)
                 .FirstOrDefaultAsync(d => d.UserId == userId);
 
-            if (coord == null) return Page();
+            if (coord?.SchoolId == null || string.IsNullOrWhiteSpace(itemName)) return RedirectToPage();
 
-            var ticket = new Ticket
+            var pedido = new PedidoStock
             {
-                Description = $"PEDIDO DE EMPRÉSTIMO DE STOCK:\nItem: {itemName}\nTipo: {itemType}\nQuantidade: {quantity}\nAgrupamento: {coord.School?.Agrupamento?.Name}\nEscola Solicitante: {coord.School?.Name}\nNotas: {notes}\n\n[DATA:{{\"ItemName\":\"{itemName}\",\"ItemType\":\"{itemType}\",\"Quantity\":{quantity},\"AgrupamentoId\":{coord.School?.AgrupamentoId}}}]",
-                Status = "Pedido",
+                ItemName = itemName.Trim(),
+                ItemType = itemType,
+                Quantity = Math.Max(1, quantity),
+                Notes = notes,
+                RequestedByUserId = userId,
+                SchoolId = coord.SchoolId,
+                AgrupamentoId = coord.School?.AgrupamentoId,
+                Status = "Pendente_Diretor",
                 CreatedAt = DateTime.UtcNow,
-                Level = "Empréstimo"
+                UpdatedAt = DateTime.UtcNow
             };
 
-            _context.Tickets.Add(ticket);
+            _context.PedidosStock.Add(pedido);
             await _context.SaveChangesAsync();
 
-            return RedirectToPage(new { success = "Pedido de empréstimo enviado com sucesso!" });
+            return RedirectToPage(new { success = $"Pedido de '{itemName}' enviado ao Diretor com sucesso!" });
         }
+
 
         public async Task<IActionResult> OnPostEditStatusAsync(string name, int? roomId, string currentStatus, string newStatus, int quantity)
         {
@@ -270,9 +341,99 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             
             return RedirectToPage(new { success = "Equipamentos excluídos com sucesso!" });
         }
+        public async Task<IActionResult> OnPostReturnItemAsync(string idWithPrefix)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            var coord = await _context.Coordenadores.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (coord == null) return RedirectToPage();
+
+            string message = "Artigo devolvido com sucesso!";
+
+            if (idWithPrefix.StartsWith("se_"))
+            {
+                int id = int.Parse(idWithPrefix.Substring(3));
+                var item = await _context.StockEmpresa.FindAsync(id);
+                if (item != null && item.SchoolId == coord.SchoolId)
+                {
+                    bool wasAdminLoan = (item.AdminId != null || item.AgrupamentoId == null || item.AgrupamentoId != coord.School?.AgrupamentoId);
+
+                    // Find the related "Atendido" request by matching school and a case-insensitive name check
+                    var allAtendidoForSchool = await _context.PedidosStock
+                        .Where(p => p.SchoolId == coord.SchoolId && p.Status == "Atendido")
+                        .ToListAsync();
+
+                    var matchingRequest = allAtendidoForSchool
+                        .FirstOrDefault(p => string.Equals(p.ItemName, item.EquipmentName, StringComparison.OrdinalIgnoreCase)
+                                          || (item.EquipmentName != null && p.ItemName.Contains(item.EquipmentName, StringComparison.OrdinalIgnoreCase))
+                                          || (item.EquipmentName != null && item.EquipmentName.Contains(p.ItemName, StringComparison.OrdinalIgnoreCase)));
+
+                    if (matchingRequest != null)
+                    {
+                        matchingRequest.Quantity -= 1;
+                        if (matchingRequest.Quantity <= 0)
+                        {
+                            _context.PedidosStock.Remove(matchingRequest);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: check if no more borrowed items exist for this school; if so, wipe all Atendido records
+                        var remainingBorrowedFromSchool = await _context.StockEmpresa
+                            .CountAsync(s => s.SchoolId == coord.SchoolId && s.Status == "Emprestado" && s.Id != item.Id);
+                        if (remainingBorrowedFromSchool == 0)
+                        {
+                            _context.PedidosStock.RemoveRange(allAtendidoForSchool);
+                        }
+                    }
+
+                    item.SchoolId = null;
+                    if (wasAdminLoan) {
+                        item.AgrupamentoId = null; 
+                        item.AdminId = null;
+                    }
+                    
+                    item.Status = "Disponível";
+                    item.IsAvailable = true;
+                    message = "Artigo devolvido com sucesso!";
+                }
+            }
+            else if (idWithPrefix.StartsWith("eq_"))
+            {
+                int id = int.Parse(idWithPrefix.Substring(3));
+                var item = await _context.Equipamentos
+                    .Include(e => e.Room).ThenInclude(r => r.Block)
+                    .FirstOrDefaultAsync(e => e.Id == id);
+
+                if (item != null && item.Room?.Block.SchoolId == coord.SchoolId)
+                {
+                    item.Status = "Disponível";
+                    var statusChange = new StatusEquipamento
+                    {
+                        EquipamentoId = item.Id,
+                        Estado = "Disponível"
+                    };
+                    _context.StatusEquipamentos.Add(statusChange);
+                    message = "Artigo devolvido com sucesso!";
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { success = message });
+        }
     }
 
-    public class CoordinatorStockItemViewModel
+    public class CoordinatorBorrowedItemViewModel
+    {
+        public string? IdWithPrefix { get; set; }
+        public string? Name { get; set; }
+        public string? Type { get; set; }
+        public string? Details { get; set; }
+        public bool IsAdminLoan { get; set; }
+    }
+
+    public class CoordinatorStockTableItemViewModel
     {
         public string? Name { get; set; }
         public string? Category { get; set; }

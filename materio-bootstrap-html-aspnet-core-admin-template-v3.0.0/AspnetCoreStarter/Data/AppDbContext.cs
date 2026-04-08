@@ -34,5 +34,6 @@ namespace AspnetCoreStarter.Data
         public DbSet<Reparo> Reparos { get; set; }
         public DbSet<Emprestimo> Emprestimos { get; set; }
         public DbSet<Empresa> Empresas { get; set; }
+        public DbSet<PedidoStock> PedidosStock { get; set; }
     }
 }

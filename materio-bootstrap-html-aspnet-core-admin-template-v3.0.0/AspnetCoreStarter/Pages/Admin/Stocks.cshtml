@@ -292,6 +292,13 @@
                     <i class="tf-icons ri-building-4-line me-1"></i> Stock Empresas Privadas
                 </button>
             </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-escalados" aria-controls="navs-escalados" aria-selected="false">
+                    <i class="tf-icons ri-alarm-warning-line me-1 text-danger"></i>
+                    Pedidos Escalados
+                    <span class="badge bg-danger ms-1">@Model.EscalatedRequests.Count</span>
+                </button>
+            </li>
         </ul>
         <div class="tab-content">
             <!-- Stock Empresa Tab -->
@@ -661,8 +668,170 @@
                     }
                 </div>
             </div>
+
+            @* ========= Pedidos Escalados Tab ========= *@
+            <div class="tab-pane fade" id="navs-escalados" role="tabpanel">
+                @if (!Model.EscalatedRequests.Any())
+                {
+                    <div class="alert alert-success d-flex align-items-center mt-3">
+                        <i class="ri-checkbox-circle-line me-2 fs-5"></i>
+                        <span>Sem pedidos escalados de Diretores a aguardar resposta.</span>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var req in Model.EscalatedRequests)
+                    {
+                        var globalStock = Model.EmpresaInventory
+                            .Where(s => s.Location == "Stock Empresa" && s.Status != "Emprestado" &&
+                                (string.Equals(s.Name, req.ItemName, StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(s.Type, req.ItemType, StringComparison.OrdinalIgnoreCase)))
+                            .ToList();
+
+                        var availableGlobalItems = Model.Inventory
+                            .Where(s => s.Status == "Disponível" && s.Location == "Stock Empresa" &&
+                                (string.Equals(s.Name, req.ItemName, StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(s.Type, req.ItemType, StringComparison.OrdinalIgnoreCase)))
+                            .ToList();
+                        <div class="card shadow-sm border-0 mb-4 border-danger border-start border-3">
+                            <div class="card-header bg-label-danger d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold fs-6 text-danger">
+                                        <i class="ri-alarm-warning-line me-1"></i>@req.ItemName
+                                    </span>
+                                    <span class="badge bg-label-secondary ms-2">@req.ItemType</span>
+                                    <span class="badge bg-label-danger ms-1">Qtd: @req.Quantity</span>
+                                </div>
+                                @if (req.Status == "Atendido")
+                                {
+                                    <span class="badge bg-success"><i class="ri-checkbox-circle-line me-1"></i>Emprestado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Pendente Admin</span>
+                                }
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><i class="ri-school-line me-1 text-muted"></i><strong>Escola:</strong> @(req.School?.Name ?? "N/A")</p>
+                                        <p class="mb-1"><i class="ri-organization-chart me-1 text-muted"></i><strong>Agrupamento:</strong> @(req.Agrupamento?.Name ?? req.School?.Agrupamento?.Name ?? "N/A")</p>
+                                        <p class="mb-1"><i class="ri-time-line me-1 text-muted"></i><strong>Criado:</strong> @req.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                                        @if (req.Status == "Atendido")
+                                        {
+                                            <p class="mb-1 text-success fw-bold"><i class="ri-check-double-line me-1"></i><strong>Atendido em:</strong> @(req.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</p>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(req.DirectorNotes))
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="alert alert-secondary py-2 small mb-0">
+                                                <i class="ri-chat-1-line me-1"></i>
+                                                <strong>Nota do Diretor:</strong> @req.DirectorNotes
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                @* Using availableGlobalItems defined above *@
+
+                                @if (req.Status == "Atendido")
+                                {
+                                    <div class="alert alert-info d-flex align-items-center mb-0">
+                                        <i class="ri-information-line me-2 fs-5"></i>
+                                        <div>
+                                            Este pedido foi atendido com stock central/global.
+                                            <small class="d-block text-muted small">Os itens foram transferidos para a escola de destino.</small>
+                                        </div>
+                                    </div>
+                                }
+                                else if (availableGlobalItems.Any())
+                                {
+                                    <form method="post" asp-page-handler="FulfillEscalatedRequest">
+                                        <input type="hidden" name="requestId" value="@req.Id" />
+                                        <label class="form-label fw-semibold small text-uppercase">
+                                            Stock Central Disponível (selecione os itens a enviar):
+                                        </label>
+                                        <div class="table-responsive mb-3">
+                                            <table class="table table-sm table-bordered mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width:40px;">✓</th>
+                                                        <th>Artigo</th>
+                                                        <th>Tipo</th>
+                                                        <th>Qtd Disponível</th>
+                                                        <th>Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in availableGlobalItems)
+                                                    {
+                                                        <tr>
+                                                            <td><input type="checkbox" name="selectedStockIds" value="@item.SampleId" checked /></td>
+                                                            <td>@item.Name</td>
+                                                            <td>@item.Type</td>
+                                                            <td>@item.Quantity</td>
+                                                            <td><span class="badge bg-label-success">@item.Status</span></td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="ri-send-plane-fill me-1"></i> Emprestar
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    onclick="openAdminRejectModal(@req.Id)">
+                                                <i class="ri-close-circle-line me-1"></i> Recusar Pedido
+                                            </button>
+                                        </div>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning mb-2">
+                                        <i class="ri-information-line me-1"></i>
+                                        Sem stock central disponível do tipo <strong>@req.ItemName (@req.ItemType)</strong>.
+                                        Adicione stock antes de atender este pedido.
+                                    </div>
+                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                            onclick="openAdminRejectModal(@req.Id)">
+                                        <i class="ri-close-circle-line me-1"></i> Recusar Pedido
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
         </div>
 </div>
+</div>
+
+<!-- Modal Recusar Pedido (Admin) -->
+<div class="modal fade" id="modalAdminReject" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="RejectEscalatedRequest" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger"><i class="ri-close-circle-line me-2"></i>Recusar Pedido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="requestId" id="adminRejectRequestId" />
+                <div class="alert alert-warning py-2">
+                    <i class="ri-error-warning-line me-1"></i>
+                    Ao recusar, o coordenador será notificado que o pedido não pode ser atendido.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger">
+                    <i class="ri-close-line me-1"></i> Confirmar Recusa
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Modal Adicionar Stock -->

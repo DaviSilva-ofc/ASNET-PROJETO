@@ -46,6 +46,8 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<string> UniqueStatuses { get; set; } = new();
 
         public List<DirectorStockItemViewModel> Items { get; set; } = new();
+        public List<PedidoStock> PendingSchoolRequests { get; set; } = new();
+        public List<DirectorLendingItemViewModel> StoredItemsForLending { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -67,6 +69,47 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             }
 
             int agrId = director.AgrupamentoId.Value;
+
+            // Load pending requests from coordinators in this agrupamento (pending director or escalated to admin)
+            PendingSchoolRequests = await _context.PedidosStock
+                .Include(p => p.School)
+                .Include(p => p.RequestedBy)
+                .Where(p => p.AgrupamentoId == agrId && (p.Status == "Pendente_Diretor" || p.Status == "Pendente_Admin"))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            // Load stored stock items available in this agrupamento from both sources
+            var centralStock = await _context.StockEmpresa
+                .Include(s => s.School)
+                .Where(s => s.AgrupamentoId == agrId && (s.Status == "Armazenado" || s.Status == "Disponível") && s.IsAvailable)
+                .ToListAsync();
+
+            var storedEquipments = await _context.Equipamentos
+                .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
+                .Include(e => e.StatusEquipamentos)
+                .Where(e => e.Room != null && e.Room.Block.School.AgrupamentoId == agrId)
+                .ToListAsync();
+
+            // Filter equipments using the MapStatus logic to find "Armazenado" items
+            var onlyArmazenadoEquips = storedEquipments
+                .Where(e => MapStatus(e) == "Armazenado")
+                .ToList();
+
+            StoredItemsForLending = centralStock.Select(s => new DirectorLendingItemViewModel
+            {
+                IdWithPrefix = $"se_{s.Id}",
+                Name = s.EquipmentName,
+                Type = s.Type,
+                Source = "Stock Central",
+                CurrentLocation = s.School?.Name ?? "Agrupamento"
+            }).Concat(onlyArmazenadoEquips.Select(e => new DirectorLendingItemViewModel
+            {
+                IdWithPrefix = $"eq_{e.Id}",
+                Name = NormalizeEquipmentName(e.Name),
+                Type = e.Type,
+                Source = "Armazenado em Sala",
+                CurrentLocation = e.Room?.Name ?? "Desconhecido"
+            })).ToList();
 
             // Stats for the director
             AvailableSchools = await _context.Schools.Where(s => s.AgrupamentoId == agrId).ToListAsync();
@@ -186,6 +229,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             return estado.ToLower() switch
             {
+                var s when s.Contains("emprestado") => "Emprestado",
                 "disponível" or "disponivel" or "armazenado" => "Armazenado",
                 "a funcionar" or "funcionando" or "em uso" => "A funcionar",
                 "avariado" or "indisponível" or "indisponivel" or "recolhido" => "Avariado",
@@ -286,7 +330,102 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             
             return RedirectToPage(new { success = "Equipamentos excluídos com sucesso!" });
         }
+        public async Task<IActionResult> OnPostFulfillRequestAsync(int requestId, string[] selectedIds)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            var pedido = await _context.PedidosStock.FindAsync(requestId);
+            if (pedido == null || pedido.Status != "Pendente_Diretor") return RedirectToPage();
+
+            var director = await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (director?.AgrupamentoId != pedido.AgrupamentoId) return RedirectToPage();
+
+            int fulfilledCount = 0;
+
+            foreach (var prefixedId in selectedIds)
+            {
+                if (prefixedId.StartsWith("se_"))
+                {
+                    int id = int.Parse(prefixedId.Substring(3));
+                    var item = await _context.StockEmpresa.FindAsync(id);
+                    if (item != null)
+                    {
+                        item.SchoolId = pedido.SchoolId;
+                        item.Status = "Emprestado";
+                        item.IsAvailable = false;
+                        fulfilledCount++;
+                    }
+                }
+                else if (prefixedId.StartsWith("eq_"))
+                {
+                    int id = int.Parse(prefixedId.Substring(3));
+                    var item = await _context.Equipamentos
+                        .Include(e => e.Room)
+                        .FirstOrDefaultAsync(e => e.Id == id);
+
+                    if (item != null)
+                    {
+                        // Transfer equipment to the school
+                        // We set RoomId to null to indicate it is now with the school but not in a specific room yet,
+                        // or we could assign it to a default "Entry" room if we had one.
+                        // For now, let's keep it in "Armazenado" state but linked to the school via RoomId=null + school identity.
+                        // Wait, Equipamento doesn't have a direct SchoolId. It's inferred via Room -> Block -> School.
+                        // So we MUST assign it to a room in the target school.
+                        
+                        var targetSchoolRoom = await _context.Salas
+                            .Include(r => r.Block)
+                            .FirstOrDefaultAsync(r => r.Block != null && r.Block.SchoolId == pedido.SchoolId);
+
+                        if (targetSchoolRoom != null)
+                        {
+                            item.RoomId = targetSchoolRoom.Id;
+                            // Add status change
+                            var statusChange = new StatusEquipamento
+                            {
+                                EquipamentoId = item.Id,
+                                Estado = "Em Uso (Emprestado)"
+                            };
+                            _context.StatusEquipamentos.Add(statusChange);
+                            fulfilledCount++;
+                        }
+                    }
+                }
+            }
+
+            pedido.Status = "Atendido";
+            pedido.UpdatedAt = DateTime.UtcNow;
+            pedido.DirectorNotes = $"Atendido pelo Diretor em {DateTime.Now:dd/MM/yyyy}. Total de {fulfilledCount} itens enviados.";
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { success = "Emprestado com sucesso!" });
+        }
+
+        public async Task<IActionResult> OnPostForwardToAdminAsync(int requestId, string? directorNotes)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            var pedido = await _context.PedidosStock.FindAsync(requestId);
+            if (pedido == null || pedido.Status != "Pendente_Diretor") return RedirectToPage();
+
+            pedido.Status = "Pendente_Admin";
+            pedido.DirectorNotes = directorNotes ?? "Sem stock disponível no agrupamento.";
+            pedido.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { success = $"Pedido #{requestId} reencaminhado ao Administrador." });
+        }
     }
+    public class DirectorLendingItemViewModel
+    {
+        public string? IdWithPrefix { get; set; }
+        public string? Name { get; set; }
+        public string? Type { get; set; }
+        public string? Source { get; set; }
+        public string? CurrentLocation { get; set; }
+    }
+
     public class DirectorStockItemViewModel
     {
         public string? Name { get; set; }

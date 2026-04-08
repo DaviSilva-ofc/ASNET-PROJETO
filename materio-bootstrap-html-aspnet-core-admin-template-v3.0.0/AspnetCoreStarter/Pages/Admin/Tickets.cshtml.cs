@@ -51,6 +51,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Include(t => t.School)
                 .Include(t => t.Admin)
                 .Include(t => t.Equipamento)
+                .Where(t => t.Level != "Empréstimo") // pedidos de stock são geridos no painel de Stocks
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(FilterStatus) && FilterStatus != "Todos os Estados")
@@ -71,10 +72,15 @@ namespace AspnetCoreStarter.Pages.Admin
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
             AvailableSchools = await _context.Schools.OrderBy(s => s.Name).ToListAsync();
+            var eqIdsWithActiveTickets = await _context.Tickets
+                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
+                .Select(t => t.EquipamentoId!.Value)
+                .ToListAsync();
+
             AvailableEquipment = await _context.Equipamentos
                 .Include(e => e.Room)
                 .ThenInclude(r => r.Block)
-                .Where(e => e.Status == "Avariado")
+                .Where(e => e.Status == "Avariado" && !eqIdsWithActiveTickets.Contains(e.Id))
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 
@@ -118,6 +124,21 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 TempData["ErrorMessage"] = "Falta preencher campos obrigatórios.";
                 return RedirectToPage();
+            }
+
+            // Block if there's already an active ticket for this equipment
+            if (NewTicket.EquipamentoId.HasValue)
+            {
+                var alreadyOpen = await _context.Tickets.AnyAsync(t =>
+                    t.EquipamentoId == NewTicket.EquipamentoId &&
+                    t.Status != "Concluído" && t.Status != "Recusado" &&
+                    t.Level != "Empréstimo");
+
+                if (alreadyOpen)
+                {
+                    TempData["ErrorMessage"] = "Já existe um ticket ativo para este equipamento. Aguarde a conclusão antes de criar outro.";
+                    return RedirectToPage();
+                }
             }
 
             var userId = HttpContext.Session.GetString("UserId");

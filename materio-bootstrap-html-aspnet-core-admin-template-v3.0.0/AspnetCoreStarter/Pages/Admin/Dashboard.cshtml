@@ -515,6 +515,132 @@
         </div>
     </div>
 
+    <!-- ===== Escalated Stock Requests Row ===== -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card tree-card h-100" style="border-left: 5px solid var(--asnet-blue);">
+                <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
+                    <h5 class="mb-0"><i class='bx bx-git-branch me-2'></i>Pedidos Escalados (Stock Global)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Agrupamento / Escola</th>
+                                    <th>Artigo Solicitado</th>
+                                    <th>Qtd</th>
+                                    <th>Justificação Diretor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.EscalatedRequests == null || !Model.EscalatedRequests.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">Nenhum pedido escalado pendente.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var r in Model.EscalatedRequests)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">@r.Agrupamento?.Name</span>
+                                                    <small class="text-muted">@r.School?.Name</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="text-primary fw-semibold">@r.ItemName</span>
+                                                    <small class="badge bg-label-secondary" style="width:fit-content;">@r.ItemType</small>
+                                                </div>
+                                            </td>
+                                            <td><span class="badge bg-secondary">@r.Quantity</span></td>
+                                            <td><small class="text-muted italic">@(string.IsNullOrEmpty(r.DirectorNotes) ? "Sem notas" : r.DirectorNotes)</small></td>
+                                            <td>
+                                                @if (r.Status == "Atendido")
+                                                {
+                                                    <span class="badge bg-label-success px-3">
+                                                        <i class="ri-checkbox-circle-line me-1"></i> Emprestado
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-primary" onclick="openAdminFulfillModal(@r.Id, '@r.ItemType', @r.Quantity, '@r.ItemName', '@(r.School?.Name ?? r.Agrupamento?.Name)')">
+                                                        Atender
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Admin Fulfill -->
+    <div class="modal fade" id="modalAdminFulfill" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="post" id="adminFulfillForm">
+                    <input type="hidden" name="requestId" id="adminFulfillRequestId" />
+                    <div class="modal-header bg-primary py-3">
+                        <h5 class="modal-title text-white fw-bold"><i class='bx bx-package me-2'></i>Atendimento Global: <span id="adminFulfillItemDisplay"></span></h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 shadow-none mb-4">
+                            <i class='bx bx-info-circle me-1'></i> Pedido de <strong><span id="adminFulfillQuantityDisplay"></span></strong> unidade(s) escalado para o Admin.
+                        </div>
+
+                        <h6 class="fw-bold mb-2">Stock Global Disponível</h6>
+                        <div class="table-responsive border rounded mb-4" style="max-height: 250px;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40px;"><input type="checkbox" onclick="toggleAdminAllStock(this)" /></th>
+                                        <th>Nome</th>
+                                        <th>Tipo</th>
+                                        <th>Localização Atual</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var s in Model.GlobalStock)
+                                    {
+                                        <tr class="admin-stock-row" data-type="@s.Type">
+                                            <td>
+                                                <input type="checkbox" name="selectedStockIds" value="@s.Id" class="admin-stock-checkbox" />
+                                            </td>
+                                            <td>@s.EquipmentName</td>
+                                            <td><span class="badge bg-label-secondary">@s.Type</span></td>
+                                            <td><small>@(s.Agrupamento?.Name ?? "Stock Global")</small></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">Notas do Administrador</label>
+                            <textarea name="adminNotes" class="form-control" rows="2" placeholder="Notas finais..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light d-flex justify-content-between">
+                        <button type="submit" asp-page-handler="RejectEscalatedRequest" class="btn btn-outline-danger">Recusar</button>
+                        <button type="submit" asp-page-handler="FulfillEscalatedRequest" class="btn btn-success px-4 fw-bold">Confirmar Atendimento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== Low Stock Alerts Row ===== -->
     @if (Model.LowStockItems.Any())
     {
@@ -792,6 +918,31 @@
         el.classList.toggle('open');
         var children = el.parentElement.querySelector('.tree-children');
         if (children) children.classList.toggle('show');
+    }
+
+    function openAdminFulfillModal(id, type, qty, itemName, schoolName) {
+        document.getElementById('adminFulfillRequestId').value = id;
+        document.getElementById('adminFulfillItemDisplay').innerText = itemName;
+        document.getElementById('adminFulfillQuantityDisplay').innerText = qty;
+
+        // Auto-select
+        const checkboxes = document.querySelectorAll('.admin-stock-checkbox');
+        let selectedCount = 0;
+        checkboxes.forEach(cb => {
+            const row = cb.closest('.admin-stock-row');
+            if (row.getAttribute('data-type') === type && selectedCount < qty) {
+                cb.checked = true;
+                selectedCount++;
+            } else {
+                cb.checked = false;
+            }
+        });
+
+        new bootstrap.Modal(document.getElementById('modalAdminFulfill')).show();
+    }
+
+    function toggleAdminAllStock(el) {
+        document.querySelectorAll('.admin-stock-checkbox').forEach(cb => cb.checked = el.checked);
     }
 
     // ===== Ticket Status Chart (Line) — Trend over last 6 months =====

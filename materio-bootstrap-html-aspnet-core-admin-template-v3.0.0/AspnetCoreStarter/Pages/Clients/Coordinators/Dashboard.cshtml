@@ -7,144 +7,556 @@
 
 @section PageStyles {
 <style>
-    .stat-card { border: none; border-radius: 14px; overflow: hidden; transition: transform .2s, box-shadow .2s; }
-    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(30,33,48,.12); }
-    .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #fff; }
-    .dark-style .card, [data-bs-theme="dark"] .card { background-color: #2b2c40; }
+    :root {
+        --asnet-navy: #1e2130;
+        --asnet-orange: #f89223;
+        --asnet-blue: #696cff;
+        --asnet-teal: #03c3ec;
+        --asnet-green: #71dd37;
+        --asnet-pink: #e7305b;
+        
+        /* Theme aware variables */
+        --dash-card-bg: #fff;
+        --dash-text: #566a7f;
+        --dash-title: #566a7f;
+        --dash-subtitle: #a1acb8;
+        --dash-border: rgba(67, 89, 113, 0.1);
+        --dash-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12);
+    }
+
+    .dark-style, [data-bs-theme="dark"] {
+        --dash-card-bg: #2b2e44;
+        --dash-text: #a3adbb;
+        --dash-title: #f5f5f9;
+        --dash-subtitle: #7071a4;
+        --dash-border: rgba(255, 255, 255, 0.05);
+        --dash-shadow: 0 4px 18px rgba(0,0,0,0.2);
+    }
+
+    .dash-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--dash-title);
+    }
+
+    .stat-card, .tree-card, .pending-card, .chart-card {
+        background: var(--dash-card-bg) !important;
+        border: none !important;
+        border-radius: 16px !important;
+        box-shadow: var(--dash-shadow) !important;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .stat-icon {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #fff;
+    }
+    .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--dash-title); }
+    .stat-label  { font-size: .8rem; color: var(--dash-subtitle); margin: 0; }
+
+    .chart-card .card-header, .tree-card .card-header {
+        background: transparent !important;
+        border-bottom: 1px solid var(--dash-border) !important;
+        font-weight: 600;
+        color: var(--dash-title);
+    }
+
+    .tree-tabs .nav-link {
+        font-size: .85rem;
+        padding: .45rem .9rem;
+        border-radius: 8px !important;
+        color: var(--dash-text);
+        font-weight: 500;
+    }
+    .tree-tabs .nav-link.active {
+        background: var(--asnet-blue);
+        color: #fff;
+    }
+
+    .tree-list { list-style: none; padding-left: 0; }
+    .tree-list ul {
+        list-style: none;
+        padding-left: 1.6rem;
+        border-left: 1px solid var(--dash-border);
+    }
+    .tree-item { position: relative; padding: .35rem 0; color: var(--dash-text); }
+    .tree-toggle { cursor: pointer; user-select: none; }
+
+    .tree-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px; height: 26px;
+        border-radius: 8px;
+        font-size: .7rem;
+        font-weight: 700;
+        color: #fff;
+        margin-right: .4rem;
+    }
+    .tree-badge-school { background: var(--asnet-green); }
+    .tree-badge-bloco  { background: var(--asnet-teal); }
+    .tree-badge-sala   { background: var(--asnet-orange); }
+
+    .tree-label { font-weight: 500; font-size: .88rem; }
+    .tree-children { display: none; }
+    .tree-children.show { display: block; }
+
+    .tree-toggle .tree-arrow {
+        display: inline-block;
+        width: 20px; height: 20px;
+        text-align: center;
+        line-height:20px;
+        font-size: .65rem;
+        color: var(--dash-text);
+        background: var(--dash-border);
+        border-radius: 6px;
+        margin-left: .3rem;
+        transition: transform .15s;
+    }
+    .tree-toggle.open .tree-arrow { transform: rotate(90deg); }
+
+    .pending-big-number {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--dash-title);
+        line-height: 1;
+    }
+    .pending-subtitle { font-size: .85rem; color: var(--dash-subtitle); }
+
+    .pending-avatar {
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        background: rgba(var(--asnet-blue-rgb), 0.1);
+        color: var(--asnet-blue);
+        display: flex; align-items: center; justify-content: center;
+        font-size: .7rem;
+        font-weight: 600;
+        margin-right: -8px;
+        border: 2px solid var(--dash-card-bg);
+    }
 </style>
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="mb-4 d-flex align-items-center justify-content-between">
+    <!-- Title -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h4 class="fw-bold mb-0"><span class="text-muted fw-light">Coordenador /</span> Dashboard</h4>
-            @if (!string.IsNullOrEmpty(Model.SchoolName)) {
-                <small class="text-muted"><i class="ri-building-line me-1"></i>@Model.SchoolName</small>
-            }
+            <h4 class="dash-title mb-1">Coordenador / Dashboard</h4>
+            <p class="text-muted mb-0">Escola: <span class="fw-bold text-primary">@Model.SchoolName</span></p>
         </div>
     </div>
 
-    @* Stat Cards *@
+    <!-- ===== Stat mini-cards ===== -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:var(--asnet-blue);">
+                        <i class='ri-user-star-line'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.TotalProfessores</p>
+                        <p class="stat-label">Professores</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#ff3e1d;">
+                        <i class='bx bx-support'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.PendingTicketsCount</p>
+                        <p class="stat-label">Tickets pendentes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#03c3ec;">
+                        <i class='bx bx-door-open'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.TotalSalas</p>
+                        <p class="stat-label">Salas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#fd7e14;">
+                        <i class='bx bx-package'></i>
+                    </div>
+                    <div>
+                        <p class="stat-number">@Model.LowStockAlertsCount</p>
+                        <p class="stat-label">Alertas de Stock</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-primary"><i class="ri-door-line"></i></div>
-                    <div>
-                        <div class="fs-4 fw-bold text-primary">@Model.TotalSalas</div>
-                        <div class="text-muted small">Salas</div>
-                    </div>
+        <!-- Infrastructure Tree (Scoped to School) -->
+        <div class="col-lg-4">
+            <div class="card tree-card h-100" style="border-left: 5px solid var(--asnet-blue);">
+                <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
+                    <h5 class="mb-0">Infraestrutura</h5>
+                </div>
+                <div class="card-body" style="max-height:380px; overflow-y:auto;">
+                    <ul class="tree-list">
+                        @if (Model.MySchool != null)
+                        {
+                            <li class="tree-item">
+                                <div class="tree-toggle open" onclick="toggleTree(this)">
+                                    <span class="tree-badge tree-badge-school">@Model.Blocos?.Count</span>
+                                    <span class="tree-label">@Model.MySchool.Name</span>
+                                    <span class="tree-arrow">▶</span>
+                                </div>
+                                <ul class="tree-children show">
+                                    @if (Model.Blocos != null)
+                                    {
+                                        @foreach (var bloco in Model.Blocos)
+                                        {
+                                            var blocoSalas = Model.Salas?.Where(s => s.BlockId == bloco.Id).ToList();
+                                            <li class="tree-item">
+                                                <div class="tree-toggle" onclick="toggleTree(this)">
+                                                    <span class="tree-badge tree-badge-bloco">@blocoSalas?.Count</span>
+                                                    <span class="tree-label">@bloco.Name</span>
+                                                    @if (blocoSalas != null && blocoSalas.Any()) { <span class="tree-arrow">▶</span> }
+                                                </div>
+                                                @if (blocoSalas != null && blocoSalas.Any())
+                                                {
+                                                    <ul class="tree-children">
+                                                        @foreach (var sala in blocoSalas)
+                                                        {
+                                                            <li class="tree-item px-2 py-1">
+                                                                <span class="tree-badge tree-badge-sala"><i class='bx bx-door-open' style="font-size:.7rem;"></i></span>
+                                                                <span class="tree-label">@sala.Name</span>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-success"><i class="ri-computer-line"></i></div>
+
+        <!-- Chat Notifications Card -->
+        <div class="col-lg-4">
+            <div class="card pending-card h-100" style="border-left: 5px solid #71dd37;">
+                <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <div class="fs-4 fw-bold text-success">@Model.TotalEquipamentos</div>
-                        <div class="text-muted small">Equipamentos</div>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="stat-icon" style="background:#71dd37;">
+                                <i class='bx bx-chat'></i>
+                            </div>
+                            <h6 class="mb-0 fw-bold">Mensagens</h6>
+                        </div>
+                        <p class="pending-big-number">@Model.TotalUnreadMessages<span style="font-size:1rem;color:#71dd37;"> novas</span></p>
+                        <p class="pending-subtitle">mensagens no chat aguardam resposta</p>
+
+                        @if (Model.RecentMessageSenders != null && Model.RecentMessageSenders.Any())
+                        {
+                            <div class="d-flex mt-3 mb-3">
+                                @foreach (var u in Model.RecentMessageSenders)
+                                {
+                                    <div class="pending-avatar" style="width:32px;height:32px;border-radius:50%;background:rgba(113,221,55,0.1);color:#71dd37;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;margin-right:-8px;border:2px solid var(--dash-card-bg);" title="@u.Username">
+                                        @(u.Username?.Substring(0, Math.Min(2, u.Username.Length)).ToUpper())
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
+                    <a href="/Clients/Coordinators/Chat" class="btn w-100" style="background:#71dd37;color:#fff;font-weight:600;">
+                        <i class='bx bx-reply me-1'></i> Responder
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-danger"><i class="ri-error-warning-line"></i></div>
+
+        <!-- Pedir Reparo (Support) -->
+        <div class="col-lg-4">
+            <div class="card pending-card h-100" style="border-left: 5px solid #ff4d4d;">
+                <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <div class="fs-4 fw-bold text-danger">@Model.DamagedCount</div>
-                        <div class="text-muted small">Avariados</div>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <div class="stat-icon" style="background:#ff4d4d;">
+                                <i class='bx bx-wrench'></i>
+                            </div>
+                            <h6 class="mb-0 fw-bold">Pedir Reparo</h6>
+                        </div>
+                        <p class="pending-big-number">Suporte</p>
+                        <p class="pending-subtitle">Existem @Model.DamagedEquipmentCount equipamentos avariados na sua escola.</p>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card stat-card shadow-sm h-100">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon bg-warning"><i class="ri-ticket-line"></i></div>
-                    <div>
-                        <div class="fs-4 fw-bold text-warning">@Model.PendingTickets</div>
-                        <div class="text-muted small">Tickets Pendentes</div>
-                    </div>
+                    <a href="/Clients/Coordinators/Tickets" class="btn w-100" style="background:#ff4d4d;color:#fff;font-weight:600;">
+                        <i class='bx bx-plus-circle me-1'></i> Novo Pedido
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        @* Chart *@
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header border-bottom pb-3">
-                    <h5 class="mb-0"><i class="ri-bar-chart-2-line me-2 text-primary"></i>Tickets por Mês</h5>
+    <!-- ===== Low Stock Alerts Row ===== -->
+    @if (Model.StockAlerts.Any())
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm" style="border-left: 5px solid #ffab00;">
+                    <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class='bx bx-error text-warning' style="font-size: 1.5rem;"></i>
+                            <h5 class="mb-0 fw-bold">Alertas de Stock Baixo</h5>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                            @foreach (var item in Model.StockAlerts)
+                            {
+                                <div class="col">
+                                    <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-label-secondary">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="stat-icon bg-warning" style="width: 32px; height: 32px; font-size: 1rem;">
+                                                <i class='bx bx-box'></i>
+                                            </div>
+                                            <span class="fw-semibold">@item.Name</span>
+                                        </div>
+                                        <span class="badge bg-label-danger">@item.AvailableCount disponíveis</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ===== Charts Row ===== -->
+    <div class="row g-4 mb-4">
+        <!-- Monthly Ticket Comparison Chart -->
+        <div class="col-lg-7">
+            <div class="card chart-card h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class='bx bx-trending-up' style="color:var(--asnet-blue);"></i>
+                    Comparação Mensal de Tickets
                 </div>
                 <div class="card-body">
-                    <canvas id="ticketChart" height="110"></canvas>
+                    <div style="height: 250px; position: relative;">
+                        <canvas id="monthlyTicketChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
-
-        @* Quick Stats *@
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-body text-center">
-                    <div class="fs-1 fw-bold text-info">@Model.TotalProfessores</div>
-                    <div class="text-muted"><i class="ri-user-2-line me-1"></i>Professores na Escola</div>
+        <!-- System Overview -->
+        <div class="col-lg-5">
+            <div class="card chart-card h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class='bx bx-pie-chart-alt-2' style="color:var(--asnet-orange);"></i>
+                    Visão Geral do Sistema
+                </div>
+                <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                    <div style="height: 250px; width: 100%; position: relative;">
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+                    <div class="d-flex gap-3 mt-3 flex-wrap justify-content-center">
+                        <span><i class='bx bxs-circle' style="color:#ff3e1d;font-size:.6rem;"></i> Tickets</span>
+                        <span><i class='bx bxs-circle' style="color:#f89223;font-size:.6rem;"></i> Stock</span>
+                    </div>
                 </div>
             </div>
-            <div class="card shadow-sm border-0">
-                <div class="card-header border-bottom pb-2">
-                    <h6 class="mb-0"><i class="ri-chat-3-line me-2 text-primary"></i>Mensagens Não Lidas
-                        @if (Model.TotalUnreadMessages > 0) {
-                            <span class="badge bg-danger ms-2">@Model.TotalUnreadMessages</span>
-                        }
-                    </h6>
+        </div>
+    <!-- ===== My Requests Row ===== -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card tree-card h-100" style="border-left: 5px solid var(--asnet-orange);">
+                <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
+                    <h5 class="mb-0"><i class='bx bx-list-ul me-2'></i>Meus Pedidos de Stock</h5>
                 </div>
-                <div class="card-body p-2">
-                    @if (Model.RecentSenders == null || !Model.RecentSenders.Any()) {
-                        <div class="text-center text-muted py-3 small">Sem mensagens por ler</div>
-                    } else {
-                        @foreach (var s in Model.RecentSenders) {
-                            <a asp-page="./Chat" asp-route-userId="@s.Id" class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none hover-bg">
-                                <div class="avatar avatar-sm bg-label-primary rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
-                                    <span class="fw-bold" style="font-size:0.75rem;">@(s.Username?.Substring(0, 1).ToUpper())</span>
-                                </div>
-                                <span class="small fw-semibold">@s.Username</span>
-                            </a>
-                        }
-                    }
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Artigo</th>
+                                    <th>Tipo</th>
+                                    <th>Qtd</th>
+                                    <th>Data</th>
+                                    <th>Status</th>
+                                    <th>Notas Diretor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MyRequests == null || !Model.MyRequests.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">Nenhum pedido realizado.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var r in Model.MyRequests)
+                                    {
+                                        <tr>
+                                            <td><span class="fw-bold">@r.ItemName</span></td>
+                                            <td><span class="badge bg-label-secondary">@r.ItemType</span></td>
+                                            <td>@r.Quantity</td>
+                                            <td style="font-size: 0.85rem;">@r.CreatedAt.ToString("g")</td>
+                                            <td>
+                                                @switch (r.Status)
+                                                {
+                                                    case "Pendente_Diretor":
+                                                        <span class="badge bg-label-warning text-uppercase">Pendente (Diretor)</span>
+                                                        break;
+                                                    case "Pendente_Admin":
+                                                        <span class="badge bg-label-info text-uppercase">Pendente (Admin)</span>
+                                                        break;
+                                                    case "Atendido":
+                                                        <span class="badge bg-label-success text-uppercase">Atendido</span>
+                                                        break;
+                                                    case "Recusado":
+                                                        <span class="badge bg-label-danger text-uppercase">Recusado</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-label-secondary text-uppercase">@r.Status</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td><small>@(string.IsNullOrEmpty(r.DirectorNotes) ? "-" : r.DirectorNotes)</small></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    }
+    <!-- Modal Solicitar Stock -->
+    <div class="modal fade" id="modalRequestStock" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="post" asp-page-handler="RequestStock">
+                    <div class="modal-header bg-primary py-3">
+                        <h5 class="modal-title text-white fw-bold"><i class='bx bx-package me-2'></i>Solicitar Novo Equipamento</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Artigo / Nome</label>
+                                <input type="text" name="itemName" class="form-control" placeholder="Ex: Portátil, Rato, Monitor..." required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tipo</label>
+                                <select name="itemType" class="form-select">
+                                    <option value="Portátil">Portátil</option>
+                                    <option value="Desktop">Desktop</option>
+                                    <option value="Monitor">Monitor</option>
+                                    <option value="Rato/Teclado">Rato/Teclado</option>
+                                    <option value="Impressora">Impressora</option>
+                                    <option value="Cabos/Adaptadores">Cabos/Adaptadores</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Quantidade</label>
+                                <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Notas Adicionais (Justificação)</label>
+                                <textarea name="notes" class="form-control" rows="3" placeholder="Porquê precisa deste equipamento?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">Enviar Pedido</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section PageScripts {
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-    const ctx = document.getElementById('ticketChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
+    function toggleTree(el) {
+        el.classList.toggle('open');
+        var children = el.parentElement.querySelector('.tree-children');
+        if (children) children.classList.toggle('show');
+    }
+
+    // ===== Monthly Ticket Chart =====
+    const ticketCtx = document.getElementById('monthlyTicketChart').getContext('2d');
+    new Chart(ticketCtx, {
+        type: 'bar',
         data: {
-            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartLabels)),
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartLabels)),
             datasets: [{
-                label: 'Tickets',
-                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ChartData)),
-                borderColor: '#696cff',
-                backgroundColor: 'rgba(105,108,255,0.12)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#696cff'
+                label: 'Número de Tickets',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartMonthlyData)),
+                backgroundColor: '#696cff',
+                borderRadius: 6,
+                maxBarThickness: 40
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // ===== System Overview Chart (Bar) =====
+    const overviewCtx = document.getElementById('overviewChart').getContext('2d');
+    new Chart(overviewCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Tickets', 'Stock'],
+            datasets: [{
+                label: 'Total',
+                data: [@Model.PendingTicketsCount, @Model.LowStockAlertsCount],
+                backgroundColor: ['#ff3e1d', '#f89223'],
+                borderRadius: 8,
+                maxBarThickness: 50
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
         }
     });
 </script>

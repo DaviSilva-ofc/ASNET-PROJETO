@@ -25,6 +25,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<AgrupamentoStockGroup> AgrupamentoTree { get; set; } = new();
         public List<EmpresaStockGroup> EmpresasPrivadasTree { get; set; } = new();
         public List<Ticket> PendingRequests { get; set; } = new();
+        public List<PedidoStock> EscalatedRequests { get; set; } = new();
 
         public List<Agrupamento> AvailableAgrupamentos { get; set; } = new();
         public List<Empresa> AvailableEmpresasPrivadas { get; set; } = new();
@@ -116,6 +117,15 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Include(t => t.Admin)
                 .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
                 .OrderBy(t => t.CreatedAt)
+                .ToListAsync();
+
+            // Load PedidoStock escalated to admin (pending or already fulfilled by admin)
+            EscalatedRequests = await _context.PedidosStock
+                .Include(p => p.Agrupamento)
+                .Include(p => p.School)
+                .Include(p => p.RequestedBy)
+                .Where(p => p.Status == "Pendente_Admin" || (p.Status == "Atendido" && p.AdminId != null))
+                .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
                 .ToListAsync();
 
             // 2. Aggregate Inventory with Filters
@@ -524,7 +534,7 @@ namespace AspnetCoreStarter.Pages.Admin
             }
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"Sucesso: {availableItems.Count} item(ns) emprestado(s).";
+            TempData["Success"] = "Emprestado com sucesso!";
             return RedirectToPage();
         }
 
@@ -562,7 +572,7 @@ namespace AspnetCoreStarter.Pages.Admin
             }
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"Sucesso: {lentItems.Count} item(ns) devolvido(s).";
+            TempData["Success"] = "Devolvido com sucesso!";
             return RedirectToPage();
         }
 
@@ -674,6 +684,55 @@ namespace AspnetCoreStarter.Pages.Admin
             await _context.SaveChangesAsync();
             
             TempData["Success"] = "Pedido de Empréstimo Recusado com sucesso.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostFulfillEscalatedRequestAsync(int requestId, int[] selectedStockIds)
+        {
+            var pedido = await _context.PedidosStock
+                .Include(p => p.School)
+                .FirstOrDefaultAsync(p => p.Id == requestId);
+
+            if (pedido == null || pedido.Status != "Pendente_Admin") return RedirectToPage();
+
+            var items = await _context.StockEmpresa
+                .Where(s => selectedStockIds.Contains(s.Id))
+                .ToListAsync();
+
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            int? currentAdminId = int.TryParse(userIdStr, out int id) ? id : null;
+
+            pedido.AdminId = currentAdminId;
+
+            foreach (var item in items)
+            {
+                item.SchoolId = pedido.SchoolId;
+                item.AgrupamentoId = pedido.AgrupamentoId;
+                item.Status = "Emprestado";
+                item.IsAvailable = false;
+                item.AdminId = currentAdminId;
+            }
+
+            pedido.Status = "Atendido";
+            pedido.UpdatedAt = DateTime.UtcNow;
+            pedido.DirectorNotes = (pedido.DirectorNotes ?? "") + $" | Atendido pelo Admin em {DateTime.Now:dd/MM/yyyy}.";
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Pedido #{requestId} atendido! {items.Count} item(s) enviados para {pedido.School?.Name}.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRejectEscalatedRequestAsync(int requestId)
+        {
+            var pedido = await _context.PedidosStock.FindAsync(requestId);
+            if (pedido == null) return RedirectToPage();
+
+            pedido.Status = "Recusado";
+            pedido.DirectorNotes = (pedido.DirectorNotes ?? "") + $" | Recusado pelo Admin em {DateTime.Now:dd/MM/yyyy}.";
+            pedido.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Pedido recusado.";
             return RedirectToPage();
         }
     }

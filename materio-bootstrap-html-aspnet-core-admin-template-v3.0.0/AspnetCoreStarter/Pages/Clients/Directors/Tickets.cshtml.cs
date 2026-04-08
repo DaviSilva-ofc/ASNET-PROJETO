@@ -73,7 +73,8 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var query = _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Equipamento)
-                .Where(t => t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value));
+                .Where(t => t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value))
+                .Where(t => t.Level != "Empréstimo"); // pedidos de empréstimo geridos no painel de Stocks
 
             if (!string.IsNullOrEmpty(FilterStatus) && FilterStatus != "Todos os Estados")
             {
@@ -110,13 +111,19 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 }
             }
 
-            // Available equipment for the "Novo Ticket" modal - ONLY AVARIADO
+            // Find IDs of equipment that already have active tickets
+            var eqIdsWithActiveTickets = await _context.Tickets
+                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
+                .Select(t => t.EquipamentoId!.Value)
+                .ToListAsync();
+
+            // Available equipment for the "Novo Ticket" modal - ONLY AVARIADO AND WITHOUT TICKETS
             AvailableEquipment = await _context.Equipamentos
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                         .ThenInclude(b => b.School)
                 .Where(e => e.Room != null && e.Room.Block != null && schoolIds.Contains(e.Room.Block.SchoolId))
-                .Where(e => e.Status == "Avariado")
+                .Where(e => (e.Status == "Avariado" || e.Status == "Indisponível" || e.Status == "Danificado") && !eqIdsWithActiveTickets.Contains(e.Id))
                 .OrderBy(e => e.Room.Block.School.Name)
                 .ThenBy(e => e.Type)
                 .ToListAsync();
@@ -155,6 +162,20 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
         public async Task<IActionResult> OnPostCreateTicketAsync()
         {
+            if (NewTicket.EquipamentoId.HasValue)
+            {
+                var alreadyOpen = await _context.Tickets.AnyAsync(t =>
+                    t.EquipamentoId == NewTicket.EquipamentoId &&
+                    t.Status != "Concluído" && t.Status != "Recusado" &&
+                    t.Level != "Empréstimo");
+
+                if (alreadyOpen)
+                {
+                    TempData["ErrorMessage"] = "Erro: Este equipamento já possui um ticket de suporte em aberto.";
+                    return RedirectToPage();
+                }
+            }
+
             // Standardizing status to "Pendente"
             NewTicket.Status = "Pendente";
             NewTicket.CreatedAt = System.DateTime.UtcNow;
@@ -162,6 +183,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             _context.Tickets.Add(NewTicket);
             await _context.SaveChangesAsync();
 
+            TempData["SuccessMessage"] = "Ticket criado com sucesso!";
             return RedirectToPage();
         }
     }

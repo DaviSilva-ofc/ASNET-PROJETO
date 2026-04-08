@@ -1,8 +1,11 @@
 @page
 @model AspnetCoreStarter.Pages.Clients.Directors.DirectorDashboardModel
+@using System.Linq
 @{
     Layout = "Layouts/_ContentNavbarLayout";
     ViewData["Title"] = "Dashboard Direção";
+    ViewData["container"] = "container-fluid";
+    ViewData["containerNav"] = "container-fluid";
 }
 
 @section PageStyles {
@@ -148,10 +151,37 @@
         color: #fff;
         border-color: var(--dash-card-bg);
     }
+
+    /* Forced Full Width Layout */
+    .container-xxl, .container-fluid {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+    }
+    
+    .layout-page, .content-wrapper, .layout-container {
+        width: 100% !important;
+    }
+
+    /* Custom Navigation Tabs */
+    .nav-pills .nav-link {
+        background: transparent !important;
+        color: rgba(255,255,255,0.6) !important;
+        transition: all 0.2s ease;
+    }
+    .nav-pills .nav-link.active {
+        background: var(--asnet-orange) !important;
+        color: #fff !important;
+    }
+    .nav-pills .nav-link:hover:not(.active) {
+        background: rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+    }
 </style>
 }
 
-<div class="container-xxl flex-grow-1 container-p-y">
+
     <!-- Title -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
@@ -159,268 +189,308 @@
             <p class="text-muted mb-0">Agrupamento: <span class="fw-bold text-primary">@(Model.Agrupamento?.Name ?? "N/A")</span></p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-sm" style="background:var(--asnet-orange);color:#fff;">
-                <i class='bx bx-user-voice me-1'></i> Professores
-            </button>
         </div>
     </div>
 
-    <!-- ===== Stat mini-cards ===== -->
+    <!-- VISÃO GERAL (Imagem 1 style) -->
+    <!-- ===== Stat mini-cards (Restored) ===== -->
     <div class="row g-3 mb-4">
-        <!-- Professores -->
         <div class="col-6 col-lg-3">
-            <div class="card stat-card h-100">
+            <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:var(--asnet-blue);">
-                        <i class='bx bx-user-voice'></i>
+                    <div class="stat-icon" style="background:var(--asnet-blue); width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                        <i class='bx bx-user-voice text-white'></i>
                     </div>
                     <div>
-                        <p class="stat-number">@Model.TotalProfessores</p>
-                        <p class="stat-label">Professores</p>
+                        <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.TotalProfessores</p>
+                        <p class="stat-label mb-0 text-white-50 small">Utilizadores</p>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Pending Tickets -->
         <div class="col-6 col-lg-3">
-            <div class="card stat-card h-100">
+            <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#ff3e1d;">
-                        <i class='bx bx-support'></i>
+                    <div class="stat-icon" style="background:var(--asnet-orange); width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                        <i class='bx bx-file text-white'></i>
                     </div>
                     <div>
-                        <p class="stat-number">@Model.PendingTicketsCount</p>
-                        <p class="stat-label">Tickets pendentes</p>
+                        <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.TotalContratos</p>
+                        <p class="stat-label mb-0 text-white-50 small">Contratos</p>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Escolas -->
         <div class="col-6 col-lg-3">
-            <div class="card stat-card h-100">
+            <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#03c3ec;">
-                        <i class='bx bx-file'></i>
+                    <div class="stat-icon" style="background:#ff3e1d; width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                        <i class='bx bx-support text-white'></i>
                     </div>
                     <div>
-                        <p class="stat-number">@Model.TotalContratos</p>
-                        <p class="stat-label">Contratos</p>
+                        <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.PendingTicketsCount</p>
+                        <p class="stat-label mb-0 text-white-50 small">Tickets pendentes</p>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Alertas de Stock -->
         <div class="col-6 col-lg-3">
-            <div class="card stat-card h-100">
+            <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#fd7e14;">
-                        <i class='bx bx-package'></i>
+                    <div class="stat-icon" style="background:#fd7e14; width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                        <i class='bx bx-package text-white'></i>
                     </div>
                     <div>
-                        <p class="stat-number">@Model.LowStockAlertsCount</p>
-                        <p class="stat-label">Alertas de Stock</p>
+                        <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.LowStockAlertsCount</p>
+                        <p class="stat-label mb-0 text-white-50 small">Alertas de stock</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- VISÃO GERAL (Imagem 2 style - 3 Columns Horizontal) -->
     <div class="row g-4 mb-4">
-        <!-- Infrastructure Tree (Filtered by Agrupamento) -->
+        <!-- Infrastructure Tree (Col 1) -->
         <div class="col-lg-4">
-            <div class="card tree-card h-100" style="border-left: 5px solid var(--asnet-blue);">
-                <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
-                    <ul class="nav tree-tabs" role="tablist">
-                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tabTree">Agrupamento</a></li>
-                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tabSchools">Escolas</a></li>
+            <div class="card h-100 shadow-sm border-0" style="background: #2b2c40 !important; border-left: 4px solid var(--asnet-blue) !important;">
+                <div class="card-header border-bottom-0 pb-0">
+                    <ul class="nav nav-pills gap-2 mb-3" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active py-2 px-3 fw-bold" style="font-size: 0.8rem;" data-bs-toggle="tab" data-bs-target="#tab-agrup">Agrupamentos</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-2 px-3 fw-bold shadow-none" style="font-size: 0.8rem;" data-bs-toggle="tab" data-bs-target="#tab-esc">Escolas</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-2 px-3 fw-bold shadow-none" style="font-size: 0.8rem;" data-bs-toggle="tab" data-bs-target="#tab-blocos">Blocos</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link py-2 px-3 fw-bold shadow-none" style="font-size: 0.8rem;" data-bs-toggle="tab" data-bs-target="#tab-salas">Salas</button>
+                        </li>
                     </ul>
                 </div>
-                <div class="card-body" style="max-height:380px; overflow-y:auto;">
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="tabTree">
-                            <ul class="tree-list">
-                                @if (Model.Agrupamento != null)
-                                {
-                                    <li class="tree-item">
-                                        <div class="tree-toggle" onclick="toggleTree(this)">
-                                            <span class="tree-badge tree-badge-agrup">@Model.Schools?.Count</span>
-                                            <span class="tree-label">@Model.Agrupamento.Name</span>
-                                            @if (Model.Schools != null && Model.Schools.Any()) { <span class="tree-arrow">▶</span> }
+                <div class="card-body pt-0" style="max-height: 400px; overflow-y: auto;">
+                    <div class="tab-content p-0 border-0 shadow-none">
+                        <!-- Agrupamentos List -->
+                         <div class="tab-pane fade show active" id="tab-agrup">
+                            @if (Model.Agrupamento != null)
+                            {
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background: #696cff; border-radius: 6px; color: #fff; font-weight: bold; font-size: 0.75rem;">
+                                            @Model.Agrupamento.Name.Substring(0, 1).ToUpper()
                                         </div>
-                                        @if (Model.Schools != null && Model.Schools.Any())
-                                        {
-                                            <ul class="tree-children">
-                                                @foreach (var school in Model.Schools)
-                                                {
-                                                    var schoolBlocos = Model.Blocos?.Where(b => b.SchoolId == school.Id).ToList();
-                                                    <li class="tree-item">
-                                                        <div class="tree-toggle" onclick="toggleTree(this)">
-                                                            <span class="tree-badge tree-badge-school">@schoolBlocos?.Count</span>
-                                                            <span class="tree-label">@school.Name</span>
-                                                            @if (schoolBlocos != null && schoolBlocos.Any()) { <span class="tree-arrow">▶</span> }
-                                                        </div>
-                                                        @if (schoolBlocos != null && schoolBlocos.Any())
-                                                        {
-                                                            <ul class="tree-children">
-                                                                @foreach (var bloco in schoolBlocos)
-                                                                {
-                                                                    var blocoSalas = Model.Salas?.Where(s => s.BlockId == bloco.Id).ToList();
-                                                                    <li class="tree-item">
-                                                                        <div class="tree-toggle" onclick="toggleTree(this)">
-                                                                            <span class="tree-badge tree-badge-bloco">@blocoSalas?.Count</span>
-                                                                            <span class="tree-label">@bloco.Name</span>
-                                                                            @if (blocoSalas != null && blocoSalas.Any()) { <span class="tree-arrow">▶</span> }
-                                                                        </div>
-                                                                        @if (blocoSalas != null && blocoSalas.Any())
-                                                                        {
-                                                                            <ul class="tree-children">
-                                                                                @foreach (var sala in blocoSalas)
-                                                                                {
-                                                                                    <li class="tree-item">
-                                                                                        <span class="tree-badge tree-badge-sala"><i class='bx bx-door-open' style="font-size:.7rem;"></i></span>
-                                                                                        <span class="tree-label">@sala.Name</span>
-                                                                                    </li>
-                                                                                }
-                                                                            </ul>
-                                                                        }
-                                                                    </li>
-                                                                }
-                                                            </ul>
-                                                        }
-                                                    </li>
-                                                }
-                                            </ul>
-                                        }
-                                    </li>
-                                }
-                                else
-                                {
-                                    <li class="text-muted py-3 text-center">Nenhum agrupamento atribuído.</li>
-                                }
-                            </ul>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-semibold text-white" style="font-size: 0.85rem;">@Model.Agrupamento.Name</span>
+                                            <i class='bx bxs-caret-right-circle text-white-50' style="font-size: 1.1rem; margin-top: -2px;"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
-                        <div class="tab-pane fade" id="tabSchools">
-                            <ul class="tree-list">
-                                @if (Model.Schools != null)
-                                {
-                                    @foreach (var school in Model.Schools)
-                                    {
-                                        <li class="tree-item d-flex align-items-center gap-2 py-2">
-                                            <span class="tree-badge tree-badge-school"><i class='bx bx-buildings' style="font-size:.7rem;"></i></span>
-                                            <span class="tree-label">@school.Name</span>
-                                        </li>
+                        <!-- Escolas List -->
+                        <div class="tab-pane fade" id="tab-esc">
+                            <div class="d-flex flex-column gap-3">
+                                @if (Model.Schools != null) {
+                                    @foreach (var school in Model.Schools) {
+                                         <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background: #696cff; border-radius: 6px; color: #fff; font-weight: bold; font-size: 0.75rem;">
+                                                @(school.Name?.Substring(0, 1).ToUpper() ?? "E")
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold text-white" style="font-size: 0.85rem;">@school.Name</span>
+                                                <i class='bx bxs-caret-right-circle text-white-50' style="font-size: 1.1rem; margin-top: -2px;"></i>
+                                            </div>
+                                        </div>
                                     }
                                 }
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chat Notifications Card -->
-        <div class="col-lg-4">
-            <div class="card pending-card h-100" style="border-left: 5px solid #71dd37;">
-                <div class="card-body d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="stat-icon" style="background:#71dd37;">
-                                <i class='bx bx-chat'></i>
                             </div>
-                            <h6 class="mb-0 fw-bold">Mensagens</h6>
                         </div>
-                        <p class="pending-big-number">@Model.TotalUnreadMessages<span style="font-size:1rem;color:#71dd37;"> novas</span></p>
-                        <p class="pending-subtitle">mensagens no chat aguardam resposta</p>
-
-                        @if (Model.RecentMessageSenders.Any())
-                        {
-                            <div class="d-flex mt-3 mb-3">
-                                @foreach (var u in Model.RecentMessageSenders)
-                                {
-                                    <div class="pending-avatar" title="@u.Username">
-                                        @(u.Username?.Substring(0, Math.Min(2, u.Username.Length)).ToUpper())
-                                    </div>
+                        <!-- Blocos List -->
+                        <div class="tab-pane fade" id="tab-blocos">
+                            <div class="d-flex flex-column gap-3">
+                                @if (Model.Blocos != null) {
+                                    @foreach (var bloco in Model.Blocos) {
+                                         <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background: #696cff; border-radius: 6px; color: #fff; font-weight: bold; font-size: 0.75rem;">
+                                                @(bloco.Name?.Substring(0, 1).ToUpper() ?? "B")
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold text-white" style="font-size: 0.85rem;">@bloco.Name</span>
+                                                <i class='bx bxs-caret-right-circle text-white-50' style="font-size: 1.1rem; margin-top: -2px;"></i>
+                                            </div>
+                                        </div>
+                                    }
                                 }
                             </div>
-                        }
-                    </div>
-                    <a href="/Clients/Directors/Chat" class="btn w-100" style="background:#71dd37;color:#fff;font-weight:600;">
-                        <i class='bx bx-reply me-1'></i> Responder
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pedir Reparo -->
-        <div class="col-lg-4">
-            <div class="card pending-card h-100" style="border-left: 5px solid #ff4d4d;">
-                <div class="card-body d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="stat-icon" style="background:#ff4d4d;">
-                                <i class='bx bx-wrench'></i>
-                            </div>
-                            <h6 class="mb-0 fw-bold">Pedir Reparo</h6>
                         </div>
-                        <p class="pending-big-number">Suporte</p>
-                        <p class="pending-subtitle">Existem @Model.DamagedEquipmentCount equipamentos avariados no seu agrupamento.</p>
+                        <!-- Salas List -->
+                        <div class="tab-pane fade" id="tab-salas">
+                            <div class="d-flex flex-column gap-3">
+                                @if (Model.Salas != null) {
+                                    @foreach (var sala in Model.Salas) {
+                                         <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background: #696cff; border-radius: 6px; color: #fff; font-weight: bold; font-size: 0.75rem;">
+                                                @(sala.Name?.Substring(0, 1).ToUpper() ?? "S")
+                                            </div>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold text-white" style="font-size: 0.85rem;">@sala.Name</span>
+                                                <i class='bx bxs-caret-right-circle text-white-50' style="font-size: 1.1rem; margin-top: -2px;"></i>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
                     </div>
-                    <a href="/Clients/Directors/Equipment?FilterStatus=Avariado" class="btn w-100" style="background:#ff4d4d;color:#fff;font-weight:600;">
-                        <i class='bx bx-plus-circle me-1'></i> Novo Pedido
-                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Card (Col 2) -->
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm border-0 d-flex flex-column" style="background: #2b2c40 !important; border-left: 4px solid #71dd37 !important;">
+                <div class="card-body p-4 flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div style="width: 40px; height: 40px; background: #71dd37; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class='bx bx-chat text-white fs-4'></i>
+                        </div>
+                        <h5 class="mb-0 fw-bold text-white">Mensagens</h5>
+                    </div>
+                    <div class="mb-3">
+                        <span class="fw-bolder" style="font-size: 3rem; color: #fff; line-height: 1;">@Model.TotalUnreadMessages</span>
+                        <span class="fw-bold" style="color: #71dd37; font-size: 1.2rem;"> novas</span>
+                    </div>
+                    <p class="text-white-50 small">mensagens no chat aguardam resposta</p>
+                </div>
+                <div class="p-4 pt-0">
+                    <a href="/Clients/Directors/Chat" class="btn w-100 py-2 fw-bold" style="background: #71dd37; color: #fff; border-radius: 8px;">Responder</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests Card (Col 3) -->
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm border-0 d-flex flex-column" style="background: #2b2c40 !important; border-left: 4px solid #ff3e1d !important;">
+                <div class="card-body p-4 flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div style="width: 40px; height: 40px; background: #ff4d4d; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <i class='bx bx-task text-white fs-4'></i>
+                        </div>
+                        <h5 class="mb-0 fw-bold text-white">Pedidos Pendentes</h5>
+                    </div>
+                    <div class="mb-3">
+                        <span class="fw-bolder" style="font-size: 3rem; color: #fff; line-height: 1;">@Model.SchoolRequests?.Count</span>
+                        <span class="fw-bold" style="color: #ff4d4d; font-size: 1.2rem;"> novos</span>
+                    </div>
+                    <p class="text-white-50 small">pedidos de registo aguardam aprovação</p>
+                </div>
+                <div class="p-4 pt-0">
+                    <a href="/Clients/Directors/Stocks" class="btn w-100 py-2 fw-bold" style="background: #ff3e1d; color: #fff; border-radius: 8px;">Ver Pedidos</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== Charts Row ===== -->
+    <!-- Charts Row -->
     <div class="row g-4 mb-4">
-        <!-- Monthly Ticket Comparison Chart (Modified) -->
         <div class="col-lg-7">
-            <div class="card chart-card h-100">
-                <div class="card-header d-flex align-items-center gap-2">
-                    <i class='bx bx-trending-up' style="color:var(--asnet-blue);"></i>
-                    Comparação Mensal de Tickets
-                </div>
-                <div class="card-body">
-                    <div style="height: 250px; position: relative;">
-                        <canvas id="monthlyTicketChart"></canvas>
-                    </div>
-                </div>
+            <div class="card chart-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+                <div class="card-header d-flex align-items-center gap-2 border-bottom border-secondary pb-3"><i class='bx bx-trending-up' style="color:var(--asnet-blue);"></i> Comparação de Tickets</div>
+                <div class="card-body pt-4"><canvas id="monthlyTicketChart" style="max-height: 250px;"></canvas></div>
             </div>
         </div>
-        <!-- System Overview (Only Tickets and Stocks) -->
         <div class="col-lg-5">
-            <div class="card chart-card h-100">
-                <div class="card-header d-flex align-items-center gap-2">
-                    <i class='bx bx-pie-chart-alt-2' style="color:var(--asnet-orange);"></i>
-                    Visão Geral do Sistema
-                </div>
-                <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                    <div style="height: 250px; width: 100%; position: relative;">
-                        <canvas id="overviewChart"></canvas>
-                    </div>
+            <div class="card chart-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+                <div class="card-header d-flex align-items-center gap-2 border-bottom border-secondary pb-3"><i class='bx bx-pie-chart-alt-2' style="color:var(--asnet-orange);"></i> Visão Geral</div>
+                <div class="card-body pt-4 d-flex flex-column align-items-center justify-content-center">
+                    <canvas id="overviewChart" style="max-height: 250px;"></canvas>
                     <div class="d-flex gap-3 mt-3 flex-wrap justify-content-center">
-                        <span><i class='bx bxs-circle' style="color:#ff3e1d;font-size:.6rem;"></i> Tickets</span>
-                        <span><i class='bx bxs-circle' style="color:#f89223;font-size:.6rem;"></i> Stock</span>
+                        <span class="text-white-50"><i class='bx bxs-circle me-1' style="color:#ff3e1d;font-size:.6rem;"></i> Tickets</span>
+                        <span class="text-white-50"><i class='bx bxs-circle me-1' style="color:#f89223;font-size:.6rem;"></i> Stock</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== Map Row (Filtered) ===== -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
+        <!-- Map (Row 3) -->
+        <div class="col-12 mt-4">
             <div class="card map-card h-100">
-                <div class="card-header d-flex align-items-center gap-2">
-                    <i class='bx bx-map-pin' style="color:#f89223;"></i>
-                    Escolas do Agrupamento
-                </div>
-                <div class="card-body p-0">
-                    <div id="clientMap" style="height: 400px; width: 100%; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;"></div>
-                </div>
+                <div class="card-header d-flex align-items-center gap-2"><i class='bx bx-map-pin' style="color:#f89223;"></i> Escolas do Agrupamento</div>
+                <div class="card-body p-0"><div id="clientMap" style="height: 400px; width: 100%; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;"></div></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Processar Pedido (Diretor) -->
+    <div class="modal fade" id="modalFulfillRequest" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form method="post" id="fulfillForm">
+                    <input type="hidden" name="requestId" id="fulfillRequestId" />
+                    <div class="modal-header bg-primary py-3">
+                        <h5 class="modal-title text-white fw-bold"><i class='bx bx-task me-2'></i>Processar Pedido: <span id="fulfillItemDisplay"></span></h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 shadow-none mb-4">
+                            <i class='bx bx-info-circle me-1'></i> Pedido de <strong><span id="fulfillQuantityDisplay"></span></strong> unidade(s) para <strong><span id="fulfillSchoolDisplay"></span></strong>.
+                        </div>
+
+                        <h6 class="fw-bold mb-2">Stock Disponível (Armazenado no Agrupamento)</h6>
+                        <p class="text-muted small mb-3">Itens com o tipo correspondente marcados automaticamente.</p>
+                        
+                        <div class="table-responsive border rounded mb-4" style="max-height: 250px;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40px;"><input type="checkbox" id="selectAllStock" onclick="toggleAllStock(this)" /></th>
+                                        <th>Nome</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="availableStockList">
+                                    @foreach (var s in Model.AvailableStock)
+                                    {
+                                        <tr class="stock-row" data-type="@s.Type">
+                                            <td>
+                                                <input type="checkbox" name="selectedStockIds" value="@s.Id" class="stock-checkbox" />
+                                            </td>
+                                            <td>@s.EquipmentName</td>
+                                            <td><span class="badge bg-label-secondary">@s.Type</span></td>
+                                            <td><span class="badge bg-label-info">@s.Status</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold">Notas / Justificação</label>
+                            <textarea name="directorNotes" class="form-control" rows="2" placeholder="Notas para o coordenador ou administrador..."></textarea>
+                        </div>
+
+                        <div id="selectionWarning" class="alert alert-warning border-0 shadow-none d-none">
+                            <i class='bx bx-error me-1'></i> A quantidade selecionada é diferente da solicitada.
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light d-flex justify-content-between">
+                        <div>
+                            <button type="submit" asp-page-handler="RejectRequest" class="btn btn-outline-danger">Recusar</button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" asp-page-handler="EscalateRequest" class="btn btn-outline-info">Reencaminhar ao Admin</button>
+                            <button type="submit" asp-page-handler="FulfillRequest" class="btn btn-success px-4 fw-bold">Emprestar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
         </div>
     </div>
 </div>
@@ -435,6 +505,50 @@
         var children = el.parentElement.querySelector('.tree-children');
         if (children) children.classList.toggle('show');
     }
+
+    function openFulfillModal(id, type, qty, itemName, schoolName) {
+        document.getElementById('fulfillRequestId').value = id;
+        document.getElementById('fulfillItemDisplay').innerText = itemName;
+        document.getElementById('fulfillQuantityDisplay').innerText = qty;
+        document.getElementById('fulfillSchoolDisplay').innerText = schoolName;
+
+        // Auto-select logic
+        const checkboxes = document.querySelectorAll('.stock-checkbox');
+        let selectedCount = 0;
+        checkboxes.forEach(cb => {
+            const row = cb.closest('.stock-row');
+            const rowType = row.getAttribute('data-type');
+            if (rowType === type && selectedCount < qty) {
+                cb.checked = true;
+                selectedCount++;
+            } else {
+                cb.checked = false;
+            }
+        });
+
+        checkSelection(qty);
+        new bootstrap.Modal(document.getElementById('modalFulfillRequest')).show();
+    }
+
+    function toggleAllStock(el) {
+        const checkboxes = document.querySelectorAll('.stock-checkbox');
+        checkboxes.forEach(cb => cb.checked = el.checked);
+        checkSelection(parseInt(document.getElementById('fulfillQuantityDisplay').innerText));
+    }
+
+    function checkSelection(requestedQty) {
+        const selectedCount = document.querySelectorAll('.stock-checkbox:checked').length;
+        const warning = document.getElementById('selectionWarning');
+        if (selectedCount !== requestedQty) {
+            warning.classList.remove('d-none');
+        } else {
+            warning.classList.add('d-none');
+        }
+    }
+
+    document.querySelectorAll('.stock-checkbox').forEach(cb => {
+        cb.onchange = () => checkSelection(parseInt(document.getElementById('fulfillQuantityDisplay').innerText));
+    });
 
     // ===== Monthly Ticket Chart =====
     const ticketCtx = document.getElementById('monthlyTicketChart').getContext('2d');

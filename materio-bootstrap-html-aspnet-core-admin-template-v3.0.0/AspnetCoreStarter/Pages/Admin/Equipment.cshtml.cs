@@ -256,6 +256,7 @@ namespace AspnetCoreStarter.Pages.Admin
             equip.Brand = NewEquipment.Brand;
             equip.Model = NewEquipment.Model;
             equip.SerialNumber = NewEquipment.SerialNumber;
+            equip.Status = NewEquipment.Status ?? "A funcionar";
             
             if (LocationType == "empresa")
             {

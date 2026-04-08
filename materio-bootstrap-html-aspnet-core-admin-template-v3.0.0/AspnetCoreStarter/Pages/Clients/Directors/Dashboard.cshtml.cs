@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using AspnetCoreStarter.Services;
 using System;
 
 namespace AspnetCoreStarter.Pages.Clients.Directors
@@ -14,12 +15,15 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
     public class DirectorDashboardModel : PageModel
     {
         private readonly AppDbContext _context;
+        private readonly IStockService _stockService;
 
-        public DirectorDashboardModel(AppDbContext context)
+        public DirectorDashboardModel(AppDbContext context, IStockService stockService)
         {
             _context = context;
+            _stockService = stockService;
         }
 
+        public List<LowStockItemViewModel> StockAlerts { get; set; } = new();
         public int TotalProfessores { get; set; }
         public int PendingTicketsCount { get; set; }
         public int LowStockAlertsCount { get; set; }
@@ -41,6 +45,8 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<Bloco>? Blocos { get; set; }
         public List<Sala>? Salas { get; set; }
         public List<string> EquipmentTypes { get; set; } = new();
+        public List<PedidoStock> SchoolRequests { get; set; } = new();
+        public List<StockEmpresa> AvailableStock { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -126,10 +132,26 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 .Where(t => (t.Status == "Pendente" || t.TechnicianId == null) && t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value))
                 .CountAsync();
 
-            // Low Stock alerts (Global as no school link exists in model)
-            LowStockAlertsCount = await _context.StockEmpresa
-                .Where(s => !s.IsAvailable)
-                .CountAsync();
+            // 5. Low Stock Alerts Logic
+            var allAvailableStock = await _context.StockEmpresa
+                .Where(s => (s.IsAvailable || s.Status == "Disponível") && (s.AgrupamentoId == agrupamentoId || (s.SchoolId != null && schoolIds.Contains(s.SchoolId.Value))))
+                .ToListAsync();
+
+            var groupedStock = allAvailableStock
+                .GroupBy(s => new { Name = s.EquipmentName ?? "Sem Nome", Type = s.Type })
+                .Select(g => new LowStockItemViewModel
+                {
+                    Name = g.Key.Name,
+                    AvailableCount = g.Count(),
+                    Type = g.Key.Type
+                })
+                .ToList();
+
+            StockAlerts = groupedStock
+                .Where(x => _stockService.IsLowStock(x.Name, x.Type, x.AvailableCount))
+                .ToList();
+
+            LowStockAlertsCount = StockAlerts.Count;
 
             // Chat Notifications (Unread messages for the current director)
             var unreadMessages = await _context.Mensagens
@@ -169,7 +191,82 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 .ToList();
             ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locations);
 
+            // Load school requests (pending director or escalated to admin)
+            SchoolRequests = await _context.PedidosStock
+                .Include(p => p.School)
+                .Include(p => p.RequestedBy)
+                .Where(p => p.AgrupamentoId == agrupamentoId && (p.Status == "Pendente_Diretor" || p.Status == "Pendente_Admin"))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            // Load available unassigned stock for this agrupamento
+            AvailableStock = await _context.StockEmpresa
+                .Where(s => s.AgrupamentoId == agrupamentoId && s.SchoolId == null && (s.IsAvailable || s.Status == "Armazenado" || s.Status == "Disponível"))
+                .ToListAsync();
+
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostFulfillRequestAsync(int requestId, int[] selectedStockIds, string? directorNotes)
+        {
+            var request = await _context.PedidosStock.FindAsync(requestId);
+            if (request == null) return RedirectToPage();
+
+            if (selectedStockIds != null && selectedStockIds.Length > 0)
+            {
+                var items = await _context.StockEmpresa
+                    .Where(s => selectedStockIds.Contains(s.Id))
+                    .ToListAsync();
+
+                foreach (var item in items)
+                {
+                    item.SchoolId = request.SchoolId;
+                    item.Status = "Emprestado";
+                    item.IsAvailable = false;
+                }
+            }
+
+            request.Status = "Atendido";
+            request.DirectorNotes = directorNotes;
+            request.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Pedido atendido e stock atribuído à escola.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEscalateRequestAsync(int requestId, string? directorNotes)
+        {
+            var request = await _context.PedidosStock.FindAsync(requestId);
+            if (request == null) return RedirectToPage();
+
+            request.Status = "Pendente_Admin";
+            request.DirectorNotes = directorNotes;
+            request.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Pedido escalado para o Administrador.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRejectRequestAsync(int requestId, string? directorNotes)
+        {
+            var request = await _context.PedidosStock.FindAsync(requestId);
+            if (request == null) return RedirectToPage();
+
+            request.Status = "Recusado";
+            request.DirectorNotes = directorNotes;
+            request.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Pedido recusado.";
+            return RedirectToPage();
+        }
+        public class LowStockItemViewModel
+        {
+            public string Name { get; set; }
+            public int AvailableCount { get; set; }
+            public string? Type { get; set; }
         }
     }
 }

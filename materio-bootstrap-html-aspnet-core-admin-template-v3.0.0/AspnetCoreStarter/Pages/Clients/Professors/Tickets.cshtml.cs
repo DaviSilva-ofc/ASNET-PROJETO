@@ -58,6 +58,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
                 .Include(t => t.Equipamento)
                     .ThenInclude(e => e.Room)
                 .Where(t => t.Equipamento != null && t.Equipamento.RoomId.HasValue && roomIds.Contains(t.Equipamento.RoomId.Value))
+                .Where(t => t.Level != "Empréstimo") // pedidos de empréstimo geridos no painel de Stocks
                 .AsQueryable();
 
             if (SalaId.HasValue)
@@ -118,15 +119,16 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToPage("/Auth/Login");
             
-            if (NewTicket.EquipamentoId != null)
+            if (NewTicket.EquipamentoId.HasValue)
             {
-                // Double check if there's already an active ticket
-                var existingTicket = await _context.Tickets
-                    .AnyAsync(t => t.EquipamentoId == NewTicket.EquipamentoId && t.Status != "Concluído" && t.Status != "Recusado");
-                
-                if (existingTicket)
+                var alreadyOpen = await _context.Tickets.AnyAsync(t =>
+                    t.EquipamentoId == NewTicket.EquipamentoId &&
+                    t.Status != "Concluído" && t.Status != "Recusado" &&
+                    t.Level != "Empréstimo");
+
+                if (alreadyOpen)
                 {
-                    TempData["ErrorMessage"] = "Já existe um ticket ativo para este equipamento.";
+                    TempData["ErrorMessage"] = "Já existe um ticket ativo para este equipamento. Aguarde a conclusão antes de criar outro.";
                     return RedirectToPage();
                 }
 

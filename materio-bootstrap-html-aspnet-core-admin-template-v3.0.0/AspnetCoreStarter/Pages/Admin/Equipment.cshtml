@@ -131,7 +131,7 @@
                                     </form>
                                     <div class="d-flex align-items-center gap-1">
                                         <button type="button" class="btn btn-sm text-primary p-1" title="Editar"
-                                                onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId')">
+                                                onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId', '@item.Status')">
                                             <i class="bx bx-edit"></i> ✏️
                                         </button>
                                         <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
@@ -244,6 +244,16 @@
                                 </select>
                             </div>
                             <div class="col-md-12">
+                                <label class="form-label">Estado do Equipamento</label>
+                                <select asp-for="NewEquipment.Status" id="editStatus" class="form-select" required>
+                                    <option value="A funcionar">A funcionar</option>
+                                    <option value="Armazenado">Armazenado</option>
+                                    <option value="Avariado">Avariado</option>
+                                    <option value="Indisponível">Indisponível</option>
+                                    <option value="Em Reparação">Em Reparação</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
                                 <label class="form-label">Empresa (Opcional se for Sala)</label>
                                 <select asp-for="NewEquipment.EmpresaId" id="editEmpresa" class="form-select">
                                     <option value="">Nenhuma / Escola</option>
@@ -353,6 +363,14 @@
                     <div class="mb-3">
                         <label class="form-label">Nº Série</label>
                         <input type="text" name="NewEquipment.SerialNumber" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-primary fw-bold">Estado Inicial</label>
+                        <select name="NewEquipment.Status" class="form-select border-primary" required>
+                            <option value="A funcionar" selected>A funcionar</option>
+                            <option value="Armazenado">Armazenado (Stock)</option>
+                            <option value="Avariado">Avariado</option>
+                        </select>
                     </div>
                     <!-- Location Type Toggle -->
                     <div class="mb-3">
@@ -807,7 +825,7 @@
         }
     }
 
-    function openEditModal(id, name, type, brand, model, serial, roomId, empId) {
+    function openEditModal(id, name, type, brand, model, serial, roomId, empId, status) {
         document.getElementById('editId').value = id;
         
         // Set Artigo and trigger brands update
@@ -826,6 +844,13 @@
         document.getElementById('editSerial').value = serial;
         document.getElementById('editSala').value = roomId || "";
         document.getElementById('editEmpresa').value = empId || "";
+        
+        const statusSelect = document.getElementById('editStatus');
+        if (statusSelect) {
+            // Normalize status for the select
+            if (status === "Funcionando" || !status) status = "A funcionar";
+            statusSelect.value = status;
+        }
 
         // Determine LocationType for the POST
         const locType = empId ? "empresa" : "escola";

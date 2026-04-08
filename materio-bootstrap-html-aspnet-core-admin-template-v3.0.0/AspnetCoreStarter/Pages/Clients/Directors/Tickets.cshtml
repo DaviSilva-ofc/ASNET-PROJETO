@@ -141,53 +141,27 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label">Equipamento Avariado</label>
-                    @if (Model.eqId.HasValue)
-                    {
-                        <input type="hidden" asp-for="NewTicket.EquipamentoId" />
-                        <select id="selectEquipamentoDisabled" class="form-select bg-light" disabled>
-                            @foreach (var eq in Model.AvailableEquipment)
-                            {
-                                <option value="@eq.Id" data-type="@eq.Type" data-school="@eq.Room?.Block?.SchoolId" selected="@(eq.Id == Model.eqId ? "selected" : null)">
-                                    @eq.Name (@eq.SerialNumber) - @eq.Type
-                                </option>
-                            }
-                        </select>
-                    }
-                    else
-                    {
-                        <select asp-for="NewTicket.EquipamentoId" id="selectEquipamento" class="form-select" required onchange="updatePriorityLevels()">
-                            <option value="">Selecione um equipamento...</option>
-                            @foreach (var eq in Model.AvailableEquipment)
-                            {
-                                <option value="@eq.Id" data-type="@eq.Type" data-school="@eq.Room?.Block?.SchoolId">
-                                    @eq.Name (@eq.SerialNumber) - @eq.Type
-                                </option>
-                            }
-                        </select>
-                    }
+                    <select asp-for="NewTicket.EquipamentoId" id="selectEquipamento" class="form-select" required onchange="updatePriorityLevels()">
+                        <option value="">Selecione um equipamento...</option>
+                        @foreach (var eq in Model.AvailableEquipment)
+                        {
+                            <option value="@eq.Id" data-type="@eq.Type" data-school="@eq.Room?.Block?.SchoolId">
+                                @eq.Name (@eq.SerialNumber) - @eq.Type
+                            </option>
+                        }
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Escola / Local</label>
-                    @if (Model.eqId.HasValue)
-                    {
-                        <input type="hidden" asp-for="NewTicket.SchoolId" />
-                        <select class="form-select bg-light" disabled>
-                            @foreach (var s in Model.Schools)
-                            {
-                                <option value="@s.Id" selected="@(s.Id == Model.NewTicket.SchoolId ? "selected" : null)">@s.Name</option>
-                            }
-                        </select>
-                    }
-                    else
-                    {
-                        <select asp-for="NewTicket.SchoolId" id="selectSchool" class="form-select" required>
-                            <option value="">Selecione a escola...</option>
-                            @foreach (var s in Model.Schools)
-                            {
-                                <option value="@s.Id">@s.Name</option>
-                            }
-                        </select>
-                    }
+                    <input type="hidden" asp-for="NewTicket.SchoolId" id="hiddenSchoolId" />
+                    <select id="selectSchool" class="form-select" disabled style="background-color: #f8f9fa; cursor: not-allowed; opacity: 1;">
+                        <option value="">Selecione um equipamento primeiro...</option>
+                        @foreach (var s in Model.Schools)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </select>
+                    <div class="form-text small"><i class="bx bx-info-circle"></i> A localização é determinada automaticamente pelo equipamento selecionado.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Nível de Prioridade</label>
@@ -323,51 +297,39 @@
     function updatePriorityLevels() {
         const selectEq = document.getElementById('selectEquipamento') || document.getElementById('selectEquipamentoDisabled');
         if (!selectEq) return;
+        
         const selectPri = document.getElementById('selectPriority');
+        const selectSchool = document.getElementById('selectSchool');
+        const hiddenSchoolId = document.getElementById('hiddenSchoolId');
         const hint = document.getElementById('priorityHint');
         
-        // Priority 1: Scrape text from selectEq
-        const selectedOptionFromEq = selectEq.options[selectEq.selectedIndex];
-        const typeFromEq = selectedOptionFromEq ? selectedOptionFromEq.getAttribute('data-type') : '';
-        if (typeFromEq) {
-            processPriority(typeFromEq);
-            return;
-        }
-
-        // Priority 2: Use server-side context if we are in a specific equipment flow
-        const eqId = "@Model.eqId";
-        if (eqId) {
-            @if (Model.eqId.HasValue) {
-                var eq = Model.AvailableEquipment.FirstOrDefault(e => e.Id == Model.eqId.Value);
-                if (eq != null) {
-                    @:processPriority("@eq.Type");
-                    @:return;
-                }
-            }
-        }
-
-        // Priority 3: Scrape from dropdown
-        let selectedOption = null;
-        if (selectEq && selectEq.selectedIndex !== -1) {
-            selectedOption = selectEq.options[selectEq.selectedIndex];
-        }
+        // Get selected option and its data attributes
+        const selectedOption = selectEq.options[selectEq.selectedIndex];
         const type = selectedOption ? selectedOption.getAttribute('data-type') : '';
         const schoolId = selectedOption ? selectedOption.getAttribute('data-school') : '';
 
-        // Sync and lock school dropdown
-        const selectSchool = document.getElementById('selectSchool');
-        if (schoolId && selectSchool) {
+        console.log("Selected equipment type:", type, "School ID:", schoolId);
+
+        // 1. Update School/Location (Locked)
+        if (schoolId && selectSchool && hiddenSchoolId) {
             selectSchool.value = schoolId;
+            hiddenSchoolId.value = schoolId;
+            
+            // Apply visual feedback for locked state
             selectSchool.style.pointerEvents = "none";
             selectSchool.style.backgroundColor = "#f8f9fa";
-            selectSchool.style.opacity = "0.7";
-        } else if (selectSchool) {
+            selectSchool.style.opacity = "1";
+        } else if (selectSchool && hiddenSchoolId) {
+            selectSchool.value = "";
+            hiddenSchoolId.value = "";
             selectSchool.style.pointerEvents = "auto";
             selectSchool.style.backgroundColor = "";
-            selectSchool.style.opacity = "1";
         }
 
-        processPriority(type);
+        // 2. Process Priority based on Type
+        if (type) {
+            processPriority(type);
+        }
     }
 
     function processPriority(type) {
@@ -430,17 +392,40 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Auto-open modal if context is provided
         const urlParams = new URLSearchParams(window.location.search);
+        const modalElement = document.getElementById('modalNovoTicketGlobal');
+        
+        // Auto-open modal if context is provided via URL
         if (urlParams.has('eqId')) {
-            const myModalElement = document.getElementById('modalNovoTicketGlobal');
-            const myModal = new bootstrap.Modal(myModalElement);
+            const myModal = new bootstrap.Modal(modalElement);
             myModal.show();
-            // Trigger priority check after modal is shown
-            myModalElement.addEventListener('shown.bs.modal', function () {
+            // Trigger priority check after modal is shown to lock school etc
+            modalElement.addEventListener('shown.bs.modal', function () {
                 updatePriorityLevels();
-            });
+            }, { once: true });
         }
+
+        // Clear ticket context from URL and reset form when modal is closed
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            // Remove eqId from URL without reloading
+            if (window.location.search.includes('eqId')) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('eqId');
+                window.history.replaceState({}, '', url);
+            }
+            
+            // Re-enable school select if it was locked
+            const selectSchool = document.getElementById('selectSchool');
+            if (selectSchool) {
+                selectSchool.style.pointerEvents = "auto";
+                selectSchool.style.backgroundColor = "";
+                selectSchool.style.opacity = "1";
+            }
+            
+            // Clear priority hint
+            const hint = document.getElementById('priorityHint');
+            if (hint) hint.innerText = "";
+        });
     });
 </script>
 }

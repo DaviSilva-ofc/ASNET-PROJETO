@@ -166,8 +166,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
+    </d    <!-- ===== Navigation Tabs ===== -->
     <div class="d-flex justify-content-end align-items-center gap-3 mb-4">
         <button type="button" class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
             <i class="ri-filter-3-line me-1"></i> Filtros
@@ -180,103 +179,289 @@
         </button>
     </div>
 
-    @if (hasAnyFilter)
-    {
-        <div class="alert alert-info d-flex justify-content-between align-items-center mb-4 shadow-sm" role="alert">
-            <div class="d-flex align-items-center">
-                <i class="ri-information-line me-2 ri-xl"></i>
-                <div>
-                    <span class="fw-semibold">Filtros ativos:</span>
-                    <span class="small ms-1">
-                        @{
-                            var filters = new List<string>();
-                            if (!string.IsNullOrEmpty(Model.FilterArticle)) filters.Add($"Artigo: {Model.FilterArticle}");
-                            if (!string.IsNullOrEmpty(Model.FilterType)) filters.Add($"Tipo: {Model.FilterType}");
-                            if (!string.IsNullOrEmpty(Model.FilterStatus)) filters.Add($"Estado: {Model.FilterStatus}");
-                            if (Model.FilterEscolaId.HasValue || Model.FilterSalaId.HasValue) filters.Add("Localização específica");
-                            @Html.Raw(string.Join(", ", filters))
-                        }
-                    </span>
+    <!-- ===== Navigation Tabs (Moved Below Actions) ===== -->
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs border-0" role="tablist" style="gap: 2rem;">
+            <li class="nav-item">
+                <button class="nav-link active fw-bold px-0 bg-transparent border-0 position-relative pb-2" 
+                        data-bs-toggle="tab" data-bs-target="#tab-inventory" 
+                        style="color: var(--asnet-orange) !important; font-size: 1.1rem;">
+                    Estado do Stock
+                    <div class="position-absolute bottom-0 start-0 w-100" style="height: 3px; background: var(--asnet-orange); border-radius: 3px;"></div>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold px-0 bg-transparent border-0 pb-2 text-muted" 
+                        data-bs-toggle="tab" data-bs-target="#tab-requests" 
+                        style="font-size: 1.1rem;">
+                    Pedidos das Escolas
+                    @if (Model.PendingSchoolRequests.Any())
+                    {
+                        <span class="badge badge-dot bg-danger ms-1" style="width: 8px; height: 8px;"></span>
+                    }
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content p-0 border-0 shadow-none">
+        <!-- TAB 1: INVENTÁRIO -->
+        <div class="tab-pane fade show active" id="tab-inventory" role="tabpanel">
+            @if (hasAnyFilter)
+            {
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-4 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-information-line me-2 ri-xl"></i>
+                        <div>
+                            <span class="fw-semibold">Filtros ativos:</span>
+                            <span class="small ms-1">
+                                @{
+                                    var filtersList = new List<string>();
+                                    if (!string.IsNullOrEmpty(Model.FilterArticle)) filtersList.Add($"Artigo: {Model.FilterArticle}");
+                                    if (!string.IsNullOrEmpty(Model.FilterType)) filtersList.Add($"Tipo: {Model.FilterType}");
+                                    if (!string.IsNullOrEmpty(Model.FilterStatus)) filtersList.Add($"Estado: {Model.FilterStatus}");
+                                    if (Model.FilterEscolaId.HasValue || Model.FilterSalaId.HasValue) filtersList.Add("Localização específica");
+                                    @Html.Raw(string.Join(", ", filtersList))
+                                }
+                            </span>
+                        </div>
+                    </div>
+                    <a asp-page="./Stocks" class="btn btn-sm btn-info border-1 border-white text-white">Limpar Filtros</a>
+                </div>
+            }
+
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Visão Geral de Equipamentos e Inventário</h5>
+                </div>
+                <div class="table-responsive text-nowrap" id="stocksTableContainer">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Artigo</th>
+                                <th>Tipo</th>
+                                <th>Localização</th>
+                                <th>Quantidade</th>
+                                <th>Estado</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Items.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">Nenhum artigo encontrado no agrupamento com os filtros selecionados.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td><strong>@item.Name</strong></td>
+                                        <td><span class="badge bg-label-secondary">@item.Category</span></td>
+                                        <td>@item.Location</td>
+                                        <td>@item.Quantity</td>
+                                        <td>
+                                            @if (item.Status != null && item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <span class="badge bg-label-success">A funcionar</span>
+                                            }
+                                            else if (item.Status != null && item.Status.Trim().Equals("Armazenado", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <span class="badge bg-label-info">Armazenado</span>
+                                            }
+                                            else if (item.Status != null && (item.Status.Trim().Equals("Avariado", StringComparison.OrdinalIgnoreCase) || 
+                                                     item.Status.Trim().Equals("Indisponível", StringComparison.OrdinalIgnoreCase)))
+                                            {
+                                                <span class="badge bg-label-danger">Avariado</span>
+                                            }
+                                            else if (item.Status != null && item.Status.Trim().Equals("Emprestado", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <span class="badge bg-label-primary">Emprestado</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-label-secondary">@item.Status</span>
+                                            }
+                                        </td>
+                                        <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
+                                            <div class="d-flex align-items-center gap-2 justify-content-center">
+                                                <button type="button" class="btn btn-sm btn-outline-primary p-1 px-2" 
+                                                        onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                                        title="Editar Estado do Equipamento">
+                                                    <i class="ri-edit-line me-1"></i> Editar
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2" 
+                                                        onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                                        title="Excluir Equipamentos">
+                                                    <i class="ri-delete-bin-line me-1"></i> Excluir
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <a asp-page="./Stocks" class="btn btn-sm btn-info border-1 border-white text-white">Limpar Filtros</a>
         </div>
-    }
 
-    <div class="card shadow-sm mt-2">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Visão Geral de Equipamentos e Inventário</h5>
-        </div>
-        <div class="table-responsive text-nowrap" id="stocksTableContainer">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Artigo</th>
-                        <th>Tipo</th>
-                        <th>Localização</th>
-                        <th>Quantidade</th>
-                        <th>Estado</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!Model.Items.Any())
+        <!-- TAB 2: PEDIDOS DAS ESCOLAS -->
+        <div class="tab-pane fade" id="tab-requests" role="tabpanel">
+            <h5 class="mb-4 text-warning fw-bold"><i class="ri-inbox-2-line me-2"></i>Pedidos de Escolas Pendentes</h5>
+            
+            @if (Model.PendingSchoolRequests.Any())
+            {
+                <div class="row g-4">
+                    @foreach (var req in Model.PendingSchoolRequests)
                     {
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">Nenhum artigo encontrado no agrupamento com os filtros selecionados.</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Model.Items)
-                        {
-                            <tr>
-                                <td><strong>@item.Name</strong></td>
-                                <td><span class="badge bg-label-secondary">@item.Category</span></td>
-                                <td>@item.Location</td>
-                                <td>@item.Quantity</td>
-                                <td>
-                                    @if (item.Status != null && item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase))
+                        var potentialStockItems = Model.StoredItemsForLending
+                            .Where(s => string.Equals(s.Name, req.ItemName, StringComparison.OrdinalIgnoreCase)
+                                     || string.Equals(s.Type, req.ItemType, StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+                        
+                        var preSelected = potentialStockItems.Take(req.Quantity).ToList();
+                        
+                        <div class="col-12">
+                            <div class="card border shadow-none mb-3">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-start justify-content-between mb-3">
+                                        <div>
+                                            <h5 class="mb-1 fw-bold">
+                                                @req.ItemName
+                                                @if (req.Status == "Pendente_Admin")
+                                                {
+                                                    <span class="badge bg-label-info ms-2"><i class="ri-arrow-up-line me-1"></i>A aguardar Admin</span>
+                                                }
+                                            </h5>
+                                            <span class="badge bg-label-secondary me-2">@req.ItemType</span>
+                                            <span class="badge bg-label-primary">Solicitado: @req.Quantity</span>
+                                            <div class="text-muted small mt-2">
+                                                <i class="ri-school-line me-1"></i><strong>@req.School?.Name</strong>
+                                                &nbsp;·&nbsp; <i class="ri-time-line me-1"></i>@req.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(req.Notes))
                                     {
-                                        <span class="badge bg-label-success">A funcionar</span>
+                                        <div class="alert alert-light border-0 bg-label-secondary py-2 mb-3">
+                                            <small class="fst-italic">"@req.Notes"</small>
+                                        </div>
                                     }
-                                    else if (item.Status != null && item.Status.Trim().Equals("Armazenado", StringComparison.OrdinalIgnoreCase))
+
+                                    @if (req.Status == "Pendente_Admin")
                                     {
-                                        <span class="badge bg-label-info">Armazenado</span>
+                                        <div class="alert alert-info d-flex align-items-center mb-0">
+                                            <i class="ri-information-line me-2 fs-5"></i>
+                                            <div>
+                                                Solicitação encaminhada ao Administrador. 
+                                                <small class="d-block text-muted">A aguardar atendimento via stock central / global.</small>
+                                            </div>
+                                        </div>
                                     }
-                                    else if (item.Status != null && (item.Status.Trim().Equals("Avariado", StringComparison.OrdinalIgnoreCase) || 
-                                             item.Status.Trim().Equals("Indisponível", StringComparison.OrdinalIgnoreCase)))
+                                    else if (potentialStockItems.Any())
                                     {
-                                        <span class="badge bg-label-danger">Avariado</span>
-                                    }
-                                    else if (item.Status != null && item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        <span class="badge bg-label-warning">Em reparo</span>
+                                        <form method="post" asp-page-handler="FulfillRequest">
+                                            <input type="hidden" name="requestId" value="@req.Id" />
+                                            <div class="table-responsive border rounded mb-3">
+                                                <table class="table table-sm table-hover mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th style="width: 40px;">✓</th>
+                                                            <th>Artigo</th>
+                                                            <th>Origem</th>
+                                                            <th>Localização Atual</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var stock in potentialStockItems)
+                                                        {
+                                                            bool isPreChecked = preSelected.Contains(stock);
+                                                            <tr>
+                                                                <td><input type="checkbox" name="selectedIds" value="@stock.IdWithPrefix" @(isPreChecked ? "checked" : "") /></td>
+                                                                <td>@stock.Name <small class="text-muted d-block" style="font-size: 0.7rem;">@stock.Type</small></td>
+                                                                <td>
+                                                                    <span class="badge bg-label-@(stock.Source == "Stock Central" ? "info" : "primary") small" style="font-size: 0.65rem;">
+                                                                        @stock.Source
+                                                                    </span>
+                                                                </td>
+                                                                <td class="small">@stock.CurrentLocation</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <button type="submit" class="btn btn-success px-4">
+                                                    <i class="ri-send-plane-fill me-1"></i> Emprestar
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger" onclick="openForwardModal(@req.Id)">
+                                                    <i class="ri-arrow-up-circle-line me-1"></i> Reencaminhar ao Admin
+                                                </button>
+                                            </div>
+                                        </form>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-label-secondary">@item.Status</span>
+                                        <div class="alert alert-warning d-flex align-items-center mb-3">
+                                            <i class="ri-error-warning-line me-2"></i>
+                                            Sem stock disponível no agrupamento para este pedido.
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="button" class="btn btn-danger" onclick="openForwardModal(@req.Id)">
+                                                <i class="ri-arrow-up-circle-line me-1"></i> Reencaminhar ao Admin
+                                            </button>
+                                        </div>
                                     }
-                                </td>
-                                <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
-                                    <div class="d-flex align-items-center gap-2 justify-content-center">
-                                        <button type="button" class="btn btn-sm btn-outline-primary p-1 px-2" 
-                                                onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
-                                                title="Editar Estado do Equipamento">
-                                            <i class="ri-edit-line me-1"></i> Editar
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2" 
-                                                onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
-                                                title="Excluir Equipamentos">
-                                            <i class="ri-delete-bin-line me-1"></i> Excluir
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
+                                </div>
+                            </div>
+                        </div>
                     }
-                </tbody>
-            </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="ri-checkbox-circle-line text-success mb-3" style="font-size: 3rem;"></i>
+                    <h5>Tudo em ordem!</h5>
+                    <p class="text-muted">Não existem pedidos pendentes das escolas.</p>
+                </div>
+            }
+        </div>
+    </div>
+        </div>
+    }
+
+    <!-- Modal Reencaminhar ao Admin -->
+    <div class="modal fade" id="modalForwardAdmin" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-page-handler="ForwardToAdmin" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="ri-arrow-up-circle-line me-2"></i>Reencaminhar ao Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="requestId" id="forwardRequestId" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Motivo (opcional)</label>
+                        <textarea name="directorNotes" class="form-control" rows="3"
+                                  placeholder="Ex: Sem stock disponível no agrupamento..."></textarea>
+                    </div>
+                    <div class="alert alert-info py-2">
+                        <i class="ri-information-line me-1"></i>
+                        Este pedido será enviado ao Administrador para atendimento direto.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ri-send-plane-line me-1"></i> Reencaminhar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -647,5 +832,11 @@
     window.addEventListener('DOMContentLoaded', function() {
         filterRooms();
     });
+
+    function openForwardModal(requestId) {
+        document.getElementById('forwardRequestId').value = requestId;
+        var modal = new bootstrap.Modal(document.getElementById('modalForwardAdmin'));
+        modal.show();
+    }
 </script>
 }

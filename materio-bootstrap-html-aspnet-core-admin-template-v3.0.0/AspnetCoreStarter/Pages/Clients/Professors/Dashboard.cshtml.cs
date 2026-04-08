@@ -31,6 +31,13 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
         public List<int>? LineChartMonthlyData { get; set; }
         public List<string>? LineChartLabels { get; set; }
 
+        public List<Sala> MySalas { get; set; } = new();
+        public List<Bloco> MyBlocos { get; set; } = new();
+        public List<School> MySchools { get; set; } = new();
+
+        public int HealthyCount { get; set; }
+        public int DamagedCount { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -45,6 +52,8 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
 
             // Fetch the teacher's rooms
             var salas = await _context.Salas
+                .Include(s => s.Block)
+                    .ThenInclude(b => b.School)
                 .Where(s => s.ResponsibleProfessorId == userId)
                 .ToListAsync();
             
@@ -61,6 +70,16 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             PendingTicketsCount = await _context.Tickets
                 .Include(t => t.Equipamento)
                 .CountAsync(t => t.Equipamento != null && t.Equipamento.RoomId.HasValue && salaIds.Contains(t.Equipamento.RoomId.Value) && (t.Status == "Pendente" || t.Status == "Pedido"));
+
+            // Get Infrastructure data for tabs
+            MySalas = salas;
+            MyBlocos = salas.Select(s => s.Block).GroupBy(b => b.Id).Select(g => g.First()).ToList();
+            MySchools = salas.Select(s => s.Block.School).GroupBy(s => s.Id).Select(g => g.First()).ToList();
+
+            // Stats for second chart (Status distribution)
+            HealthyCount = await _context.Equipamentos
+                .CountAsync(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value) && (e.Status == "A funcionar" || e.Status == "Funcionando"));
+            DamagedCount = DamagedEquipmentCount;
 
             // Chat Notifications
             var unreadMessages = await _context.Mensagens

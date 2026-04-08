@@ -22,113 +22,1273 @@ namespace AspnetCoreStarter.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("AspnetCoreStarter.Models.School", b =>
+            modelBuilder.Entity("AspnetCoreStarter.Models.Administrador", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_utilizador");
+
+                    b.Property<int?>("AgrupamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("AgrupamentoId");
+
+                    b.ToTable("administradores");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Agrupamento", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("ContactEmail")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<string>("Grouping")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("RegisteredAt")
-                        .HasColumnType("datetime(6)");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_agrupamento");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Schools");
+                    b.ToTable("agrupamentos");
                 });
 
-            modelBuilder.Entity("AspnetCoreStarter.Models.User", b =>
+            modelBuilder.Entity("AspnetCoreStarter.Models.Bloco", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("id_bloco");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<string>("Grouping")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PasswordResetToken")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("ProfilePhotoPath")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("ResetTokenExpiry")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<int?>("SchoolId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Subject")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("Username")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_bloco");
+
+                    b.Property<int>("SchoolId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_escola");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SchoolId");
 
-                    b.ToTable("Users");
+                    b.ToTable("blocos");
                 });
 
-            modelBuilder.Entity("AspnetCoreStarter.Models.User", b =>
+            modelBuilder.Entity("AspnetCoreStarter.Models.ComponenteEquipamento", b =>
                 {
-                    b.HasOne("AspnetCoreStarter.Models.School", null)
-                        .WithMany("Users")
-                        .HasForeignKey("SchoolId");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_componente");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Battery")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("bateria");
+
+                    b.Property<string>("Cooler")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("cooler");
+
+                    b.Property<int>("EquipamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_equipamento");
+
+                    b.Property<string>("GraphicsCard")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("placa_grafica");
+
+                    b.Property<string>("Motherboard")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("motherboard");
+
+                    b.Property<string>("OS")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("sistema_operativo");
+
+                    b.Property<string>("Observations")
+                        .HasColumnType("longtext")
+                        .HasColumnName("observacoes");
+
+                    b.Property<string>("PowerSupply")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("fonte_alimentacao");
+
+                    b.Property<string>("Processor")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("processador");
+
+                    b.Property<string>("Ram")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("memoria_ram");
+
+                    b.Property<string>("Storage")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("armazenamento");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EquipamentoId");
+
+                    b.ToTable("componentes_equipamentos");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Contrato", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_contrato");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_admin");
+
+                    b.Property<int?>("AgrupamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
+
+                    b.Property<string>("ContractStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status_contrato");
+
+                    b.Property<string>("ContractType")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("tipo_contrato");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("descricao");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_empresa");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_expiracao");
+
+                    b.Property<string>("Period")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("periodo");
+
+                    b.Property<int?>("SchoolId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_escola");
+
+                    b.Property<string>("UrgencyLevel")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("nivel_urgencia");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("AgrupamentoId");
+
+                    b.HasIndex("EmpresaId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.ToTable("contratos");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Coordenador", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_utilizador");
+
+                    b.Property<int?>("SchoolId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_escola");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.ToTable("coordenadores");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Diretor", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_utilizador");
+
+                    b.Property<int?>("AgrupamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("AgrupamentoId");
+
+                    b.ToTable("diretores");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Empresa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_empresa");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("localizacao");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_empresa");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("empresas");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Emprestimo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_emprestimo");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AgrupamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
+
+                    b.Property<int>("EquipamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_equipamento");
+
+                    b.Property<DateTime?>("LoanDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_emprestimo");
+
+                    b.Property<string>("LoanType")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("tipo_emprestimo");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgrupamentoId");
+
+                    b.HasIndex("EquipamentoId");
+
+                    b.ToTable("emprestimos");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Equipamento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_equipamento");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long?>("AssetNumber")
+                        .HasColumnType("bigint")
+                        .HasColumnName("numero_patrimonio");
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("marca");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_empresa");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("ip");
+
+                    b.Property<string>("MacAddress")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("mac_address");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("modelo");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_equipamento");
+
+                    b.Property<int?>("RoomId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_sala");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("numero_serie");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("tipo");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmpresaId");
+
+                    b.HasIndex("RoomId");
+
+                    b.ToTable("equipamentos");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Historico", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_historico");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ChangedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_mudanca");
+
+                    b.Property<int>("EquipamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_equipamento");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("estado");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EquipamentoId");
+
+                    b.ToTable("historico");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Mensagem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_mensagem");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("conteudo");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_envio");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("lida");
+
+                    b.Property<int>("ReceiverId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_destinatario");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_remetente");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("mensagens");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.PedidoStock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_pedido");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_admin");
+
+                    b.Property<int?>("AgrupamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_criacao");
+
+                    b.Property<string>("DirectorNotes")
+                        .HasColumnType("longtext")
+                        .HasColumnName("notas_diretor");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_artigo");
+
+                    b.Property<string>("ItemType")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("tipo_artigo");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("longtext")
+                        .HasColumnName("notas");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int")
+                        .HasColumnName("quantidade");
+
+                    b.Property<int?>("RequestedByUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_coordenador");
+
+                    b.Property<int?>("SchoolId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_escola");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_atualizacao");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("AgrupamentoId");
+
+                    b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.ToTable("pedidos_stock");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Professor", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_utilizador");
+
+                    b.Property<int?>("BlocoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_bloco");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("BlocoId");
+
+                    b.ToTable("professores");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Reparo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_reparo");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EquipamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_equipamento");
+
+                    b.Property<string>("FaultDescription")
+                        .HasColumnType("longtext")
+                        .HasColumnName("descricao_avaria");
+
+                    b.Property<DateTime?>("RepairDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_reparo");
+
+                    b.Property<int>("TecnicoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_tecnico");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EquipamentoId");
+
+                    b.HasIndex("TecnicoId");
+
+                    b.ToTable("reparos");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Sala", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_sala");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlockId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_bloco");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_sala");
+
+                    b.Property<int?>("ResponsibleProfessorId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_professor_responsavel");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockId");
+
+                    b.HasIndex("ResponsibleProfessorId");
+
+                    b.ToTable("salas");
                 });
 
             modelBuilder.Entity("AspnetCoreStarter.Models.School", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_escola");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("localizacao");
+
+                    b.Property<int?>("AgrupamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_escola");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgrupamentoId");
+
+                    b.ToTable("escolas");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.StatusEquipamento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_status");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Empresa")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("empresa");
+
+                    b.Property<int?>("EquipamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_equipamento");
+
+                    b.Property<string>("Estado")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("estado");
+
+                    b.Property<string>("Versao")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("versao");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EquipamentoId");
+
+                    b.ToTable("status_equipamento");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.StockEmpresa", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_stock");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_admin");
+
+                    b.Property<int?>("AgrupamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_agrupamento");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("descricao");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_empresa");
+
+                    b.Property<string>("EquipmentName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_equipamento");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("disponivel");
+
+                    b.Property<int?>("SchoolId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_escola");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("TechnicianId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_tecnico");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("tipo");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("AgrupamentoId");
+
+                    b.HasIndex("EmpresaId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.HasIndex("TechnicianId");
+
+                    b.ToTable("stock_empresa");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.StockTecnico", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_stock_tecnico");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("descricao");
+
+                    b.Property<string>("EquipmentName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome_equipamento");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("disponivel");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("TechnicianId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_tecnico");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("stock_tecnico");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Tecnico", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_utilizador");
+
+                    b.Property<string>("AreaTecnica")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("area_tecnica");
+
+                    b.Property<string>("Nivel")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("nivel");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("tecnicos");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Ticket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_ticket");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_admin");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_criacao");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("longtext")
+                        .HasColumnName("descricao");
+
+                    b.Property<int?>("EquipamentoId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_equipamento");
+
+                    b.Property<string>("Level")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("nivel");
+
+                    b.Property<string>("Period")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("periodo");
+
+                    b.Property<int?>("SchoolId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_escola");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("TechnicianId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_tecnico");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("EquipamentoId");
+
+                    b.HasIndex("SchoolId");
+
+                    b.HasIndex("TechnicianId");
+
+                    b.ToTable("tickets");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id_utilizador");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("status_conta");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("data_criacao");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("email");
+
+                    b.Property<int?>("EmpresaId")
+                        .HasColumnType("int")
+                        .HasColumnName("id_empresa");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("palavra_passe");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("password_hash");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("longtext")
+                        .HasColumnName("password_reset_token");
+
+                    b.Property<string>("ProfilePhotoPath")
+                        .HasColumnType("longtext")
+                        .HasColumnName("profile_photo_path");
+
+                    b.Property<DateTime?>("ResetTokenExpiry")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("reset_token_expiry");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("nome");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmpresaId");
+
+                    b.ToTable("utilizadores");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Administrador", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Agrupamento", "Agrupamento")
+                        .WithMany()
+                        .HasForeignKey("AgrupamentoId");
+
+                    b.HasOne("AspnetCoreStarter.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agrupamento");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Bloco", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("School");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.ComponenteEquipamento", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Equipamento", "Equipamento")
+                        .WithMany()
+                        .HasForeignKey("EquipamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipamento");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Contrato", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Administrador", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Agrupamento", "Agrupamento")
+                        .WithMany()
+                        .HasForeignKey("AgrupamentoId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
+                    b.HasOne("AspnetCoreStarter.Models.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId");
+
+                    b.Navigation("Admin");
+
+                    b.Navigation("Agrupamento");
+
+                    b.Navigation("Empresa");
+
+                    b.Navigation("School");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Coordenador", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId");
+
+                    b.HasOne("AspnetCoreStarter.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("School");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Diretor", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Agrupamento", "Agrupamento")
+                        .WithMany()
+                        .HasForeignKey("AgrupamentoId");
+
+                    b.HasOne("AspnetCoreStarter.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agrupamento");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Emprestimo", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Agrupamento", "Agrupamento")
+                        .WithMany()
+                        .HasForeignKey("AgrupamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspnetCoreStarter.Models.Equipamento", "Equipamento")
+                        .WithMany()
+                        .HasForeignKey("EquipamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agrupamento");
+
+                    b.Navigation("Equipamento");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Equipamento", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Sala", "Room")
+                        .WithMany("Equipments")
+                        .HasForeignKey("RoomId");
+
+                    b.Navigation("Empresa");
+
+                    b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Historico", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Equipamento", "Equipamento")
+                        .WithMany()
+                        .HasForeignKey("EquipamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipamento");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Mensagem", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.User", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspnetCoreStarter.Models.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.PedidoStock", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.User", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Agrupamento", "Agrupamento")
+                        .WithMany()
+                        .HasForeignKey("AgrupamentoId");
+
+                    b.HasOne("AspnetCoreStarter.Models.User", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId");
+
+                    b.HasOne("AspnetCoreStarter.Models.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId");
+
+                    b.Navigation("Admin");
+
+                    b.Navigation("Agrupamento");
+
+                    b.Navigation("RequestedBy");
+
+                    b.Navigation("School");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Professor", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Bloco", "Bloco")
+                        .WithMany()
+                        .HasForeignKey("BlocoId");
+
+                    b.HasOne("AspnetCoreStarter.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bloco");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Reparo", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Equipamento", "Equipamento")
+                        .WithMany()
+                        .HasForeignKey("EquipamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspnetCoreStarter.Models.Tecnico", "Tecnico")
+                        .WithMany()
+                        .HasForeignKey("TecnicoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipamento");
+
+                    b.Navigation("Tecnico");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Sala", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Bloco", "Block")
+                        .WithMany("Rooms")
+                        .HasForeignKey("BlockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AspnetCoreStarter.Models.Professor", "ResponsibleProfessor")
+                        .WithMany()
+                        .HasForeignKey("ResponsibleProfessorId");
+
+                    b.Navigation("Block");
+
+                    b.Navigation("ResponsibleProfessor");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.School", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Agrupamento", "Agrupamento")
+                        .WithMany("Schools")
+                        .HasForeignKey("AgrupamentoId");
+
+                    b.Navigation("Agrupamento");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.StatusEquipamento", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Equipamento", "Equipamento")
+                        .WithMany("StatusEquipamentos")
+                        .HasForeignKey("EquipamentoId");
+
+                    b.Navigation("Equipamento");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.StockEmpresa", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Administrador", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Agrupamento", "Agrupamento")
+                        .WithMany()
+                        .HasForeignKey("AgrupamentoId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Empresa", "Empresa")
+                        .WithMany()
+                        .HasForeignKey("EmpresaId");
+
+                    b.HasOne("AspnetCoreStarter.Models.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Tecnico", "Technician")
+                        .WithMany()
+                        .HasForeignKey("TechnicianId");
+
+                    b.Navigation("Admin");
+
+                    b.Navigation("Agrupamento");
+
+                    b.Navigation("Empresa");
+
+                    b.Navigation("School");
+
+                    b.Navigation("Technician");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Tecnico", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Ticket", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.User", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId");
+
+                    b.HasOne("AspnetCoreStarter.Models.Equipamento", "Equipamento")
+                        .WithMany()
+                        .HasForeignKey("EquipamentoId");
+
+                    b.HasOne("AspnetCoreStarter.Models.School", "School")
+                        .WithMany()
+                        .HasForeignKey("SchoolId");
+
+                    b.HasOne("AspnetCoreStarter.Models.User", "Technician")
+                        .WithMany()
+                        .HasForeignKey("TechnicianId");
+
+                    b.Navigation("Admin");
+
+                    b.Navigation("Equipamento");
+
+                    b.Navigation("School");
+
+                    b.Navigation("Technician");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.User", b =>
+                {
+                    b.HasOne("AspnetCoreStarter.Models.Empresa", "Empresa")
+                        .WithMany("Users")
+                        .HasForeignKey("EmpresaId");
+
+                    b.Navigation("Empresa");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Agrupamento", b =>
+                {
+                    b.Navigation("Schools");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Bloco", b =>
+                {
+                    b.Navigation("Rooms");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Empresa", b =>
+                {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Equipamento", b =>
+                {
+                    b.Navigation("StatusEquipamentos");
+                });
+
+            modelBuilder.Entity("AspnetCoreStarter.Models.Sala", b =>
+                {
+                    b.Navigation("Equipments");
                 });
 #pragma warning restore 612, 618
         }

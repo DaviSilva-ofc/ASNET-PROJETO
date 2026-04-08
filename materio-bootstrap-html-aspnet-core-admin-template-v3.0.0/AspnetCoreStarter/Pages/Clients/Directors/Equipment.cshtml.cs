@@ -21,6 +21,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
         public List<Equipamento> Equipments { get; set; }
         public List<Sala> Rooms { get; set; } = new();
+        public HashSet<int> EquipmentWithActiveTickets { get; set; } = new();
 
         [BindProperty]
         public Ticket NewTicket { get; set; } = new();
@@ -174,6 +175,14 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             Equipments = await query.ToListAsync();
 
+            // Find equipment IDs that already have active tickets
+            var activeTicketEqIds = await _context.Tickets
+                .Where(t => t.EquipamentoId != null && t.Status != "Concluído")
+                .Select(t => t.EquipamentoId.Value)
+                .Distinct()
+                .ToListAsync();
+            EquipmentWithActiveTickets = new HashSet<int>(activeTicketEqIds);
+
             // Filter context-sensitive lists
             AvailableAgrupamentos = await _context.Agrupamentos.Where(a => a.Id == myAgrupamentoId).ToListAsync();
             AvailableEscolas = await _context.Schools.Where(s => s.AgrupamentoId == myAgrupamentoId).ToListAsync();
@@ -326,6 +335,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             equip.Brand = NewEquipment.Brand;
             equip.Model = NewEquipment.Model;
             equip.SerialNumber = NewEquipment.SerialNumber;
+            equip.Status = NewEquipment.Status ?? "A funcionar";
             
             if (LocationType == "empresa")
             {
