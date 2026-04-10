@@ -125,7 +125,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var blocks = await _context.Blocos.Where(b => schoolIds.Contains(b.SchoolId)).ToListAsync();
             var blockIds = blocks.Select(b => b.Id).ToList();
 
-            var rooms = await _context.Salas.Where(r => blockIds.Contains(r.BlockId)).ToListAsync();
+            var rooms = await _context.Salas.Where(r => r.BlockId.HasValue && blockIds.Contains(r.BlockId.Value)).ToListAsync();
             var roomIds = rooms.Select(r => r.Id).ToList();
             CountSalas = rooms.Count;
 
@@ -143,7 +143,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var schoolIdsRecursive = AvailableSchools.Select(s => s.Id).ToList();
             var blocksAll = await _context.Blocos.Where(b => schoolIdsRecursive.Contains(b.SchoolId)).ToListAsync();
             var blockIdsAll = blocksAll.Select(b => b.Id).ToList();
-            AvailableRooms = await _context.Salas.Where(r => blockIdsAll.Contains(r.BlockId)).ToListAsync();
+            AvailableRooms = await _context.Salas.Where(r => r.BlockId.HasValue && blockIdsAll.Contains(r.BlockId.Value)).ToListAsync();
 
             // Get all possible pairs for cascading filters before applying any other filters
             var baseQuery = _context.Equipamentos

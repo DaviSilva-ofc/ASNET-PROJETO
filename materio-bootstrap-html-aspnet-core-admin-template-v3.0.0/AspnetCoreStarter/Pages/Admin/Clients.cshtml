@@ -324,12 +324,12 @@
     </div>
     }
 
-    <!-- Clientes Independentes Table -->
-    @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Cliente Individual")
+    <!-- Clientes Privados Table -->
+    @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Cliente Privado")
     {
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Clientes Independentes</h5>
+            <h5 class="mb-0">Clientes Privados</h5>
             <span class="badge bg-label-warning">@Model.IndependentClientsList.Count Utilizadores</span>
         </div>
         <div class="table-responsive text-nowrap">
@@ -369,8 +369,8 @@
                                 <div class="d-flex align-items-center gap-1">
                                     <button type="button" class="btn-edit-subtle" title="Editar Cliente"
                                             data-bs-toggle="modal" data-bs-target="#modalEditUser"
-                                            onclick="setEditUser('@u.Id', '@Html.Raw((u.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((u.Email ?? "").Replace("'", "\\'"))', 'Cliente Independente', '@u.EmpresaId')">✏️</button>
-                                    <form method="post" asp-page-handler="DeleteUser" asp-route-id="@u.Id" asp-route-role="Cliente Independente" onsubmit="return confirm('Remover este cliente?')">
+                                            onclick="setEditUser('@u.Id', '@Html.Raw((u.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((u.Email ?? "").Replace("'", "\\'"))', 'Cliente Privado', '@u.EmpresaId')">✏️</button>
+                                    <form method="post" asp-page-handler="DeleteUser" asp-route-id="@u.Id" asp-route-role="Cliente Privado" onsubmit="return confirm('Remover este cliente?')">
                                         <button type="submit" class="btn-delete-subtle" title="Eliminar Cliente">🗑️</button>
                                     </form>
                                 </div>
@@ -411,7 +411,7 @@
                             <option value="Diretor">Diretor</option>
                             <option value="Coordenador">Coordenador</option>
                             <option value="Professor">Professor</option>
-                            <option value="Cliente Independente">Cliente Independente</option>
+                            <option value="Cliente Privado">Cliente Privado</option>
                         </select>
                     </div>
 
@@ -458,7 +458,7 @@
                         </div>
                     </div>
 
-                    <!-- Dependent Field: Empresa for Cliente Independente -->
+                    <!-- Dependent Field: Empresa for Cliente Privado -->
                     <div id="divAddUserEmpresa" class="mb-3" style="display:none;">
                         <label class="form-label text-warning fw-bold"><i class="ri-building-line me-1"></i>Empresa</label>
                         <div class="select-search-wrapper">
@@ -594,7 +594,7 @@
                                 <option value="Diretor">Diretor</option>
                                 <option value="Coordenador">Coordenador</option>
                                 <option value="Professor">Professor</option>
-                                <option value="Cliente Individual">Cliente Individual</option>
+                                <option value="Cliente Privado">Cliente Privado</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -720,7 +720,7 @@
             var sel = document.getElementById('editBlocoSelect');
             sel.disabled = false;
             sel.value = currentParentId || '';
-        } else if (role === 'Cliente Independente') {
+        } else if (role === 'Cliente Privado') {
             document.getElementById('editEmpresaDiv').style.display = 'block';
             var sel = document.getElementById('editEmpresaSelect');
             sel.disabled = false;
@@ -757,7 +757,7 @@
         } else if (role === 'Professor') {
             divBlo.style.display = 'block';
             document.getElementById('addUserBloco').disabled = false;
-        } else if (role === 'Cliente Independente') {
+        } else if (role === 'Cliente Privado') {
             document.getElementById('divAddUserEmpresa').style.display = 'block';
             document.getElementById('addUserEmpresa').disabled = false;
         }

@@ -1,0 +1,161 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Private.PrivateContractsModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Meus Contratos";
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Private Client /</span> Contratos
+    </h4>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center border-bottom mb-3">
+            <h5 class="mb-0">Contratos de Assistência Técnica (ASNET)</h5>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    <i class="ri-filter-3-line me-1"></i> Filtros
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.FilterStatus) || !string.IsNullOrEmpty(Model.FilterType))
+        {
+            <div class="card-body py-2">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0" role="alert" style="background-color: #e7f3ff;">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-info-circle-line me-2 text-primary"></i>
+                        <span class="small text-primary fw-medium">
+                            Filtros ativos:
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus)) { <span class="badge bg-white text-primary border me-1">Estado: @Model.FilterStatus</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterType)) { <span class="badge bg-white text-primary border me-1">Tipo: @Model.FilterType</span> }
+                        </span>
+                    </div>
+                    <a asp-page="./Contracts" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="ri-refresh-line me-1 small"></i> Limpar Filtros
+                    </a>
+                </div>
+            </div>
+        }
+
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead class="table-light text-uppercase small fw-bold">
+                    <tr>
+                        <th>Tipo de Contrato</th>
+                        <th>Período</th>
+                        <th>Expiração</th>
+                        <th>Urgência</th>
+                        <th>Gestor ASNET</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Contracts == null || !Model.Contracts.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="bx bx-file shadow-sm fs-1 text-muted mb-2"></i>
+                                <p class="text-muted">Nenhum contrato ativo encontrado.</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in Model.Contracts)
+                        {
+                            <tr>
+                                <td><span class="fw-bold">@c.ContractType</span></td>
+                                <td>@c.Period</td>
+                                <td>
+                                    @if (c.ExpiryDate.HasValue)
+                                    {
+                                        var daysLeft = (c.ExpiryDate.Value - DateTime.Now).Days;
+                                        var badgeClass = daysLeft < 0 ? "bg-label-danger" : (daysLeft <= 30 ? "bg-label-warning" : "bg-label-info");
+                                        var label = daysLeft < 0 ? "Expirado" : (daysLeft == 0 ? "Expira hoje" : $"{daysLeft} dias");
+
+                                        <div class="d-flex flex-column">
+                                            <span>@c.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
+                                            <small class="badge @badgeClass" style="width: fit-content; font-size: 0.7rem;">@label</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Sem data</span>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var urgClass = c.UrgencyLevel switch
+                                        {
+                                            "Alto" => "bg-label-danger",
+                                            "Médio" => "bg-label-warning",
+                                            "Baixo" => "bg-label-success",
+                                            _ => "bg-label-secondary"
+                                        };
+                                        var urgTime = c.UrgencyLevel switch
+                                        {
+                                            "Alto" => "4h",
+                                            "Médio" => "24h",
+                                            "Baixo" => "48h",
+                                            _ => "--"
+                                        };
+                                    }
+                                    <span class="badge @urgClass">@c.UrgencyLevel <small class="opacity-75">(@urgTime)</small></span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-xs me-2">
+                                            <span class="avatar-initial rounded-circle bg-label-primary">@(c.Admin?.User?.Username?.Substring(0, 1) ?? "A")</span>
+                                        </div>
+                                        <span class="small">@(c.Admin?.User?.Username ?? "Administrador")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge @(c.ContractStatus == "Ativo" ? "bg-label-success" : "bg-label-warning") shadow-sm">
+                                        @c.ContractStatus
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold">Filtrar Contratos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Tipo</label>
+                            <input type="text" asp-for="FilterType" class="form-control" placeholder="Ex: Manutenção..." />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase">Estado</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Ativo">Ativo</option>
+                                <option value="Pendente">Pendente</option>
+                                <option value="Expirado">Expirado</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary px-4">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+

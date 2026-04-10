@@ -72,8 +72,10 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             if (!string.IsNullOrEmpty(success)) SuccessMessage = success;
 
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Auth/Login");
+            if (User?.Identity == null || !User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
+            
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            if (userRole != "Admin" && userRole != "Tecnico") return RedirectToPage("/Index");
 
             // Cleanup: Ensure data is normalized (singularized)
             // Note: The global cleanup in Admin/Stocks.cshtml.cs will also handle this,

@@ -115,7 +115,7 @@ namespace AspnetCoreStarter.Pages.Admin
                     .Select(b => b.Id)
                     .ToList();
                 var salaIds = AllSalas
-                    .Where(s => blocoIds.Contains(s.BlockId))
+                    .Where(s => s.BlockId.HasValue && blocoIds.Contains(s.BlockId.Value))
                     .Select(s => s.Id)
                     .ToList();
                 var equipCount = await _context.Equipamentos

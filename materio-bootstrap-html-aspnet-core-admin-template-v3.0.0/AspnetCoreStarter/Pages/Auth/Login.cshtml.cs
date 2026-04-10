@@ -227,6 +227,10 @@ namespace AspnetCoreStarter.Pages.Auth
                 {
                     role = "Professor";
                 }
+                else if (user.EmpresaId.HasValue)
+                {
+                    role = "ClientePrivado";
+                }
 
                 Console.WriteLine($"[LOGIN] Utilizador: {user.Username}, Role: {role}, AccountStatus: '{user.AccountStatus}'");
 
@@ -283,6 +287,11 @@ namespace AspnetCoreStarter.Pages.Auth
                 if (role == "Professor")
                 {
                     return RedirectToPage("/Clients/Professors/Dashboard");
+                }
+
+                if (role == "ClientePrivado")
+                {
+                    return RedirectToPage("/Clients/Private/Dashboard");
                 }
 
                 return RedirectToPage("/frontpages/LandingPage");

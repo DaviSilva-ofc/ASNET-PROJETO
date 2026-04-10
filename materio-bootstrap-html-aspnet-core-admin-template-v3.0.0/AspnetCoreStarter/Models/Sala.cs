@@ -16,10 +16,16 @@ namespace AspnetCoreStarter.Models
         public string Name { get; set; }
 
         [Column("id_bloco")]
-        public int BlockId { get; set; }
+        public int? BlockId { get; set; }
 
         [ForeignKey("BlockId")]
-        public Bloco Block { get; set; }
+        public virtual Bloco? Block { get; set; }
+
+        [Column("id_setor")]
+        public int? SetorId { get; set; }
+
+        [ForeignKey("SetorId")]
+        public virtual Setor? Setor { get; set; }
 
         [Column("id_professor_responsavel")]
         public int? ResponsibleProfessorId { get; set; }

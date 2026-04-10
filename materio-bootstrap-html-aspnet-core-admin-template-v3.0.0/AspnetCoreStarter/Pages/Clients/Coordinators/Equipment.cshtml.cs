@@ -89,7 +89,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             var blocoIds = AvailableBlocos.Select(b => b.Id).ToList();
 
             Rooms = await _context.Salas
-                .Where(s => blocoIds.Contains(s.BlockId))
+                .Where(s => s.BlockId.HasValue && blocoIds.Contains(s.BlockId.Value))
                 .OrderBy(s => s.Name)
                 .ToListAsync();
 

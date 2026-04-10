@@ -63,7 +63,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             Blocos = await _context.Blocos.Where(b => b.SchoolId == schoolId).ToListAsync();
             var blocoIds = Blocos.Select(b => b.Id).ToList();
 
-            Salas = await _context.Salas.Where(s => blocoIds.Contains(s.BlockId)).ToListAsync();
+            Salas = await _context.Salas.Where(s => s.BlockId.HasValue && blocoIds.Contains(s.BlockId.Value)).ToListAsync();
             var salaIds = Salas.Select(s => s.Id).ToList();
 
             TotalSalas = Salas.Count;

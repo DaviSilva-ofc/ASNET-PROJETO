@@ -1,0 +1,752 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Private.PrivateEquipmentModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Gestão de Equipamentos - " + (Model.Empresa?.Name ?? "Cliente Privado");
+    ViewData["isNavbar"] = true;
+    ViewData["contentNavbar"] = true;
+}
+
+@section VendorStyles {
+<link rel="stylesheet" href="~/vendor/libs/notyf/notyf.dist.css" />
+<link rel="stylesheet" href="~/vendor/libs/select2/select2.dist.css" />
+}
+
+@section PageStyles {
+<style>
+    .infra-chip { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,0.05); color: #666; margin-right: 4px; }
+    .dark-style .infra-chip { background: rgba(255,255,255,0.05); color: #aaa; }
+
+    /* Infrastructure Tree Styles */
+    .infra-tree .tree-node { position: relative; padding: 4px 0; }
+    .tree-node i { font-size: 1.1rem; vertical-align: middle; opacity: 0.8; }
+    .cursor-pointer { cursor: pointer; }
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        font-weight: bold; color: var(--asnet-blue);
+        display: inline-block; padding: 2px;
+    }
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line { transform: rotate(90deg); }
+    .dept-node { color: var(--asnet-blue); }
+    .setor-node { color: #71dd37; }
+    .sala-node { color: #ffab00; }
+    .equip-node { color: #8592a3; font-size: 0.85rem; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Private Client /</span> Equipamentos</h4>
+
+    <!-- Infrastructure Tree View (Collapsible) -->
+    <div class="card mb-4 border-primary shadow-sm overflow-hidden">
+        <div class="card-header bg-primary py-2 d-flex justify-content-between align-items-center cursor-pointer" 
+             data-bs-toggle="collapse" data-bs-target="#infraTreeCollapse">
+            <h6 class="mb-0 text-white fw-bold"><i class="bx bx-node me-2"></i>Estrutura da Empresa (Árvore)</h6>
+            <i class="bx bx-chevron-down text-white"></i>
+        </div>
+        <div id="infraTreeCollapse" class="collapse">
+            <div class="card-body pt-3 pb-2">
+                <div class="infra-tree">
+                    @if (!Model.Departamentos.Any())
+                    {
+                        <div class="text-center py-3">
+                            <p class="text-muted small mb-0">Nenhuma unidade registada. Use o botão "Gerir Unidades" para começar.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var dept in Model.Departamentos)
+                        {
+                            <div class="tree-node dept-node">
+                                <div class="d-flex align-items-center cursor-pointer" data-bs-toggle="collapse" data-bs-target="#dept-@dept.Id">
+                                    <i class="ri-arrow-right-s-line me-1"></i>
+                                    <i class="bx bx-briefcase me-1"></i> <strong>@dept.Name</strong>
+                                </div>
+                                <div id="dept-@dept.Id" class="collapse ps-4 border-start ms-2">
+                                    @foreach (var setor in dept.Setores)
+                                    {
+                                        <div class="tree-node setor-node mt-2">
+                                            <div class="d-flex align-items-center cursor-pointer" data-bs-toggle="collapse" data-bs-target="#setor-@setor.Id">
+                                                <i class="ri-arrow-right-s-line me-1"></i>
+                                                <i class="bx bx-collection me-1"></i> @setor.Name
+                                            </div>
+                                            <div id="setor-@setor.Id" class="collapse ps-4 border-start ms-2">
+                                                @foreach (var sala in setor.Salas)
+                                                {
+                                                    <div class="tree-node sala-node mt-1">
+                                                        <div class="d-flex align-items-center cursor-pointer" data-bs-toggle="collapse" data-bs-target="#sala-@sala.Id">
+                                                            <i class="ri-arrow-right-s-line me-1"></i>
+                                                            <i class="bx bx-door-open me-1"></i> <span class="fw-medium">@sala.Name</span>
+                                                            <span class="badge bg-label-secondary ms-2 small">@sala.Equipments.Count</span>
+                                                        </div>
+                                                        <div id="sala-@sala.Id" class="collapse ps-4 ms-2">
+                                                            @foreach (var eqGroup in sala.Equipments.GroupBy(e => e.Name))
+                                                            {
+                                                                <a asp-page="./Equipment" asp-route-FilterName="@eqGroup.Key" asp-route-FilterRoomId="@sala.Id" 
+                                                                   class="tree-node equip-node d-flex align-items-center py-1 text-decoration-none hover-primary">
+                                                                    <i class="bx bx-chevron-right me-1"></i>
+                                                                    <span>@eqGroup.Key (@eqGroup.Count())</span>
+                                                                </a>
+                                                            }
+                                                            @if (!sala.Equipments.Any())
+                                                            {
+                                                                <span class="text-muted italic small ms-3">Vazia</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible shadow-sm mb-4" role="alert">
+            <i class="bx bx-check-circle me-2"></i> @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible shadow-sm mb-4" role="alert">
+            <i class="bx bx-error-circle me-2"></i> @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+        @if (!string.IsNullOrEmpty(Model.FilterName) || !string.IsNullOrEmpty(Model.FilterType) || 
+             !string.IsNullOrEmpty(Model.FilterBrand) || !string.IsNullOrEmpty(Model.FilterStatus) || 
+             Model.FilterRoomId.HasValue)
+        {
+            <div class="card-body">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert">
+                    <div>
+                        <i class="bx bx-info-circle me-1"></i> A filtrar por:
+                        @if (!string.IsNullOrEmpty(Model.FilterName)) { <span class="badge bg-white text-info ms-1">Artigo: @Model.FilterName</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterType)) { <span class="badge bg-white text-info ms-1">Tipo: @Model.FilterType</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterBrand)) { <span class="badge bg-white text-info ms-1">Marca: @Model.FilterBrand</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterStatus)) { <span class="badge bg-white text-info ms-1">Estado: @Model.FilterStatus</span> }
+                        @if (Model.FilterRoomId.HasValue)
+                        {
+                            var roomName = Model.UniqueRooms.FirstOrDefault(r => r.Id == Model.FilterRoomId)?.Name ?? "Selecionada";
+                            <span class="badge bg-white text-info ms-1">Localização: @roomName</span>
+                        }
+                    </div>
+                    <a asp-page="./Equipment" class="btn btn-sm btn-label-secondary">Limpar Tudo</a>
+                </div>
+            </div>
+        }
+
+    <!-- Equipment List Card -->
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center border-bottom mb-3">
+            <h5 class="mb-0">Inventário de Equipamentos</h5>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    🔍 Filtros
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalRegistarEquipamento">
+                    Novo Equipamento
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th class="small text-uppercase fw-bold">Artigo</th>
+                        <th class="small text-uppercase fw-bold">Tipo</th>
+                        <th class="small text-uppercase fw-bold">Nº Série</th>
+                        <th class="small text-uppercase fw-bold">Localização (Sala)</th>
+                        <th class="small text-uppercase fw-bold">Status</th>
+                        <th class="small text-uppercase fw-bold text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @if (Model.Equipments == null || !Model.Equipments.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="bx bx-box fs-1 text-muted mb-2"></i>
+                                <p class="text-muted">Nenhum equipamento encontrado.</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Equipments)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <strong class="d-block text-dark">@item.Name</strong>
+                                    <small class="text-muted">@item.Brand</small>
+                                </td>
+                                <td>@item.Type</td>
+                                <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
+                                <td>
+                                    @if (item.Room != null)
+                                    {
+                                        <span>@item.Room.Name (@(item.Room.Setor?.Name ?? "N/A"))</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted italic small">Não definida</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Status == "Avariado")
+                                    {
+                                        <span class="badge bg-label-danger">Avariado</span>
+                                    }
+                                    else if (item.Status == "Em reparo")
+                                    {
+                                        <span class="badge bg-label-warning">Em reparo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-success">A funcionar</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
+                                            @if (item.Status == "Avariado" || item.Status == "Danificado")
+                                            {
+                                                <button type="submit" class="btn btn-sm text-success p-1" title="Marcar como Funcional">
+                                                    <i class="ri-check-line"></i> Funcional
+                                                </button>
+                                                <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary p-1" title="Solicitar Ticket">
+                                                    <i class="ri-add-circle-line"></i> Solicitar Ticket
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm text-warning p-1" title="Marcar como Avariado">
+                                                    <i class="ri-error-warning-line"></i> Avariar
+                                                </button>
+                                            }
+                                        </form>
+
+                                        <div class="vr mx-1 opacity-25"></div>
+
+                                        <button type="button" class="btn btn-sm text-primary p-1" title="Editar" 
+                                                onclick="openEditModal(@item.Id, '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@(item.RoomId)', '@(item.Room?.SetorId)', '@(item.Room?.Setor?.DepartamentoId)', '@item.Status')">
+                                            <i class="bx bx-edit"></i> ✏️
+                                        </button>
+
+                                        <form method="post" asp-page-handler="DeleteEquipment" asp-route-id="@item.Id" 
+                                              onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?')" style="display:inline-block;">
+                                            <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar">
+                                                <i class="bx bx-trash"></i> 🗑️
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Registar Equipamento -->
+<div class="modal fade" id="modalRegistarEquipamento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="post" asp-page-handler="AddEquipment" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="bx bx-plus-circle me-2"></i>Novo Equipamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Artigo</label>
+                        <select asp-for="NewEquipment.Name" id="regName" class="form-select select2" required onchange="updateSpecificTypes('reg')">
+                            <option value="">Selecione...</option>
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Componentes">Componentes</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Quadros Interativos">Quadros Interativos</option>
+                            <option value="Servidores/Infra">Servidores/Infra</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Tipo Específico</label>
+                        <select asp-for="NewEquipment.Type" id="regType" class="form-select select2" required onchange="updateBrands('reg')">
+                            <option value="">Selecione Artigo...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Marca</label>
+                        <select asp-for="NewEquipment.Brand" id="regBrand" class="form-select select2" required onchange="updateModels('reg')">
+                            <option value="">Selecione Tipo...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Modelo</label>
+                        <select asp-for="NewEquipment.Model" id="regModel" class="form-select select2" required>
+                            <option value="">Selecione Marca...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Nº de Série</label>
+                        <input type="text" asp-for="NewEquipment.SerialNumber" class="form-control" placeholder="X-XXXX-XXXX-X" required />
+                    </div>
+
+                    <div class="col-12"><hr class="my-2"></div>
+                    <div class="col-12">
+                        <p class="mb-2 fw-bold text-primary small"><i class="bx bx-map-pin me-1"></i>LOCALIZAÇÃO HIERÁRQUICA</p>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label small">Departamento</label>
+                        <select id="regDept" class="form-select form-select-sm" onchange="cascadeSetores('reg')">
+                            <option value="">Selecione...</option>
+                            @foreach (var dept in Model.Departamentos) { <option value="@dept.Id">@dept.Name</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Setor</label>
+                        <select id="regSetor" class="form-select form-select-sm" onchange="cascadeSalas('reg')" disabled>
+                            <option value="">Selecione Dept primeiro...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Sala</label>
+                        <select asp-for="NewEquipment.RoomId" id="regSala" class="form-select form-select-sm" disabled required>
+                            <option value="">Selecione Setor primeiro...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-primary">Registar Ativo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Editar Equipamento -->
+<div class="modal fade" id="modalEditarEquipamento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="post" asp-page-handler="EditEquipment" class="modal-content">
+            <input type="hidden" asp-for="NewEquipment.Id" id="editId" />
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="bx bx-edit me-2"></i>Editar Equipamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Artigo</label>
+                        <select asp-for="NewEquipment.Name" id="editName" class="form-select select2" required onchange="updateSpecificTypes('edit')">
+                            <option value="">Selecione...</option>
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Componentes">Componentes</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Quadros Interativos">Quadros Interativos</option>
+                            <option value="Servidores/Infra">Servidores/Infra</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Tipo Específico</label>
+                        <select asp-for="NewEquipment.Type" id="editType" class="form-select select2" required onchange="updateBrands('edit')">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Marca</label>
+                        <select asp-for="NewEquipment.Brand" id="editBrand" class="form-select select2" required onchange="updateModels('edit')">
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Modelo</label>
+                        <select asp-for="NewEquipment.Model" id="editModel" class="form-select select2" required>
+                            <option value="">Selecione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Nº de Série</label>
+                        <input type="text" asp-for="NewEquipment.SerialNumber" id="editSerial" class="form-control" required />
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Estado</label>
+                        <select asp-for="NewEquipment.Status" id="editStatus" class="form-select" required>
+                            <option value="A funcionar">A funcionar</option>
+                            <option value="Avariado">Avariado</option>
+                            <option value="Em reparo">Em reparo</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12"><hr class="my-2"></div>
+                    <div class="col-12">
+                        <p class="mb-2 fw-bold text-primary small"><i class="bx bx-map-pin me-1"></i>LOCALIZAÇÃO HIERÁRQUICA</p>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label small">Departamento</label>
+                        <select id="editDept" class="form-select form-select-sm" onchange="cascadeSetores('edit')">
+                            <option value="">Selecione...</option>
+                            @foreach (var dept in Model.Departamentos) { <option value="@dept.Id">@dept.Name</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Setor</label>
+                        <select id="editSetor" class="form-select form-select-sm" onchange="cascadeSalas('edit')">
+                            <option value="">Selecione Dept primeiro...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Sala</label>
+                        <select asp-for="NewEquipment.RoomId" id="editSala" class="form-select form-select-sm" required>
+                            <option value="">Selecione Setor primeiro...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Modal: Novo Ticket placeholder removed, moved to centralized Tickets page -->
+
+<!-- Modal: Filtros -->
+<div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="get" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="bx bx-filter-alt me-2"></i>Filtrar Inventário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Artigo</label>
+                        <select asp-for="FilterName" class="form-select select2-modal">
+                            <option value="">Todos</option>
+                            @foreach (var name in Model.UniqueEquipmentNames) { <option value="@name">@name</option> }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Tipo</label>
+                        <select asp-for="FilterType" class="form-select select2-modal">
+                            <option value="">Todos</option>
+                            @foreach (var type in Model.UniqueTypes) { <option value="@type">@type</option> }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Marca</label>
+                        <select asp-for="FilterBrand" class="form-select select2-modal">
+                            <option value="">Todas</option>
+                            @foreach (var brand in Model.UniqueBrands) { <option value="@brand">@brand</option> }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Estado</label>
+                        <select asp-for="FilterStatus" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="A funcionar">A funcionar</option>
+                            <option value="Avariado">Avariado</option>
+                            <option value="Em reparo">Em reparo</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Localização</label>
+                        <select asp-for="FilterRoomId" class="form-select select2-modal">
+                            <option value="">Todas</option>
+                            @foreach (var room in Model.UniqueRooms) { <option value="@room.Id">@room.Name (@(room.Setor?.Name ?? "N/A"))</option> }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <a asp-page="./Equipment" class="btn btn-outline-secondary">Limpar Tudo</a>
+                <button type="submit" class="btn btn-primary px-4">Aplicar Filtros</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section VendorScripts {
+    <script src="~/vendor/libs/select2/select2.dist.js"></script>
+}
+
+@section PageScripts {
+<script>
+    // Initialize Select2
+    $(function() {
+        $('.select2').each(function() {
+            var $this = $(this);
+            $this.select2({
+                placeholder: 'Selecione...',
+                dropdownParent: $this.parent()
+            });
+        });
+
+        // Specialized initialization for modals to ensure dropdown visibility
+        $('.select2-modal').each(function() {
+            var $this = $(this);
+            $this.select2({
+                placeholder: 'Selecione...',
+                dropdownParent: $this.closest('.modal-content')
+            });
+        });
+    });
+
+    const brandModelData = {
+        'Computadores': {
+            'HP': ['ProDesk 400 G7', 'EliteDesk 800 G9', 'ProBook 450 G8'],
+            'Dell': ['OptiPlex 3090', 'Latitude 5520', 'Vostro 3510'],
+            'Lenovo': ['ThinkCentre M70q', 'ThinkPad T14', 'IdeaPad 3'],
+            'Apple': ['MacBook Air M2', 'MacBook Pro 14"', 'iMac 24"']
+        },
+        'Monitores': {
+            'HP': ['P24h G5', 'E24 G5'],
+            'Dell': ['P2422H', 'U2722D'],
+            'Samsung': ['F24T350', 'Odyssey G5'],
+            'LG': ['24MP400', '27UL500']
+        },
+        'Impressoras': {
+            'HP': ['LaserJet Pro M404dn', 'OfficeJet Pro 9010'],
+            'Brother': ['HL-L2350DW', 'MFC-L2710DW'],
+            'Epson': ['EcoTank ET-2850']
+        },
+        'Networking': {
+            'Cisco': ['Catalyst 1000', 'Cisco ISR 1100'],
+            'TP-Link': ['TL-SG108', 'Archer AX50'],
+            'Ubiquiti': ['UniFi U6 Lite', 'UniFi Switch 24']
+        },
+        'Componentes': {
+            'Kingston': ['8GB DDR4 3200', 'NV2 1TB NVMe'],
+            'Samsung': ['870 EVO 500GB', '980 PRO 1TB'],
+            'Intel': ['Core i5-13400', 'Core i7-13700']
+        },
+        'Periféricos': {
+            'Logitech': ['K120 Keyboard', 'M185 Mouse', 'C920 Webcam'],
+            'Microsoft': ['Bluetooth Mouse']
+        },
+        'Projetores': {
+            'Epson': ['EB-W06', 'EB-FH06'],
+            'BenQ': ['MH560']
+        },
+        'Quadros Interativos': {
+            'SMART': ['Board MX075', 'Board 6000S'],
+            'Promethean': ['ActivPanel 9']
+        },
+        'Servidores/Infra': {
+            'Dell': ['PowerEdge T150', 'PowerEdge R350'],
+            'HP': ['ProLiant ML30', 'ProLiant DL380']
+        },
+        'Outros': {
+            'Genérico': ['Outro Equipamento']
+        }
+    };
+
+    function updateSpecificTypes(prefix, selectedValue = null) {
+        const artigo = document.getElementById(prefix + 'Name').value;
+        const typeSelect = document.getElementById(prefix + 'Type');
+        const sourceSelect = document.getElementById('type-hidden-source');
+        
+        typeSelect.innerHTML = '<option value="">Selecione...</option>';
+        $(typeSelect).val("").trigger('change');
+        
+        if (artigo) {
+            Array.from(sourceSelect.options).forEach(opt => {
+                const targetArtigo = opt.getAttribute('data-artigo');
+                if (targetArtigo === artigo) {
+                    const cloned = opt.cloneNode(true);
+                    if (selectedValue && cloned.value === selectedValue) cloned.selected = true;
+                    typeSelect.appendChild(cloned);
+                }
+            });
+        }
+        
+        $(typeSelect).select2({
+            placeholder: artigo ? 'Selecione o tipo...' : 'Selecione o artigo primeiro',
+            dropdownParent: $(typeSelect).parent()
+        });
+    }
+
+    function updateBrands(prefix) {
+        const artigo = document.getElementById(prefix + 'Name').value;
+        const brandSelect = document.getElementById(prefix + 'Brand');
+        
+        brandSelect.innerHTML = '<option value="">Selecione...</option>';
+        $(brandSelect).val("").trigger('change');
+
+        if (artigo && brandModelData[artigo]) {
+            Object.keys(brandModelData[artigo]).forEach(brand => {
+                const opt = document.createElement('option');
+                opt.value = brand;
+                opt.textContent = brand;
+                brandSelect.appendChild(opt);
+            });
+        }
+        $(brandSelect).select2({
+            placeholder: artigo ? 'Selecione a marca...' : 'Selecione o tipo primeiro',
+            dropdownParent: $(brandSelect).parent()
+        });
+        updateModels(prefix);
+    }
+
+    function updateModels(prefix, selectedModel = null) {
+        const artigo = document.getElementById(prefix + 'Name').value;
+        const brand = document.getElementById(prefix + 'Brand').value;
+        const modelSelect = document.getElementById(prefix + 'Model');
+        
+        modelSelect.innerHTML = '<option value="">Selecione...</option>';
+        $(modelSelect).val("").trigger('change');
+
+        if (artigo && brand && brandModelData[artigo] && brandModelData[artigo][brand]) {
+            brandModelData[artigo][brand].forEach(model => {
+                const opt = document.createElement('option');
+                opt.value = model;
+                opt.textContent = model;
+                if (selectedModel && model === selectedModel) opt.selected = true;
+                modelSelect.appendChild(opt);
+            });
+        }
+        $(modelSelect).select2({
+            placeholder: brand ? 'Selecione o modelo...' : 'Selecione a marca primeiro',
+            dropdownParent: $(modelSelect).parent()
+        });
+    }
+
+    function cascadeSetores(prefix, selectedValue = null) {
+        const deptId = document.getElementById(prefix + 'Dept').value;
+        const setorSelect = document.getElementById(prefix + 'Setor');
+        const salaSelect = document.getElementById(prefix + 'Sala');
+        
+        setorSelect.innerHTML = '<option value="">Selecione...</option>';
+        setorSelect.disabled = !deptId;
+        if (prefix === 'reg') {
+            salaSelect.innerHTML = '<option value="">Selecione Setor primeiro...</option>';
+            salaSelect.disabled = true;
+        }
+
+        if (deptId) {
+            const allSetores = Array.from(document.querySelectorAll('#regSetor-hidden option'));
+            allSetores.forEach(opt => {
+                if (opt.getAttribute('data-dept') === deptId) {
+                    const cloned = opt.cloneNode(true);
+                    if (selectedValue && cloned.value == selectedValue) cloned.selected = true;
+                    setorSelect.appendChild(cloned);
+                }
+            });
+        }
+    }
+
+    function cascadeSalas(prefix, selectedValue = null) {
+        const setorId = document.getElementById(prefix + 'Setor').value;
+        const salaSelect = document.getElementById(prefix + 'Sala');
+        
+        salaSelect.innerHTML = '<option value="">Selecione...</option>';
+        salaSelect.disabled = !setorId;
+
+        if (setorId) {
+            const allSalas = Array.from(document.querySelectorAll('#regSala-hidden option'));
+            allSalas.forEach(opt => {
+                if (opt.getAttribute('data-setor') === setorId) {
+                    const cloned = opt.cloneNode(true);
+                    if (selectedValue && cloned.value == selectedValue) cloned.selected = true;
+                    salaSelect.appendChild(cloned);
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Source for Specific Types - used for cascading filtering
+        const tSource = document.createElement('select');
+        tSource.id = 'type-hidden-source';
+        tSource.style.display = 'none';
+        tSource.innerHTML = `
+            <option value="Desktop" data-artigo="Computadores">Desktop</option>
+            <option value="Portátil" data-artigo="Computadores">Portátil</option>
+            <option value="AIO" data-artigo="Computadores">AIO</option>
+            <option value="Laptop" data-artigo="Computadores">Laptop</option>
+            <option value="Monitor" data-artigo="Monitores">Monitor</option>
+            <option value="Televisão" data-artigo="Monitores">Televisão</option>
+            <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+            <option value="Router" data-artigo="Networking">Router</option>
+            <option value="Switch" data-artigo="Networking">Switch</option>
+            <option value="Access Point" data-artigo="Networking">Access Point</option>
+            <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+            <option value="Rato" data-artigo="Periféricos">Rato</option>
+            <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
+            <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
+            <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+            <option value="Projetor" data-artigo="Projetores">Projetor</option>
+            <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
+            <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+            <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+            <option value="Outro" data-artigo="Outros">Outro</option>
+        `;
+        document.body.appendChild(tSource);
+
+        const sHidden = document.createElement('select');
+        sHidden.id = 'regSetor-hidden';
+        sHidden.style.display = 'none';
+        @foreach(var s in Model.Setores) {
+            @:sHidden.innerHTML += '<option value="@s.Id" data-dept="@s.DepartamentoId">@s.Name</option>';
+        }
+        document.body.appendChild(sHidden);
+
+        const rHidden = document.createElement('select');
+        rHidden.id = 'regSala-hidden';
+        rHidden.style.display = 'none';
+        @foreach(var r in Model.Salas) {
+            @:rHidden.innerHTML += '<option value="@r.Id" data-setor="@r.SetorId">@r.Name</option>';
+        }
+        document.body.appendChild(rHidden);
+    });
+
+    function openEditModal(id, name, type, brand, model, serial, roomId, setorId, deptId, status) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editName').value = name;
+        
+        // Trigger cascading updates
+        updateSpecificTypes('edit', type);
+        updateBrands('edit');
+        document.getElementById('editBrand').value = brand;
+        updateModels('edit', model);
+        
+        document.getElementById('editSerial').value = serial;
+        document.getElementById('editStatus').value = status;
+        
+        document.getElementById('editDept').value = deptId || "";
+        cascadeSetores('edit', setorId);
+        cascadeSalas('edit', roomId);
+
+        new bootstrap.Modal(document.getElementById('modalEditarEquipamento')).show();
+    }
+</script>
+}

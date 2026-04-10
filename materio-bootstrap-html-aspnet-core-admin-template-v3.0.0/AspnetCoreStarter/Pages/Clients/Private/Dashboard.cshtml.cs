@@ -10,25 +10,23 @@ using System.Security.Claims;
 using AspnetCoreStarter.Services;
 using System;
 
-namespace AspnetCoreStarter.Pages.Clients.Directors
+namespace AspnetCoreStarter.Pages.Clients.Private
 {
-    public class DirectorDashboardModel : PageModel
+    public class PrivateDashboardModel : PageModel
     {
         private readonly AppDbContext _context;
         private readonly IStockService _stockService;
 
-        public DirectorDashboardModel(AppDbContext context, IStockService stockService)
+        public PrivateDashboardModel(AppDbContext context, IStockService stockService)
         {
             _context = context;
             _stockService = stockService;
         }
 
         public List<LowStockItemViewModel> StockAlerts { get; set; } = new();
-        public int TotalProfessores { get; set; }
+        public int TotalUsers { get; set; }
         public int PendingTicketsCount { get; set; }
         public int LowStockAlertsCount { get; set; }
-        public int TotalEscolas { get; set; }
-        public int TotalSalas { get; set; }
         public int TotalContratos { get; set; }
         public int DamagedEquipmentCount { get; set; }
         public int TotalUnreadMessages { get; set; }
@@ -39,13 +37,10 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
         public string? ClientLocationsJson { get; set; }
 
-        // Infrastructure tree data (filtered)
-        public Agrupamento? Agrupamento { get; set; }
-        public List<AspnetCoreStarter.Models.School>? Schools { get; set; }
-        public List<Bloco>? Blocos { get; set; }
-        public List<Sala>? Salas { get; set; }
+        // Infrastructure data
+        public Empresa? Empresa { get; set; }
         public List<string> EquipmentTypes { get; set; } = new();
-        public List<PedidoStock> SchoolRequests { get; set; } = new();
+        public List<Contrato> RecentContracts { get; set; } = new();
         public List<StockEmpresa> AvailableStock { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
@@ -55,86 +50,40 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            if (string.IsNullOrEmpty(userIdStr) || userRole != "Diretor")
+            if (string.IsNullOrEmpty(userIdStr) || userRole != "ClientePrivado")
                 return RedirectToPage("/Index");
 
             int userId = int.Parse(userIdStr);
 
-            // Temporary fix for missing tables and columns
-            try { 
-                await _context.Database.ExecuteSqlRawAsync(@"
-                    CREATE TABLE IF NOT EXISTS contratos (
-                        id_contrato INT AUTO_INCREMENT PRIMARY KEY,
-                        periodo VARCHAR(50),
-                        tipo_contrato VARCHAR(50),
-                        status_contrato VARCHAR(50),
-                        descricao TEXT,
-                        id_agrupamento INT,
-                        id_admin INT,
-                        FOREIGN KEY (id_agrupamento) REFERENCES agrupamentos(id_agrupamento),
-                        FOREIGN KEY (id_admin) REFERENCES utilizadores(id_utilizador)
-                    ) ENGINE=InnoDB;"); 
-            } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN password_hash VARCHAR(255) NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE salas ADD COLUMN id_professor_responsavel INT NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'A funcionar';"); } catch { }
+            // Fetch the User and their Empresa
+            var user = await _context.Users
+                .Include(u => u.Empresa)
+                .FirstOrDefaultAsync(u => u.Id == userId);
 
-            // Fetch the Director's Agrupamento
-            var diretor = await _context.Diretores
-                .Include(d => d.Agrupamento)
-                .FirstOrDefaultAsync(d => d.UserId == userId);
-
-            if (diretor == null || diretor.AgrupamentoId == null)
+            if (user == null || user.EmpresaId == null)
             {
-                // If not found or No Agrupamento assigned, they see nothing or redirect
                 return Page();
             }
 
-            int agrupamentoId = diretor.AgrupamentoId.Value;
-            Agrupamento = diretor.Agrupamento;
-
-            // Infrastructure tree data (filtered by Agrupamento)
-            Schools = await _context.Schools
-                .Where(s => s.AgrupamentoId == agrupamentoId)
-                .ToListAsync();
-
-            var schoolIds = Schools.Select(s => s.Id).ToList();
-
-            Blocos = await _context.Blocos
-                .Where(b => schoolIds.Contains(b.SchoolId))
-                .ToListAsync();
-
-            var blocoIds = Blocos.Select(b => b.Id).ToList();
-
-            Salas = await _context.Salas
-                .Where(s => s.BlockId.HasValue && blocoIds.Contains(s.BlockId.Value))
-                .ToListAsync();
-
-            var salaIds = Salas.Select(s => s.Id).ToList();
+            int empresaId = user.EmpresaId.Value;
+            Empresa = user.Empresa;
 
             // Totals
-            TotalEscolas = Schools.Count;
-            TotalSalas = Salas.Count;
-            TotalContratos = await _context.Contratos.CountAsync(c => c.AgrupamentoId == agrupamentoId);
+            TotalContratos = await _context.Contratos.CountAsync(c => c.EmpresaId == empresaId);
+            TotalUsers = await _context.Users.CountAsync(u => u.EmpresaId == empresaId);
             
             DamagedEquipmentCount = await _context.Equipamentos
-                .CountAsync(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value) && e.Status == "Avariado");
+                .CountAsync(e => e.EmpresaId == empresaId && e.Status == "Avariado");
 
-            // Total Professores belonging to blocks in this Agrupamento
-            TotalProfessores = await _context.Professores
-                .CountAsync(p => blocoIds.Contains(p.BlocoId ?? 0));
-            
-            // Tickets pendentes (Filtered by schools in this Agrupamento)
+            // Tickets pendentes (Filtered by equipment belonging to this company)
             PendingTicketsCount = await _context.Tickets
-                .Where(t => (t.Status == "Pendente" || t.TechnicianId == null) && t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value))
+                .Include(t => t.Equipamento)
+                .Where(t => (t.Status == "Pendente" || t.TechnicianId == null) && t.Equipamento != null && t.Equipamento.EmpresaId == empresaId)
                 .CountAsync();
 
             // 5. Low Stock Alerts Logic
             var allAvailableStock = await _context.StockEmpresa
-                .Where(s => (s.IsAvailable || s.Status == "Disponível") && (s.AgrupamentoId == agrupamentoId || (s.SchoolId != null && schoolIds.Contains(s.SchoolId.Value))))
+                .Where(s => (s.IsAvailable || s.Status == "Disponível") && s.EmpresaId == empresaId)
                 .ToListAsync();
 
             var groupedStock = allAvailableStock
@@ -153,7 +102,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             LowStockAlertsCount = StockAlerts.Count;
 
-            // Chat Notifications (Unread messages for the current director)
+            // Chat Notifications (Unread messages for the current user)
             var unreadMessages = await _context.Mensagens
                 .Include(m => m.Sender)
                 .Where(m => m.ReceiverId == userId && !m.IsRead)
@@ -168,7 +117,6 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 .ToList();
 
             // Monthly Ticket Comparison Chart Data
-            // We'll show the last 6 months
             LineChartLabels = new List<string>();
             LineChartMonthlyData = new List<int>();
 
@@ -179,29 +127,30 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 LineChartLabels.Add(label);
 
                 var count = await _context.Tickets
-                    .Where(t => t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value) && t.CreatedAt.Month == date.Month && t.CreatedAt.Year == date.Year)
+                    .Include(t => t.Equipamento)
+                    .Where(t => t.Equipamento != null && t.Equipamento.EmpresaId == empresaId && t.CreatedAt.Month == date.Month && t.CreatedAt.Year == date.Year)
                     .CountAsync();
                 LineChartMonthlyData.Add(count);
             }
 
-            // Client Locations for Map (Only for this Agrupamento)
-            var locations = Schools
-                .Where(s => !string.IsNullOrEmpty(s.Address))
-                .Select(s => new { name = s.Name, address = s.Address })
-                .ToList();
+            // Company Location for Map
+            var locations = new List<object>();
+            if (Empresa != null && !string.IsNullOrEmpty(Empresa.Location))
+            {
+                locations.Add(new { name = Empresa.Name, address = Empresa.Location });
+            }
             ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locations);
 
-            // Load school requests (pending director or escalated to admin)
-            SchoolRequests = await _context.PedidosStock
-                .Include(p => p.School)
-                .Include(p => p.RequestedBy)
-                .Where(p => p.AgrupamentoId == agrupamentoId && (p.Status == "Pendente_Diretor" || p.Status == "Pendente_Admin"))
-                .OrderByDescending(p => p.CreatedAt)
+            // Load active contracts for this company to display in the dashboard
+            RecentContracts = await _context.Contratos
+                .Where(c => c.EmpresaId == empresaId)
+                .OrderByDescending(c => c.ExpiryDate)
+                .Take(5)
                 .ToListAsync();
 
-            // Load available unassigned stock for this agrupamento
+            // Load available unassigned stock for this company
             AvailableStock = await _context.StockEmpresa
-                .Where(s => s.AgrupamentoId == agrupamentoId && s.SchoolId == null && (s.IsAvailable || s.Status == "Armazenado" || s.Status == "Disponível"))
+                .Where(s => s.EmpresaId == empresaId && (s.IsAvailable || s.Status == "Armazenado" || s.Status == "Disponível"))
                 .ToListAsync();
 
             return Page();
@@ -220,7 +169,6 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
                 foreach (var item in items)
                 {
-                    item.SchoolId = request.SchoolId;
                     item.Status = "Emprestado";
                     item.IsAvailable = false;
                 }
@@ -231,7 +179,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             request.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Pedido atendido e stock atribuído à escola.";
+            TempData["SuccessMessage"] = "Pedido atendido e stock atribuído.";
             return RedirectToPage();
         }
 
@@ -262,9 +210,10 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             TempData["SuccessMessage"] = "Pedido recusado.";
             return RedirectToPage();
         }
+
         public class LowStockItemViewModel
         {
-            public string Name { get; set; }
+            public string Name { get; set; } = string.Empty;
             public int AvailableCount { get; set; }
             public string? Type { get; set; }
         }

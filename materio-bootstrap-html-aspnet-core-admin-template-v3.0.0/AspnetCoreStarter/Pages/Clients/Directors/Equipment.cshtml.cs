@@ -191,7 +191,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             AvailableBlocos = await _context.Blocos.Where(b => schoolIds.Contains(b.SchoolId)).ToListAsync();
             var blocoIds = AvailableBlocos.Select(b => b.Id).ToList();
             
-            Rooms = await _context.Salas.Where(s => blocoIds.Contains(s.BlockId)).ToListAsync();
+            Rooms = await _context.Salas.Where(s => s.BlockId.HasValue && blocoIds.Contains(s.BlockId.Value)).ToListAsync();
             AvailableEmpresas = await _context.Empresas.ToListAsync();
             
             // Get unique values for filter dropdowns based on Agrupamento scope

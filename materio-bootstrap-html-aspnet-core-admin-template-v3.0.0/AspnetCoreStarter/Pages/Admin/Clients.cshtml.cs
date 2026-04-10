@@ -134,7 +134,7 @@ namespace AspnetCoreStarter.Pages.Admin
             bool showDirectors     = string.IsNullOrEmpty(FilterType) || FilterType == "Diretor";
             bool showCoordinators  = string.IsNullOrEmpty(FilterType) || FilterType == "Coordenador";
             bool showProfessors    = string.IsNullOrEmpty(FilterType) || FilterType == "Professor";
-            bool showIndependent   = string.IsNullOrEmpty(FilterType) || FilterType == "Cliente Individual";
+            bool showIndependent   = string.IsNullOrEmpty(FilterType) || FilterType == "Cliente Privado";
 
             DirectorsList    = showDirectors    ? await directorsQuery.ToListAsync()    : new();
             CoordinatorsList = showCoordinators ? await coordinatorsQuery.ToListAsync() : new();
@@ -238,7 +238,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 }
                 _context.Professores.Add(record);
             }
-            else if (NewUserRole == "Cliente Independente")
+            else if (NewUserRole == "Cliente Privado")
             {
                 user.EmpresaId = NewUserEmpresaId;
                 _context.Users.Update(user);
@@ -454,7 +454,7 @@ namespace AspnetCoreStarter.Pages.Admin
                         }
                     }
                 }
-                else if (EditUserRole == "Cliente Independente")
+                else if (EditUserRole == "Cliente Privado")
                 {
                     user.EmpresaId = SelectedParentId;
                 }

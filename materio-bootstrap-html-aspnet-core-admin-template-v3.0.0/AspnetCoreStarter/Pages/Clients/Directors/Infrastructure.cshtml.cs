@@ -87,7 +87,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 .Include(s => s.Equipments)
                 .Include(s => s.ResponsibleProfessor)
                     .ThenInclude(p => p.User)
-                .Where(s => blocoIds.Contains(s.BlockId))
+                .Where(s => s.BlockId.HasValue && blocoIds.Contains(s.BlockId.Value))
                 .ToListAsync();
 
             // Build Client ViewModels (only one for the director's agrupamento)

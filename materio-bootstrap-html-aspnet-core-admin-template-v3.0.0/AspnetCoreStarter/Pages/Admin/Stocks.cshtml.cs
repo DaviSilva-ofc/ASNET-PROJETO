@@ -119,12 +119,12 @@ namespace AspnetCoreStarter.Pages.Admin
                 .OrderBy(t => t.CreatedAt)
                 .ToListAsync();
 
-            // Load PedidoStock escalated to admin (pending or already fulfilled by admin)
+            // Load PedidoStock escalated to admin (pending only)
             EscalatedRequests = await _context.PedidosStock
                 .Include(p => p.Agrupamento)
                 .Include(p => p.School)
                 .Include(p => p.RequestedBy)
-                .Where(p => p.Status == "Pendente_Admin" || (p.Status == "Atendido" && p.AdminId != null))
+                .Where(p => p.Status == "Pendente_Admin")
                 .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
                 .ToListAsync();
 
@@ -691,6 +691,7 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             var pedido = await _context.PedidosStock
                 .Include(p => p.School)
+                .Include(p => p.RequestedBy)
                 .FirstOrDefaultAsync(p => p.Id == requestId);
 
             if (pedido == null || pedido.Status != "Pendente_Admin") return RedirectToPage();
@@ -708,6 +709,7 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 item.SchoolId = pedido.SchoolId;
                 item.AgrupamentoId = pedido.AgrupamentoId;
+                item.EmpresaId = pedido.RequestedBy?.EmpresaId;
                 item.Status = "Emprestado";
                 item.IsAvailable = false;
                 item.AdminId = currentAdminId;

@@ -233,6 +233,51 @@
           </a>
         </li>
       }
+      else if (User.IsInRole("ClientePrivado"))
+      {
+        <li class='menu-item@(currentPage == "/Clients/Private/Dashboard" ? " active" : "")'>
+          <a asp-page="/Clients/Private/Dashboard" class="menu-link">
+            <i class="menu-icon icon-base ri-dashboard-line"></i>
+            <div>Visão Geral</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Private/Infrastructure" ? " active" : "")'>
+          <a asp-page="/Clients/Private/Infrastructure" class="menu-link">
+            <i class="menu-icon icon-base ri-government-line"></i>
+            <div>Infraestrutura</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Private/Equipment" ? " active" : "")'>
+          <a asp-page="/Clients/Private/Equipment" class="menu-link">
+            <i class="menu-icon icon-base ri-computer-line"></i>
+            <div>Equipamentos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Private/Stocks" ? " active" : "")'>
+          <a asp-page="/Clients/Private/Stocks" class="menu-link">
+            <i class="menu-icon icon-base ri-inbox-archive-line"></i>
+            <div>Stocks</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Private/Contracts" ? " active" : "")'>
+          <a asp-page="/Clients/Private/Contracts" class="menu-link">
+            <i class="menu-icon icon-base ri-file-list-3-line"></i>
+            <div>Contratos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Private/Tickets" ? " active" : "")'>
+          <a asp-page="/Clients/Private/Tickets" class="menu-link">
+            <i class="menu-icon icon-base ri-ticket-line"></i>
+            <div>Tickets</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Private/Chat" ? " active" : "")'>
+          <a asp-page="/Clients/Private/Chat" class="menu-link">
+            <i class="menu-icon icon-base ri-chat-3-line"></i>
+            <div>Chat</div>
+          </a>
+        </li>
+      }
     }
   </ul>
 

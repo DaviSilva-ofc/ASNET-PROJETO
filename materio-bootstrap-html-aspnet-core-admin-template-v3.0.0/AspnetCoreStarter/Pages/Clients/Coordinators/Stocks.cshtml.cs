@@ -102,7 +102,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             var blocks = await _context.Blocos.Where(b => b.SchoolId == mySchoolId).ToListAsync();
             var blockIds = blocks.Select(b => b.Id).ToList();
 
-            AvailableRooms = await _context.Salas.Where(r => blockIds.Contains(r.BlockId)).ToListAsync();
+            AvailableRooms = await _context.Salas.Where(r => r.BlockId.HasValue && blockIds.Contains(r.BlockId.Value)).ToListAsync();
             var roomIds = AvailableRooms.Select(r => r.Id).ToList();
             CountSalas = AvailableRooms.Count;
 

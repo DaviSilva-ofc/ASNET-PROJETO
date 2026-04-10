@@ -1,0 +1,403 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Private.InfrastructureModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Gestão de Infraestrutura";
+}
+
+@section VendorStyles {
+<link rel="stylesheet" href="~/vendor/libs/notyf/notyf.dist.css" />
+<link rel="stylesheet" href="~/vendor/libs/select2/select2.dist.css" />
+}
+
+@section PageStyles {
+<style>
+    .dark-style .card-header h5,
+    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+
+    /* Custom Header Color - Gold/Orange as requested */
+    .bg-infra-header {
+        background-color: #ffab00 !important;
+        background-image: linear-gradient(72deg, #ffab00, #ffc107 100%) !important;
+    }
+
+    .bg-light-section {
+        background-color: rgba(67, 89, 113, 0.03);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(67, 89, 113, 0.1);
+    }
+    .dark-style .bg-light-section,
+    [data-bs-theme="dark"] .bg-light-section {
+        background-color: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    .bg-light-section:hover {
+        background-color: rgba(67, 89, 113, 0.06);
+    }
+
+    .edit-header-btn {
+        background-color: rgba(255, 255, 255, 0.25);
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        padding: 6px;
+        border-radius: 0.375rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        line-height: 1;
+    }
+    .edit-header-btn:hover {
+        background-color: rgba(255, 255, 255, 0.45);
+        transform: translateY(-1px);
+    }
+
+    .infra-tree .tree-node {
+        position: relative;
+        padding: 4px 0;
+    }
+
+    .tree-node i {
+        font-size: 1.1rem;
+        vertical-align: middle;
+        opacity: 0.9;
+    }
+
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        background-color: rgba(105, 108, 255, 0.15);
+        border-radius: 4px;
+        padding: 4px;
+        margin-right: 8px;
+    }
+
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background-color: #696cff;
+        color: #fff;
+    }
+
+    .btn-delete-subtle {
+        opacity: 0.3;
+        transition: all 0.2s ease;
+        padding: 0 4px;
+        color: #8592a3 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    .tree-node:hover .btn-delete-subtle { opacity: 1; }
+    .btn-delete-subtle:hover { color: #ff3e1d !important; transform: scale(1.15); }
+
+    .action-btn-subtle {
+        padding: 4px 8px;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header Card -->
+    <div class="card mb-4 border-primary shadow-sm">
+        <div class="card-body p-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                <h5 class="mb-2 mb-md-0 fw-bold text-primary"><i class="bx bx-buildings me-2"></i>Gestão da Infraestrutura</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary btn-md shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddDept">
+                        <i class="bx bx-plus me-1"></i> Novo Departamento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible shadow-sm mb-4" role="alert">
+            <i class="bx bx-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        @foreach (var dept in Model.Departamentos)
+        {
+            var totalSalas = dept.Setores.Sum(s => s.Salas.Count);
+            var totalEquips = dept.Setores.Sum(s => s.Salas.Sum(r => r.Equipments.Count));
+
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-infra-header text-white d-flex justify-content-between align-items-center cursor-pointer" 
+                         data-bs-toggle="collapse" data-bs-target="#dept-@dept.Id">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 text-white me-3">
+                                <strong>@dept.Name</strong>
+                            </h5>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="edit-header-btn" 
+                                    onclick="event.stopPropagation(); openEdit('Dept', @dept.Id, '@dept.Name')" 
+                                    title="Editar Departamento">
+                                ✏️
+                            </button>
+                            <form method="post" asp-page-handler="DeleteDept" asp-route-id="@dept.Id" 
+                                  onsubmit="return confirm('Excluir este departamento e tudo o que está dentro dele?');"
+                                  style="display:inline;" onclick="event.stopPropagation();">
+                                <button type="submit" class="edit-header-btn" title="Excluir Departamento" style="background: rgba(255, 62, 29, 0.4); border-color: rgba(255, 255, 255, 0.5);">
+                                    🗑️
+                                </button>
+                            </form>
+                            <i class="bx bx-chevron-down text-white fs-4 ms-2"></i>
+                        </div>
+                    </div>
+                    <div id="dept-@dept.Id" class="collapse show">
+                        <div class="card-body pt-4">
+                            <div class="row">
+                                <!-- Coluna 1: Resumo -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <h6 class="mb-3 fw-bold"><i class="bx bx-stats me-2"></i>Visão Geral</h6>
+                                        <div class="d-flex flex-column gap-3">
+                                            <div>
+                                                <h3 class="mb-0 text-primary">@totalEquips</h3>
+                                                <p class="text-muted small mb-0">Total de Equipamentos</p>
+                                            </div>
+                                            <div>
+                                                <h3 class="mb-0 text-success">@totalSalas</h3>
+                                                <p class="text-muted small mb-0">Salas Registadas</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna 2: Ações Rápidas -->
+                                <div class="col-md-3 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <h6 class="mb-3 fw-bold"><i class="bx bx-rocket me-2"></i>Ações Rápidas</h6>
+                                        <button class="btn btn-outline-primary w-100 mb-2" onclick="openAdd('Setor', @dept.Id, '@dept.Name')">
+                                            <i class="bx bx-plus me-1"></i> Novo Setor
+                                        </button>
+                                        <p class="text-muted small">Crie novos setores para organizar as suas salas e equipamentos.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Coluna 3: Infraestrutura (Árvore) -->
+                                <div class="col-md-5 mb-3">
+                                    <div class="border rounded p-3 h-100 bg-light-section">
+                                        <h6 class="mb-3 fw-bold"><i class="bx bx-sitemap me-2"></i>Infraestrutura</h6>
+                                        <div class="infra-tree">
+                                            @foreach (var setor in dept.Setores)
+                                            {
+                                                <div class="tree-node setor-node mb-3">
+                                                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-label-secondary mb-2">
+                                                        <div class="d-flex align-items-center cursor-pointer flex-grow-1" data-bs-toggle="collapse" data-bs-target="#setor-@setor.Id">
+                                                            <i class="ri-arrow-right-s-line"></i>
+                                                            <i class="bx bx-layer me-2"></i>
+                                                            <strong>@setor.Name</strong>
+                                                        </div>
+                                                        <div class="d-flex align-items-center gap-1">
+                                                            <button class="btn btn-xs btn-outline-success action-btn-subtle" onclick="openAdd('Sala', @setor.Id, '@setor.Name')">
+                                                                <i class="bx bx-plus me-1"></i> 🚪 Nova Sala
+                                                            </button>
+                                                            <button class="btn btn-xs btn-outline-secondary action-btn-subtle border-0" 
+                                                                    onclick="openEdit('Setor', @setor.Id, '@setor.Name', @dept.Id)" title="Editar">
+                                                                ✏️
+                                                            </button>
+                                                            <form method="post" asp-page-handler="DeleteSetor" asp-route-id="@setor.Id" 
+                                                                  onsubmit="return confirm('Excluir este setor e as suas salas?');" style="display:inline;">
+                                                                <button type="submit" class="btn-delete-subtle" title="Excluir">🗑️</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+
+                                                    <div id="setor-@setor.Id" class="collapse show ms-4">
+                                                        @foreach (var sala in setor.Salas)
+                                                        {
+                                                            <div class="tree-node room-node mb-1 d-flex align-items-center justify-content-between p-1 px-2 rounded hover-bg-light">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="bx bx-door-open me-2 text-warning"></i>
+                                                                    <span>@sala.Name</span>
+                                                                    <span class="badge bg-label-secondary mx-2 small">@sala.Equipments.Count ativ.</span>
+                                                                </div>
+                                                                <div class="d-flex align-items-center gap-1">
+                                                                    <button class="btn btn-xs btn-outline-secondary action-btn-subtle border-0" 
+                                                                            onclick="openEdit('Sala', @sala.Id, '@sala.Name', @setor.Id)" title="Editar">
+                                                                        ✏️
+                                                                    </button>
+                                                                    <form method="post" asp-page-handler="DeleteSala" asp-route-id="@sala.Id" 
+                                                                          onsubmit="return confirm('Excluir esta sala?');" style="display:inline;">
+                                                                        <button type="submit" class="btn-delete-subtle" title="Excluir">🗑️</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                        @if (!setor.Salas.Any())
+                                                        {
+                                                            <div class="text-muted small italic ms-4 p-1">Vazio</div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Modal: Add Dept -->
+<div class="modal fade" id="modalAddDept" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" asp-page-handler="AddDept" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">Novo Departamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Nome do Departamento</label>
+                    <input type="text" asp-for="NewDeptName" class="form-control" placeholder="Ex: Tecnologia da Informação" required />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Registar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Generic Add (Setor/Sala) -->
+<div class="modal fade" id="modalGenericAdd" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" id="formGenericAdd" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="titleGenericAdd">Adicionar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="SelectedDeptId" id="addParentId_Dept" />
+                <input type="hidden" name="SelectedSetorId" id="addParentId_Setor" />
+                <div class="mb-3 p-2 bg-label-primary rounded">
+                    <small class="text-muted text-uppercase d-block" id="labelParentType">Pertence a</small>
+                    <strong id="labelParentName"></strong>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" id="labelItemName">Nome</label>
+                    <input type="text" name="NewItemName" id="inputItemName" class="form-control" required />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Registar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Generic Edit -->
+<div class="modal fade" id="modalGenericEdit" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" id="formGenericEdit" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="titleGenericEdit">Editar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" asp-for="EditId" id="editItemId" />
+                <div id="divEditParent" class="mb-3">
+                    <label class="form-label">Pertence a</label>
+                    <select asp-for="EditParentId" id="editParentSelect" class="form-select select2">
+                        <!-- Options filled via JS -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Novo Nome</label>
+                    <input type="text" asp-for="EditName" id="editNameInput" class="form-control" required />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section VendorScripts {
+    <script src="~/vendor/libs/select2/select2.dist.js"></script>
+}
+
+@section PageScripts {
+<script>
+    const depts = @Html.Raw(Json.Serialize(Model.Departamentos.Select(d => new { d.Id, d.Name })));
+    const setores = @Html.Raw(Json.Serialize(Model.Setores.Select(s => new { s.Id, s.Name, s.DepartamentoId })));
+
+    function openAdd(type, parentId, parentName) {
+        const title = type === 'Setor' ? 'Novo Setor' : 'Nova Sala';
+        const label = type === 'Setor' ? 'Nome do Setor' : 'Nome da Sala';
+        const parentTypeLabel = type === 'Setor' ? 'Departamento PAI' : 'Setor PAI';
+        
+        document.getElementById('titleGenericAdd').textContent = title;
+        document.getElementById('labelParentType').textContent = parentTypeLabel;
+        document.getElementById('labelParentName').textContent = parentName;
+        document.getElementById('labelItemName').textContent = label;
+        
+        document.getElementById('addParentId_Dept').value = type === 'Setor' ? parentId : '';
+        document.getElementById('addParentId_Setor').value = type === 'Sala' ? parentId : '';
+        
+        document.getElementById('inputItemName').name = type === 'Setor' ? 'NewSetorName' : 'NewSalaName';
+        document.getElementById('formGenericAdd').action = type === 'Setor' ? '?handler=AddSetor' : '?handler=AddSala';
+        
+        new bootstrap.Modal(document.getElementById('modalGenericAdd')).show();
+    }
+
+    function openEdit(type, id, name, parentId = null) {
+        document.getElementById('titleGenericEdit').textContent = 'Editar ' + type;
+        document.getElementById('editItemId').value = id;
+        document.getElementById('editNameInput').value = name;
+        
+        const parentDiv = document.getElementById('divEditParent');
+        const parentSelect = document.getElementById('editParentSelect');
+        parentSelect.innerHTML = '';
+
+        if (type === 'Dept') {
+            parentDiv.style.display = 'none';
+            document.getElementById('formGenericEdit').action = '?handler=EditDept';
+        } else if (type === 'Setor') {
+            parentDiv.style.display = 'block';
+            depts.forEach(d => {
+                const opt = new Option(d.name, d.id, false, d.id === parentId);
+                parentSelect.add(opt);
+            });
+            document.getElementById('formGenericEdit').action = '?handler=EditSetor';
+        } else if (type === 'Sala') {
+            parentDiv.style.display = 'block';
+            setores.forEach(s => {
+                const opt = new Option(s.name, s.id, false, s.id === parentId);
+                parentSelect.add(opt);
+            });
+            document.getElementById('formGenericEdit').action = '?handler=EditSala';
+        }
+        
+        $(parentSelect).trigger('change');
+        new bootstrap.Modal(document.getElementById('modalGenericEdit')).show();
+    }
+
+    $(function() {
+        $('.select2').each(function() {
+            var $this = $(this);
+            $this.select2({
+                dropdownParent: $this.parent()
+            });
+        });
+    });
+</script>
+}
