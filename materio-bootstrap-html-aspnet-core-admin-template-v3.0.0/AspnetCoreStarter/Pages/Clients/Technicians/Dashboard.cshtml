@@ -3,6 +3,8 @@
 @{
     Layout = "Layouts/_ContentNavbarLayout";
     ViewData["Title"] = "Visão Geral - Técnico";
+    ViewData["container"] = "container-fluid";
+    ViewData["containerNav"] = "container-fluid";
 }
 
 @section PageStyles {
@@ -11,183 +13,530 @@
         --asnet-navy: #1e2130;
         --asnet-orange: #f89223;
         --asnet-blue: #696cff;
+        --asnet-teal: #03c3ec;
         --asnet-green: #71dd37;
+        --asnet-pink: #e7305b;
+
+        /* Theme aware variables */
+        --dash-card-bg: #fff;
+        --dash-text: #566a7f;
+        --dash-title: #566a7f;
+        --dash-subtitle: #a1acb8;
+        --dash-border: rgba(67, 89, 113, 0.1);
+        --dash-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12);
     }
 
-    .dash-title { font-size: 1.75rem; font-weight: 700; color: var(--asnet-navy); }
-    .dark-style .dash-title { color: #f5f5f9 !important; }
+    .dark-style, [data-bs-theme="dark"] {
+        --dash-card-bg: #2b2e44;
+        --dash-text: #a3adbb;
+        --dash-title: #f5f5f9;
+        --dash-subtitle: #7071a4;
+        --dash-border: rgba(255, 255, 255, 0.05);
+        --dash-shadow: 0 4px 18px rgba(0,0,0,0.2);
+    }
 
-    .stat-card {
-        border: none;
-        border-radius: 14px;
-        transition: transform .2s;
+    .dash-title { font-size: 1.75rem; font-weight: 700; color: var(--dash-title); }
+
+    .stat-card, .tree-card, .pending-card, .chart-card, .map-card {
+        background: var(--dash-card-bg) !important;
+        border: none !important;
+        border-radius: 16px !important;
+        box-shadow: var(--dash-shadow) !important;
+        transition: transform .2s, box-shadow .2s;
     }
     .stat-card:hover { transform: translateY(-4px); }
-    
+
     .stat-icon {
         width: 48px; height: 48px;
         border-radius: 12px;
         display: flex; align-items: center; justify-content: center;
         font-size: 1.4rem; color: #fff;
     }
-    .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; }
-    .stat-label  { font-size: .8rem; color: #9e9e9e; margin: 0; }
+    .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--dash-title); }
+    .stat-label  { font-size: .8rem; color: var(--dash-subtitle); margin: 0; }
+
+    .chart-card .card-header, .tree-card .card-header, .map-card .card-header {
+        background: transparent !important;
+        border-bottom: 1px solid var(--dash-border) !important;
+        font-weight: 600;
+        color: var(--dash-title);
+    }
+
+    /* Forced Full Width Layout */
+    .container-xxl, .container-fluid {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+    }
+    .layout-page, .content-wrapper, .layout-container { width: 100% !important; }
+
+    .nav-pills .nav-link {
+        background: transparent !important;
+        color: rgba(255,255,255,0.6) !important;
+        transition: all 0.2s ease;
+    }
+    .nav-pills .nav-link.active {
+        background: var(--asnet-orange) !important;
+        color: #fff !important;
+    }
+    .nav-pills .nav-link:hover:not(.active) {
+        background: rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+    }
 </style>
 }
 
-<div class="container-xxl flex-grow-1 container-p-y">
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-            <h4 class="dash-title mb-1">Painel Técnico</h4>
-            <p class="text-muted mb-0">Bem-vindo, <span class="fw-bold text-primary">@User.Identity?.Name</span></p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="/Admin/Tickets" class="btn btn-primary btn-sm">
-                <i class='bx bx-list-ul me-1'></i> Todos os Tickets
-            </a>
-        </div>
+<!-- Title -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="dash-title mb-1">Painel do Técnico</h4>
+        <p class="text-muted mb-0">Bem-vindo, <span class="fw-bold text-primary">@User.Identity?.Name</span></p>
     </div>
+    <div class="d-flex gap-2">
+        <a href="/Clients/Technicians/Tickets" class="btn btn-primary d-flex align-items-center gap-2">
+            <i class='bx bx-list-ul'></i> Gestão de Tickets
+        </a>
+    </div>
+</div>
 
-    <!-- Stats Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3">
-            <div class="card stat-card shadow-sm">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:var(--asnet-blue);">
-                        <i class='bx bx-support'></i>
-                    </div>
-                    <div>
-                        <p class="stat-number">@Model.TotalTicketsCount</p>
-                        <p class="stat-label">Total Tickets</p>
-                    </div>
+<!-- ======================= TOP MINI CARDS ======================= -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:var(--asnet-blue); width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                    <i class='bx bx-support text-white'></i>
                 </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card stat-card shadow-sm">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:var(--asnet-orange);">
-                        <i class='bx bx-user-check'></i>
-                    </div>
-                    <div>
-                        <p class="stat-number">@Model.MyTicketsCount</p>
-                        <p class="stat-label">Meus Tickets</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card stat-card shadow-sm">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#ff3e1d;">
-                        <i class='bx bx-error-circle'></i>
-                    </div>
-                    <div>
-                        <p class="stat-number">@Model.PendingTicketsCount</p>
-                        <p class="stat-label">Pendentes</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="card stat-card shadow-sm">
-                <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:var(--asnet-green);">
-                        <i class='bx bx-chat'></i>
-                    </div>
-                    <div>
-                        <p class="stat-number">@Model.UnreadMessagesCount</p>
-                        <p class="stat-label">Mensagens</p>
-                    </div>
+                <div>
+                    <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.MyTicketsCount</p>
+                    <p class="stat-label mb-0 text-white-50 small">Meus Tickets (Total)</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row g-4">
-        <!-- Recent Tickets -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Tickets Recentes</h5>
-                    <a href="/Admin/Tickets" class="btn btn-xs btn-outline-primary">Ver todos</a>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#ff3e1d; width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                    <i class='bx bx-task-x text-white'></i>
                 </div>
-                <div class="table-responsive text-nowrap">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Escola</th>
-                                <th>Nível</th>
-                                <th>Estado</th>
-                                <th>Data</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var t in Model.RecentTickets)
-                            {
-                                <tr>
-                                    <td><strong>@(t.School?.Name ?? "N/A")</strong></td>
-                                    <td>
-                                        <span class="badge @(t.Level?.Contains("Alto") == true || t.Level?.Contains("Extremo") == true ? "bg-label-danger" : (t.Level?.Contains("Médio") == true ? "bg-label-warning" : "bg-label-info"))">
-                                            @t.Level
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @{
-                                            var stClass = t.Status switch {
-                                                "Pendente" => "bg-label-warning",
-                                                "Em Resolução" => "bg-label-info",
-                                                "Concluído" => "bg-label-success",
-                                                _ => "bg-label-secondary"
-                                            };
-                                        }
-                                        <span class="badge @stClass">@t.Status</span>
-                                    </td>
-                                    <td>@t.CreatedAt.ToString("dd/MM")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div>
+                    <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.PendingTicketsCount</p>
+                    <p class="stat-label mb-0 text-white-50 small">Tickets Ativos</p>
                 </div>
             </div>
         </div>
-
-        <!-- My Stock Alerts -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Alertas de Stock Técnico</h5>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:var(--asnet-orange); width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                    <i class='bx bx-package text-white'></i>
                 </div>
-                <div class="card-body">
-                    @if (!Model.MyStock.Any())
-                    {
-                        <div class="text-center py-4">
-                            <i class='bx bx-package text-muted' style="font-size: 3rem;"></i>
-                            <p class="mt-2 text-muted">Sem itens no stock pessoal.</p>
-                        </div>
-                    }
-                    else
-                    {
-                        <ul class="list-group list-group-flush">
-                            @foreach (var s in Model.MyStock)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                    <div>
-                                        <h6 class="mb-0">@s.EquipmentName</h6>
-                                        <small class="text-muted">@s.Description</small>
-                                    </div>
-                                    <span class="badge @(s.IsAvailable ? "bg-label-success" : "bg-label-danger")">
-                                        @(s.IsAvailable ? "Disponível" : "Em Uso")
-                                    </span>
-                                </li>
-                            }
-                        </ul>
-                        <div class="mt-3">
-                            <a href="/Admin/Stocks" class="btn btn-sm btn-outline-secondary w-100">Gerir meu Stock</a>
-                        </div>
-                    }
+                <div>
+                    <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.MyStockAlertsCount</p>
+                    <p class="stat-label mb-0 text-white-50 small">Peças em Uso</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:var(--asnet-green); width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                    <i class='bx bx-message-rounded-dots text-white'></i>
+                </div>
+                <div>
+                    <p class="stat-number mb-0 fw-bold text-white fs-5">@Model.UnreadMessagesCount</p>
+                    <p class="stat-label mb-0 text-white-50 small">Mensagens Novas</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ======================= 3 COLUMN MIDDLE SECTION ======================= -->
+<div class="row g-4 mb-4">
+    <!-- Col 1: Locais Atendidos -->
+    <div class="col-lg-4">
+        <div class="card h-100 shadow-sm border-0" style="background: #2b2c40 !important; border-left: 4px solid var(--asnet-blue) !important;">
+            <div class="card-header border-bottom-0 pb-0">
+                <ul class="nav nav-pills gap-2 mb-3" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active py-2 px-3 fw-bold" style="font-size: 0.8rem;">Locais com Tickets Abertos</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body pt-0" style="max-height: 400px; overflow-y: auto;">
+                <div class="d-flex flex-column gap-3 mt-2">
+                    @if (!Model.LocaisAtendimento.Any())
+                    {
+                        <p class="text-white-50 small">Não tens tickets ativos para nenhuma localização no momento.</p>
+                    }
+                    else
+                    {
+                        @foreach (var loc in Model.LocaisAtendimento)
+                        {
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; background: #696cff; border-radius: 6px; color: #fff; font-weight: bold; font-size: 0.75rem;">
+                                    @(loc.Name?.Substring(0, 1).ToUpper() ?? "L")
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-semibold text-white" style="font-size: 0.85rem;">@loc.Name</span>
+                                    <i class='bx bx-building-house text-white-50' style="font-size: 0.9rem;"></i>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Col 2: Mensagens -->
+    <div class="col-lg-4">
+        <div class="card h-100 shadow-sm border-0 d-flex flex-column" style="background: #2b2c40 !important; border-left: 4px solid #71dd37 !important;">
+            <div class="card-body p-4 flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div style="width: 40px; height: 40px; background: #71dd37; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class='bx bx-chat text-white fs-4'></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-white">Comunicações</h5>
+                </div>
+                <div class="mb-3">
+                    <span class="fw-bolder" style="font-size: 3rem; color: #fff; line-height: 1;">@Model.UnreadMessagesCount</span>
+                    <span class="fw-bold" style="color: #71dd37; font-size: 1.2rem;"> novas</span>
+                </div>
+                <p class="text-white-50 small">mensagens aguardam resposta para andamento de tickets</p>
+
+                @if (Model.RecentMessageSenders.Any())
+                {
+                    <div class="d-flex mt-3">
+                        @foreach (var sender in Model.RecentMessageSenders)
+                        {
+                            <div class="rounded-circle text-white d-flex align-items-center justify-content-center me-1"
+                                style="width:32px; height:32px; border:2px solid #2b2c40; background:#696cff; margin-right:-8px;"
+                                title="@sender.Username">
+                                @(sender.Username?.Substring(0, 1).ToUpper() ?? "U")
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="p-4 pt-0">
+                <a href="/Clients/Technicians/Chat" class="btn w-100 py-2 fw-bold" style="background: #71dd37; color: #fff; border-radius: 8px;">Responder no Chat</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Col 3: Mala de Ferramentas / Alertas Stock -->
+    <div class="col-lg-4">
+        <div class="card h-100 shadow-sm border-0 d-flex flex-column" style="background: #2b2c40 !important; border-left: 4px solid #f89223 !important;">
+            <div class="card-body p-4 flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div style="width: 40px; height: 40px; background: #f89223; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class='bx bx-briefcase-alt-2 text-white fs-4'></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-white">Mala de Peças</h5>
+                </div>
+                <div class="mb-3">
+                    <span class="fw-bolder" style="font-size: 3rem; color: #fff; line-height: 1;">@Model.MyStock.Count()</span>
+                    <span class="fw-bold" style="color: #f89223; font-size: 1.2rem;"> em uso</span>
+                </div>
+                <p class="text-white-50 small" style="margin-bottom: 2rem;">equipamentos da ASNET atualmente à tua disposição para usares.</p>
+
+                <div class="d-flex justify-content-between text-white-50 small mt-2">
+                    <span title="Total de equipamentos armazenados na Sede global da ASNET prontos a solicitar" data-bs-toggle="tooltip">Stock Global Livre (ASNET): <strong class="text-white">@Model.GlobalAvailableStockCount</strong></span>
+                </div>
+            </div>
+            <div class="p-4 pt-0">
+                <a asp-page="/Clients/Technicians/Stocks" class="btn btn-warning w-100 fw-bold py-2 shadow-sm text-white" style="background: var(--asnet-orange) !important; border:none;">
+                    Gerir Mala De Peças
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================= FULL WIDTH TICKETS TABLE ======================= -->
+<div class="card mb-4" style="background: #2b2c40 !important;">
+    <div class="card-header border-bottom border-secondary d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-white">Os meus Trabalhos Recentes (Últimos atribuídos)</h5>
+        <a href="/Clients/Technicians/Tickets" class="btn btn-sm btn-outline-primary shadow-none">Ver Todos</a>
+    </div>
+    <div class="table-responsive text-nowrap">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th class="text-white-50">Local</th>
+                    <th class="text-white-50">Nível</th>
+                    <th class="text-white-50">Estado</th>
+                    <th class="text-white-50">Data de Abertura</th>
+                </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+                @if (!Model.RecentTickets.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-white-50">Nenhum ticket te foi atribuído ainda.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var t in Model.RecentTickets)
+                    {
+                        <tr>
+                            <td><strong class="text-white">@(t.School?.Name ?? "N/A")</strong></td>
+                            <td>
+                                <span class="badge @(t.Level?.Contains("Alto") == true || t.Level?.Contains("Extremo") == true ? "bg-label-danger" : (t.Level?.Contains("Médio") == true ? "bg-label-warning" : "bg-label-info"))">
+                                    @t.Level
+                                </span>
+                            </td>
+                            <td>
+                                @{
+                                    var stClass = t.Status switch {
+                                        "Pendente" => "bg-label-warning",
+                                        "Em Resolução" => "bg-label-info",
+                                        "Concluído" => "bg-label-success",
+                                        _ => "bg-label-secondary"
+                                    };
+                                }
+                                <span class="badge @stClass">@t.Status</span>
+                            </td>
+                            <td class="text-white-50">@t.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ======================= CHARTS SECTION ======================= -->
+<div class="row g-4 mb-4">
+    <!-- Line Chart -->
+    <div class="col-lg-7">
+        <div class="card chart-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+            <div class="card-header d-flex align-items-center gap-2 border-bottom border-secondary pb-3 text-white">
+                <i class='bx bx-trending-up' style="color:var(--asnet-blue);"></i> Tendência de Resolução de Avárias
+            </div>
+            <div class="card-body pt-4">
+                <canvas id="monthlyTicketChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Bar Chart Overview -->
+    <div class="col-lg-5">
+        <div class="card chart-card h-100 shadow-sm border-0" style="background: #2b2c40 !important;">
+            <div class="card-header d-flex align-items-center gap-2 border-bottom border-secondary pb-3 text-white">
+                <i class='bx bx-bar-chart-alt-2' style="color:var(--asnet-green);"></i> Tickets Atendidos por Mês
+            </div>
+            <div class="card-body pt-4 d-flex flex-column align-items-center justify-content-center">
+                <canvas id="overviewChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================= MAP SECTION ======================= -->
+<div class="col-12 mt-4">
+    <div class="card map-card h-100 border-0 shadow-sm" style="background: #2b2c40 !important;">
+        <div class="card-header d-flex align-items-center gap-2 text-white border-bottom border-secondary pb-3">
+            <i class='bx bx-map-pin' style="color:#f89223;"></i> Mapa de Locais de Atendimento
+        </div>
+        <div class="card-body p-0">
+            <div id="clientMap" style="height: 400px; width: 100%; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;"></div>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+    // Configurações do Line Chart (Tickets)
+    const ticketCtx = document.getElementById('monthlyTicketChart').getContext('2d');
+    new Chart(ticketCtx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartLabels)),
+            datasets: [
+                {
+                    label: 'Pendentes',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartMonthlyData.Pendente)),
+                    borderColor: '#696cff',
+                    backgroundColor: 'rgba(105, 108, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Em Resolução',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartMonthlyData.EmResolucao)),
+                    borderColor: '#ff3e1d',
+                    backgroundColor: 'transparent',
+                    tension: 0.4
+                },
+                {
+                    label: 'Concluídos',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.LineChartMonthlyData.Concluido)),
+                    borderColor: '#71dd37',
+                    backgroundColor: 'transparent',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.7)' } }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, color: 'rgba(255,255,255,0.7)' },
+                    grid: { color: 'rgba(255,255,255,0.05)' }
+                },
+                x: {
+                    ticks: { color: 'rgba(255,255,255,0.7)' },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // Bar Chart Overview (Produtividade Mensal - 1 Ano)
+    const overviewCtx = document.getElementById('overviewChart').getContext('2d');
+    new Chart(overviewCtx, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BarChartLabels)),
+            datasets: [{
+                label: 'Tickets Solucionados',
+                data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BarChartData)),
+                backgroundColor: '#71dd37',
+                borderRadius: 4,
+                maxBarThickness: 30
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, color: 'rgba(255,255,255,0.7)' },
+                    grid: { color: 'rgba(255,255,255,0.05)' }
+                },
+                x: {
+                    ticks: { color: 'rgba(255,255,255,0.7)' },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // Função de Inicialização do Mapa
+    function initMap() {
+        var myLatLng = { lat: 41.5454, lng: -8.4265 }; // Centro em Braga (padrão)
+        var map = new google.maps.Map(document.getElementById('clientMap'), {
+            zoom: 11,
+            center: myLatLng,
+            styles: [
+                { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+                {
+                    featureType: 'administrative.locality',
+                    elementType: 'labels.text.fill',
+                    stylers: [{ color: '#d59563' }]
+                },
+                {
+                    featureType: 'poi',
+                    elementType: 'labels.text.fill',
+                    stylers: [{ color: '#d59563' }]
+                },
+                {
+                    featureType: 'poi.park',
+                    elementType: 'geometry',
+                    stylers: [{ color: '#263c3f' }]
+                },
+                {
+                    featureType: 'poi.park',
+                    elementType: 'labels.text.fill',
+                    stylers: [{ color: '#6b9a76' }]
+                },
+                {
+                    featureType: 'road',
+                    elementType: 'geometry',
+                    stylers: [{ color: '#38414e' }]
+                },
+                {
+                    featureType: 'road',
+                    elementType: 'geometry.stroke',
+                    stylers: [{ color: '#212a37' }]
+                },
+                {
+                    featureType: 'road',
+                    elementType: 'labels.text.fill',
+                    stylers: [{ color: '#9ca5b3' }]
+                },
+                {
+                    featureType: 'road.highway',
+                    elementType: 'geometry',
+                    stylers: [{ color: '#746855' }]
+                },
+                {
+                    featureType: 'road.highway',
+                    elementType: 'geometry.stroke',
+                    stylers: [{ color: '#1f2835' }]
+                },
+                {
+                    featureType: 'road.highway',
+                    elementType: 'labels.text.fill',
+                    stylers: [{ color: '#f3d19c' }]
+                },
+                {
+                    featureType: 'water',
+                    elementType: 'geometry',
+                    stylers: [{ color: '#17263c' }]
+                },
+                {
+                    featureType: 'water',
+                    elementType: 'labels.text.fill',
+                    stylers: [{ color: '#515c6d' }]
+                },
+                {
+                    featureType: 'water',
+                    elementType: 'labels.text.stroke',
+                    stylers: [{ color: '#17263c' }]
+                }
+            ]
+        });
+
+        // Adicionar os marcadores para Escolas onde o técnico tem serviço
+        var locationsRaw = '@Html.Raw(Model.ClientLocationsJson)';
+        if (locationsRaw && locationsRaw !== 'null') {
+            var locations = JSON.parse(locationsRaw.replace(/&quot;/g, '"'));
+            var geocoder = new google.maps.Geocoder();
+
+            locations.forEach(function(loc) {
+                if (loc.address) {
+                    geocoder.geocode({ 'address': loc.address + ", Portugal" }, function(results, status) {
+                        if (status === 'OK') {
+                            new google.maps.Marker({
+                                map: map,
+                                position: results[0].geometry.location,
+                                title: loc.name,
+                                icon: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png'
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
+}

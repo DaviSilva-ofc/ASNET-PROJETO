@@ -32,6 +32,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<AspnetCoreStarter.Models.User> RecentMessageSenders { get; set; }
         public List<LowStockItemViewModel> LowStockItems { get; set; } = new();
         public List<PedidoStock> EscalatedRequests { get; set; } = new();
+        public List<Ticket> TechnicianStockRequests { get; set; } = new();
         public List<StockEmpresa> GlobalStock { get; set; } = new();
 
         public int TicketsPendenteCount { get; set; }
@@ -78,7 +79,7 @@ namespace AspnetCoreStarter.Pages.Admin
 
             // 2. Tickets pendentes
             PendingTicketsCount = await _context.Tickets
-                .Where(t => t.Status == "Pendente")
+                .Where(t => t.Status == "Pendente" || (t.Level == "Empréstimo" && t.Status == "Pedido"))
                 .CountAsync();
 
             // 4. Chat Notifications
@@ -189,6 +190,13 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Include(p => p.RequestedBy)
                 .Where(p => p.Status == "Pendente_Admin")
                 .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+                .ToListAsync();
+
+            // Load technician stock requests sent as Tickets (Level = "Empréstimo")
+            TechnicianStockRequests = await _context.Tickets
+                .Include(t => t.Technician)
+                .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
+                .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
             // Load global stock (available items with no school assigned)

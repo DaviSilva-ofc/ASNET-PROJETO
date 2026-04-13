@@ -202,6 +202,49 @@
     </div>
     }
 
+    <!-- Técnicos Table -->
+    @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Técnico")
+    {
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Técnicos</h5>
+            <span class="badge bg-label-secondary">@Model.TecnicosList.Count Equipas</span>
+        </div>
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="table-border-bottom-0">
+                    @foreach (var t in Model.TecnicosList)
+                    {
+                        <tr>
+                            <td><span class="badge bg-label-secondary">#@t.User?.Id</span></td>
+                            <td><strong>@t.User?.Username</strong></td>
+                            <td>@t.User?.Email</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-1">
+                                    <button type="button" class="btn-edit-subtle" title="Editar Técnico"
+                                            data-bs-toggle="modal" data-bs-target="#modalEditUser"
+                                            onclick="setEditUser('@t.UserId', '@Html.Raw((t.User?.Username ?? "").Replace("'", "\\'"))', '@Html.Raw((t.User?.Email ?? "").Replace("'", "\\'"))', 'Técnico', '')">✏️</button>
+                                    <form method="post" asp-page-handler="DeleteUser" asp-route-id="@t.UserId" asp-route-role="Técnico" onsubmit="return confirm('Remover este técnico?')">
+                                        <button type="submit" class="btn-delete-subtle" title="Eliminar Técnico">🗑️</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    }
+
     <!-- Coordenadores Table -->
     @if (string.IsNullOrEmpty(Model.FilterType) || Model.FilterType == "Coordenador")
     {
@@ -411,6 +454,7 @@
                             <option value="Diretor">Diretor</option>
                             <option value="Coordenador">Coordenador</option>
                             <option value="Professor">Professor</option>
+                            <option value="Técnico">Técnico</option>
                             <option value="Cliente Privado">Cliente Privado</option>
                         </select>
                     </div>
@@ -594,6 +638,7 @@
                                 <option value="Diretor">Diretor</option>
                                 <option value="Coordenador">Coordenador</option>
                                 <option value="Professor">Professor</option>
+                                <option value="Técnico">Técnico</option>
                                 <option value="Cliente Privado">Cliente Privado</option>
                             </select>
                         </div>
@@ -760,6 +805,8 @@
         } else if (role === 'Cliente Privado') {
             document.getElementById('divAddUserEmpresa').style.display = 'block';
             document.getElementById('addUserEmpresa').disabled = false;
+        } else if (role === 'Técnico') {
+            // Técnicos são globais, não precisam de dropdown especial.
         }
     }
 

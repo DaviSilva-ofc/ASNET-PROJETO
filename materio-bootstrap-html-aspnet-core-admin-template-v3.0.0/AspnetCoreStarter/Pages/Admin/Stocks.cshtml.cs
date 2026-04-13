@@ -659,13 +659,29 @@ namespace AspnetCoreStarter.Pages.Admin
                     {
                         item.Status = "Emprestado";
                         item.IsAvailable = false;
-                        item.AgrupamentoId = data.AgrupamentoId;
+                        
+                        // If it's a technician requesting, assign directly to them
+                        if (data.RequestorRole == "Tecnico" && data.RequestorId > 0)
+                        {
+                            item.TechnicianId = data.RequestorId;
+                            item.AgrupamentoId = null;
+                            item.SchoolId = null;
+                        }
+                        else
+                        {
+                            item.AgrupamentoId = data.AgrupamentoId > 0 ? data.AgrupamentoId : null;
+                        }
                     }
 
                     ticket.Status = "Concluído";
                     ticket.Description += "\n\n[RESOLVIDO: PEDIDO APROVADO - Equipamentos transferidos automaticamente.]";
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Pedido de Empréstimo Aprovado! Os equipamentos foram transferidos para o Agrupamento.";
+                    
+                    if (data.RequestorRole == "Tecnico")
+                        TempData["Success"] = "Pedido de Stock Aprovado! Os equipamentos foram atribuídos à mala do técnico.";
+                    else
+                        TempData["Success"] = "Pedido de Empréstimo Aprovado! Os equipamentos foram transferidos para o Agrupamento.";
+                    
                     return RedirectToPage();
                 }
             }
@@ -745,6 +761,8 @@ namespace AspnetCoreStarter.Pages.Admin
         public string? ItemType { get; set; }
         public int Quantity { get; set; }
         public int AgrupamentoId { get; set; }
+        public int RequestorId { get; set; }
+        public string? RequestorRole { get; set; }
     }
 
     public class StockItemViewModel

@@ -278,11 +278,11 @@
                             <option value="Monitores">Monitores</option>
                             <option value="Impressoras">Impressoras</option>
                             <option value="Networking">Networking</option>
-                            <option value="Periféricos">Periféricos</option>
+                            <option value="Servidores/Infra">Servidores/Infra</option>
                             <option value="Componentes">Componentes</option>
+                            <option value="Periféricos">Periféricos</option>
                             <option value="Projetores">Projetores</option>
                             <option value="Quadros Interativos">Quadros Interativos</option>
-                            <option value="Servidores/Infra">Servidores/Infra</option>
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
@@ -362,11 +362,11 @@
                             <option value="Monitores">Monitores</option>
                             <option value="Impressoras">Impressoras</option>
                             <option value="Networking">Networking</option>
-                            <option value="Periféricos">Periféricos</option>
+                            <option value="Servidores/Infra">Servidores/Infra</option>
                             <option value="Componentes">Componentes</option>
+                            <option value="Periféricos">Periféricos</option>
                             <option value="Projetores">Projetores</option>
                             <option value="Quadros Interativos">Quadros Interativos</option>
-                            <option value="Servidores/Infra">Servidores/Infra</option>
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
@@ -450,9 +450,18 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label fw-bold">Artigo</label>
-                        <select asp-for="FilterName" class="form-select select2-modal">
+                        <select id="filterArtigo" asp-for="FilterName" class="form-select select2-modal">
                             <option value="">Todos</option>
-                            @foreach (var name in Model.UniqueEquipmentNames) { <option value="@name">@name</option> }
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Servidores/Infra">Servidores/Infra</option>
+                            <option value="Componentes">Componentes</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Quadros Interativos">Quadros Interativos</option>
+                            <option value="Outros">Outros</option>
                         </select>
                     </div>
                     <div class="col-12">
@@ -523,50 +532,85 @@
 
     const brandModelData = {
         'Computadores': {
-            'HP': ['ProDesk 400 G7', 'EliteDesk 800 G9', 'ProBook 450 G8'],
-            'Dell': ['OptiPlex 3090', 'Latitude 5520', 'Vostro 3510'],
-            'Lenovo': ['ThinkCentre M70q', 'ThinkPad T14', 'IdeaPad 3'],
-            'Apple': ['MacBook Air M2', 'MacBook Pro 14"', 'iMac 24"']
+            'HP': ['ProDesk 400 G6', 'ProDesk 600 G6', 'EliteDesk 800 G6', 'Z2 Mini G5', 'EliteOne 800 G6 AIO', 'ProBook 450 G8', 'EliteBook 840 G8', 'ZBook Power G8'],
+            'Dell': ['OptiPlex 3090', 'OptiPlex 5090', 'OptiPlex 7090', 'Precision 3450', 'OptiPlex 7490 AIO', 'Vostro 3510', 'Latitude 3520', 'Precision 3561'],
+            'Lenovo': ['ThinkCentre M70q', 'ThinkCentre M80q', 'ThinkCentre M90q', 'ThinkStation P348', 'ThinkCentre M90a AIO', 'V15 G2', 'ThinkPad T14', 'ThinkPad P15'],
+            'Apple': ['Mac mini M1', 'Mac mini M2', 'iMac 24"', 'Mac Studio', 'MacBook Air M1', 'MacBook Air M2', 'MacBook Pro 14"', 'MacBook Pro 16"'],
+            'Asus': ['ExpertCenter D5', 'ExpertCenter D7', 'Zenbook 14', 'ExpertBook B1', 'ROG Strix G15']
         },
         'Monitores': {
-            'HP': ['P24h G5', 'E24 G5'],
-            'Dell': ['P2422H', 'U2722D'],
-            'Samsung': ['F24T350', 'Odyssey G5'],
-            'LG': ['24MP400', '27UL500']
+            'HP': ['P22h G4', 'P24h G4', 'E24 G4', 'E27 G4', 'Z24f G3', 'Z27k G3'],
+            'Dell': ['E2222H', 'E2422H', 'P2422H', 'P2722H', 'U2422H', 'U2722DE'],
+            'Samsung': ['F24T350', 'F27T350', 'Odyssey G3', 'Odyssey G5', 'Smart Monitor M5', 'Smart Monitor M7'],
+            'LG': ['24MK430H', '27MK600M', '27UL500-W', '32UN500-W', 'UltraGear 24GN600'],
+            'Asus': ['VP228HE', 'VZ249HE', 'VG248QG', 'PA248QV'],
+            'AOC': ['24B2XH', '27B2H', '24G2U', 'C27G2U']
         },
         'Impressoras': {
-            'HP': ['LaserJet Pro M404dn', 'OfficeJet Pro 9010'],
-            'Brother': ['HL-L2350DW', 'MFC-L2710DW'],
-            'Epson': ['EcoTank ET-2850']
+            'HP': ['LaserJet Pro M404n', 'LaserJet Pro MFP M428fdn', 'Color LaserJet Pro M454dw', 'OfficeJet Pro 9010'],
+            'Brother': ['HL-L2350DW', 'HL-L5100DN', 'MFC-L2710DW', 'MFC-L5700DN'],
+            'Epson': ['EcoTank L3250', 'EcoTank L4260', 'WorkForce WF-2830', 'SureColor SC-P700'],
+            'Canon': ['i-SENSYS LBP223dw', 'MAXIFY MB2150', 'PIXMA TR4550']
         },
         'Networking': {
-            'Cisco': ['Catalyst 1000', 'Cisco ISR 1100'],
-            'TP-Link': ['TL-SG108', 'Archer AX50'],
-            'Ubiquiti': ['UniFi U6 Lite', 'UniFi Switch 24']
-        },
-        'Componentes': {
-            'Kingston': ['8GB DDR4 3200', 'NV2 1TB NVMe'],
-            'Samsung': ['870 EVO 500GB', '980 PRO 1TB'],
-            'Intel': ['Core i5-13400', 'Core i7-13700']
-        },
-        'Periféricos': {
-            'Logitech': ['K120 Keyboard', 'M185 Mouse', 'C920 Webcam'],
-            'Microsoft': ['Bluetooth Mouse']
-        },
-        'Projetores': {
-            'Epson': ['EB-W06', 'EB-FH06'],
-            'BenQ': ['MH560']
-        },
-        'Quadros Interativos': {
-            'SMART': ['Board MX075', 'Board 6000S'],
-            'Promethean': ['ActivPanel 9']
+            'Cisco': ['Catalyst 1000-8T', 'Catalyst 1000-24T', 'CBS250-8T', 'CBS350-24T', 'RV160 VPN Router', 'RV340 VPN Router', 'C921-4P'],
+            'Ubiquiti': ['UniFi Switch Lite 8', 'UniFi Switch 24', 'UniFi AP AC Lite', 'UniFi U6 Lite', 'UniFi U6 Pro', 'EdgeRouter 4'],
+            'TP-Link': ['TL-SG108', 'TL-SG1024', 'EAP245', 'EAP610', 'Archer AX55', 'SafeStream TL-R605'],
+            'Fortinet': ['FortiGate 40F', 'FortiGate 60F', 'FortiGate 80F', 'FortiSwitch 108E', 'FortiAP 221E'],
+            'Netgear': ['GS108', 'GS308', 'GS316', 'WAX610', 'WAX620', 'RAX50', 'MS108UP'],
+            'D-Link': ['DGS-1100-08V2', 'DGS-1100-24V2', 'DAP-X2810', 'DIR-X1860', 'DMS-106XT'],
+            'MikroTik': ['hAP ac3', 'RB260GS', 'CRS326-24G-2S+', 'RB5009UG+S+IN', 'cAP ac'],
+            'Aruba': ['Instant On AP22', 'Instant On AP25', 'Instant On 1930 24G', 'CX 6100']
         },
         'Servidores/Infra': {
-            'Dell': ['PowerEdge T150', 'PowerEdge R350'],
-            'HP': ['ProLiant ML30', 'ProLiant DL380']
+            'Dell': ['PowerEdge T150', 'PowerEdge T350', 'PowerEdge R250', 'PowerEdge R350'],
+            'HP': ['ProLiant ML30 Gen10', 'ProLiant ML110 Gen10', 'ProLiant DL360 Gen10', 'ProLiant DL380 Gen10'],
+            'Lenovo': ['ThinkSystem ST50', 'ThinkSystem ST250', 'ThinkSystem SR250L'],
+            'Synology': ['DiskStation DS220+', 'DiskStation DS420+', 'DiskStation DS920+', 'RackStation RS820+'],
+            'QNAP': ['TS-251D', 'TS-451D2', 'TS-453D', 'TS-653D']
+        },
+        'Componentes': {
+            'Kingston': ['ValueRAM 8GB DDR4', 'FURY Beast 16GB DDR4', 'A400 240GB SSD', 'A400 480GB SSD', 'NV2 500GB NVMe', 'NV2 1TB NVMe'],
+            'Samsung': ['870 EVO 250GB', '870 EVO 500GB', '870 EVO 1TB', '980 500GB NVMe', '980 PRO 1TB NVMe', 'DDR4 8GB 3200MHz'],
+            'Crucial': ['BX500 240GB SSD', 'BX500 480GB SSD', 'MX500 500GB SSD', 'P3 500GB NVMe', 'P3 1TB NVMe', 'RAM 8GB DDR4 3200', 'RAM 16GB DDR4 3200'],
+            'Western Digital': ['Blue 1TB HDD', 'Blue 2TB HDD', 'Blue 500GB SSD', 'Blue SN570 500GB NVMe', 'Blue SN570 1TB NVMe', 'Black SN770 1TB NVMe'],
+            'Seagate': ['Barracuda 1TB HDD', 'Barracuda 2TB HDD', 'Barracuda 4TB HDD', 'IronWolf 4TB NAS'],
+            'Corsair': ['Vengeance LPX 8GB DDR4', 'Vengeance LPX 16GB DDR4', 'CV550 550W PSU', 'CX650M 650W PSU'],
+            'Intel': ['Core i3-12100', 'Core i5-12400', 'Core i5-13400', 'Core i7-12700', 'Core i7-13700'],
+            'AMD': ['Ryzen 3 4100', 'Ryzen 5 5600', 'Ryzen 5 5600G', 'Ryzen 7 5700G', 'Ryzen 7 5800X'],
+            'NVIDIA': ['GeForce GT 710', 'GeForce GT 1030', 'GeForce GTX 1650', 'GeForce RTX 3060'],
+            'Gigabyte': ['B550M DS3H', 'B660M DS3H', 'H610M H DDR4', 'A520M DS3H'],
+            'MSI': ['PRO B550M-A', 'PRO B660M-A', 'MAG B550 TOMAHAWK', 'PRO H610M-B'],
+            'EVGA': ['600 BR 600W PSU', '700 BR 700W PSU', 'SuperNOVA 650 G6']
+        },
+        'Periféricos': {
+            'Logitech': ['K120 Teclado', 'MK270 Combo', 'MK345 Combo', 'MK540 Combo', 'M185 Rato', 'M190 Rato', 'M330 Silent', 'B100 Rato', 'C270 Webcam', 'C920 HD Pro Webcam', 'H340 Headset', 'H390 Headset', 'Z150 Colunas'],
+            'Microsoft': ['Ergonomic Keyboard', 'Comfort Mouse 4500', 'Bluetooth Mouse', 'LifeCam HD-3000'],
+            'HP': ['125 Teclado', '125 Rato', '235 Combo Wireless', '330 Combo Wireless', '320 FHD Webcam'],
+            'Cherry': ['KC 1000 Teclado', 'DC 2000 Combo', 'STREAM Keyboard', 'GENTIX Rato'],
+            'Trust': ['Primo Teclado', 'Mydo Rato', 'Ody Combo', 'Trino Webcam HD'],
+            'Jabra': ['Evolve2 30 Headset', 'Evolve2 40 Headset', 'Speak 510'],
+            'Kensington': ['Pro Fit Rato Wireless', 'Orbit Trackball']
+        },
+        'Projetores': {
+            'Epson': ['EB-W06', 'EB-FH06', 'EB-X51', 'EB-2250U', 'EB-L200SW', 'EB-735Fi', 'EB-1485Fi'],
+            'BenQ': ['MH733', 'MH560', 'MW560', 'TH585P', 'EH600', 'LH720'],
+            'ViewSonic': ['PA503S', 'PA503W', 'PA503X', 'PX701HD', 'LS500WH'],
+            'Optoma': ['H190X', 'EH401', 'W381', 'ZH406ST'],
+            'NEC': ['ME402X', 'ME403U', 'P547UL', 'PA804UL'],
+            'Sony': ['VPL-EX455', 'VPL-PHZ12', 'VPL-FHZ66']
+        },
+        'Quadros Interativos': {
+            'SMART': ['Board MX075-V3', 'Board MX086-V3', 'Board 6000S', 'Board 7000 Pro'],
+            'Promethean': ['ActivPanel 9', 'ActivPanel 9 Premium', 'ActivPanel Elements'],
+            'ViewSonic': ['ViewBoard IFP5550', 'ViewBoard IFP6550', 'ViewBoard IFP7550', 'ViewBoard IFP8650'],
+            'Samsung': ['Flip WM55B', 'Flip WM75B', 'Flip Pro WM85B'],
+            'BenQ': ['RP6503', 'RP7503', 'RP8603'],
+            'Clevertouch': ['Impact Plus 65"', 'Impact Plus 75"', 'Impact Plus 86"']
         },
         'Outros': {
-            'Genérico': ['Outro Equipamento']
+            'Genérico': ['Outro Equipamento'],
+            'Sem Marca': ['Sem Modelo']
         }
     };
 
@@ -689,25 +733,46 @@
         tSource.id = 'type-hidden-source';
         tSource.style.display = 'none';
         tSource.innerHTML = `
+            <!-- Computadores -->
             <option value="Desktop" data-artigo="Computadores">Desktop</option>
             <option value="Portátil" data-artigo="Computadores">Portátil</option>
             <option value="AIO" data-artigo="Computadores">AIO</option>
             <option value="Laptop" data-artigo="Computadores">Laptop</option>
+            <!-- Monitores -->
             <option value="Monitor" data-artigo="Monitores">Monitor</option>
             <option value="Televisão" data-artigo="Monitores">Televisão</option>
+            <option value="TV" data-artigo="Monitores">TV</option>
+            <!-- Impressoras -->
             <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+            <!-- Networking -->
             <option value="Router" data-artigo="Networking">Router</option>
             <option value="Switch" data-artigo="Networking">Switch</option>
             <option value="Access Point" data-artigo="Networking">Access Point</option>
-            <option value="Teclado" data-artigo="Periféricos">Teclado</option>
-            <option value="Rato" data-artigo="Periféricos">Rato</option>
+            <option value="Firewall" data-artigo="Networking">Firewall</option>
+            <!-- Servidores/Infra -->
+            <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+            <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
+            <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+            <!-- Componentes -->
+            <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
             <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
             <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
             <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+            <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
+            <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
+            <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
+            <!-- Periféricos -->
+            <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+            <option value="Rato" data-artigo="Periféricos">Rato</option>
+            <option value="Headphones" data-artigo="Periféricos">Headphones</option>
+            <option value="Colunas" data-artigo="Periféricos">Colunas</option>
+            <!-- Projetores -->
             <option value="Projetor" data-artigo="Projetores">Projetor</option>
+            <!-- Quadros Interativos -->
             <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
-            <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
-            <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+            <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
+            <!-- Outros -->
+            <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
             <option value="Outro" data-artigo="Outros">Outro</option>
         `;
         document.body.appendChild(tSource);
@@ -731,16 +796,40 @@
 
     function openEditModal(id, name, type, brand, model, serial, roomId, setorId, deptId, status) {
         document.getElementById('editId').value = id;
-        document.getElementById('editName').value = name;
         
-        // Trigger cascading updates
+        // Normalize Article name
+        const artSelect = document.getElementById('editName');
+        const cleanName = (name || '').toLowerCase().trim();
+        let matchingOpt = Array.from(artSelect.options).find(o => o.value.toLowerCase().trim() === cleanName);
+        
+        // Specific normalization rules
+        if (!matchingOpt) {
+            if (cleanName === 'computador') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Computadores');
+            else if (cleanName === 'monitor' || cleanName === 'televisão' || cleanName === 'tv') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Monitores');
+            else if (cleanName === 'impressora') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Impressoras');
+            else if (cleanName.includes('quadro') || cleanName.includes('board')) matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Quadros Interativos');
+        }
+
+        if (matchingOpt) {
+            $(artSelect).val(matchingOpt.value).trigger('change');
+        } else {
+            $(artSelect).val('Outros').trigger('change');
+        }
+        
+        // Trigger cascading updates with Select2 support
         updateSpecificTypes('edit', type);
         updateBrands('edit');
-        document.getElementById('editBrand').value = brand;
+        $(document.getElementById('editBrand')).val(brand).trigger('change');
         updateModels('edit', model);
         
         document.getElementById('editSerial').value = serial;
-        document.getElementById('editStatus').value = status;
+        
+        const statusSelect = document.getElementById('editStatus');
+        if (statusSelect) {
+            let cleanStatus = (status || 'A funcionar').trim();
+            if (cleanStatus === "Funcionando") cleanStatus = "A funcionar";
+            $(statusSelect).val(cleanStatus).trigger('change');
+        }
         
         document.getElementById('editDept').value = deptId || "";
         cascadeSetores('edit', setorId);

@@ -1,0 +1,407 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Technicians.TicketsModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Trabalhos Atribuídos";
+}
+
+@section PageStyles {
+<style>
+    .map-card {
+        background: #2b2c40 !important;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    #clientMap {
+        height: 400px;
+        width: 100%;
+        border-bottom-left-radius: 14px;
+        border-bottom-right-radius: 14px;
+    }
+
+    /* Same searchable-select pattern used on equipment modals */
+    .select-search-wrapper { position: relative; }
+    .select-search-input {
+        display: block;
+        width: 100%;
+        padding: 0.4375rem 0.75rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--bs-border-color);
+        border-bottom: none;
+        border-radius: 6px 6px 0 0;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        outline: none;
+    }
+    .select-search-input:focus {
+        border-color: #696cff;
+        box-shadow: 0 0 0 0.1rem rgba(105,108,255,0.25);
+    }
+    .select-search-wrapper .form-select {
+        border-radius: 0 0 6px 6px !important;
+    }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Técnico /</span> Meus Trabalhos</h4>
+
+    <!-- Exibição de Alertas TempData -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Intervenções Técnicas Pendentes/Histórico</h5>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                    <i class="ri-filter-3-line"></i> Filtrar
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados" || !string.IsNullOrEmpty(Model.FilterArticle) || !string.IsNullOrEmpty(Model.FilterType))
+        {
+            <div class="card-body py-2">
+                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0" role="alert" style="padding: 0.6rem 1.2rem; background-color: #e7f3ff;">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-filter-3-line me-2 text-primary"></i>
+                        <span class="small text-primary fw-medium">
+                            Filtros ativos: 
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { <span class="badge bg-white text-primary border me-1">Estado: @Model.FilterStatus</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterArticle)) { <span class="badge bg-white text-primary border me-1">Artigo: @Model.FilterArticle</span> }
+                            @if (!string.IsNullOrEmpty(Model.FilterType)) { <span class="badge bg-white text-primary border me-1">Tipo: @Model.FilterType</span> }
+                        </span>
+                    </div>
+                    <a asp-page="./Tickets" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="ri-refresh-line me-1 small"></i> Limpar Filtros
+                    </a>
+                </div>
+            </div>
+        }
+        <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Escola / Solicitante</th>
+                        <th>Equipamento (Avaria)</th>
+                        <th>Prioridade</th>
+                        <th>Estado</th>
+                        <th>Data Lançamento</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Tickets == null || !Model.Tickets.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">Nenhum trabalho atribuído neste momento. Tudo resolvido!</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var t in Model.Tickets)
+                        {
+                            <tr>
+                                <td><span class="fw-bold text-primary">#@t.Id</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-2">
+                                            <span class="avatar-initial rounded-circle bg-label-info"><i class="ri-building-line"></i></span>
+                                        </div>
+                                        <span class="fw-medium">@(t.School?.Name ?? "Sede ASNET")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-wrap" style="max-width: 300px;">
+                                        @{
+                                            var desc = t.Description ?? string.Empty;
+                                            var cutAt = desc.Length;
+                                            foreach (var marker in new[] { "( [DATA:", "[DATA:", "[RESOLVIDO:", "( IDATA:" })
+                                            {
+                                                var idx = desc.IndexOf(marker);
+                                                if (idx >= 0 && idx < cutAt) cutAt = idx;
+                                            }
+                                            desc = desc.Substring(0, cutAt).Trim();
+                                        }
+                                        <div class="fw-semibold">@(t.Equipamento?.Name ?? "Indefinido") <span class="text-muted small">(@(t.Equipamento?.SerialNumber ?? "N/A"))</span></div>
+                                        <div class="small text-muted mt-1" title="@desc">@(desc.Length > 60 ? desc.Substring(0, 60) + "..." : desc)</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(t.Level))
+                                    {
+                                        <span class="badge @(t.Level.Contains("Alta") || t.Level.Contains("Crítica") || t.Level.Contains("Extremo") ? "bg-label-danger" : (t.Level.Contains("Média") || t.Level.Contains("Médio") ? "bg-label-warning" : "bg-label-info"))">
+                                            @t.Level
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var statusClass = t.Status switch
+                                        {
+                                            "Pendente" => "bg-label-warning",
+                                            "Em Resolução" => "bg-label-info",
+                                            "Concluído" => "bg-label-success",
+                                            _ => "bg-label-secondary"
+                                        };
+                                    }
+                                    <span class="badge @statusClass">@t.Status</span>
+                                </td>
+                                <td><span class="small">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                <td>
+                                    <form method="post" asp-page-handler="UpdateStatus" class="d-inline-flex gap-2">
+                                        <input type="hidden" name="id" value="@t.Id" />
+                                        <input type="hidden" name="FilterStatus" value="@Model.FilterStatus" />
+                                        <input type="hidden" name="FilterArticle" value="@Model.FilterArticle" />
+                                        <input type="hidden" name="FilterType" value="@Model.FilterType" />
+                                        
+                                        <select name="newStatus" class="form-select form-select-sm" style="width: 150px; border-color: #d9dee3;" onchange="this.form.submit()">
+                                            <option value="" disabled selected>Alterar Estado...</option>
+                                            <option value="Pendente" disabled="@(t.Status == "Pendente" ? "disabled" : null)">Pendente</option>
+                                            <option value="Em Resolução" disabled="@(t.Status == "Em Resolução" ? "disabled" : null)">Em Resolução (Dar Início)</option>
+                                            <option value="Concluído" disabled="@(t.Status == "Concluído" ? "disabled" : null)">Concluído (Finalizar)</option>
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Pesquisar Meus Trabalhos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Estado da Intervenção</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="Todos os Estados">Todos os Estados</option>
+                                <option value="Pendente">Pendentes</option>
+                                <option value="Em Resolução">Em Resolução</option>
+                                <option value="Concluído">Concluídos (Histórico)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Categoria</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." oninput="filterSelect(this, 'filterArtigo')" />
+                                <select id="filterArtigo" asp-for="FilterArticle" class="form-select" onchange="filterTypesByArtigo()">
+                                    <option value="">Qualquer Artigo</option>
+                                    <option value="Computadores">Computadores</option>
+                                    <option value="Monitores">Monitores</option>
+                                    <option value="Impressoras">Impressoras</option>
+                                    <option value="Networking">Networking</option>
+                                    <option value="Servidores/Infra">Servidores/Infra</option>
+                                    <option value="Componentes">Componentes</option>
+                                    <option value="Periféricos">Periféricos</option>
+                                    <option value="Projetores">Projetores</option>
+                                    <option value="Quadros Interativos">Quadros Interativos</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Específico</label>
+                            <div class="select-search-wrapper">
+                                <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." oninput="filterSelect(this, 'filterTipo')" />
+                                <select id="filterTipo" asp-for="FilterType" class="form-select">
+                                <option value="">Qualquer Tipo</option>
+                                <!-- Computadores -->
+                                <option value="Desktop" data-artigo="Computadores">Desktop</option>
+                                <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                                <option value="AIO" data-artigo="Computadores">AIO</option>
+                                <option value="Laptop" data-artigo="Computadores">Laptop</option>
+                                <!-- Monitores -->
+                                <option value="Monitor" data-artigo="Monitores">Monitor</option>
+                                <option value="Televisão" data-artigo="Monitores">Televisão</option>
+                                <option value="TV" data-artigo="Monitores">TV</option>
+                                <!-- Impressoras -->
+                                <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                                <!-- Networking -->
+                                <option value="Router" data-artigo="Networking">Router</option>
+                                <option value="Switch" data-artigo="Networking">Switch</option>
+                                <option value="Access Point" data-artigo="Networking">Access Point</option>
+                                <option value="Firewall" data-artigo="Networking">Firewall</option>
+                                <!-- Servidores/Infra -->
+                                <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+                                <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
+                                <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+                                <!-- Componentes -->
+                                <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
+                                <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
+                                <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
+                                <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+                                <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
+                                <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
+                                <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
+                                <!-- Periféricos -->
+                                <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+                                <option value="Rato" data-artigo="Periféricos">Rato</option>
+                                <option value="Headphones" data-artigo="Periféricos">Headphones</option>
+                                <option value="Colunas" data-artigo="Periféricos">Colunas</option>
+                                <!-- Projetores -->
+                                <option value="Projetor" data-artigo="Projetores">Projetor</option>
+                                <!-- Quadros Interativos -->
+                                <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
+                                <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
+                                <!-- Outros -->
+                                <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
+                                <option value="Outro" data-artigo="Outros">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- ======================= MAP SECTION ======================= -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card map-card border-0 shadow-sm">
+                <div class="card-header d-flex align-items-center gap-2 text-white border-bottom border-secondary pb-3">
+                    <i class='bx bx-map-pin' style="color:#f89223;"></i> Mapa de Intervenções Ativas
+                </div>
+                <div class="card-body p-0">
+                    <div id="clientMap"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+<script>
+    function filterSelect(input, selectId) {
+        const filter = (input?.value || "").toLowerCase().trim();
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        const options = select.querySelectorAll('option');
+        const currentArtigo = selectId === 'filterTipo'
+            ? (document.getElementById('filterArtigo')?.value || "").toLowerCase().trim()
+            : null;
+
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const text = (opt.textContent || "").toLowerCase();
+            const matchesSearch = text.includes(filter);
+
+            let matchesArtigo = true;
+            if (currentArtigo) {
+                const artigoOpt = (opt.getAttribute('data-artigo') || "").toLowerCase().trim();
+                matchesArtigo = artigoOpt === currentArtigo;
+            }
+
+            opt.style.display = (matchesSearch && matchesArtigo) ? '' : 'none';
+        });
+    }
+
+    function filterTypesByArtigo() {
+        const artName = document.getElementById('filterArtigo').value;
+        const tipoSelect = document.getElementById('filterTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        
+        tipoSelect.value = "";
+
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const optArt = (opt.getAttribute('data-artigo') || "");
+            if (artName === "" || optArt === artName) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        // Keep type search behavior consistent with equipment modals
+        const typeSearch = document.querySelector('input[oninput="filterSelect(this, \'filterTipo\')"]');
+        filterSelect(typeSearch, 'filterTipo');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        filterTypesByArtigo();
+    });
+
+    // Map Initialization
+    function initMap() {
+        var myLatLng = { lat: 41.5454, lng: -8.4265 }; // Centro em Braga
+        var map = new google.maps.Map(document.getElementById('clientMap'), {
+            zoom: 11,
+            center: myLatLng,
+            styles: [
+                { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+                { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+                { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+                { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+                { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
+            ]
+        });
+
+        var locationsRaw = '@Html.Raw(Model.ClientLocationsJson)';
+        if (locationsRaw && locationsRaw !== 'null') {
+            var locations = JSON.parse(locationsRaw);
+            var geocoder = new google.maps.Geocoder();
+
+            locations.forEach(function(loc) {
+                if (loc.address) {
+                    geocoder.geocode({ 'address': loc.address + ", Portugal" }, function(results, status) {
+                        if (status === 'OK') {
+                            var marker = new google.maps.Marker({
+                                map: map,
+                                position: results[0].geometry.location,
+                                title: loc.name,
+                                icon: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png'
+                            });
+
+                            var infoWindow = new google.maps.InfoWindow({
+                                content: '<div style="color:#222"><strong>' + loc.name + '</strong><br>' + loc.address + '</div>'
+                            });
+
+                            marker.addListener('click', function() {
+                                infoWindow.open(map, marker);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
+}

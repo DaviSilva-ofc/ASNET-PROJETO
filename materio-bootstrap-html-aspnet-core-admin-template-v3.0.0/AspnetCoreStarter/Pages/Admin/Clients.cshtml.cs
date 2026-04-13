@@ -22,6 +22,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<Diretor> DirectorsList { get; set; } = new();
         public List<Coordenador> CoordinatorsList { get; set; } = new();
         public List<Professor> ProfessorsList { get; set; } = new();
+        public List<Tecnico> TecnicosList { get; set; } = new();
         public List<User> IndependentClientsList { get; set; } = new();
 
         public List<Agrupamento> Agrupamentos { get; set; } = new();
@@ -93,12 +94,17 @@ namespace AspnetCoreStarter.Pages.Admin
                         .ThenInclude(s => s.Agrupamento)
                 .AsQueryable();
 
+            var tecnicosQuery = _context.Tecnicos
+                .Include(t => t.User)
+                .AsQueryable();
+
             // Apply Filters
             if (FilterId.HasValue)
             {
                 directorsQuery = directorsQuery.Where(d => d.UserId == FilterId.Value);
                 coordinatorsQuery = coordinatorsQuery.Where(c => c.UserId == FilterId.Value);
                 professorsQuery = professorsQuery.Where(p => p.UserId == FilterId.Value);
+                tecnicosQuery = tecnicosQuery.Where(t => t.UserId == FilterId.Value);
             }
 
             if (!string.IsNullOrEmpty(FilterName))
@@ -106,6 +112,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 directorsQuery = directorsQuery.Where(d => d.User.Username.Contains(FilterName));
                 coordinatorsQuery = coordinatorsQuery.Where(c => c.User.Username.Contains(FilterName));
                 professorsQuery = professorsQuery.Where(p => p.User.Username.Contains(FilterName));
+                tecnicosQuery = tecnicosQuery.Where(t => t.User.Username.Contains(FilterName));
             }
 
             if (!string.IsNullOrEmpty(FilterEmail))
@@ -113,6 +120,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 directorsQuery = directorsQuery.Where(d => d.User.Email.Contains(FilterEmail));
                 coordinatorsQuery = coordinatorsQuery.Where(c => c.User.Email.Contains(FilterEmail));
                 professorsQuery = professorsQuery.Where(p => p.User.Email.Contains(FilterEmail));
+                tecnicosQuery = tecnicosQuery.Where(t => t.User.Email.Contains(FilterEmail));
             }
 
             if (FilterAgrupamento.HasValue && FilterAgrupamento.Value > 0)
@@ -134,19 +142,22 @@ namespace AspnetCoreStarter.Pages.Admin
             bool showDirectors     = string.IsNullOrEmpty(FilterType) || FilterType == "Diretor";
             bool showCoordinators  = string.IsNullOrEmpty(FilterType) || FilterType == "Coordenador";
             bool showProfessors    = string.IsNullOrEmpty(FilterType) || FilterType == "Professor";
+            bool showTecnicos      = string.IsNullOrEmpty(FilterType) || FilterType == "Técnico";
             bool showIndependent   = string.IsNullOrEmpty(FilterType) || FilterType == "Cliente Privado";
 
             DirectorsList    = showDirectors    ? await directorsQuery.ToListAsync()    : new();
             CoordinatorsList = showCoordinators ? await coordinatorsQuery.ToListAsync() : new();
             ProfessorsList   = showProfessors   ? await professorsQuery.ToListAsync()   : new();
+            TecnicosList     = showTecnicos     ? await tecnicosQuery.ToListAsync()     : new();
 
             // Independent Clients: Users who are NOT directors, coordinators, professors or admins
             var directorUserIds    = await _context.Diretores.Select(d => d.UserId).ToListAsync();
             var coordinatorUserIds = await _context.Coordenadores.Select(c => c.UserId).ToListAsync();
             var professorUserIds   = await _context.Professores.Select(p => p.UserId).ToListAsync();
+            var tecnicoUserIds     = await _context.Tecnicos.Select(t => t.UserId).ToListAsync();
             var adminUserIds       = await _context.Administradores.Select(a => a.UserId).ToListAsync();
             
-            var excludeIds = directorUserIds.Union(coordinatorUserIds).Union(professorUserIds).Union(adminUserIds).ToList();
+            var excludeIds = directorUserIds.Union(coordinatorUserIds).Union(professorUserIds).Union(tecnicoUserIds).Union(adminUserIds).ToList();
 
             if (showIndependent)
             {
@@ -237,6 +248,11 @@ namespace AspnetCoreStarter.Pages.Admin
                     }
                 }
                 _context.Professores.Add(record);
+            }
+            else if (NewUserRole == "Técnico")
+            {
+                var record = new Tecnico { UserId = user.Id };
+                _context.Tecnicos.Add(record);
             }
             else if (NewUserRole == "Cliente Privado")
             {
@@ -333,6 +349,9 @@ namespace AspnetCoreStarter.Pages.Admin
                 } else if (role == "Professor") {
                     var r = await _context.Professores.FirstOrDefaultAsync(x => x.UserId == id);
                     if (r != null) _context.Professores.Remove(r);
+                } else if (role == "Técnico") {
+                    var r = await _context.Tecnicos.FirstOrDefaultAsync(x => x.UserId == id);
+                    if (r != null) _context.Tecnicos.Remove(r);
                 }
 
                 _context.Users.Remove(user);

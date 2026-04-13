@@ -600,33 +600,103 @@
                                                     </div>
 
                                                     <div id="tree-equips-emp-@empVm.Empresa.Id" class="collapse">
-                                                         @if (empVm.Equipments.Any())
-                                                         {
-                                                             var groupedEquips = empVm.Equipments
-                                                                 .GroupBy(e => !string.IsNullOrEmpty(e.Type) ? e.Type : (!string.IsNullOrEmpty(e.Name) ? e.Name : "Outros"))
-                                                                 .Select(g => new { TypeName = g.Key, Count = g.Count() })
-                                                                 .OrderBy(g => g.TypeName)
-                                                                 .ToList();
+                                                        @if (empVm.Departamentos.Any())
+                                                        {
+                                                            foreach (var dept in empVm.Departamentos.OrderBy(d => d.Name))
+                                                            {
+                                                                <div class="tree-node bloc-node ms-4 mt-1">
+                                                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-setores-emp-@dept.Id">
+                                                                        <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                        <i class="icon-base ri-building-4-line me-1"></i> @dept.Name
+                                                                    </div>
 
-                                                             @foreach (var group in groupedEquips)
-                                                             {
-                                                                 <div class="tree-node equip-node ms-4 mt-1 small">
-                                                                     <a asp-page="/Admin/Equipment"
-                                                                        asp-route-FilterEmpresaId="@empVm.Empresa.Id"
-                                                                        asp-route-FilterType="@group.TypeName"
-                                                                        class="text-secondary text-decoration-none">
-                                                                         <i class="ri-computer-line me-1"></i> @group.TypeName (@group.Count)
-                                                                     </a>
-                                                                 </div>
-                                                             }
-                                                         }
-                                                         else
-                                                         {
-                                                             <div class="ms-4 mt-1 small">
-                                                                 <span class="text-muted italic" style="font-size: 0.82rem;">Sem equipamentos vinculados diretamente</span>
-                                                             </div>
-                                                         }
-                                                     </div>
+                                                                    <div id="tree-setores-emp-@dept.Id" class="collapse">
+                                                                        @foreach (var setor in dept.Setores.OrderBy(s => s.Name))
+                                                                        {
+                                                                            <div class="tree-node school-node ms-4 mt-1">
+                                                                                <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-salas-emp-@setor.Id">
+                                                                                    <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                                    <i class="icon-base ri-layout-grid-line me-1"></i> @setor.Name
+                                                                                </div>
+
+                                                                                <div id="tree-salas-emp-@setor.Id" class="collapse">
+                                                                                    @foreach (var sala in setor.Salas.OrderBy(s => s.Name))
+                                                                                    {
+                                                                                        <div class="tree-node room-node ms-4 mt-1">
+                                                                                            <div class="d-flex align-items-center cursor-pointer p-1 rounded" data-bs-toggle="collapse" data-bs-target="#tree-equip-sala-emp-@sala.Id">
+                                                                                                <i class="icon-base ri-arrow-right-s-line"></i>
+                                                                                                <i class="icon-base ri-door-open-line me-1"></i> @sala.Name
+                                                                                                <span class="ms-2 text-muted small">(@(sala.Equipments?.Count ?? 0) equipamentos)</span>
+                                                                                            </div>
+
+                                                                                            <div id="tree-equip-sala-emp-@sala.Id" class="collapse">
+                                                                                                @if (sala.Equipments != null && sala.Equipments.Any())
+                                                                                                {
+                                                                                                    var groupedEquipmentsByType = sala.Equipments
+                                                                                                        .GroupBy(e => !string.IsNullOrWhiteSpace(e.Type) ? e.Type : (!string.IsNullOrWhiteSpace(e.Name) ? e.Name : "Outros"))
+                                                                                                        .Select(g => new { TypeName = g.Key, Count = g.Count() })
+                                                                                                        .OrderBy(g => g.TypeName)
+                                                                                                        .ToList();
+
+                                                                                                    foreach (var group in groupedEquipmentsByType)
+                                                                                                    {
+                                                                                                        <div class="tree-node equip-node ms-4 mt-1 small">
+                                                                                                            <a asp-page="/Admin/Equipment"
+                                                                                                               asp-route-FilterEmpresaId="@empVm.Empresa.Id"
+                                                                                                               asp-route-FilterRoomId="@sala.Id"
+                                                                                                               asp-route-FilterType="@group.TypeName"
+                                                                                                               class="text-secondary text-decoration-none">
+                                                                                                                <i class="ri-computer-line me-1"></i> @group.TypeName (@group.Count)
+                                                                                                            </a>
+                                                                                                        </div>
+                                                                                                    }
+                                                                                                }
+                                                                                                else
+                                                                                                {
+                                                                                                    <div class="ms-4 mt-1 small text-muted">Sem equipamentos nesta sala</div>
+                                                                                                }
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    }
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+
+                                                        @if (empVm.Equipments.Any())
+                                                        {
+                                                            <div class="tree-node equip-node ms-4 mt-2">
+                                                                <div class="small fw-semibold text-muted mb-1">Equipamentos sem sala</div>
+                                                                @{
+                                                                    var groupedDirectEquipments = empVm.Equipments
+                                                                        .GroupBy(e => !string.IsNullOrWhiteSpace(e.Type) ? e.Type : (!string.IsNullOrWhiteSpace(e.Name) ? e.Name : "Outros"))
+                                                                        .Select(g => new { TypeName = g.Key, Count = g.Count() })
+                                                                        .OrderBy(g => g.TypeName)
+                                                                        .ToList();
+                                                                }
+                                                                @foreach (var group in groupedDirectEquipments)
+                                                                {
+                                                                    <div class="tree-node equip-node ms-2 mt-1 small">
+                                                                        <a asp-page="/Admin/Equipment"
+                                                                           asp-route-FilterEmpresaId="@empVm.Empresa.Id"
+                                                                           asp-route-FilterType="@group.TypeName"
+                                                                           class="text-secondary text-decoration-none">
+                                                                            <i class="ri-computer-line me-1"></i> @group.TypeName (@group.Count)
+                                                                        </a>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        }
+                                                        else if (!empVm.Departamentos.Any())
+                                                        {
+                                                            <div class="ms-4 mt-1 small">
+                                                                <span class="text-muted italic" style="font-size: 0.82rem;">Sem infraestrutura registada</span>
+                                                            </div>
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

@@ -225,11 +225,11 @@
                             <option value="Computadores">Computadores</option>
                             <option value="Monitores">Monitores</option>
                             <option value="Impressoras">Impressoras</option>
-                            <option value="Projetores">Projetores</option>
                             <option value="Networking">Networking</option>
                             <option value="Servidores/Infra">Servidores/Infra</option>
                             <option value="Componentes">Componentes</option>
                             <option value="Periféricos">Periféricos</option>
+                            <option value="Projetores">Projetores</option>
                             <option value="Quadros Interativos">Quadros Interativos</option>
                             <option value="Outros">Outros</option>
                         </select>
@@ -238,13 +238,27 @@
                         <label class="form-label fw-semibold small text-uppercase mb-1">Tipo</label>
                         <select id="filterTipo" asp-for="FilterType" class="form-select">
                             <option value="">Todos</option>
+                            <!-- Computadores -->
                             <option value="Desktop" data-art="Computadores">Desktop</option>
                             <option value="Portátil" data-art="Computadores">Portátil</option>
                             <option value="AIO" data-art="Computadores">AIO</option>
                             <option value="Laptop" data-art="Computadores">Laptop</option>
+                            <!-- Monitores -->
                             <option value="Monitor" data-art="Monitores">Monitor</option>
                             <option value="Televisão" data-art="Monitores">Televisão</option>
                             <option value="TV" data-art="Monitores">TV</option>
+                            <!-- Impressoras -->
+                            <option value="Impressora" data-art="Impressoras">Impressora</option>
+                            <!-- Networking -->
+                            <option value="Router" data-art="Networking">Router</option>
+                            <option value="Switch" data-art="Networking">Switch</option>
+                            <option value="Access Point" data-art="Networking">Access Point</option>
+                            <option value="Firewall" data-art="Networking">Firewall</option>
+                            <!-- Servidores/Infra -->
+                            <option value="Servidor" data-art="Servidores/Infra">Servidor</option>
+                            <option value="Storage" data-art="Servidores/Infra">Storage</option>
+                            <option value="NAS" data-art="Servidores/Infra">NAS</option>
+                            <!-- Componentes -->
                             <option value="Motherboard" data-art="Componentes">Motherboard</option>
                             <option value="Disco HDD" data-art="Componentes">Disco HDD</option>
                             <option value="Disco SSD" data-art="Componentes">Disco SSD</option>
@@ -252,20 +266,18 @@
                             <option value="Processador (CPU)" data-art="Componentes">Processador (CPU)</option>
                             <option value="Placa Gráfica" data-art="Componentes">Placa Gráfica</option>
                             <option value="Fonte Alimentação" data-art="Componentes">Fonte Alimentação</option>
+                            <!-- Periféricos -->
                             <option value="Teclado" data-art="Periféricos">Teclado</option>
                             <option value="Rato" data-art="Periféricos">Rato</option>
-                            <option value="Impressora" data-art="Impressoras">Impressora</option>
+                            <option value="Headphones" data-art="Periféricos">Headphones</option>
+                            <option value="Colunas" data-art="Periféricos">Colunas</option>
+                            <!-- Projetores -->
                             <option value="Projetor" data-art="Projetores">Projetor</option>
+                            <!-- Quadros Interativos -->
                             <option value="Quadro Interativo" data-art="Quadros Interativos">Quadro Interativo</option>
-                            <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
-                            <option value="Router" data-art="Networking">Router</option>
-                            <option value="Switch" data-art="Networking">Switch</option>
-                            <option value="Access Point" data-art="Networking">Access Point</option>
-                            <option value="Firewall" data-art="Networking">Firewall</option>
-                            <option value="Servidor" data-art="Servidores/Infra">Servidor</option>
-                            <option value="Storage" data-art="Servidores/Infra">Storage</option>
-                            <option value="NAS" data-art="Servidores/Infra">NAS</option>
-                            <option value="Cabo/Adatador" data-art="Outros">Cabo/Adaptador</option>
+                            <option value="Mesa Interativa" data-art="Quadros Interativos">Mesa Interativa</option>
+                            <!-- Outros -->
+                            <option value="Cabo/Adaptador" data-art="Outros">Cabo/Adaptador</option>
                             <option value="Outro" data-art="Outros">Outro</option>
                         </select>
                     </div>

@@ -138,10 +138,7 @@
                                             </form>
                                         }
                                         
-                                        <div class="d-flex align-items-center gap-1 ms-2">
-                                            <button type="button" class="btn btn-sm text-primary p-1" title="Editar" onclick="alert('Modo de leitura. Apenas administradores podem editar.');"><i class="bx bx-edit"></i> ✏️</button>
-                                            <button type="button" class="btn btn-sm text-danger p-1" title="Eliminar" onclick="alert('Modo de leitura. Apenas administradores podem apagar.');"><i class="bx bx-trash"></i> 🗑️</button>
-                                        </div>
+
                                     </div>
                                 </td>
                             </tr>
@@ -164,7 +161,19 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold small">Artigo</label>
-                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Procurar artigo... Ex: Monitor">
+                            <select id="filterArtigo" asp-for="FilterName" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Computadores">Computadores</option>
+                                <option value="Monitores">Monitores</option>
+                                <option value="Impressoras">Impressoras</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Servidores/Infra">Servidores/Infra</option>
+                                <option value="Componentes">Componentes</option>
+                                <option value="Periféricos">Periféricos</option>
+                                <option value="Projetores">Projetores</option>
+                                <option value="Quadros Interativos">Quadros Interativos</option>
+                                <option value="Outros">Outros</option>
+                            </select>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label fw-semibold small">Estado</label>

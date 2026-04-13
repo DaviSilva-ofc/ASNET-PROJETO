@@ -159,12 +159,13 @@
                             <label class="form-label fw-bold small text-uppercase">Artigo</label>
                             <div class="select-search-wrapper">
                                 <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." onkeyup="filterSelect(this, 'editArtigo')">
-                                <select asp-for="NewEquipment.Name" id="editArtigo" class="form-select" required onchange="updateBrandsModels('edit')">
-                                    <option value="">Selecione...</option>
+                                <select asp-for="NewEquipment.Name" id="editArtigo" class="form-select" required onchange="updateBrandsModels('edit'); updateSpecificTypes('edit');">
+                                    <option value="">Selecione o artigo...</option>
                                     <option value="Computadores">Computadores</option>
                                     <option value="Monitores">Monitores</option>
                                     <option value="Impressoras">Impressoras</option>
                                     <option value="Networking">Networking</option>
+                                    <option value="Servidores/Infra">Servidores/Infra</option>
                                     <option value="Componentes">Componentes</option>
                                     <option value="Periféricos">Periféricos</option>
                                     <option value="Projetores">Projetores</option>
@@ -178,14 +179,28 @@
                             <div class="select-search-wrapper">
                                 <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." onkeyup="filterSelect(this, 'editTipo')">
                                 <select asp-for="NewEquipment.Type" id="editTipo" class="form-select" required>
-                                    <option value="">Selecione o artigo primeiro...</option>
+                                    <option value="">Selecione o tipo...</option>
+                                    <!-- Computadores -->
                                     <option value="Desktop" data-artigo="Computadores">Desktop</option>
                                     <option value="Portátil" data-artigo="Computadores">Portátil</option>
                                     <option value="AIO" data-artigo="Computadores">AIO</option>
                                     <option value="Laptop" data-artigo="Computadores">Laptop</option>
+                                    <!-- Monitores -->
                                     <option value="Monitor" data-artigo="Monitores">Monitor</option>
                                     <option value="Televisão" data-artigo="Monitores">Televisão</option>
                                     <option value="TV" data-artigo="Monitores">TV</option>
+                                    <!-- Impressoras -->
+                                    <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                                    <!-- Networking -->
+                                    <option value="Router" data-artigo="Networking">Router</option>
+                                    <option value="Switch" data-artigo="Networking">Switch</option>
+                                    <option value="Access Point" data-artigo="Networking">Access Point</option>
+                                    <option value="Firewall" data-artigo="Networking">Firewall</option>
+                                    <!-- Servidores/Infra -->
+                                    <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+                                    <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
+                                    <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+                                    <!-- Componentes -->
                                     <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
                                     <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
                                     <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
@@ -193,19 +208,17 @@
                                     <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
                                     <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
                                     <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
+                                    <!-- Periféricos -->
                                     <option value="Teclado" data-artigo="Periféricos">Teclado</option>
                                     <option value="Rato" data-artigo="Periféricos">Rato</option>
-                                    <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                                    <option value="Headphones" data-artigo="Periféricos">Headphones</option>
+                                    <option value="Colunas" data-artigo="Periféricos">Colunas</option>
+                                    <!-- Projetores -->
                                     <option value="Projetor" data-artigo="Projetores">Projetor</option>
+                                    <!-- Quadros Interativos -->
                                     <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
                                     <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
-                                    <option value="Router" data-artigo="Networking">Router</option>
-                                    <option value="Switch" data-artigo="Networking">Switch</option>
-                                    <option value="Access Point" data-artigo="Networking">Access Point</option>
-                                    <option value="Firewall" data-artigo="Networking">Firewall</option>
-                                    <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
-                                    <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
-                                    <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+                                    <!-- Outros -->
                                     <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
                                     <option value="Outro" data-artigo="Outros">Outro</option>
                                 </select>
@@ -275,8 +288,8 @@
                             <label class="form-label fw-bold small text-uppercase">Artigo</label>
                             <div class="select-search-wrapper">
                                 <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." onkeyup="filterSelect(this, 'regArtigo')">
-                                <select asp-for="NewEquipment.Name" id="regArtigo" class="form-select" required onchange="updateBrandsModels()">
-                                    <option value="">Selecione...</option>
+                                <select asp-for="NewEquipment.Name" id="regArtigo" class="form-select" required onchange="updateBrandsModels(); updateSpecificTypes();">
+                                    <option value="">Selecione o artigo...</option>
                                     <option value="Computadores">Computadores</option>
                                     <option value="Monitores">Monitores</option>
                                     <option value="Impressoras">Impressoras</option>
@@ -296,13 +309,27 @@
                                 <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." onkeyup="filterSelect(this, 'regTipo')">
                                 <select asp-for="NewEquipment.Type" id="regTipo" class="form-select" required>
                                     <option value="">Selecione o tipo...</option>
+                                    <!-- Computadores -->
                                     <option value="Desktop" data-artigo="Computadores">Desktop</option>
                                     <option value="Portátil" data-artigo="Computadores">Portátil</option>
                                     <option value="AIO" data-artigo="Computadores">AIO</option>
                                     <option value="Laptop" data-artigo="Computadores">Laptop</option>
+                                    <!-- Monitores -->
                                     <option value="Monitor" data-artigo="Monitores">Monitor</option>
                                     <option value="Televisão" data-artigo="Monitores">Televisão</option>
                                     <option value="TV" data-artigo="Monitores">TV</option>
+                                    <!-- Impressoras -->
+                                    <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                                    <!-- Networking -->
+                                    <option value="Router" data-artigo="Networking">Router</option>
+                                    <option value="Switch" data-artigo="Networking">Switch</option>
+                                    <option value="Access Point" data-artigo="Networking">Access Point</option>
+                                    <option value="Firewall" data-artigo="Networking">Firewall</option>
+                                    <!-- Servidores/Infra -->
+                                    <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+                                    <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
+                                    <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+                                    <!-- Componentes -->
                                     <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
                                     <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
                                     <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
@@ -310,19 +337,17 @@
                                     <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
                                     <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
                                     <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
+                                    <!-- Periféricos -->
                                     <option value="Teclado" data-artigo="Periféricos">Teclado</option>
                                     <option value="Rato" data-artigo="Periféricos">Rato</option>
-                                    <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                                    <option value="Headphones" data-artigo="Periféricos">Headphones</option>
+                                    <option value="Colunas" data-artigo="Periféricos">Colunas</option>
+                                    <!-- Projetores -->
                                     <option value="Projetor" data-artigo="Projetores">Projetor</option>
+                                    <!-- Quadros Interativos -->
                                     <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
                                     <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
-                                    <option value="Router" data-artigo="Networking">Router</option>
-                                    <option value="Switch" data-artigo="Networking">Switch</option>
-                                    <option value="Access Point" data-artigo="Networking">Access Point</option>
-                                    <option value="Firewall" data-artigo="Networking">Firewall</option>
-                                    <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
-                                    <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
-                                    <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
+                                    <!-- Outros -->
                                     <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
                                     <option value="Outro" data-artigo="Outros">Outro</option>
                                 </select>
@@ -411,25 +436,65 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label fw-bold small text-uppercase">Artigo</label>
-                        <select asp-for="FilterName" class="form-select">
+                        <select id="filterArtigo" asp-for="FilterName" class="form-select">
                             <option value="">Todos os Artigos</option>
-                            @foreach (var name in Model.UniqueEquipmentNames)
-                            {
-                                <option value="@name">@name</option>
-                            }
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Servidores/Infra">Servidores/Infra</option>
+                            <option value="Componentes">Componentes</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Quadros Interativos">Quadros Interativos</option>
+                            <option value="Outros">Outros</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold small text-uppercase">Tipo</label>
-                        <select asp-for="FilterType" class="form-select">
+                        <select id="filterTipo" asp-for="FilterType" class="form-select">
                             <option value="">Todos os Tipos</option>
-                            <option value="Desktop">Desktop</option>
-                            <option value="Portátil">Portátil</option>
-                            <option value="Monitor">Monitor</option>
-                            <option value="Impressora">Impressora</option>
-                            <option value="Router">Router</option>
-                            <option value="Switch">Switch</option>
-                            <option value="Componente">Componente</option>
+                            <!-- Computadores -->
+                            <option value="Desktop" data-art="Computadores">Desktop</option>
+                            <option value="Portátil" data-art="Computadores">Portátil</option>
+                            <option value="AIO" data-art="Computadores">AIO</option>
+                            <option value="Laptop" data-art="Computadores">Laptop</option>
+                            <!-- Monitores -->
+                            <option value="Monitor" data-art="Monitores">Monitor</option>
+                            <option value="Televisão" data-art="Monitores">Televisão</option>
+                            <option value="TV" data-art="Monitores">TV</option>
+                            <!-- Impressoras -->
+                            <option value="Impressora" data-art="Impressoras">Impressora</option>
+                            <!-- Networking -->
+                            <option value="Router" data-art="Networking">Router</option>
+                            <option value="Switch" data-art="Networking">Switch</option>
+                            <option value="Access Point" data-art="Networking">Access Point</option>
+                            <option value="Firewall" data-art="Networking">Firewall</option>
+                            <!-- Servidores/Infra -->
+                            <option value="Servidor" data-art="Servidores/Infra">Servidor</option>
+                            <option value="Storage" data-art="Servidores/Infra">Storage</option>
+                            <option value="NAS" data-art="Servidores/Infra">NAS</option>
+                            <!-- Componentes -->
+                            <option value="Motherboard" data-art="Componentes">Motherboard</option>
+                            <option value="Disco HDD" data-art="Componentes">Disco HDD</option>
+                            <option value="Disco SSD" data-art="Componentes">Disco SSD</option>
+                            <option value="Memória RAM" data-art="Componentes">Memória RAM</option>
+                            <option value="Processador (CPU)" data-art="Componentes">Processador (CPU)</option>
+                            <option value="Placa Gráfica" data-art="Componentes">Placa Gráfica</option>
+                            <option value="Fonte Alimentação" data-art="Componentes">Fonte Alimentação</option>
+                            <!-- Periféricos -->
+                            <option value="Teclado" data-art="Periféricos">Teclado</option>
+                            <option value="Rato" data-art="Periféricos">Rato</option>
+                            <option value="Headphones" data-art="Periféricos">Headphones</option>
+                            <option value="Colunas" data-art="Periféricos">Colunas</option>
+                            <!-- Projetores -->
+                            <option value="Projetor" data-art="Projetores">Projetor</option>
+                            <!-- Quadros Interativos -->
+                            <option value="Quadro Interativo" data-art="Quadros Interativos">Quadro Interativo</option>
+                            <option value="Mesa Interativa" data-art="Quadros Interativos">Mesa Interativa</option>
+                            <!-- Outros -->
+                            <option value="Cabo/Adaptador" data-art="Outros">Cabo/Adaptador</option>
+                            <option value="Outro" data-art="Outros">Outro</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -483,24 +548,116 @@
 
 @section PageScripts {
 <script>
-    const brandModelData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object> {
-        ["Computadores"] = new { HP = new[]{"ProDesk 400", "ProDesk 600", "ZBook", "EliteOne 800 (AIO)"}, Dell = new[]{"OptiPlex 3090", "Latitude 3520", "OptiPlex 7490 (AIO)"}, Lenovo = new[]{"ThinkCentre M70q", "ThinkPad T14", "IdeaCentre AIO"} },
-        ["Monitores"] = new { HP = new[]{"P22h", "E24"}, Dell = new[]{"P2422H", "U2422H"}, Samsung = new[]{"F24T350", "Smart TV 4K"}, LG = new[]{"Monitor 24\"", "TV NanoCell"} },
-        ["Impressoras"] = new { HP = new[]{"LaserJet Pro", "DeskJet"}, Brother = new[]{"HL-L2350DW"}, Epson = new[]{"EcoTank"} },
-        ["Networking"] = new { Cisco = new[]{"Catalyst 1000", "Firepower 1010"}, Ubiquiti = new[]{"UniFi U6"}, Fortinet = new[]{"FortiGate 40F", "FortiGate 60F"} },
-        ["Servidores/Infra"] = new { Dell = new[]{"PowerEdge T150", "PowerEdge R250"}, HP = new[]{"ProLiant ML30", "DL360"}, Synology = new[]{"DS220+", "RS820+"} },
-        ["Componentes"] = new { Kingston = new[]{"DDR4 8GB", "SSD 480GB"}, Samsung = new[]{"980 NVMe"} },
-        ["Quadros Interativos"] = new { SMART = new[]{"Board MX", "Mesa Interativa"}, ViewSonic = new[]{"ViewBoard"} }
-    }));
+    const brandModelData = {
+        'Computadores': {
+            'HP': ['ProDesk 400 G6', 'ProDesk 600 G6', 'EliteDesk 800 G6', 'Z2 Mini G5', 'EliteOne 800 G6 AIO', 'ProBook 450 G8', 'EliteBook 840 G8', 'ZBook Power G8'],
+            'Dell': ['OptiPlex 3090', 'OptiPlex 5090', 'OptiPlex 7090', 'Precision 3450', 'OptiPlex 7490 AIO', 'Vostro 3510', 'Latitude 3520', 'Precision 3561'],
+            'Lenovo': ['ThinkCentre M70q', 'ThinkCentre M80q', 'ThinkCentre M90q', 'ThinkStation P348', 'ThinkCentre M90a AIO', 'V15 G2', 'ThinkPad T14', 'ThinkPad P15'],
+            'Apple': ['Mac mini M1', 'Mac mini M2', 'iMac 24"', 'Mac Studio', 'MacBook Air M1', 'MacBook Air M2', 'MacBook Pro 14"', 'MacBook Pro 16"'],
+            'Asus': ['ExpertCenter D5', 'ExpertCenter D7', 'Zenbook 14', 'ExpertBook B1', 'ROG Strix G15']
+        },
+        'Monitores': {
+            'HP': ['P22h G4', 'P24h G4', 'E24 G4', 'E27 G4', 'Z24f G3', 'Z27k G3'],
+            'Dell': ['E2222H', 'E2422H', 'P2422H', 'P2722H', 'U2422H', 'U2722DE'],
+            'Samsung': ['F24T350', 'F27T350', 'Odyssey G3', 'Odyssey G5', 'Smart Monitor M5', 'Smart Monitor M7'],
+            'LG': ['24MK430H', '27MK600M', '27UL500-W', '32UN500-W', 'UltraGear 24GN600'],
+            'Asus': ['VP228HE', 'VZ249HE', 'VG248QG', 'PA248QV'],
+            'AOC': ['24B2XH', '27B2H', '24G2U', 'C27G2U']
+        },
+        'Impressoras': {
+            'HP': ['LaserJet Pro M404n', 'LaserJet Pro MFP M428fdn', 'Color LaserJet Pro M454dw', 'OfficeJet Pro 9010'],
+            'Brother': ['HL-L2350DW', 'HL-L5100DN', 'MFC-L2710DW', 'MFC-L5700DN'],
+            'Epson': ['EcoTank L3250', 'EcoTank L4260', 'WorkForce WF-2830', 'SureColor SC-P700'],
+            'Canon': ['i-SENSYS LBP223dw', 'MAXIFY MB2150', 'PIXMA TR4550']
+        },
+        'Networking': {
+            'Cisco': ['Catalyst 1000-8T', 'Catalyst 1000-24T', 'CBS250-8T', 'CBS350-24T', 'RV160 VPN Router', 'RV340 VPN Router', 'C921-4P'],
+            'Ubiquiti': ['UniFi Switch Lite 8', 'UniFi Switch 24', 'UniFi AP AC Lite', 'UniFi U6 Lite', 'UniFi U6 Pro', 'EdgeRouter 4'],
+            'TP-Link': ['TL-SG108', 'TL-SG1024', 'EAP245', 'EAP610', 'Archer AX55', 'SafeStream TL-R605'],
+            'Fortinet': ['FortiGate 40F', 'FortiGate 60F', 'FortiGate 80F', 'FortiSwitch 108E', 'FortiAP 221E'],
+            'Netgear': ['GS108', 'GS308', 'GS316', 'WAX610', 'WAX620', 'RAX50', 'MS108UP'],
+            'D-Link': ['DGS-1100-08V2', 'DGS-1100-24V2', 'DAP-X2810', 'DIR-X1860', 'DMS-106XT']
+        },
+        'Servidores/Infra': {
+            'Dell': ['PowerEdge T150', 'PowerEdge T350', 'PowerEdge R250', 'PowerEdge R350'],
+            'HP': ['ProLiant ML30 Gen10', 'ProLiant ML110 Gen10', 'ProLiant DL360 Gen10', 'ProLiant DL380 Gen10'],
+            'Lenovo': ['ThinkSystem ST50', 'ThinkSystem ST250', 'ThinkSystem SR250L'],
+            'Synology': ['DiskStation DS220+', 'DiskStation DS420+', 'DiskStation DS920+', 'RackStation RS820+'],
+            'QNAP': ['TS-251D', 'TS-451D2', 'TS-453D', 'TS-653D']
+        },
+        'Componentes': {
+            'Kingston': ['ValueRAM 8GB DDR4', 'FURY Beast 16GB DDR4', 'A400 240GB SSD', 'A400 480GB SSD', 'NV2 500GB NVMe', 'NV2 1TB NVMe'],
+            'Samsung': ['870 EVO 250GB', '870 EVO 500GB', '870 EVO 1TB', '980 500GB NVMe', '980 PRO 1TB NVMe', 'DDR4 8GB 3200MHz'],
+            'Crucial': ['BX500 240GB SSD', 'BX500 480GB SSD', 'MX500 500GB SSD', 'P3 500GB NVMe', 'P3 1TB NVMe', 'RAM 8GB DDR4 3200', 'RAM 16GB DDR4 3200'],
+            'Western Digital': ['Blue 1TB HDD', 'Blue 2TB HDD', 'Blue 500GB SSD', 'Blue SN570 500GB NVMe', 'Blue SN570 1TB NVMe', 'Black SN770 1TB NVMe'],
+            'Intel': ['Core i3-12100', 'Core i5-12400', 'Core i5-13400', 'Core i7-12700', 'Core i7-13700'],
+            'AMD': ['Ryzen 3 4100', 'Ryzen 5 5600', 'Ryzen 5 5600G', 'Ryzen 7 5700G', 'Ryzen 7 5800X'],
+            'NVIDIA': ['GeForce GT 710', 'GeForce GT 1030', 'GeForce GTX 1650', 'GeForce RTX 3060']
+        },
+        'Periféricos': {
+            'Logitech': ['K120 Teclado', 'MK270 Combo', 'MK345 Combo', 'MK540 Combo', 'M185 Rato', 'M190 Rato', 'M330 Silent', 'B100 Rato', 'C270 Webcam', 'C920 HD Pro Webcam', 'H340 Headset', 'H390 Headset', 'Z150 Colunas'],
+            'Microsoft': ['Ergonomic Keyboard', 'Comfort Mouse 4500', 'Bluetooth Mouse', 'LifeCam HD-3000'],
+            'HP': ['125 Teclado', '125 Rato', '235 Combo Wireless', '330 Combo Wireless', '320 FHD Webcam']
+        },
+        'Projetores': {
+            'Epson': ['EB-W06', 'EB-FH06', 'EB-X51', 'EB-2250U', 'EB-L200SW', 'EB-735Fi', 'EB-1485Fi'],
+            'BenQ': ['MH733', 'MH560', 'MW560', 'TH585P', 'EH600', 'LH720'],
+            'ViewSonic': ['PA503S', 'PA503W', 'PA503X', 'PX701HD', 'LS500WH'],
+            'Optoma': ['H190X', 'EH401', 'W381', 'ZH406ST'],
+            'NEC': ['ME402X', 'ME403U', 'P547UL', 'PA804UL'],
+            'Sony': ['VPL-EX455', 'VPL-PHZ12', 'VPL-FHZ66']
+        },
+        'Quadros Interativos': {
+            'SMART': ['Board MX075-V3', 'Board MX086-V3', 'Board 6000S', 'Board 7000 Pro'],
+            'Promethean': ['ActivPanel 9', 'ActivPanel 9 Premium', 'ActivPanel Elements'],
+            'ViewSonic': ['ViewBoard IFP5550', 'ViewBoard IFP6550', 'ViewBoard IFP7550', 'ViewBoard IFP8650'],
+            'Samsung': ['Flip WM55B', 'Flip WM75B', 'Flip Pro WM85B'],
+            'BenQ': ['RP6503', 'RP7503', 'RP8603'],
+            'Clevertouch': ['Impact Plus 65"', 'Impact Plus 75"', 'Impact Plus 86"']
+        },
+        'Outros': {
+            'Genérico': ['Outro Equipamento'],
+            'Sem Marca': ['Sem Modelo']
+        }
+    };
 
+    // Filter select options by search input
     function filterSelect(input, selectId) {
-        const filter = input.value.toLowerCase();
-        const select = document.getElementById(selectId);
-        const options = select.querySelectorAll('option');
-        options.forEach(option => {
-            if (option.value === "") return;
-            option.style.display = option.text.toLowerCase().includes(filter) ? 'block' : 'none';
+        var filter = (input ? input.value : "").toLowerCase().trim();
+        var select = document.getElementById(selectId);
+        var options = select.querySelectorAll('option');
+        
+        var currentArtigo = null;
+        if (selectId === 'regTipo') {
+            currentArtigo = document.getElementById('regArtigo').value.toLowerCase().trim();
+        } else if (selectId === 'editTipo') {
+            currentArtigo = document.getElementById('editArtigo').value.toLowerCase().trim();
+        }
+
+        options.forEach(function(opt) {
+            if (opt.value === "") return;
+            var text = opt.textContent.toLowerCase();
+            var matchesSearch = text.includes(filter);
+            
+            var matchesArtigo = true;
+            if (currentArtigo) {
+                var targetArtigo = (opt.getAttribute('data-artigo') || "").toLowerCase().trim();
+                matchesArtigo = (targetArtigo === currentArtigo);
+            }
+
+            opt.style.display = (matchesSearch && matchesArtigo) ? '' : 'none';
         });
+    }
+
+    function updateSpecificTypes(prefix = 'reg') {
+        const artigo = document.getElementById(prefix + 'Artigo').value;
+        const tipoSelect = document.getElementById(prefix + 'Tipo');
+        tipoSelect.value = "";
+        
+        // Trigger filterSelect to update display based on BOTH artigo AND any current search
+        const wrapper = tipoSelect.closest('.select-search-wrapper');
+        const searchInput = wrapper ? wrapper.querySelector('.select-search-input') : null;
+        filterSelect(searchInput, prefix + 'Tipo');
     }
 
     function updateBrandsModels(prefix = 'reg') {
@@ -551,10 +708,33 @@
     function openEditModal(id, name, type, brand, model, serial, roomId) {
         document.getElementById('editId').value = id;
         
-        // Set Artigo and trigger brands update
+        // Set Artigo with normalization
         const artSelect = document.getElementById('editArtigo');
-        artSelect.value = name;
+        const cleanName = (name || '').toLowerCase().trim();
+        
+        // Try to find a matching option (case insensitive)
+        let matchingOpt = Array.from(artSelect.options).find(o => o.value.toLowerCase().trim() === cleanName);
+        
+        // Specific normalization rules
+        if (!matchingOpt) {
+            if (cleanName === 'computador') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Computadores');
+            else if (cleanName === 'monitor' || cleanName === 'televisão' || cleanName === 'tv') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Monitores');
+            else if (cleanName === 'impressora') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Impressoras');
+            else if (cleanName === 'componente') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Componentes');
+            else if (cleanName === 'periférico' || cleanName === 'rato' || cleanName === 'teclado') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Periféricos');
+            else if (cleanName === 'projetor') matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Projetores');
+            else if (cleanName.includes('quadro') || cleanName.includes('board')) matchingOpt = Array.from(artSelect.options).find(o => o.value === 'Quadros Interativos');
+        }
+
+        if (matchingOpt) {
+            artSelect.value = matchingOpt.value;
+        } else {
+            artSelect.value = 'Outros'; 
+        }
+
+        // Trigger updates
         updateBrandsModels('edit');
+        updateSpecificTypes('edit');
 
         // Set Marca and trigger models update
         const marcaSelect = document.getElementById('editMarca');
@@ -563,7 +743,17 @@
 
         // Set others
         document.getElementById('editModelo').value = model;
-        document.getElementById('editTipo').value = type;
+        
+        // Set type (Tipo Específico)
+        const tipoSelect = document.getElementById('editTipo');
+        const cleanType = (type || '').toLowerCase().trim();
+        let matchedType = Array.from(tipoSelect.options).find(o => o.value.toLowerCase().trim() === cleanType);
+        if (matchedType) {
+            tipoSelect.value = matchedType.value;
+        } else {
+            tipoSelect.value = type || ""; 
+        }
+
         document.getElementById('editSerial').value = serial;
         document.getElementById('editSala').value = roomId;
 

@@ -31,6 +31,7 @@ namespace AspnetCoreStarter.Pages.Admin
             public List<User> Responsibles { get; set; } = new();
             public int TicketCount { get; set; }
             public int ContractCount { get; set; }
+            public List<Departamento> Departamentos { get; set; } = new();
             public List<Equipamento> Equipments { get; set; } = new();
             public string Abbreviation { get; set; } = "";
             public int? IndividualClientId { get; set; }
@@ -223,7 +224,22 @@ namespace AspnetCoreStarter.Pages.Admin
                     .CountAsync(t => (t.EquipamentoId.HasValue && _context.Equipamentos.Any(e => e.Id == t.EquipamentoId.Value && e.EmpresaId == emp.Id)));
 
                 var contractCount = await _context.Contratos.CountAsync(c => c.EmpresaId == emp.Id);
-                var equipments = await _context.Equipamentos.Where(e => e.EmpresaId == emp.Id).ToListAsync();
+                var departamentos = await _context.Departamentos
+                    .Where(d => d.EmpresaId == emp.Id)
+                    .Include(d => d.Setores)
+                        .ThenInclude(s => s.Salas)
+                            .ThenInclude(sala => sala.Equipments)
+                    .ToListAsync();
+
+                var salaIds = departamentos
+                    .SelectMany(d => d.Setores)
+                    .SelectMany(s => s.Salas)
+                    .Select(s => s.Id)
+                    .ToList();
+
+                var equipments = await _context.Equipamentos
+                    .Where(e => e.EmpresaId == emp.Id && (!e.RoomId.HasValue || !salaIds.Contains(e.RoomId.Value)))
+                    .ToListAsync();
 
                 var indClientUser = await _context.Users
                     .FirstOrDefaultAsync(u => u.EmpresaId == emp.Id && !_context.Administradores.Any(a => a.UserId == u.Id));
@@ -239,6 +255,7 @@ namespace AspnetCoreStarter.Pages.Admin
                     Responsibles = responsibles,
                     TicketCount = ticketCount,
                     ContractCount = contractCount,
+                    Departamentos = departamentos,
                     Equipments = equipments,
                     Abbreviation = GetAbbreviation(emp.Name),
                     IndividualClientId = indClientUser?.Id

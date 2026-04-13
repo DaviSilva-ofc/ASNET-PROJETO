@@ -518,6 +518,53 @@
     <!-- ===== Escalated Stock Requests Row ===== -->
     <div class="row g-4 mb-4">
         <div class="col-12">
+            <div class="card tree-card h-100" style="border-left: 5px solid #ffab00;">
+                <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
+                    <h5 class="mb-0"><i class='bx bx-package me-2'></i>Pedidos de Stock dos Técnicos</h5>
+                    <a href="/Admin/Stocks" class="btn btn-sm btn-outline-warning">Abrir Stocks</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Técnico</th>
+                                    <th>Pedido</th>
+                                    <th>Estado</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.TechnicianStockRequests == null || !Model.TechnicianStockRequests.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">Nenhum pedido de stock de técnico pendente.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var t in Model.TechnicianStockRequests.Take(10))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="fw-semibold">@(t.Technician?.Username ?? $"Técnico #{t.TechnicianId}")</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@(t.Description ?? "Sem descrição")</small>
+                                            </td>
+                                            <td><span class="badge bg-label-warning">@t.Status</span></td>
+                                            <td><small>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
             <div class="card tree-card h-100" style="border-left: 5px solid var(--asnet-blue);">
                 <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
                     <h5 class="mb-0"><i class='bx bx-git-branch me-2'></i>Pedidos Escalados (Stock Global)</h5>
