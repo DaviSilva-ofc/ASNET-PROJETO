@@ -74,8 +74,16 @@
                             <tr>
                                 <td><span class="fw-bold">#@ticket.Id</span></td>
                                 <td>
-                                    <small class="text-muted">@ticket.Equipamento?.Name</small><br>
-                                    @ticket.Equipamento?.Brand @ticket.Equipamento?.Model
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold">@ticket.Equipamento?.Name</span>
+                                        <small class="text-muted small">
+                                            @(ticket.Equipamento?.Brand ?? "Genérico") @(ticket.Equipamento?.Model ?? "")
+                                            @if (!string.IsNullOrEmpty(ticket.Equipamento?.SerialNumber))
+                                            {
+                                                <span class="ms-1">(S/N: @ticket.Equipamento.SerialNumber)</span>
+                                            }
+                                        </small>
+                                    </div>
                                 </td>
                                 <td>
                                     @{
@@ -162,7 +170,7 @@
                                 </option>
                             }
                         </select>
-                        <div class="form-text small">Apenas equipamentos com estado 'Avariado' ou 'Indisponível' são listados.</div>
+                        <div class="form-text small">Selecione o equipamento para o qual pretende criar um pedido de assistência.</div>
                     </div>
 
                     <div class="mb-3">
@@ -214,7 +222,6 @@
                         <select asp-for="FilterStatus" class="form-select">
                             <option value="Todos os Estados">Todos os Estados</option>
                             <option value="Pendente">Pendente</option>
-                            <option value="Em Resolução">Em Resolução</option>
                             <option value="Concluído">Concluído</option>
                         </select>
                     </div>
@@ -389,9 +396,34 @@
                 
                 // Trigger priority update after modal is ready
                 myModalElement.addEventListener('shown.bs.modal', function () {
+                    var selectEq = document.getElementById('selectEquipamento');
+                    if (selectEq && '@Model.EqId.Value') {
+                        selectEq.value = '@Model.EqId.Value';
+                        if (typeof jQuery !== 'undefined' && $(selectEq).hasClass("select2-hidden-accessible")) {
+                            $(selectEq).trigger('change');
+                        }
+                    }
                     updatePriorityLevels();
                 });
                 </text>
+            }
+            
+            var modalEl = document.getElementById('modalNovoTicket');
+            if (modalEl) {
+                modalEl.addEventListener('hidden.bs.modal', function () {
+                    if (window.location.search.includes('EqId')) {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('EqId');
+                        window.history.replaceState({}, '', url);
+                    }
+                    var selectEq = document.getElementById('selectEquipamento');
+                    if (selectEq) {
+                        selectEq.value = "";
+                        if (typeof jQuery !== 'undefined' && $(selectEq).hasClass("select2-hidden-accessible")) {
+                            $(selectEq).trigger('change');
+                        }
+                    }
+                });
             }
         });
     </script>

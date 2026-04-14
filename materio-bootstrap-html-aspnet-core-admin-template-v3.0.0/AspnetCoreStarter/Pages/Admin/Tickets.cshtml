@@ -63,6 +63,7 @@
                         <th>ID</th>
                         <th>Escola / Solicitante</th>
                         <th>Assunto / Descrição</th>
+                        <th>Técnico</th>
                         <th>Prioridade</th>
                         <th>Estado</th>
                         <th>Data</th>
@@ -85,6 +86,19 @@
                                 <td>@(t.School?.Name ?? t.Admin?.Username ?? "N/A")</td>
                                 <td>
                                     <div class="text-wrap" style="max-width: 300px;">
+                                        @if (t.Equipamento != null)
+                                        {
+                                            <div class="d-flex flex-column mb-1">
+                                                <span class="fw-bold text-dark">@t.Equipamento.Name</span>
+                                                <small class="text-muted" style="font-size: 0.75rem;">
+                                                    @(t.Equipamento.Brand ?? "Genérico") @(t.Equipamento.Model ?? "")
+                                                    @if (!string.IsNullOrEmpty(t.Equipamento.SerialNumber))
+                                                    {
+                                                        <span class="ms-1">(S/N: @t.Equipamento.SerialNumber)</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                        }
                                         @{
                                             var desc = t.Description ?? "";
                                             // Find the earliest system-appended marker and trim everything from it
@@ -98,6 +112,21 @@
                                         }
                                         @desc
                                     </div>
+                                </td>
+                                <td>
+                                    @if (t.Technician != null)
+                                    {
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-xs me-2">
+                                                <span class="avatar-initial rounded-circle bg-label-primary shadow-sm" style="font-size: 0.6rem;">@(t.Technician.Username?.Substring(0, 1).ToUpper())</span>
+                                            </div>
+                                            <span class="fw-medium">@t.Technician.Username</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small italic">A aguardar...</span>
+                                    }
                                 </td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(t.Level))
@@ -141,7 +170,6 @@
                                             <select name="newStatus" class="form-select form-select-sm" style="width: 140px;" onchange="this.form.submit()">
                                                 <option value="" disabled selected>Alterar Estado</option>
                                                 <option value="Pendente" disabled="@(t.Status == "Pendente" ? "disabled" : null)">Pendente</option>
-                                                <option value="Em Resolução" disabled="@(t.Status == "Em Resolução" ? "disabled" : null)">Em Resolução</option>
                                                 <option value="Concluído" disabled="@(t.Status == "Concluído" ? "disabled" : null)">Concluído</option>
                                             </select>
                                         </form>
@@ -165,7 +193,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Equipamento Avariado</label>
+                        <label class="form-label">Equipamento</label>
                         @if (Model.eqId.HasValue)
                         {
                             <input type="hidden" asp-for="NewTicket.EquipamentoId" />
@@ -259,7 +287,6 @@
                             <select asp-for="FilterStatus" class="form-select">
                                 <option value="Todos os Estados">Todos os Estados</option>
                                 <option value="Pendente">Pendente</option>
-                                <option value="Em Resolução">Em Resolução</option>
                                 <option value="Concluído">Concluído</option>
                             </select>
                         </div>
@@ -468,6 +495,14 @@
             // Trigger priority check after modal is shown
             myModalElement.addEventListener('shown.bs.modal', function () {
                 updatePriorityLevels();
+            });
+            
+            myModalElement.addEventListener('hidden.bs.modal', function () {
+                if (window.location.search.includes('eqId')) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('eqId');
+                    window.location.href = url.toString();
+                }
             });
         }
     });

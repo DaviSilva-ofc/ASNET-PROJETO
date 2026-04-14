@@ -20,6 +20,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         }
 
         public List<Ticket> Tickets { get; set; } = new();
+        public List<Ticket> AvailableTickets { get; set; } = new();
         public string ClientLocationsJson { get; set; } = "[]";
 
         [BindProperty(SupportsGet = true)]
@@ -49,10 +50,20 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (string.IsNullOrEmpty(sessionUserId) || !int.TryParse(sessionUserId, out int userId))
                 return RedirectToPage("/Auth/Login");
 
+            // Refined filtering to include ONLY breakdown/repair tickets
             var query = _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Equipamento).ThenInclude(e => e.Empresa)
-                .Where(t => t.TechnicianId == userId && t.Level != "Empréstimo")
+                .Include(t => t.Equipamento).ThenInclude(e => e.Room)
+                .Where(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
+                .AsQueryable();
+
+            // Fetch available tickets (unassigned)
+            var availableQuery = _context.Tickets
+                .Include(t => t.School)
+                .Include(t => t.Equipamento).ThenInclude(e => e.Empresa)
+                .Include(t => t.Equipamento).ThenInclude(e => e.Room)
+                .Where(t => t.TechnicianId == null && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(FilterStatus) && FilterStatus != "Todos os Estados")
@@ -86,10 +97,13 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             }
 
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+            AvailableTickets = await availableQuery.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
-            // Prepare Map Data for active tickets
+            // Prepare Map Data for active tickets (both assigned and available)
             var mapLocations = new List<object>();
-            foreach (var t in Tickets.Where(t => t.Status != "Concluído"))
+            var allActiveTickets = Tickets.Concat(AvailableTickets).Where(t => t.Status != "Concluído");
+
+            foreach (var t in allActiveTickets)
             {
                 if (t.School != null && !string.IsNullOrEmpty(t.School.Address))
                 {
@@ -105,6 +119,31 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(uniqueLocations);
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostAcceptTicketAsync(int id)
+        {
+            if (!User.Identity.IsAuthenticated || !User.IsInRole("Tecnico")) 
+                return RedirectToPage("/Auth/Login");
+
+            var sessionUserId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(sessionUserId) || !int.TryParse(sessionUserId, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.TechnicianId == null);
+            if (ticket != null)
+            {
+                ticket.TechnicianId = userId;
+                ticket.Status = "Em Reparação";
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"Aceitou o trabalho #{id}. O estado foi alterado para 'Em Reparação'.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Ticket não encontrado ou já foi atribuído.";
+            }
+
+            return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string newStatus)

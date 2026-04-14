@@ -49,6 +49,9 @@
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
                     <i class="ri-filter-3-line me-1"></i> Filtros
                 </button>
+                <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
+                    <i class="ri-hand-coin-line me-1"></i> Requisitar Equipamento
+                </button>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">
                     <i class="ri-add-line me-1"></i> Novo Equipamento
                 </button>
@@ -105,7 +108,14 @@
                         @foreach (var item in Model.Equipments)
                         {
                             <tr>
-                                <td><strong>@item.Name</strong></td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <strong class="text-dark">@item.Name</strong>
+                                        <small class="text-muted" style="font-size: 0.75rem;">
+                                            @(item.Brand ?? "Genérico") @(item.Model ?? "")
+                                        </small>
+                                    </div>
+                                </td>
                                 <td>@item.Type</td>
                                 <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
                                 <td>
@@ -149,6 +159,12 @@
                                 </td>
                                 <td style="width: 1%; white-space: nowrap;">
                                     <div class="d-flex align-items-center gap-2">
+                                        @if (item.Status == null || (!item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) && !item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket">
+                                                <i class="ri-add-circle-line"></i> Solicitar Ticket
+                                            </a>
+                                        }
                                         @if (item.Status == "Em reparo")
                                         {
                                             <span class="text-muted small ps-2"><i class="ri-settings-line me-1"></i> Em Manutenção</span>
@@ -159,19 +175,6 @@
                                                 @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
                                                 {
                                                     <button type="submit" class="btn btn-sm text-success" title="Marcar como A funcionar"><i class="ri-check-line"></i> Funcional</button>
-                                                    
-                                                    @if (Model.EquipmentWithActiveTickets.Contains(item.Id))
-                                                    {
-                                                        <span class="text-info small ps-2" title="Já existe um ticket ativo para este equipamento">
-                                                            <i class="ri-history-line me-1"></i> Ticket em curso
-                                                        </span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket">
-                                                            <i class="ri-add-circle-line"></i> Solicitar Ticket
-                                                        </a>
-                                                    }
                                                 }
                                                 else
                                                 {
@@ -196,6 +199,74 @@
                     }
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    @* Modal Requisitar Equipamento *@
+    <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-page="/Clients/Directors/Stocks" asp-page-handler="CreateStockRequest" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Artigo</label>
+                        <select name="itemName" id="reqEqArtigo" class="form-select" required onchange="filterReqEqTypes()">
+                            <option value="">Selecione o artigo...</option>
+                            <option value="Computador">Computadores</option>
+                            <option value="Monitor">Monitores</option>
+                            <option value="Impressora">Impressoras</option>
+                            <option value="Projetor">Projetores</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Componente">Componentes</option>
+                            <option value="Periférico">Periféricos</option>
+                            <option value="Quadro Interativo">Quadros Interativos</option>
+                            <option value="Outro">Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Tipo</label>
+                        <select name="itemType" id="reqEqTipo" class="form-select">
+                            <option value="">Selecione o tipo...</option>
+                            <option value="Desktop" data-art="Computador">Desktop</option>
+                            <option value="Portátil" data-art="Computador">Portátil</option>
+                            <option value="AIO" data-art="Computador">AIO</option>
+                            <option value="Monitor" data-art="Monitor">Monitor</option>
+                            <option value="Televisão" data-art="Monitor">Televisão</option>
+                            <option value="Impressora" data-art="Impressora">Impressora</option>
+                            <option value="Projetor" data-art="Projetor">Projetor</option>
+                            <option value="Router" data-art="Networking">Router</option>
+                            <option value="Switch" data-art="Networking">Switch</option>
+                            <option value="Access Point" data-art="Networking">Access Point</option>
+                            <option value="Motherboard" data-art="Componente">Motherboard</option>
+                            <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                            <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                            <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                            <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                            <option value="Teclado" data-art="Periférico">Teclado</option>
+                            <option value="Rato" data-art="Periférico">Rato</option>
+                            <option value="Headphones" data-art="Periférico">Headphones</option>
+                            <option value="Quadro Interativo" data-art="Quadro Interativo">Quadro Interativo</option>
+                            <option value="Mesa Interativa" data-art="Quadro Interativo">Mesa Interativa</option>
+                            <option value="Outro" data-art="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Quantidade</label>
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Motivo do Pedido</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Descreva a necessidade..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning text-white">Solicitar Equipamento</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -973,6 +1044,18 @@
         if (hdnLocType) hdnLocType.value = "escola";
         const divEscola = document.getElementById('divLocEscola');
         if (divEscola) divEscola.style.display = 'block';
+    }
+
+    function filterReqEqTypes() {
+        const artName = document.getElementById('reqEqArtigo').value;
+        const tipoSelect = document.getElementById('reqEqTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        tipoSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const art = (opt.getAttribute('data-art') || "");
+            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
+        });
     }
 </script>
 }

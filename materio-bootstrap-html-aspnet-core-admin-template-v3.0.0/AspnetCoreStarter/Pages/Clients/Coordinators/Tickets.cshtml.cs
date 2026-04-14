@@ -90,7 +90,8 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             EquipamentosDisponiveis = await _context.Equipamentos
                 .Include(e => e.Room)
-                .Where(e => e.Room != null && e.Room.Block.SchoolId == coord.SchoolId && (e.Status == "Avariado" || e.Status == "Indisponível") && !eqIdsWithActiveTickets.Contains(e.Id))
+                .Where(e => e.Room != null && e.Room.Block.SchoolId == coord.SchoolId)
+                .Where(e => e.Status == null || (!e.Status.Contains("repara") && !e.Status.Contains("manutenção")))
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 
@@ -139,11 +140,8 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             _context.Tickets.Add(NovoTicket);
 
-            var equipment = await _context.Equipamentos.FindAsync(NovoTicket.EquipamentoId);
-            if (equipment != null && (equipment.Status == "A funcionar" || equipment.Status == "Funcionando"))
-            {
-                equipment.Status = "Avariado";
-            }
+            // Only auto-mark as Avariado if creating a repair-type ticket and equipment is currently working
+            // For other ticket types (software, etc.), preserve the current status
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Ticket de assistência criado com sucesso!";

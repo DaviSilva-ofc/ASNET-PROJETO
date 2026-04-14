@@ -39,6 +39,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
         public List<Sala>? Salas { get; set; }
         public List<LowStockItemViewModel> StockAlerts { get; set; } = new();
         public List<PedidoStock> MyRequests { get; set; } = new();
+        public List<Ticket> RecentTickets { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -118,6 +119,16 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             MyRequests = await _context.PedidosStock
                 .Where(p => p.SchoolId == schoolId)
                 .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            // Recent Maintenance Tickets for this school
+            RecentTickets = await _context.Tickets
+                .Include(t => t.Technician)
+                .Include(t => t.Equipamento)
+                    .ThenInclude(e => e.Room)
+                .Where(t => t.SchoolId == schoolId && t.Level != "Empréstimo")
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(5)
                 .ToListAsync();
 
             return Page();

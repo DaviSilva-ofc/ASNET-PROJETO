@@ -42,6 +42,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
         public List<string> EquipmentTypes { get; set; } = new();
         public List<Contrato> RecentContracts { get; set; } = new();
         public List<StockEmpresa> AvailableStock { get; set; } = new();
+        public List<Ticket> RecentTickets { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -151,6 +152,15 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             // Load available unassigned stock for this company
             AvailableStock = await _context.StockEmpresa
                 .Where(s => s.EmpresaId == empresaId && (s.IsAvailable || s.Status == "Armazenado" || s.Status == "Disponível"))
+                .ToListAsync();
+
+            // Recent Maintenance Tickets for this company
+            RecentTickets = await _context.Tickets
+                .Include(t => t.Technician)
+                .Include(t => t.Equipamento)
+                .Where(t => t.Equipamento != null && t.Equipamento.EmpresaId == empresaId && t.Level != "Empréstimo")
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(5)
                 .ToListAsync();
 
             return Page();

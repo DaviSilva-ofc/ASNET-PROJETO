@@ -262,6 +262,35 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             return RedirectToPage(new { success = $"Devolveu {lentItems.Count} unidade(s) de {sample.EquipmentName} à Administração ASNET." });
         }
 
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return RedirectToPage("/Auth/Login");
+
+            if (string.IsNullOrWhiteSpace(itemName))
+                return RedirectToPage(new { success = "" });
+
+            var pedido = new PedidoStock
+            {
+                ItemName = itemName.Trim(),
+                ItemType = itemType,
+                Quantity = Math.Max(1, quantity),
+                Notes = notes,
+                Status = "Pendente_Admin",
+                RequestedByUserId = userId,
+                CreatedAt = System.DateTime.UtcNow,
+                UpdatedAt = System.DateTime.UtcNow
+            };
+
+            _context.PedidosStock.Add(pedido);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { success = $"Pedido de {itemName} submetido com sucesso." });
+        }
+
         private string NormalizeEquipmentName(string? name)
         {
             if (string.IsNullOrWhiteSpace(name)) return "Desconhecido";

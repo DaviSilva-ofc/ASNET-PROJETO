@@ -161,5 +161,32 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             }
             return RedirectToPage();
         }
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            if (string.IsNullOrWhiteSpace(itemName))
+            {
+                TempData["Error"] = "Por favor selecione um artigo.";
+                return RedirectToPage();
+            }
+
+            var ticket = new Ticket
+            {
+                Description = $"PEDIDO DE EQUIPAMENTO (TÉCNICO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}",
+                Level = "Empréstimo",
+                Status = "Pedido",
+                CreatedAt = DateTime.UtcNow,
+                TechnicianId = userId
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Pedido de {itemName} enviado com sucesso para a administração.";
+            return RedirectToPage();
+        }
     }
 }

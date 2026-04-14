@@ -65,6 +65,7 @@
                         <th>Assunto / Descrição</th>
                         <th>Equipamento</th>
                         <th>Localização</th>
+                        <th>Técnico</th>
                         <th>Prioridade</th>
                         <th>Estado</th>
                         <th>Data</th>
@@ -74,7 +75,7 @@
                     @if (Model.Tickets == null || !Model.Tickets.Any())
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                                 <i class="bx bx-receipt fs-1 text-muted mb-2"></i>
                                 <p class="text-muted">Nenhum ticket encontrado.</p>
                             </td>
@@ -95,8 +96,14 @@
                                     @if (t.Equipamento != null)
                                     {
                                         <div class="d-flex flex-column">
-                                            <span class="fw-medium">@t.Equipamento.Name</span>
-                                            <small class="text-muted">S/N: @t.Equipamento.SerialNumber</small>
+                                            <span class="fw-bold">@t.Equipamento.Name</span>
+                                            <small class="text-muted small">
+                                                @(t.Equipamento.Brand ?? "Genérico") @(t.Equipamento.Model ?? "")
+                                                @if (!string.IsNullOrEmpty(t.Equipamento.SerialNumber))
+                                                {
+                                                    <span class="ms-1">(S/N: @t.Equipamento.SerialNumber)</span>
+                                                }
+                                            </small>
                                         </div>
                                     }
                                 </td>
@@ -104,6 +111,21 @@
                                     @if (t.Equipamento?.Room != null)
                                     {
                                         <span class="small">@t.Equipamento.Room.Name (@(t.Equipamento.Room.Setor?.Name ?? "N/A"))</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (t.Technician != null)
+                                    {
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-xs me-2">
+                                                <span class="avatar-initial rounded-circle bg-label-primary shadow-sm" style="font-size: 0.6rem;">@(t.Technician.Username?.Substring(0, 1).ToUpper())</span>
+                                            </div>
+                                            <span class="fw-medium text-heading small">@t.Technician.Username</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small italic">A aguardar...</span>
                                     }
                                 </td>
                                 <td>
@@ -148,7 +170,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Equipamento Avariado</label>
+                        <label class="form-label fw-bold">Equipamento</label>
                         @if (Model.eqId.HasValue)
                         {
                             var eq = Model.AvailableEquipment.FirstOrDefault(e => e.Id == Model.eqId);
@@ -187,7 +209,7 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Descrição da Avaria</label>
+                        <label class="form-label fw-bold">Descrição do Pedido</label>
                         <textarea asp-for="NewTicket.Description" class="form-control" rows="3" required placeholder="Descreva o problema detalhadamente..."></textarea>
                     </div>
                 </div>
@@ -268,6 +290,14 @@
             // Wait for modal to be ready then process priority
             modalEl.addEventListener('shown.bs.modal', function() {
                 updatePriorityLevels();
+            });
+            
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                if (window.location.search.includes('eqId')) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('eqId');
+                    window.location.href = url.toString();
+                }
             });
         }
 

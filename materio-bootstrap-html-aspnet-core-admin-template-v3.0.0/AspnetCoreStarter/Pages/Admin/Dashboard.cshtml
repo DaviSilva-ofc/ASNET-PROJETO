@@ -515,6 +515,103 @@
         </div>
     </div>
 
+    <!-- ===== Maintenance Tickets Row ===== -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card tree-card h-100" style="border-left: 5px solid var(--asnet-teal);">
+                <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
+                    <h5 class="mb-0"><i class='bx bx-wrench me-2'></i>Tickets de Manutenção Recentes</h5>
+                    <a href="/Admin/Tickets" class="btn btn-sm btn-outline-info">Gerir Todos</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Equipamento / Escola</th>
+                                    <th>Técnico Responsável</th>
+                                    <th>Estado / Data</th>
+                                    <th>Prioridade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.RecentMaintenanceTickets == null || !Model.RecentMaintenanceTickets.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">Nenhum ticket de manutenção recente.</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var t in Model.RecentMaintenanceTickets)
+                                    {
+                                        <tr>
+                                            <td><span class="badge bg-label-secondary">#@t.Id</span></td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">@t.Equipamento?.Name</span>
+                                                    <small class="text-muted small">
+                                                        @(t.Equipamento?.Brand ?? "Genérico") @(t.Equipamento?.Model ?? "")
+                                                        @if (!string.IsNullOrEmpty(t.Equipamento?.SerialNumber))
+                                                        {
+                                                            <span class="ms-1">(S/N: @t.Equipamento.SerialNumber)</span>
+                                                        }
+                                                    </small>
+                                                    <small class="text-muted text-truncate" style="max-width: 200px;">@t.School?.Name</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if (t.Technician != null)
+                                                {
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar avatar-xs me-2">
+                                                            <span class="avatar-initial rounded-circle bg-label-primary" style="font-size: 0.6rem;">@(t.Technician.Username?.Substring(0, 1).ToUpper())</span>
+                                                        </div>
+                                                        <span class="fw-medium">@t.Technician.Username</span>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-warning small italic"><i class="bx bx-error-circle me-1"></i>A aguardar...</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    @{
+                                                        var statusClass = t.Status switch {
+                                                            "Pendente" or "Pedido" => "bg-label-warning",
+                                                            "Em Reparação" or "Em Resolução" or "Em andamento" => "bg-label-info",
+                                                            "Concluído" => "bg-label-success",
+                                                            _ => "bg-label-secondary"
+                                                        };
+                                                        var statusText = (t.Status == "Pedido" || t.Status == "Pendente") ? "A aguardar" : t.Status;
+                                                    }
+                                                    <span class="badge @statusClass mb-1" style="width:fit-content; font-size: 0.65rem;">@statusText</span>
+                                                    <small class="text-muted">@t.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var prioClass = t.Level switch {
+                                                        "Alto" or "Extremo" => "text-danger",
+                                                        "Médio" => "text-warning",
+                                                        _ => "text-info"
+                                                    };
+                                                }
+                                                <span class="@prioClass fw-bold"><i class="bx bxs-circle me-1" style="font-size: 0.6rem;"></i> @t.Level</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== Escalated Stock Requests Row ===== -->
     <div class="row g-4 mb-4">
         <div class="col-12">

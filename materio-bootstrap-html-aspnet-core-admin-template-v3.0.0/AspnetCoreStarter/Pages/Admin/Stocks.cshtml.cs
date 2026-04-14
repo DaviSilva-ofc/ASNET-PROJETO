@@ -753,6 +753,32 @@ namespace AspnetCoreStarter.Pages.Admin
             TempData["Success"] = "Pedido recusado.";
             return RedirectToPage();
         }
+
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            if (string.IsNullOrWhiteSpace(itemName)) return RedirectToPage();
+
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToPage();
+
+            var pedido = new PedidoStock
+            {
+                ItemName = itemName.Trim(),
+                ItemType = itemType,
+                Quantity = Math.Max(1, quantity),
+                Notes = notes,
+                Status = "Pendente_Admin",
+                RequestedByUserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.PedidosStock.Add(pedido);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Pedido de {itemName} registado com sucesso.";
+            return RedirectToPage();
+        }
     }
 
     public class LoanRequestData 

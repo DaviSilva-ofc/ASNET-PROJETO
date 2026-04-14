@@ -77,7 +77,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 var schoolsInAgr = allSchools.Where(s => s.AgrupamentoId == agr.Id).ToList();
                 var schoolIds = schoolsInAgr.Select(s => s.Id).ToList();
                 
-                var ticketCount = await _context.Tickets.CountAsync(t => t.SchoolId.HasValue && schoolIds.Contains(t.SchoolId.Value) && t.Status != "Concluído");
+                var ticketCount = await _context.Tickets.CountAsync(t => t.SchoolId.HasValue && schoolIds.Contains(t.SchoolId.Value) && t.Status != "Concluído" && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
                 var damagedEquipCount = await _context.Equipamentos
                     .CountAsync(e => e.RoomId.HasValue && _context.Salas.Any(s => s.Id == e.RoomId.Value && s.Block != null && schoolIds.Contains(s.Block.SchoolId)) && e.Status == "Avariado");
 
@@ -113,7 +113,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             foreach (var emp in allEmpresas)
             {
                 var ticketCount = await _context.Tickets
-                    .CountAsync(t => t.Status != "Concluído" && t.EquipamentoId.HasValue && _context.Equipamentos.Any(e => e.Id == t.EquipamentoId.Value && e.EmpresaId == emp.Id));
+                    .CountAsync(t => t.Status != "Concluído" && t.EquipamentoId.HasValue && _context.Equipamentos.Any(e => e.Id == t.EquipamentoId.Value && e.EmpresaId == emp.Id) && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")));
                 
                 var damagedEquipCount = await _context.Equipamentos.CountAsync(e => e.EmpresaId == emp.Id && e.Status == "Avariado");
                 var indClientUser = await _context.Users

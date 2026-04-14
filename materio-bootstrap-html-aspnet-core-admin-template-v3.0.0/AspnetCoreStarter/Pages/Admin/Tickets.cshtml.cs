@@ -51,6 +51,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Include(t => t.School)
                 .Include(t => t.Admin)
                 .Include(t => t.Equipamento)
+                .Include(t => t.Technician)
                 .Where(t => t.Level != "Empréstimo") // pedidos de stock são geridos no painel de Stocks
                 .AsQueryable();
 
@@ -80,7 +81,7 @@ namespace AspnetCoreStarter.Pages.Admin
             AvailableEquipment = await _context.Equipamentos
                 .Include(e => e.Room)
                 .ThenInclude(r => r.Block)
-                .Where(e => e.Status == "Avariado" && !eqIdsWithActiveTickets.Contains(e.Id))
+                .Where(e => e.Status == null || (!e.Status.Contains("repara") && !e.Status.Contains("manutenção")))
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 

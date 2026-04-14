@@ -87,6 +87,7 @@
                         <th>ID</th>
                         <th>Sala / Escola</th>
                         <th>Assunto / Descrição</th>
+                        <th>Técnico</th>
                         <th>Prioridade</th>
                         <th>Estado</th>
                         <th>Data</th>
@@ -96,7 +97,7 @@
                     @if (Model.MyTickets == null || !Model.MyTickets.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">Nenhum ticket encontrado.</td>
+                            <td colspan="7" class="text-center py-5 text-muted">Nenhum ticket encontrado.</td>
                         </tr>
                     }
                     else
@@ -113,7 +114,16 @@
                                 </td>
                                 <td>
                                     <div class="text-wrap" style="max-width: 300px;">
-                                        <span class="d-block fw-bold text-dark mb-1">@t.Equipamento?.Name</span>
+                                        <div class="d-flex flex-column mb-1">
+                                            <span class="fw-bold text-dark">@t.Equipamento?.Name</span>
+                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                @(t.Equipamento?.Brand ?? "Genérico") @(t.Equipamento?.Model ?? "")
+                                                @if (!string.IsNullOrEmpty(t.Equipamento?.SerialNumber))
+                                                {
+                                                    <span class="ms-1">(S/N: @t.Equipamento.SerialNumber)</span>
+                                                }
+                                            </small>
+                                        </div>
                                         @{
                                             var desc = t.Description ?? "";
                                             var cutAt = desc.Length;
@@ -126,6 +136,21 @@
                                         }
                                         <small class="text-muted">@desc</small>
                                     </div>
+                                </td>
+                                <td>
+                                    @if (t.Technician != null)
+                                    {
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-xs me-2">
+                                                <span class="avatar-initial rounded-circle bg-label-primary shadow-sm" style="font-size: 0.6rem;">@(t.Technician.Username?.Substring(0, 1).ToUpper())</span>
+                                            </div>
+                                            <span class="fw-medium text-heading small">@t.Technician.Username</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small italic">A aguardar...</span>
+                                    }
                                 </td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(t.Level))
@@ -179,7 +204,7 @@
             </div>
             <div class="modal-body p-4">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Equipamento Avariado</label>
+                    <label class="form-label fw-semibold">Equipamento</label>
                     <select asp-for="NewTicket.EquipamentoId" id="selectEquipamento" class="form-select bg-transparent" required onchange="updatePriorityLevels()">
                         <option value="">Selecione um equipamento...</option>
                         @foreach (var eq in Model.AvailableEquipment)
@@ -209,7 +234,7 @@
                     </select>
                 </div>
                 <div class="mt-3">
-                    <label class="form-label fw-semibold small">DESCRIÇÃO DA ANOMALIA</label>
+                    <label class="form-label fw-semibold small">DESCRIÇÃO DO PEDIDO</label>
                     <textarea asp-for="NewTicket.Description" class="form-control bg-transparent" rows="3" placeholder="Ex: O monitor não liga..." required></textarea>
                 </div>
             </div>
@@ -335,10 +360,18 @@
         if (!modalElement) return;
 
         if (urlParams.has('eqId') || urlParams.has('openModal')) {
+            const eqIdVal = urlParams.get('eqId');
             var myModal = new bootstrap.Modal(modalElement);
             myModal.show();
             // Trigger check after modal is fully rendered
             modalElement.addEventListener('shown.bs.modal', function () {
+                var selectEq = document.getElementById('selectEquipamento');
+                if (selectEq && eqIdVal) {
+                    selectEq.value = eqIdVal;
+                    if (typeof jQuery !== 'undefined' && $(selectEq).hasClass("select2-hidden-accessible")) {
+                        $(selectEq).trigger('change');
+                    }
+                }
                 updatePriorityLevels();
             }, { once: true });
         }
@@ -351,6 +384,19 @@
                 for (let i = 0; i < selectPri.options.length; i++) {
                     selectPri.options[i].disabled = false;
                     selectPri.options[i].hidden = false;
+                }
+            }
+            if (window.location.search.includes('eqId') || window.location.search.includes('openModal')) {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('eqId');
+                url.searchParams.delete('openModal');
+                window.history.replaceState({}, '', url);
+            }
+            const selectEq = document.getElementById('selectEquipamento');
+            if (selectEq) {
+                selectEq.value = "";
+                if (typeof jQuery !== 'undefined' && $(selectEq).hasClass("select2-hidden-accessible")) {
+                    $(selectEq).trigger('change');
                 }
             }
         });

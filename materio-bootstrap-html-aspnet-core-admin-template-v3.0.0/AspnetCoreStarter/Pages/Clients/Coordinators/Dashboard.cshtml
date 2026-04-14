@@ -386,6 +386,87 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Recent Activity Table (Tickets) -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header d-flex justify-content-between align-items-center p-4 border-bottom">
+                    <h5 class="mb-0 fw-bold"><i class="bx bx-wrench me-2 text-info"></i>Tickets de Manutenção Recentes</h5>
+                    <a href="/Clients/Coordinators/Tickets" class="btn btn-sm btn-outline-primary fw-bold">Ver todos</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="bg-label-info">
+                            <tr>
+                                <th>TICKET</th>
+                                <th>EQUIPAMENTO / SALA</th>
+                                <th>TÉCNICO</th>
+                                <th>DATA</th>
+                                <th>ESTADO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.RecentTickets != null && Model.RecentTickets.Any()) {
+                                @foreach (var ticket in Model.RecentTickets) {
+                                    <tr>
+                                        <td><span class="badge bg-label-secondary">#@ticket.Id</span></td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-bold">@ticket.Equipamento?.Name</span>
+                                                <small class="text-muted small">
+                                                    @(ticket.Equipamento?.Brand ?? "Genérico") @(ticket.Equipamento?.Model ?? "")
+                                                    @if (!string.IsNullOrEmpty(ticket.Equipamento?.SerialNumber))
+                                                    {
+                                                        <span class="ms-1">(S/N: @ticket.Equipamento.SerialNumber)</span>
+                                                    }
+                                                </small>
+                                            </div>
+                                            <small class="text-muted">@ticket.Equipamento?.Room?.Name</small>
+                                        </td>
+                                        <td>
+                                            @if (ticket.Technician != null)
+                                            {
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-xs me-2">
+                                                        <span class="avatar-initial rounded-circle bg-label-primary" style="font-size: 0.6rem;">@(ticket.Technician.Username?.Substring(0, 1).ToUpper())</span>
+                                                    </div>
+                                                    <span class="fw-medium">@ticket.Technician.Username</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-warning small italic">A aguardar técnico...</span>
+                                            }
+                                        </td>
+                                        <td class="text-muted">@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            @{
+                                                var statusLabel = ticket.Status switch {
+                                                    "Pendente" or "Pedido" => "badge bg-label-warning",
+                                                    "Em Reparação" or "EmResolução" or "Em andamento" => "badge bg-label-info",
+                                                    "Concluído" => "badge bg-label-success",
+                                                    _ => "badge bg-label-secondary"
+                                                };
+                                                var statusDisplayName = (ticket.Status == "Pedido" || ticket.Status == "Pendente") ? "A aguardar" : ticket.Status;
+                                            }
+                                            <span class="@statusLabel text-uppercase" style="font-size: 0.65rem;">@statusDisplayName</span>
+                                        </td>
+                                    </tr>
+                                }
+                            } else {
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">Sem tickets recentes a reportar.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== My Requests Row ===== -->
     <div class="row g-4 mb-4">
         <div class="col-12">

@@ -22,6 +22,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
         public int MyTicketsCount { get; set; }
         public int PendingTicketsCount { get; set; }
+        public int AvailableTicketsCount { get; set; }
         public int MyStockAlertsCount { get; set; }
         public int UnreadMessagesCount { get; set; }
         public int GlobalAvailableStockCount { get; set; }
@@ -52,8 +53,10 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (!int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
             // Counts
-            MyTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId);
-            PendingTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && (t.Status == "Pendente" || t.Status == "Em Resolução"));
+            // Refined filtering to include ONLY breakdown/repair tickets
+            MyTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
+            PendingTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && (t.Status == "Pendente" || t.Status == "Em Resolução") && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
+            AvailableTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == null && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
             
             MyStockAlertsCount = await _context.StockTecnico
                 .Where(s => s.TechnicianId == userId && !s.IsAvailable)
@@ -65,10 +68,11 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             GlobalAvailableStockCount = await _context.StockEmpresa
                 .CountAsync(s => s.Status == "Armazenado" || s.Status == "Disponível");
 
-            // Fetch Recent Tickets (Assigned)
+            // Fetch Recent Tickets (Assigned Repairs)
             RecentTickets = await _context.Tickets
                 .Include(t => t.School)
-                .Where(t => t.TechnicianId == userId)
+                .Include(t => t.Equipamento)
+                .Where(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(5)
                 .ToListAsync();
@@ -81,7 +85,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
             // Fetch Locais Atendimento (Schools or Empresas where the technician has assigned tickets)
             var schoolIds = await _context.Tickets
-                .Where(t => t.TechnicianId == userId && t.SchoolId.HasValue && (t.Status == "Pendente" || t.Status == "Em Resolução"))
+                .Where(t => t.TechnicianId == userId && t.SchoolId.HasValue && (t.Status == "Pendente" || t.Status == "Em Resolução") && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .Select(t => t.SchoolId.Value)
                 .Distinct()
                 .ToListAsync();
@@ -104,7 +108,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 LineChartLabels.Add(date.ToString("MMM"));
 
                 var ticketsThisMonth = await _context.Tickets
-                    .Where(t => t.TechnicianId == userId && t.CreatedAt.Month == date.Month && t.CreatedAt.Year == date.Year)
+                    .Where(t => t.TechnicianId == userId && t.CreatedAt.Month == date.Month && t.CreatedAt.Year == date.Year && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                     .ToListAsync();
 
                 LineChartMonthlyData.Pendente.Add(ticketsThisMonth.Count(t => t.Status == "Pendente"));
@@ -114,13 +118,13 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
             // Bar Chart Analytics (Visão Anual - Janeiro a Dezembro do ano atual)
             int currentYear = DateTime.Now.Year;
-            var completedTicketsThisYear = await _context.Tickets
-                .Where(t => t.TechnicianId == userId && t.Status == "Concluído" && t.CreatedAt.Year == currentYear)
+            var concludedTickets = await _context.Tickets
+                .Where(t => t.TechnicianId == userId && t.Status == "Concluído" && t.CreatedAt.Year == currentYear && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .ToListAsync();
 
             for (int month = 1; month <= 12; month++)
             {
-                BarChartData.Add(completedTicketsThisYear.Count(t => t.CreatedAt.Month == month));
+                BarChartData.Add(concludedTickets.Count(t => t.CreatedAt.Month == month));
             }
 
             // Map Locations (Escolas associadas aos tickets pendentes deles)

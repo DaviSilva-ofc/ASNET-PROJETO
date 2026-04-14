@@ -47,6 +47,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<string> EquipmentTypes { get; set; } = new();
         public List<PedidoStock> SchoolRequests { get; set; } = new();
         public List<StockEmpresa> AvailableStock { get; set; } = new();
+        public List<Ticket> RecentTickets { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -202,6 +203,16 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             // Load available unassigned stock for this agrupamento
             AvailableStock = await _context.StockEmpresa
                 .Where(s => s.AgrupamentoId == agrupamentoId && s.SchoolId == null && (s.IsAvailable || s.Status == "Armazenado" || s.Status == "Disponível"))
+                .ToListAsync();
+
+            // Recent Maintenance Tickets for this grouping (excluding technician stock loans)
+            RecentTickets = await _context.Tickets
+                .Include(t => t.Technician)
+                .Include(t => t.Equipamento)
+                    .ThenInclude(e => e.Room)
+                .Where(t => t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value) && t.Level != "Empréstimo")
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(5)
                 .ToListAsync();
 
             return Page();

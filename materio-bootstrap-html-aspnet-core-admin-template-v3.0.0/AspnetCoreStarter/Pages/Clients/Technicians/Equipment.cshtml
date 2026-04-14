@@ -96,6 +96,9 @@
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
                     <i class="ri-filter-3-line me-1"></i> Filtros
                 </button>
+                <button class="btn btn-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
+                    <i class="ri-hand-coin-line me-1"></i> Requisitar Equipamento
+                </button>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">Novo Equipamento</button>
             </div>
         </div>
@@ -152,7 +155,14 @@
                         var isRepair = normalizedStatus.Contains("repara");
                         var isBroken = normalizedStatus.Contains("avari");
                         <tr>
-                            <td><strong class="text-white">@item.Name</strong></td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <strong class="text-white">@item.Name</strong>
+                                    <small class="text-white-50" style="font-size: 0.75rem;">
+                                        @(item.Brand ?? "Genérico") @(item.Model ?? "")
+                                    </small>
+                                </div>
+                            </td>
                             <td class="text-white-50">@item.Type</td>
                             <td><span class="badge bg-label-secondary font-monospace">@item.SerialNumber</span></td>
                             <td>
@@ -222,6 +232,74 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+@* Modal Requisitar Equipamento *@
+<div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page="/Clients/Technicians/Stocks" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background:#2b2c40;">
+            <div class="modal-header border-bottom border-light border-opacity-25">
+                <h5 class="modal-title text-white"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small text-uppercase">Artigo</label>
+                    <select name="itemName" id="reqEqArtigo" class="form-select" required onchange="filterReqEqTypes()">
+                        <option value="">Selecione o artigo...</option>
+                        <option value="Computador">Computadores</option>
+                        <option value="Monitor">Monitores</option>
+                        <option value="Impressora">Impressoras</option>
+                        <option value="Projetor">Projetores</option>
+                        <option value="Networking">Networking</option>
+                        <option value="Componente">Componentes</option>
+                        <option value="Perif&eacute;rico">Perif&eacute;ricos</option>
+                        <option value="Quadro Interativo">Quadros Interativos</option>
+                        <option value="Outro">Outros</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small text-uppercase">Tipo</label>
+                    <select name="itemType" id="reqEqTipo" class="form-select">
+                        <option value="">Selecione o tipo...</option>
+                        <option value="Desktop" data-art="Computador">Desktop</option>
+                        <option value="Port&aacute;til" data-art="Computador">Port&aacute;til</option>
+                        <option value="AIO" data-art="Computador">AIO</option>
+                        <option value="Monitor" data-art="Monitor">Monitor</option>
+                        <option value="Televis&atilde;o" data-art="Monitor">Televis&atilde;o</option>
+                        <option value="Impressora" data-art="Impressora">Impressora</option>
+                        <option value="Projetor" data-art="Projetor">Projetor</option>
+                        <option value="Router" data-art="Networking">Router</option>
+                        <option value="Switch" data-art="Networking">Switch</option>
+                        <option value="Access Point" data-art="Networking">Access Point</option>
+                        <option value="Motherboard" data-art="Componente">Motherboard</option>
+                        <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                        <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                        <option value="Mem&oacute;ria RAM" data-art="Componente">Mem&oacute;ria RAM</option>
+                        <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                        <option value="Teclado" data-art="Perif&eacute;rico">Teclado</option>
+                        <option value="Rato" data-art="Perif&eacute;rico">Rato</option>
+                        <option value="Headphones" data-art="Perif&eacute;rico">Headphones</option>
+                        <option value="Quadro Interativo" data-art="Quadro Interativo">Quadro Interativo</option>
+                        <option value="Mesa Interativa" data-art="Quadro Interativo">Mesa Interativa</option>
+                        <option value="Outro" data-art="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small text-uppercase">Quantidade</label>
+                    <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white-50 small text-uppercase">Motivo do Pedido</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Descreva a necessidade..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-25">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-warning text-dark fw-bold">Solicitar Equipamento</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -1142,6 +1220,18 @@
 
         var modal = new bootstrap.Modal(document.getElementById('modalEditarEquipamento'));
         modal.show();
+    }
+
+    function filterReqEqTypes() {
+        const artName = document.getElementById('reqEqArtigo').value;
+        const tipoSelect = document.getElementById('reqEqTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        tipoSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const art = (opt.getAttribute('data-art') || "");
+            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
+        });
     }
 </script>
 }

@@ -111,25 +111,17 @@
                                 </td>
                                 <td style="white-space: nowrap;">
                                     <div class="d-flex align-items-center gap-2">
-                                        @if (item.Status == "Em reparo")
+                                        @if (item.Status != null && (item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) || item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
                                         {
                                             <span class="text-muted small ps-2"><i class="ri-settings-line me-1"></i> Em Manutenção</span>
                                         }
                                         else
                                         {
+                                            <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
                                             <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
                                                 @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
                                                 {
                                                     <button type="submit" class="btn btn-sm text-success" title="Marcar como A funcionar"><i class="ri-check-line"></i> Funcional</button>
-                                                    
-                                                    @if (Model.EquipmentWithActiveTickets.Contains(item.Id))
-                                                    {
-                                                        <span class="badge bg-label-warning ms-2"><i class="ri-ticket-line me-1"></i> Ticket Ativo</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
-                                                    }
                                                 }
                                                 else
                                                 {

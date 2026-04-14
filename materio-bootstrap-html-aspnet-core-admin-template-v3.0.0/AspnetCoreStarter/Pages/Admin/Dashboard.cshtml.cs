@@ -33,6 +33,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<LowStockItemViewModel> LowStockItems { get; set; } = new();
         public List<PedidoStock> EscalatedRequests { get; set; } = new();
         public List<Ticket> TechnicianStockRequests { get; set; } = new();
+        public List<Ticket> RecentMaintenanceTickets { get; set; } = new();
         public List<StockEmpresa> GlobalStock { get; set; } = new();
 
         public int TicketsPendenteCount { get; set; }
@@ -197,6 +198,16 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Include(t => t.Technician)
                 .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
                 .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
+            // Recent General Maintenance Tickets (excluding loans)
+            RecentMaintenanceTickets = await _context.Tickets
+                .Include(t => t.Technician)
+                .Include(t => t.Equipamento)
+                .Include(t => t.School)
+                .Where(t => t.Level != "Empréstimo")
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(7)
                 .ToListAsync();
 
             // Load global stock (available items with no school assigned)

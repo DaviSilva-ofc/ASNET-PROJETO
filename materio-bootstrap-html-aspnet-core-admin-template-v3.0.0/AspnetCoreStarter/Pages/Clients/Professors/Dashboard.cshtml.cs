@@ -99,6 +99,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             RecentTickets = await _context.Tickets
                 .Include(t => t.Equipamento)
                 .ThenInclude(e => e.Room)
+                .Include(t => t.Technician)
                 .Where(t => t.Equipamento != null && t.Equipamento.RoomId.HasValue && salaIds.Contains(t.Equipamento.RoomId.Value))
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(5)

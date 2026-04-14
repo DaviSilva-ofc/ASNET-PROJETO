@@ -53,6 +53,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 .Include(t => t.Equipamento)
                     .ThenInclude(e => e.Room)
                         .ThenInclude(r => r.Setor)
+                .Include(t => t.Technician)
                 .Where(t => t.Equipamento != null && t.Equipamento.EmpresaId == empresaId)
                 .AsQueryable();
 
@@ -80,7 +81,8 @@ namespace AspnetCoreStarter.Pages.Clients.Private
 
             AvailableEquipment = await _context.Equipamentos
                 .Include(e => e.Room)
-                .Where(e => e.EmpresaId == empresaId && e.Status == "Avariado" && !eqIdsWithActiveTickets.Contains(e.Id))
+                .Where(e => e.EmpresaId == empresaId)
+                .Where(e => e.Status == null || (!e.Status.Contains("repara") && !e.Status.Contains("manutenção")))
                 .OrderBy(e => e.Name)
                 .ToListAsync();
 

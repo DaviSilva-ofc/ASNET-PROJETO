@@ -57,6 +57,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             var query = _context.Tickets
                 .Include(t => t.Equipamento)
                     .ThenInclude(e => e.Room)
+                .Include(t => t.Technician)
                 .Where(t => t.Equipamento != null && t.Equipamento.RoomId.HasValue && roomIds.Contains(t.Equipamento.RoomId.Value))
                 .Where(t => t.Level != "Empréstimo") // pedidos de empréstimo geridos no painel de Stocks
                 .AsQueryable();
@@ -99,14 +100,13 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
                 .Select(t => t.EquipamentoId.Value)
                 .ToListAsync();
 
-            // Available equipment for the Novo Ticket modal (ONLY AVARIADO equipment in their rooms WITHOUT active tickets)
+            // Available equipment for the Novo Ticket modal (ALL equipment in their rooms, excluding maintenance)
             AvailableEquipment = await _context.Equipamentos
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                         .ThenInclude(b => b.School)
                 .Where(e => e.RoomId.HasValue && roomIds.Contains(e.RoomId.Value))
-                .Where(e => e.Status == "Avariado" || e.Status == "Indisponível" || e.Status == "Danificado")
-                .Where(e => !activeTicketEqIds.Contains(e.Id))
+                .Where(e => e.Status == null || (!e.Status.Contains("repara") && !e.Status.Contains("manutenção")))
                 .OrderBy(e => e.Room.Name)
                 .ThenBy(e => e.Type)
                 .ToListAsync();
