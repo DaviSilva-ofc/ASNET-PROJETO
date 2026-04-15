@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using AspnetCoreStarter.Data;
 using AspnetCoreStarter.Models;
 using System.Security.Claims;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace AspnetCoreStarter.Pages.Clients.Technicians
 {
@@ -16,10 +18,18 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             _context = context;
         }
 
-        public List<User> Contacts { get; set; } = new();
+        public List<ContactViewModel> Contacts { get; set; } = new();
         public List<Mensagem> Messages { get; set; } = new();
         public int CurrentUserId { get; set; }
         public int? SelectedContactId { get; set; }
+
+        public class ContactViewModel
+        {
+            public int Id { get; set; }
+            public string Username { get; set; }
+            public string RoleLabel { get; set; }
+            public bool IsAdmin { get; set; }
+        }
 
         public async Task<IActionResult> OnGetAsync(int? contactId)
         {
@@ -30,12 +40,27 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToPage("/Auth/Login");
             CurrentUserId = int.Parse(userIdStr);
 
-            // For now chat is only Técnico <-> Admin
-            Contacts = await _context.Users
+            // Contactos: Administradores e Solicitantes de Tickets que o técnico aceitou
+            var adminUsers = await _context.Users
                 .Join(_context.Administradores, u => u.Id, a => a.UserId, (u, a) => u)
                 .Where(u => u.Id != CurrentUserId)
-                .Distinct()
+                .Select(u => new ContactViewModel { Id = u.Id, Username = u.Username, RoleLabel = "Administrador", IsAdmin = true })
                 .ToListAsync();
+
+            var requesterUsers = await _context.Tickets
+                .Where(t => t.TechnicianId == CurrentUserId && t.Status != "Concluído" && t.RequestedByUserId != null)
+                .Select(t => new ContactViewModel { 
+                    Id = t.RequestedBy!.Id, 
+                    Username = t.RequestedBy.Username, 
+                    RoleLabel = t.Level == "Empréstimo" ? "Cliente (Empréstimo)" : "Cliente (Reparação)",
+                    IsAdmin = false 
+                })
+                .ToListAsync();
+
+            Contacts = adminUsers.Concat(requesterUsers)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .ToList();
 
             if (contactId.HasValue)
             {
@@ -67,14 +92,18 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 return new BadRequestResult();
 
             var senderId = int.Parse(userIdStr);
+            var receiverId = request.ReceiverId;
 
-            var receiverIsAdmin = await _context.Administradores.AnyAsync(a => a.UserId == request.ReceiverId);
-            if (!receiverIsAdmin) return new BadRequestObjectResult("Destinatário inválido.");
+            // Validar se o destinatário é um admin ou o solicitante de um ticket ativo do técnico
+            var isAllowed = await _context.Administradores.AnyAsync(a => a.UserId == receiverId) ||
+                            await _context.Tickets.AnyAsync(t => t.TechnicianId == senderId && t.RequestedByUserId == receiverId && t.Status != "Concluído" && t.Status != "Recusado");
+
+            if (!isAllowed) return new BadRequestObjectResult("Destinatário inválido.");
 
             var message = new Mensagem
             {
                 SenderId = senderId,
-                ReceiverId = request.ReceiverId,
+                ReceiverId = receiverId,
                 Content = request.Content,
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false

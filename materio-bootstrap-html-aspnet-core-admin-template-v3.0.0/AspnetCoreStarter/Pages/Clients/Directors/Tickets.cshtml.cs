@@ -180,7 +180,10 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             // Standardizing status to "Pendente"
             NewTicket.Status = "Pendente";
             NewTicket.CreatedAt = System.DateTime.UtcNow;
-
+            
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdStr)) NewTicket.RequestedByUserId = int.Parse(userIdStr);
+ 
             _context.Tickets.Add(NewTicket);
             await _context.SaveChangesAsync();
 

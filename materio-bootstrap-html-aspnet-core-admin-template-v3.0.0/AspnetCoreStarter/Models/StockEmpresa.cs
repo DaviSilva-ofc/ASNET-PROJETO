@@ -34,6 +34,18 @@ namespace AspnetCoreStarter.Models
         [ForeignKey("TechnicianId")]
         public virtual Tecnico? Technician { get; set; }
 
+        [Column("id_professor")]
+        public int? ProfessorId { get; set; }
+
+        [ForeignKey("ProfessorId")]
+        public virtual Professor? Professor { get; set; }
+
+        [Column("id_diretor")]
+        public int? DirectorId { get; set; }
+
+        [ForeignKey("DirectorId")]
+        public virtual Diretor? Director { get; set; }
+
         [Column("id_agrupamento")]
         public int? AgrupamentoId { get; set; }
 

@@ -52,30 +52,46 @@
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
                     🔍 Filtros
                 </button>
-                <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
-                    <i class="ri-hand-coin-line me-1"></i> Requisitar Equipamento
-                </button>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">Novo Equipamento</button>
             </div>
         </div>
         @{
-            var activeFilterText = "";
-            if (Model.ActiveFilterRoom != null) activeFilterText = $"sala: {Model.ActiveFilterRoom.Name}";
-            else if (Model.ActiveFilterBloco != null) activeFilterText = $"bloco: {Model.ActiveFilterBloco.Name}";
-            else if (Model.ActiveFilterEscola != null) activeFilterText = $"escola: {Model.ActiveFilterEscola.Name}";
-            else if (Model.ActiveFilterAgrupamento != null) activeFilterText = $"agrupamento: {Model.ActiveFilterAgrupamento.Name}";
-            else if (Model.ActiveFilterEmpresa != null) activeFilterText = $"empresa: {Model.ActiveFilterEmpresa.Name}";
+            var hasActiveFilters = !string.IsNullOrEmpty(Model.FilterName) || 
+                                  !string.IsNullOrEmpty(Model.FilterType) || 
+                                  !string.IsNullOrEmpty(Model.FilterBrand) || 
+                                  !string.IsNullOrEmpty(Model.FilterModel) || 
+                                  !string.IsNullOrEmpty(Model.FilterStatus) || 
+                                  !string.IsNullOrEmpty(Model.FilterSerialNumber) ||
+                                  Model.FilterAgrupamentoId.HasValue || 
+                                  Model.FilterEscolaId.HasValue || 
+                                  Model.FilterBlocoId.HasValue || 
+                                  Model.FilterRoomId.HasValue || 
+                                  Model.FilterEmpresaId.HasValue;
+
+            var locationText = "";
+            if (Model.ActiveFilterRoom != null) locationText = $"Sala: {Model.ActiveFilterRoom.Name}";
+            else if (Model.ActiveFilterBloco != null) locationText = $"Bloco: {Model.ActiveFilterBloco.Name}";
+            else if (Model.ActiveFilterEscola != null) locationText = $"Escola: {Model.ActiveFilterEscola.Name}";
+            else if (Model.ActiveFilterAgrupamento != null) locationText = $"Agrupamento: {Model.ActiveFilterAgrupamento.Name}";
+            else if (Model.ActiveFilterEmpresa != null) locationText = $"Empresa: {Model.ActiveFilterEmpresa.Name}";
         }
-        @if (!string.IsNullOrEmpty(activeFilterText) || !string.IsNullOrEmpty(Model.FilterStatus))
+
+        @if (hasActiveFilters)
         {
             <div class="card-body">
-                <div class="alert alert-info d-flex justify-content-between align-items-center mb-0" role="alert">
-                    <span>A visualizar equipamentos do <strong>@activeFilterText</strong></span>
-                    @if (!string.IsNullOrEmpty(Model.FilterStatus))
-                    {
-                        <span class="badge bg-label-info me-1">Status: @Model.FilterStatus</span>
-                    }
-                    <a asp-page="./Equipment" class="btn btn-sm btn-outline-secondary ms-2">Limpar Tudo</a>
+                <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center mb-0 gap-2" role="alert">
+                    <div class="d-flex flex-wrap align-items-center gap-1">
+                        <i class="ri-filter-3-line me-1"></i>
+                        <span>Filtros Ativos: </span>
+                        @if (!string.IsNullOrEmpty(Model.FilterName)) { <span class="badge bg-label-info">Artigo: @Model.FilterName</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterType)) { <span class="badge bg-label-info">Tipo: @Model.FilterType</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterBrand)) { <span class="badge bg-label-info">Marca: @Model.FilterBrand</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterModel)) { <span class="badge bg-label-info">Modelo: @Model.FilterModel</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterStatus)) { <span class="badge bg-label-info">Status: @Model.FilterStatus</span> }
+                        @if (!string.IsNullOrEmpty(Model.FilterSerialNumber)) { <span class="badge bg-label-info">S/N: @Model.FilterSerialNumber</span> }
+                        @if (!string.IsNullOrEmpty(locationText)) { <span class="badge bg-label-info">@locationText</span> }
+                    </div>
+                    <a asp-page="./Equipment" class="btn btn-sm btn-outline-secondary">Limpar Todos os Filtros</a>
                 </div>
             </div>
         }
@@ -160,73 +176,6 @@
         </div>
     </div>
 
-    @* Modal Requisitar Equipamento *@
-    <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-page="/Admin/Stocks" asp-page-handler="CreateStockRequest" class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-uppercase">Artigo</label>
-                        <select name="itemName" id="reqEqArtigo" class="form-select" required onchange="filterReqEqTypes()">
-                            <option value="">Selecione o artigo...</option>
-                            <option value="Computador">Computadores</option>
-                            <option value="Monitor">Monitores</option>
-                            <option value="Impressora">Impressoras</option>
-                            <option value="Projetor">Projetores</option>
-                            <option value="Networking">Networking</option>
-                            <option value="Componente">Componentes</option>
-                            <option value="Periférico">Periféricos</option>
-                            <option value="Quadro Interativo">Quadros Interativos</option>
-                            <option value="Outro">Outros</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-uppercase">Tipo</label>
-                        <select name="itemType" id="reqEqTipo" class="form-select">
-                            <option value="">Selecione o tipo...</option>
-                            <option value="Desktop" data-art="Computador">Desktop</option>
-                            <option value="Portátil" data-art="Computador">Portátil</option>
-                            <option value="AIO" data-art="Computador">AIO</option>
-                            <option value="Monitor" data-art="Monitor">Monitor</option>
-                            <option value="Televisão" data-art="Monitor">Televisão</option>
-                            <option value="Impressora" data-art="Impressora">Impressora</option>
-                            <option value="Projetor" data-art="Projetor">Projetor</option>
-                            <option value="Router" data-art="Networking">Router</option>
-                            <option value="Switch" data-art="Networking">Switch</option>
-                            <option value="Access Point" data-art="Networking">Access Point</option>
-                            <option value="Motherboard" data-art="Componente">Motherboard</option>
-                            <option value="Disco HDD" data-art="Componente">Disco HDD</option>
-                            <option value="Disco SSD" data-art="Componente">Disco SSD</option>
-                            <option value="Memória RAM" data-art="Componente">Memória RAM</option>
-                            <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
-                            <option value="Teclado" data-art="Periférico">Teclado</option>
-                            <option value="Rato" data-art="Periférico">Rato</option>
-                            <option value="Headphones" data-art="Periférico">Headphones</option>
-                            <option value="Quadro Interativo" data-art="Quadro Interativo">Quadro Interativo</option>
-                            <option value="Mesa Interativa" data-art="Quadro Interativo">Mesa Interativa</option>
-                            <option value="Outro" data-art="Outro">Outro</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-uppercase">Quantidade</label>
-                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small text-uppercase">Motivo do Pedido</label>
-                        <textarea name="notes" class="form-control" rows="3" placeholder="Descreva a necessidade..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning text-white">Solicitar Equipamento</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     @* Modal Editar Equipamento *@
     <div class="modal fade" id="modalEditarEquipamento" tabindex="-1" aria-hidden="true">
@@ -587,7 +536,7 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label">Artigo</label>
-                            <select id="filterArtigo" asp-for="FilterName" class="form-select select2">
+                            <select id="filterArtigo" asp-for="FilterName" class="form-select select2" onchange="updateBrandsModels('filter'); updateSpecificTypes('filter');">
                                 <option value="">Qualquer Artigo</option>
                                 <option value="Computadores">Computadores</option>
                                 <option value="Monitores">Monitores</option>
@@ -636,6 +585,18 @@
                                 <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
                                 <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
                                 <option value="Outro" data-artigo="Outros">Outro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Marca</label>
+                            <select id="filterMarca" asp-for="FilterBrand" class="form-select select2" onchange="updateModels('filter')">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Modelo</label>
+                            <select id="filterModelo" asp-for="FilterModel" class="form-select select2">
+                                <option value="">Todos</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -757,11 +718,9 @@
         var options = select.querySelectorAll('option');
         
         var currentArtigo = null;
-        if (selectId === 'regTipo') {
-            currentArtigo = document.getElementById('regArtigo').value.toLowerCase().trim();
-        } else if (selectId === 'editTipo') {
-            currentArtigo = document.getElementById('editArtigo').value.toLowerCase().trim();
-        }
+        var prefix = selectId.replace('Tipo', '').replace('Marca', '').replace('Modelo', '');
+        var artigoEl = document.getElementById(prefix + 'Artigo');
+        if (artigoEl) currentArtigo = (artigoEl.value || "").toLowerCase().trim();
 
         options.forEach(function(opt) {
             if (opt.value === "") return;
@@ -775,7 +734,12 @@
             }
 
             opt.style.display = (matchesSearch && matchesArtigo) ? '' : 'none';
+            opt.disabled = !matchesArtigo;
         });
+
+        if (window.jQuery && jQuery.fn.select2) {
+            $(select).trigger('change.select2');
+        }
     }
 
     // Reset search inputs when a modal is closed
@@ -788,11 +752,13 @@
             });
         }
 
-        const filterArtigo = document.getElementById('filterArtigo');
-        if (filterArtigo) {
-            filterArtigo.addEventListener('change', filterModalTypesByArticle);
-        }
         filterModalTypesByArticle();
+
+        // Restore filter brand/model state on load if filterArtigo is set
+        if (filterArtigo && filterArtigo.value) {
+            updateBrandsModels('filter');
+            // We might have support for restoring selected brand/model here too if needed
+        }
 
         document.querySelectorAll('.modal').forEach(function(modal) {
             modal.addEventListener('hidden.bs.modal', function() {
@@ -926,14 +892,18 @@
         const marcaSelect = document.getElementById(prefix + 'Marca');
         const modeloSelect = document.getElementById(prefix + 'Modelo');
         const tipoSelect = document.getElementById(prefix + 'Tipo');
+        const isFilter = (prefix === 'filter');
 
-        marcaSelect.innerHTML = '<option value="">Selecione a marca...</option>';
-        modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
+        marcaSelect.innerHTML = isFilter ? '<option value="">Todas</option>' : '<option value="">Selecione a marca...</option>';
+        modeloSelect.innerHTML = isFilter ? '<option value="">Todos</option>' : '<option value="">Selecione o modelo...</option>';
 
         // Filter specific types in the dropdown
         if (tipoSelect) {
             Array.from(tipoSelect.options).forEach(opt => {
-                if (opt.value === "") return;
+                if (opt.value === "") {
+                    if (isFilter) opt.textContent = "Todos";
+                    return;
+                }
                 const dataArt = opt.getAttribute('data-artigo');
                 opt.style.display = (!artigo || !dataArt || dataArt === artigo) ? 'block' : 'none';
             });
@@ -951,14 +921,21 @@
                 marcaSelect.add(new Option(brand, brand));
             });
         }
+
+        if (window.jQuery && jQuery.fn.select2) {
+            $(marcaSelect).trigger('change.select2');
+            $(modeloSelect).trigger('change.select2');
+            if (tipoSelect) $(tipoSelect).trigger('change.select2');
+        }
     }
 
     function updateModels(prefix = 'reg') {
         const artigo = document.getElementById(prefix + 'Artigo').value;
         const marca = document.getElementById(prefix + 'Marca').value;
         const modeloSelect = document.getElementById(prefix + 'Modelo');
+        const isFilter = (prefix === 'filter');
 
-        modeloSelect.innerHTML = '<option value="">Selecione o modelo...</option>';
+        modeloSelect.innerHTML = isFilter ? '<option value="">Todos</option>' : '<option value="">Selecione o modelo...</option>';
         var modeloWrapper = modeloSelect.closest('.select-search-wrapper');
         if (modeloWrapper) modeloWrapper.querySelector('.select-search-input').value = '';
 
@@ -966,6 +943,10 @@
             brandModelData[artigo][marca].forEach(function(model) {
                 modeloSelect.add(new Option(model, model));
             });
+        }
+
+        if (window.jQuery && jQuery.fn.select2) {
+            $(modeloSelect).trigger('change.select2');
         }
     }
 
@@ -1143,17 +1124,6 @@
         });
     }
 
-    function filterReqEqTypes() {
-        const artName = document.getElementById('reqEqArtigo').value;
-        const tipoSelect = document.getElementById('reqEqTipo');
-        const options = tipoSelect.querySelectorAll('option');
-        tipoSelect.value = "";
-        options.forEach(opt => {
-            if (opt.value === "") return;
-            const art = (opt.getAttribute('data-art') || "");
-            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
-        });
-    }
 </script>
 }
 

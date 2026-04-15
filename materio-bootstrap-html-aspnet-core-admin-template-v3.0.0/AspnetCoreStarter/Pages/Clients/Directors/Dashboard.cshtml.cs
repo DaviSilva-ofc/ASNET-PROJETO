@@ -212,7 +212,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                     .ThenInclude(e => e.Room)
                 .Where(t => t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value) && t.Level != "Empréstimo")
                 .OrderByDescending(t => t.CreatedAt)
-                .Take(5)
+                .Take(3)
                 .ToListAsync();
 
             return Page();

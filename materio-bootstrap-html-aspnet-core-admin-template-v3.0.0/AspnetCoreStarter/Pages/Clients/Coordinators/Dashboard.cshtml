@@ -154,13 +154,14 @@
         </div>
     </div>
 
+
     <!-- ===== Stat mini-cards ===== -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-lg-3">
             <div class="card stat-card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="stat-icon" style="background:var(--asnet-blue);">
-                        <i class='ri-user-star-line'></i>
+                        <i class='bx bx-user-voice'></i>
                     </div>
                     <div>
                         <p class="stat-number">@Model.TotalProfessores</p>
@@ -210,7 +211,10 @@
         </div>
     </div>
 
+
+
     <div class="row g-4 mb-4">
+
         <!-- Infrastructure Tree (Scoped to School) -->
         <div class="col-lg-4">
             <div class="card tree-card h-100" style="border-left: 5px solid var(--asnet-blue);">
@@ -409,7 +413,7 @@
                         </thead>
                         <tbody>
                             @if (Model.RecentTickets != null && Model.RecentTickets.Any()) {
-                                @foreach (var ticket in Model.RecentTickets) {
+                                @foreach (var ticket in Model.RecentTickets.Take(3)) {
                                     <tr>
                                         <td><span class="badge bg-label-secondary">#@ticket.Id</span></td>
                                         <td>

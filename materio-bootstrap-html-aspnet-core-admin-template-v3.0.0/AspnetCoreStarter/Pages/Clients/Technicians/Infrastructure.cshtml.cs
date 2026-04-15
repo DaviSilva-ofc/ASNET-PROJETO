@@ -58,14 +58,76 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
             if (userRole != "Admin" && userRole != "Tecnico") return RedirectToPage("/Index");
 
-            var agrupamentos = await _context.Agrupamentos.ToListAsync();
-            var allSchools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();
-            var allBlocos = await _context.Blocos.ToListAsync();
-            Salas = await _context.Salas
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            // Define authorized IDs
+            HashSet<int>? activeSchoolIds = null;
+            HashSet<int>? activeAgrupamentoIds = null;
+            HashSet<int>? activeEmpresaIds = null;
+
+            if (userRole == "Tecnico")
+            {
+                var activeTickets = await _context.Tickets
+                    .Include(t => t.School)
+                    .Include(t => t.Equipamento)
+                        .ThenInclude(e => e.Room)
+                            .ThenInclude(r => r.Block)
+                                .ThenInclude(b => b.School)
+                    .Where(t => t.TechnicianId == userId && 
+                                t.Status != "Concluído" && 
+                                t.Level != "Empréstimo" && 
+                                t.Level != "Alteração de Estado" && 
+                                (t.Level == null || !t.Level.Contains("ltera")) && 
+                                (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && 
+                                (t.Level == null || !t.Level.Contains("Estado")))
+                    .ToListAsync();
+
+                activeSchoolIds = new HashSet<int>();
+                activeAgrupamentoIds = new HashSet<int>();
+                activeEmpresaIds = new HashSet<int>();
+
+                foreach (var t in activeTickets)
+                {
+                    if (t.SchoolId.HasValue)
+                    {
+                        activeSchoolIds.Add(t.SchoolId.Value);
+                        if (t.School?.AgrupamentoId != null) activeAgrupamentoIds.Add(t.School.AgrupamentoId.Value);
+                    }
+                    else if (t.Equipamento != null && t.Equipamento.Room != null && t.Equipamento.Room.Block != null)
+                    {
+                        activeSchoolIds.Add(t.Equipamento.Room.Block.SchoolId);
+                        if (t.Equipamento.Room.Block.School?.AgrupamentoId != null)
+                            activeAgrupamentoIds.Add(t.Equipamento.Room.Block.School.AgrupamentoId.Value);
+                    }
+
+                    if (t.Equipamento?.EmpresaId != null) activeEmpresaIds.Add(t.Equipamento.EmpresaId.Value);
+                }
+            }
+
+            // Fetch data with optional filtering
+            var agrupamentosQuery = _context.Agrupamentos.AsQueryable();
+            if (activeAgrupamentoIds != null) agrupamentosQuery = agrupamentosQuery.Where(a => activeAgrupamentoIds.Contains(a.Id));
+            var agrupamentos = await agrupamentosQuery.ToListAsync();
+
+            var schoolsQuery = _context.Schools.Include(s => s.Agrupamento).AsQueryable();
+            if (activeSchoolIds != null) schoolsQuery = schoolsQuery.Where(s => activeSchoolIds.Contains(s.Id) || (s.AgrupamentoId.HasValue && activeAgrupamentoIds!.Contains(s.AgrupamentoId.Value)));
+            var allSchools = await schoolsQuery.ToListAsync();
+
+            var validSchoolIdsList = allSchools.Select(s => s.Id).ToList();
+
+            var blocosQuery = _context.Blocos.AsQueryable();
+            if (activeSchoolIds != null) blocosQuery = blocosQuery.Where(b => validSchoolIdsList.Contains(b.SchoolId));
+            var allBlocos = await blocosQuery.ToListAsync();
+
+            var salasQuery = _context.Salas
                 .Include(s => s.Block)
                 .Include(s => s.Equipments)
                 .Include(s => s.ResponsibleProfessor).ThenInclude(p => p.User)
-                .ToListAsync();
+                .AsQueryable();
+            if (activeSchoolIds != null) salasQuery = salasQuery.Where(s => s.BlockId.HasValue && allBlocos.Select(b => b.Id).Contains(s.BlockId.Value));
+            Salas = await salasQuery.ToListAsync();
 
             // Build Client ViewModels (Schools Hierarchy)
             foreach (var agr in agrupamentos)
@@ -109,7 +171,10 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             }
 
             // Build Empresa ViewModels
-            var allEmpresas = await _context.Empresas.ToListAsync();
+            var empresasQuery = _context.Empresas.AsQueryable();
+            if (activeEmpresaIds != null) empresasQuery = empresasQuery.Where(e => activeEmpresaIds.Contains(e.Id));
+            var allEmpresas = await empresasQuery.ToListAsync();
+
             foreach (var emp in allEmpresas)
             {
                 var ticketCount = await _context.Tickets

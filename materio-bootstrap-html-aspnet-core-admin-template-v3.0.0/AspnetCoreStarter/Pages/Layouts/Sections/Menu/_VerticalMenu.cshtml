@@ -97,6 +97,13 @@
             <div>Stocks</div>
           </a>
         </li>
+        <li class='menu-item@(currentPage == "/Clients/Technicians/Calendar" ? " active" : "")'>
+          <a asp-page="/Clients/Technicians/Calendar" class="menu-link">
+            <i class="menu-icon icon-base ri-calendar-line"></i>
+            <div>Calendário</div>
+          </a>
+        </li>
+
         <li class='menu-item@(currentPage == "/Clients/Technicians/Tickets" ? " active" : "")'>
           <a asp-page="/Clients/Technicians/Tickets" class="menu-link">
             <i class="menu-icon icon-base ri-ticket-line"></i>
@@ -167,6 +174,12 @@
           <a asp-page="/Clients/Professors/Equipment" class="menu-link">
             <i class="menu-icon icon-base ri-computer-line"></i>
             <div>Equipamentos</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Clients/Professors/Stocks" ? " active" : "")'>
+          <a asp-page="/Clients/Professors/Stocks" class="menu-link">
+            <i class="menu-icon icon-base ri-archive-line"></i>
+            <div>Stocks</div>
           </a>
         </li>
         <li class='menu-item@(currentPage == "/Clients/Professors/Tickets" ? " active" : "")'>

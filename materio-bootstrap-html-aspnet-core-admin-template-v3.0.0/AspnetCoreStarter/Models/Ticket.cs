@@ -36,6 +36,12 @@ namespace AspnetCoreStarter.Models
         [Column("id_tecnico")]
         public int? TechnicianId { get; set; }
 
+        [Column("id_solicitante")]
+        public int? RequestedByUserId { get; set; }
+
+        [ForeignKey("RequestedByUserId")]
+        public virtual User? RequestedBy { get; set; }
+
         [Column("id_equipamento")]
         public int? EquipamentoId { get; set; }
 
@@ -51,5 +57,11 @@ namespace AspnetCoreStarter.Models
 
         [Column("data_criacao")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Column("data_aceitacao")]
+        public DateTime? AcceptedAt { get; set; }
+
+        [Column("data_conclusao")]
+        public DateTime? CompletedAt { get; set; }
     }
 }

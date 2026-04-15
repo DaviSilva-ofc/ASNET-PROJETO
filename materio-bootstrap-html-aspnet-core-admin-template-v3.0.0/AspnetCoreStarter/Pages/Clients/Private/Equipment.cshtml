@@ -145,127 +145,260 @@
             </div>
         }
 
-    <!-- Equipment List Card -->
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center border-bottom mb-3">
-            <h5 class="mb-0">Inventário de Equipamentos</h5>
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
-                    🔍 Filtros
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#tab-inventario">
+                    <i class="bx bx-list-ul me-1"></i> Inventário Geral
                 </button>
-                <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
-                    <i class="ri-hand-coin-line me-1"></i> Requisitar Equipamento
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-devolucoes">
+                    <i class="bx bx-undo me-1"></i> Pedidos e Devoluções
+                    @if (Model.BorrowedItems.Any())
+                    {
+                        <span class="badge rounded-pill bg-danger ms-2">@Model.BorrowedItems.Sum(i => i.Quantity)</span>
+                    }
                 </button>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalRegistarEquipamento">
-                    Novo Equipamento
-                </button>
+            </li>
+        </ul>
+        <div class="tab-content" style="background: transparent; padding: 0; box-shadow: none;">
+            <!-- Aba Inventário -->
+            <div class="tab-pane fade show active" id="tab-inventario" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center border-bottom mb-3 py-3">
+                        <h5 class="mb-0 text-primary fw-bold">Gestão de Ativos</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                                <i class="bx bx-filter-alt me-1"></i> Filtros
+                            </button>
+                            <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
+                                <i class="ri-hand-coin-line me-1"></i> Requisitar Equipamento
+                            </button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalRegistarEquipamento">
+                                <i class="bx bx-plus me-1"></i> Novo Equipamento
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="small text-uppercase fw-bold">Artigo</th>
+                                    <th class="small text-uppercase fw-bold">Tipo</th>
+                                    <th class="small text-uppercase fw-bold">Nº Série</th>
+                                    <th class="small text-uppercase fw-bold">Localização (Sala)</th>
+                                    <th class="small text-uppercase fw-bold">Status</th>
+                                    <th class="small text-uppercase fw-bold text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-border-bottom-0">
+                                @if (Model.Equipments == null || !Model.Equipments.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <i class="bx bx-box fs-1 text-muted mb-2"></i>
+                                            <p class="text-muted">Nenhum equipamento encontrado no inventário.</p>
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in Model.Equipments)
+                                    {
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="d-flex flex-column">
+                                                    <strong class="text-dark">@item.Name</strong>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        @(item.Brand ?? "Genérico") @(item.Model ?? "")
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>@item.Type</td>
+                                            <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
+                                            <td>
+                                                @if (item.Room != null)
+                                                {
+                                                    <span>@item.Room.Name (@(item.Room.Setor?.Name ?? "N/A"))</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted italic small">Não definida</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (item.Status == "Avariado")
+                                                {
+                                                    <span class="badge bg-label-danger">Avariado</span>
+                                                }
+                                                else if (item.Status == "Em reparo")
+                                                {
+                                                    <span class="badge bg-label-warning">Em reparo</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-label-success">A funcionar</span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    @if (item.Status == null || (!item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) && !item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
+                                                    {
+                                                        <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary p-1" title="Solicitar Ticket">
+                                                            <i class="ri-add-circle-line"></i> Solicitar Ticket
+                                                        </a>
+                                                    }
+                                                    <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
+                                                        @if (item.Status == "Avariado" || item.Status == "Danificado")
+                                                        {
+                                                            <button type="submit" class="btn btn-sm text-success p-1" title="Marcar como Funcional">
+                                                                <i class="ri-check-line"></i> Funcional
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="submit" class="btn btn-sm text-warning p-1" title="Marcar como Avariado">
+                                                                <i class="ri-error-warning-line"></i> Avariar
+                                                            </button>
+                                                        }
+                                                    </form>
+                                                    <div class="vr mx-1 opacity-25"></div>
+                                                    <button type="button" class="btn btn-sm text-primary p-1" title="Editar" 
+                                                            onclick="openEditModal(@item.Id, '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@(item.RoomId)', '@(item.Room?.SetorId)', '@(item.Room?.Setor?.DepartamentoId)', '@item.Status')">
+                                                        <i class="bx bx-edit"></i> ✏️
+                                                    </button>
+                                                    <form method="post" asp-page-handler="DeleteEquipment" asp-route-id="@item.Id" 
+                                                          onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?')" style="display:inline-block;">
+                                                        <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar">
+                                                            <i class="bx bx-trash"></i> 🗑️
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <div class="table-responsive text-nowrap">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th class="small text-uppercase fw-bold">Artigo</th>
-                        <th class="small text-uppercase fw-bold">Tipo</th>
-                        <th class="small text-uppercase fw-bold">Nº Série</th>
-                        <th class="small text-uppercase fw-bold">Localização (Sala)</th>
-                        <th class="small text-uppercase fw-bold">Status</th>
-                        <th class="small text-uppercase fw-bold text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="table-border-bottom-0">
-                    @if (Model.Equipments == null || !Model.Equipments.Any())
-                    {
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <i class="bx bx-box fs-1 text-muted mb-2"></i>
-                                <p class="text-muted">Nenhum equipamento encontrado.</p>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Model.Equipments)
-                        {
-                            <tr>
-                                <td class="ps-3">
-                                    <div class="d-flex flex-column">
-                                        <strong class="text-dark">@item.Name</strong>
-                                        <small class="text-muted" style="font-size: 0.75rem;">
-                                            @(item.Brand ?? "Genérico") @(item.Model ?? "")
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>@item.Type</td>
-                                <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
-                                <td>
-                                    @if (item.Room != null)
-                                    {
-                                        <span>@item.Room.Name (@(item.Room.Setor?.Name ?? "N/A"))</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted italic small">Não definida</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (item.Status == "Avariado")
-                                    {
-                                        <span class="badge bg-label-danger">Avariado</span>
-                                    }
-                                    else if (item.Status == "Em reparo")
-                                    {
-                                        <span class="badge bg-label-warning">Em reparo</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-label-success">A funcionar</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex align-items-center justify-content-center gap-2">
-                                        @if (item.Status == null || (!item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) && !item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
-                                        {
-                                            <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary p-1" title="Solicitar Ticket">
-                                                <i class="ri-add-circle-line"></i> Solicitar Ticket
-                                            </a>
-                                        }
-                                        <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
-                                            @if (item.Status == "Avariado" || item.Status == "Danificado")
-                                            {
-                                                <button type="submit" class="btn btn-sm text-success p-1" title="Marcar como Funcional">
-                                                    <i class="ri-check-line"></i> Funcional
-                                                </button>
-                                            }
-                                            else
-                                            {
-                                                <button type="submit" class="btn btn-sm text-warning p-1" title="Marcar como Avariado">
-                                                    <i class="ri-error-warning-line"></i> Avariar
-                                                </button>
-                                            }
-                                        </form>
 
-                                        <div class="vr mx-1 opacity-25"></div>
+            <!-- Aba Pedidos e Devoluções -->
+            <div class="tab-pane fade" id="tab-devolucoes" role="tabpanel">
+                <!-- Requisições Pendentes -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header border-bottom bg-label-warning py-3">
+                        <h5 class="mb-0 text-dark"><i class="ri-time-line me-2"></i>Requisições Pendentes</h5>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Artigo Pedido</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MyStockRequests == null || !Model.MyStockRequests.Any())
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-muted small">
+                                            Não existem pedidos de stock pendentes.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var ticket in Model.MyStockRequests)
+                                    {
+                                        <tr>
+                                            <td><span class="small text-muted">@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE STOCK (CLIENTE):", "").Trim()</span>
+                                                    @if (ticket.Equipamento != null)
+                                                    {
+                                                        <small class="text-muted">Ref: @ticket.Equipamento.SerialNumber</small>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var statusClass = ticket.Status switch {
+                                                        "Pendente" or "Pedido" => "badge bg-label-warning",
+                                                        "Concluído" => "badge bg-label-success",
+                                                        _ => "badge bg-label-info"
+                                                    };
+                                                }
+                                                <span class="@statusClass text-uppercase" style="font-size: 0.7rem;">@ticket.Status</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                                        <button type="button" class="btn btn-sm text-primary p-1" title="Editar" 
-                                                onclick="openEditModal(@item.Id, '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@(item.RoomId)', '@(item.Room?.SetorId)', '@(item.Room?.Setor?.DepartamentoId)', '@item.Status')">
-                                            <i class="bx bx-edit"></i> ✏️
-                                        </button>
-
-                                        <form method="post" asp-page-handler="DeleteEquipment" asp-route-id="@item.Id" 
-                                              onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?')" style="display:inline-block;">
-                                            <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar">
-                                                <i class="bx bx-trash"></i> 🗑️
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+                <!-- Equipamentos Emprestados (Para Devolução) -->
+                <div class="card shadow-sm">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">Equipamentos Emprestados (Na Posse)</h5>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="small text-uppercase fw-bold">Artigo</th>
+                                    <th class="small text-uppercase fw-bold">Tipo</th>
+                                    <th class="small text-uppercase fw-bold text-center">Quantidade Atual</th>
+                                    <th class="small text-uppercase fw-bold">Status</th>
+                                    <th class="small text-uppercase fw-bold text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-border-bottom-0">
+                                @if (Model.BorrowedItems == null || !Model.BorrowedItems.Any())
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <i class="bx bx-refresh fs-1 text-muted mb-2"></i>
+                                            <p class="text-muted small">Não existem equipamentos requisitados em sua posse.</p>
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in Model.BorrowedItems)
+                                    {
+                                        <tr>
+                                            <td class="ps-3"><strong class="text-dark">@item.Name</strong></td>
+                                            <td>@item.Category</td>
+                                            <td class="text-center"><span class="badge bg-label-info fw-bold">@item.Quantity un.</span></td>
+                                            <td><span class="badge bg-label-warning">Em seu uso</span></td>
+                                            <td class="text-center">
+                                                <form method="post" asp-page-handler="ReturnLoan" class="d-flex align-items-center justify-content-center gap-2">
+                                                    <input type="hidden" name="sampleId" value="@item.Id" />
+                                                    <div class="input-group input-group-sm" style="width: 130px;">
+                                                        <input type="number" name="quantity" class="form-control" value="1" min="1" max="@item.Quantity" required />
+                                                        <button type="submit" class="btn btn-warning text-white" 
+                                                                onclick="return confirm('Confirmar a devolução deste equipamento à Administração ASNET?')">
+                                                            <i class="bx bx-undo me-1"></i> Devolver
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -273,7 +406,7 @@
 <!-- Modal: Requisitar Equipamento -->
 <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form method="post" asp-page="/Clients/Private/Stocks" asp-page-handler="CreateStockRequest" class="modal-content">
+        <form method="post" asp-page-handler="CreateStockRequest" class="modal-content">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title fw-bold"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -281,44 +414,24 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label fw-semibold small text-uppercase">Artigo</label>
-                    <select name="itemName" id="reqEqArtigo" class="form-select" required onchange="filterReqEqTypes()">
+                    <select name="itemName" id="reqEqName" class="form-select" required onchange="updateSpecificTypes('reqEq')">
                         <option value="">Selecione o artigo...</option>
-                        <option value="Computador">Computadores</option>
-                        <option value="Monitor">Monitores</option>
-                        <option value="Impressora">Impressoras</option>
-                        <option value="Projetor">Projetores</option>
+                        <option value="Computadores">Computadores</option>
+                        <option value="Monitores">Monitores</option>
+                        <option value="Impressoras">Impressoras</option>
                         <option value="Networking">Networking</option>
-                        <option value="Componente">Componentes</option>
-                        <option value="Perif&eacute;rico">Perif&eacute;ricos</option>
-                        <option value="Quadro Interativo">Quadros Interativos</option>
-                        <option value="Outro">Outros</option>
+                        <option value="Servidores/Infra">Servidores/Infra</option>
+                        <option value="Componentes">Componentes</option>
+                        <option value="Perifericos">Perifericos</option>
+                        <option value="Projetores">Projetores</option>
+                        <option value="Quadros Interativos">Quadros Interativos</option>
+                        <option value="Outros">Outros</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold small text-uppercase">Tipo</label>
-                    <select name="itemType" id="reqEqTipo" class="form-select">
-                        <option value="">Selecione o tipo...</option>
-                        <option value="Desktop" data-art="Computador">Desktop</option>
-                        <option value="Port&aacute;til" data-art="Computador">Port&aacute;til</option>
-                        <option value="AIO" data-art="Computador">AIO</option>
-                        <option value="Monitor" data-art="Monitor">Monitor</option>
-                        <option value="Televis&atilde;o" data-art="Monitor">Televis&atilde;o</option>
-                        <option value="Impressora" data-art="Impressora">Impressora</option>
-                        <option value="Projetor" data-art="Projetor">Projetor</option>
-                        <option value="Router" data-art="Networking">Router</option>
-                        <option value="Switch" data-art="Networking">Switch</option>
-                        <option value="Access Point" data-art="Networking">Access Point</option>
-                        <option value="Motherboard" data-art="Componente">Motherboard</option>
-                        <option value="Disco HDD" data-art="Componente">Disco HDD</option>
-                        <option value="Disco SSD" data-art="Componente">Disco SSD</option>
-                        <option value="Mem&oacute;ria RAM" data-art="Componente">Mem&oacute;ria RAM</option>
-                        <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
-                        <option value="Teclado" data-art="Perif&eacute;rico">Teclado</option>
-                        <option value="Rato" data-art="Perif&eacute;rico">Rato</option>
-                        <option value="Headphones" data-art="Perif&eacute;rico">Headphones</option>
-                        <option value="Quadro Interativo" data-art="Quadro Interativo">Quadro Interativo</option>
-                        <option value="Mesa Interativa" data-art="Quadro Interativo">Mesa Interativa</option>
-                        <option value="Outro" data-art="Outro">Outro</option>
+                    <select name="itemType" id="reqEqType" class="form-select">
+                        <option value="">Selecione o artigo primeiro...</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -528,7 +641,7 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label fw-bold">Artigo</label>
-                        <select id="filterArtigo" asp-for="FilterName" class="form-select select2-modal">
+                        <select id="filterName" asp-for="FilterName" class="form-select select2-modal" onchange="updateSpecificTypes('filter')">
                             <option value="">Todos</option>
                             <option value="Computadores">Computadores</option>
                             <option value="Monitores">Monitores</option>
@@ -544,9 +657,8 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-bold">Tipo</label>
-                        <select asp-for="FilterType" class="form-select select2-modal">
-                            <option value="">Todos</option>
-                            @foreach (var type in Model.UniqueTypes) { <option value="@type">@type</option> }
+                        <select id="filterType" asp-for="FilterType" class="form-select select2-modal">
+                            <option value="">Todos os Artigos primeiro...</option>
                         </select>
                     </div>
                     <div class="col-12">
@@ -606,6 +718,12 @@
                 dropdownParent: $this.closest('.modal-content')
             });
         });
+
+        // Cascading event bindings for Select2
+        $('#filterName').on('select2:select', function (e) { updateSpecificTypes('filter'); });
+        $('#reqEqName').on('select2:select', function (e) { updateSpecificTypes('reqEq'); });
+        $('#regName').on('select2:select', function (e) { updateSpecificTypes('reg'); });
+        $('#editName').on('select2:select', function (e) { updateSpecificTypes('edit'); });
     });
 
     const brandModelData = {
@@ -693,12 +811,14 @@
     };
 
     function updateSpecificTypes(prefix, selectedValue = null) {
-        const artigo = document.getElementById(prefix + 'Name').value;
+        const nameSelect = document.getElementById(prefix + 'Name');
         const typeSelect = document.getElementById(prefix + 'Type');
         const sourceSelect = document.getElementById('type-hidden-source');
         
-        typeSelect.innerHTML = '<option value="">Selecione...</option>';
-        $(typeSelect).val("").trigger('change');
+        if (!nameSelect || !typeSelect) return;
+        const artigo = nameSelect.value;
+        
+        typeSelect.innerHTML = '<option value="">' + (artigo ? 'Selecione o tipo...' : 'Selecione o artigo primeiro') + '</option>';
         
         if (artigo) {
             Array.from(sourceSelect.options).forEach(opt => {
@@ -711,10 +831,8 @@
             });
         }
         
-        $(typeSelect).select2({
-            placeholder: artigo ? 'Selecione o tipo...' : 'Selecione o artigo primeiro',
-            dropdownParent: $(typeSelect).parent()
-        });
+        // Notify Select2
+        $(typeSelect).trigger('change');
     }
 
     function updateBrands(prefix) {
@@ -870,6 +988,12 @@
             @:rHidden.innerHTML += '<option value="@r.Id" data-setor="@r.SetorId">@r.Name</option>';
         }
         document.body.appendChild(rHidden);
+
+        // Initialize cascades for active filters
+        const activeFilterNameSelect = document.getElementById('filterName');
+        if (activeFilterNameSelect && activeFilterNameSelect.value) {
+            updateSpecificTypes('filter', '@Model.FilterType');
+        }
     });
 
     function openEditModal(id, name, type, brand, model, serial, roomId, setorId, deptId, status) {
@@ -916,16 +1040,6 @@
         new bootstrap.Modal(document.getElementById('modalEditarEquipamento')).show();
     }
 
-    function filterReqEqTypes() {
-        const artName = document.getElementById('reqEqArtigo').value;
-        const tipoSelect = document.getElementById('reqEqTipo');
-        const options = tipoSelect.querySelectorAll('option');
-        tipoSelect.value = "";
-        options.forEach(opt => {
-            if (opt.value === "") return;
-            const art = (opt.getAttribute('data-art') || "");
-            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
-        });
-    }
+    // Removida função redundante filterReqEqTypes
 </script>
 }

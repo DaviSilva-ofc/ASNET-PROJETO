@@ -33,24 +33,20 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             CurrentUserId = userId;
 
             // For Private Clients, contacts are all Administrators (Support)
-            // Plus any users they have previously messaged
             var administrators = await _context.Administradores
                 .Include(a => a.User)
                 .Where(a => a.User != null)
                 .Select(a => a.User!)
                 .ToListAsync();
-
-            var messagedUserIds = await _context.Mensagens
-                .Where(m => m.ReceiverId == CurrentUserId || m.SenderId == CurrentUserId)
-                .Select(m => m.SenderId == CurrentUserId ? m.ReceiverId : m.SenderId)
+ 
+            // Plus technicians who have accepted an active ticket from this private client
+            var technicians = await _context.Tickets
+                .Where(t => t.RequestedByUserId == CurrentUserId && t.TechnicianId != null && t.Status != "Concluído")
+                .Select(t => t.Technician!)
                 .Distinct()
                 .ToListAsync();
-
-            var messagedUsers = await _context.Users
-                .Where(u => messagedUserIds.Contains(u.Id))
-                .ToListAsync();
-
-            Contacts = administrators.Concat(messagedUsers)
+ 
+            Contacts = administrators.Concat(technicians)
                 .GroupBy(u => u.Id)
                 .Select(g => g.First())
                 .Where(u => u.Id != CurrentUserId)

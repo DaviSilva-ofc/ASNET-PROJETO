@@ -52,11 +52,11 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
                     .ToListAsync();
             }
 
-            // 3. Load all Technicians
-            var technicians = await _context.Tecnicos
-                .Include(t => t.User)
-                .Where(t => t.User != null)
-                .Select(t => t.User!)
+            // 3. Load Technicians who accepted an active ticket from this teacher
+            var technicians = await _context.Tickets
+                .Where(t => t.RequestedByUserId == CurrentUserId && t.TechnicianId != null && t.Status != "Concluído")
+                .Select(t => t.Technician!)
+                .Distinct()
                 .ToListAsync();
 
             // 4. Load all Admins
@@ -100,15 +100,34 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
 
             var senderId = int.Parse(userIdStr);
 
+            var receiverId = request.ReceiverId;
+
+            // Segurança: Verificar se o destinatário está na lista permitida (Admin, Diretor ou Técnico com Ticket ativo)
+            bool isAdmin = await _context.Administradores.AnyAsync(a => a.UserId == receiverId);
+            bool isTechnicianWithActiveTicket = await _context.Tickets.AnyAsync(t => t.RequestedByUserId == senderId && t.TechnicianId == receiverId && t.Status != "Concluído");
+            
+            // Também validar Diretor do agrupamento
+            var professor = await _context.Professores
+                .Include(p => p.Bloco)
+                    .ThenInclude(b => b.School)
+                .FirstOrDefaultAsync(p => p.UserId == senderId);
+            int? agrupamentoId = professor?.Bloco?.School?.AgrupamentoId;
+            bool isDirector = agrupamentoId.HasValue && await _context.Diretores.AnyAsync(d => d.AgrupamentoId == agrupamentoId && d.UserId == receiverId);
+
+            if (!isAdmin && !isTechnicianWithActiveTicket && !isDirector)
+            {
+                return new BadRequestObjectResult("Destinatário não autorizado.");
+            }
+
             var message = new Mensagem
             {
                 SenderId = senderId,
-                ReceiverId = request.ReceiverId,
+                ReceiverId = receiverId,
                 Content = request.Content,
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
             };
-
+ 
             _context.Mensagens.Add(message);
             await _context.SaveChangesAsync();
 

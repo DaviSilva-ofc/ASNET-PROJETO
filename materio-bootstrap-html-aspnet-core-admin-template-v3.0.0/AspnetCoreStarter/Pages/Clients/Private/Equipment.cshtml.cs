@@ -20,6 +20,8 @@ namespace AspnetCoreStarter.Pages.Clients.Private
         }
 
         public List<Equipamento> Equipments { get; set; } = new();
+        public List<PrivateStockItemViewModel> BorrowedItems { get; set; } = new();
+        public List<Ticket> MyStockRequests { get; set; } = new();
         public HashSet<int> EquipmentWithActiveTickets { get; set; } = new();
 
         [BindProperty]
@@ -109,6 +111,22 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 .Where(t => t.EquipamentoId != null && t.Status != "Concluído")
                 .Select(t => t.EquipamentoId.Value).Distinct().ToListAsync();
             EquipmentWithActiveTickets = new HashSet<int>(activeTicketEqIds);
+            
+            // Load Borrowed Items from ASNET Store (stock_empresa)
+            var borrowedQuery = _context.StockEmpresa
+                .Where(s => s.EmpresaId == empresaId && s.Status == "Emprestado")
+                .AsQueryable();
+
+            var borrowedRaw = await borrowedQuery.ToListAsync();
+            BorrowedItems = borrowedRaw.GroupBy(s => new { s.EquipmentName, s.Type })
+                .Select(g => new PrivateStockItemViewModel
+                {
+                    Id = g.First().Id,
+                    Name = g.Key.EquipmentName ?? "Equipamento",
+                    Category = g.Key.Type ?? "N/A",
+                    Quantity = g.Count(),
+                    Status = "Emprestado"
+                }).ToList();
 
             // Populate Filter Lists from full inventory
             UniqueBrands = (await queryFull.Where(e => e.Brand != null).Select(e => e.Brand).Distinct().ToListAsync())!;
@@ -119,6 +137,14 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 .Include(r => r.Setor)
                 .Where(r => r.Setor != null && r.Setor.Departamento != null && r.Setor.Departamento.EmpresaId == empresaId)
                 .OrderBy(r => r.Name)
+                .ToListAsync();
+
+            // Load My Stock Requests (Level Empréstimo created by this user)
+            MyStockRequests = await _context.Tickets
+                .Include(t => t.RequestedBy)
+                .Include(t => t.Equipamento)
+                .Where(t => t.RequestedByUserId == userId && t.Level == "Empréstimo")
+                .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
             return Page();
@@ -199,6 +225,8 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             var equip = await _context.Equipamentos.Include(e => e.Empresa).FirstOrDefaultAsync(e => e.Id == NewTicket.EquipamentoId);
             if (equip == null) return Page();
 
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            NewTicket.RequestedByUserId = int.Parse(userIdStr!);
             NewTicket.Status = "Pedido";
             NewTicket.CreatedAt = DateTime.UtcNow;
             string userNotes = NewTicket.Description ?? "";
@@ -219,6 +247,75 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostReturnLoanAsync(int sampleId, int quantity)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _context.Users.FindAsync(int.Parse(userIdStr!));
+            if (user == null || user.EmpresaId == null) return RedirectToPage("/Auth/Login");
+
+            if (quantity <= 0) return RedirectToPage();
+
+            var sample = await _context.StockEmpresa.FindAsync(sampleId);
+            if (sample == null || sample.EmpresaId != user.EmpresaId) return RedirectToPage();
+
+            var lentItems = await _context.StockEmpresa
+                .Where(s => s.EquipmentName == sample.EquipmentName && s.Type == sample.Type && s.EmpresaId == user.EmpresaId && s.Status == "Emprestado")
+                .Take(quantity)
+                .ToListAsync();
+
+            if (lentItems.Count == 0) return RedirectToPage();
+
+            foreach (var item in lentItems)
+            {
+                item.Status = "Disponível";
+                item.IsAvailable = true;
+                item.EmpresaId = null; 
+                item.SchoolId = null;
+                item.AgrupamentoId = null;
+            }
+
+            var relatedPedido = await _context.PedidosStock
+                .Where(p => p.RequestedByUserId == user.Id && p.Status == "Atendido" && 
+                            (p.ItemName == sample.EquipmentName || p.ItemType == sample.Type))
+                .OrderByDescending(p => p.UpdatedAt)
+                .FirstOrDefaultAsync();
+
+            if (relatedPedido != null)
+            {
+                relatedPedido.Status = "Devolvido";
+                relatedPedido.UpdatedAt = System.DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { success = $"Devolveu {lentItems.Count} unidade(s) de {sample.EquipmentName} à Administração ASNET." });
+        }
+
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            var user = await _context.Users.Include(u => u.Empresa).FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return RedirectToPage("/Auth/Login");
+
+            if (string.IsNullOrWhiteSpace(itemName))
+                return RedirectToPage(new { success = "" });
+
+            var ticket = new Ticket
+            {
+                Description = $"PEDIDO DE STOCK (CLIENTE PRIVADO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nEmpresa: {user.Empresa?.Name ?? "N/A"}",
+                Level = "Empréstimo",
+                Status = "Pedido",
+                CreatedAt = DateTime.UtcNow,
+                RequestedByUserId = userId
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { success = $"Pedido de {itemName} submetido com sucesso." });
         }
     }
 }

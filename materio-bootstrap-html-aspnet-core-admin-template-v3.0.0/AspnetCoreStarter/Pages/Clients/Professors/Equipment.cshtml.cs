@@ -22,6 +22,8 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
 
         public List<Equipamento> Equipments { get; set; } = new();
         public List<Sala> MyRooms { get; set; } = new();
+        public List<StockEmpresa> MyBorrowedItems { get; set; } = new();
+        public List<Ticket> MyStockRequests { get; set; } = new();
         public HashSet<int> EquipmentWithActiveTickets { get; set; } = new();
 
         [BindProperty]
@@ -91,6 +93,17 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             
             EquipmentWithActiveTickets = new HashSet<int>(activeTickets);
 
+            // Fetch items borrowed by the professor
+            MyBorrowedItems = await _context.StockEmpresa
+                .Where(s => s.ProfessorId == userId)
+                .ToListAsync();
+
+            // Fetch pending requests from this user
+            MyStockRequests = await _context.Tickets
+                .Where(t => t.RequestedByUserId == userId && t.Level == "Empréstimo" && t.Status == "Pedido")
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
             return Page();
         }
 
@@ -128,6 +141,56 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
 
             await _context.SaveChangesAsync();
             return RedirectToPage(new { success = SuccessMessage });
+        }
+ 
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            if (string.IsNullOrWhiteSpace(itemName))
+            {
+                return RedirectToPage(new { success = "Erro: Por favor selecione um artigo." });
+            }
+
+            // Get professor's school to help administration route the request
+            var room = await _context.Salas.Include(r => r.Block).ThenInclude(b => b.School).FirstOrDefaultAsync(r => r.ResponsibleProfessorId == userId);
+
+            var ticket = new Ticket
+            {
+                Description = $"PEDIDO DE EQUIPAMENTO (PROFESSOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nLocalização Sugerida: {room?.Name} ({room?.Block?.School?.Name})",
+                Level = "Empréstimo",
+                Status = "Pedido",
+                CreatedAt = DateTime.UtcNow,
+                RequestedByUserId = userId,
+                SchoolId = room?.Block?.SchoolId
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { success = $"Pedido de {itemName} enviado com sucesso para a administração." });
+        }
+
+        public async Task<IActionResult> OnPostReturnItemAsync(int id)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var item = await _context.StockEmpresa.FirstOrDefaultAsync(s => s.Id == id && s.ProfessorId == userId);
+            if (item != null)
+            {
+                item.ProfessorId = null;
+                item.Status = "Disponível";
+                item.IsAvailable = true;
+                
+                await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Equipamento devolvido com sucesso." });
+            }
+            
+            return RedirectToPage();
         }
     }
 }

@@ -57,6 +57,19 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<AppDbContext>();
         Console.WriteLine("Tentando aplicar migrações na base de dados...");
+        
+        // Manual column addition because of build locks on migrations
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_solicitante INT NULL;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD CONSTRAINT FK_tickets_utilizadores_id_solicitante FOREIGN KEY (id_solicitante) REFERENCES utilizadores(id_utilizador);"); } catch { }
+        
+        // StockEmpresa updates for Professors
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_professor INT NULL;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD CONSTRAINT FK_stock_empresa_professores_id_professor FOREIGN KEY (id_professor) REFERENCES utilizadores(id_utilizador);"); } catch { }
+        
+        // StockEmpresa updates for Directors
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_diretor INT NULL;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD CONSTRAINT FK_stock_empresa_diretores_id_diretor FOREIGN KEY (id_diretor) REFERENCES utilizadores(id_utilizador);"); } catch { }
+
         context.Database.Migrate();
         Console.WriteLine("Base de dados atualizada com sucesso.");
     }

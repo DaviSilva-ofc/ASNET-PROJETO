@@ -21,6 +21,8 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
         public List<Equipamento> Equipments { get; set; }
         public List<Sala> Rooms { get; set; } = new();
+        public List<StockEmpresa> MyBorrowedItems { get; set; } = new();
+        public List<Ticket> MyStockRequests { get; set; } = new();
         public HashSet<int> EquipmentWithActiveTickets { get; set; } = new();
 
         [BindProperty]
@@ -203,6 +205,36 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             
             ActiveFilterAgrupamento = AvailableAgrupamentos.FirstOrDefault();
 
+            // Fetch items borrowed by the director
+            MyBorrowedItems = await _context.StockEmpresa
+                .Where(s => s.DirectorId == userId)
+                .ToListAsync();
+
+            // Fetch ALL pending requests from the director's grouping
+            int? agrupamentoId = director?.AgrupamentoId;
+            var agrupamentoTickets = _context.Tickets
+                .Include(t => t.RequestedBy)
+                .Include(t => t.School)
+                .Where(t => t.Level == "Empréstimo" && (t.Status == "Pedido" || t.Status == "Pendente"));
+
+            if (agrupamentoId.HasValue)
+            {
+                // Mostra tickets da escola OU tickets de utilizadores que pertencem a escolas do agrupamento
+                var agrupamentoSchoolIds = await _context.Schools.Where(s => s.AgrupamentoId == agrupamentoId).Select(s => s.Id).ToListAsync();
+                agrupamentoTickets = agrupamentoTickets.Where(t => 
+                    (t.SchoolId != null && agrupamentoSchoolIds.Contains(t.SchoolId.Value)) ||
+                    (t.RequestedByUserId != null && _context.Users.Any(u => u.Id == t.RequestedByUserId)) // Fallback de segurança
+                );
+            }
+            else
+            {
+                agrupamentoTickets = agrupamentoTickets.Where(t => t.RequestedByUserId == userId);
+            }
+
+            MyStockRequests = await agrupamentoTickets
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
             return Page();
         }
 
@@ -260,18 +292,22 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
         public async Task<IActionResult> OnPostCreateTicketAsync()
         {
-            if (NewTicket.EquipamentoId == null) return Page();
+            if (NewTicket.EquipamentoId == null) return RedirectToPage(new { success = "Erro: Equipamento não selecionado." });
 
             var equipment = await _context.Equipamentos
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                 .FirstOrDefaultAsync(e => e.Id == NewTicket.EquipamentoId);
 
-            if (equipment == null) return Page();
+            if (equipment == null) return RedirectToPage(new { success = "Erro: Equipamento não encontrado." });
 
             NewTicket.SchoolId = equipment.Room.Block.SchoolId;
             NewTicket.Status = "Pedido";
             NewTicket.CreatedAt = DateTime.UtcNow;
+            
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdStr)) NewTicket.RequestedByUserId = int.Parse(userIdStr);
+
             NewTicket.Description = $"Pedido de reparação para {equipment.Name} ({equipment.SerialNumber}) em {equipment.Room.Name}";
 
             _context.Tickets.Add(NewTicket);
@@ -350,6 +386,58 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             await _context.SaveChangesAsync();
             return RedirectToPage(new { success = "Equipamento atualizado com sucesso!" });
+        }
+
+        public async Task<IActionResult> OnPostReturnItemAsync(int id)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var item = await _context.StockEmpresa.FirstOrDefaultAsync(s => s.Id == id && s.DirectorId == userId);
+            if (item != null)
+            {
+                item.DirectorId = null;
+                item.Status = "Disponível";
+                item.IsAvailable = true;
+                
+                await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Equipamento devolvido com sucesso." });
+            }
+            
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            if (string.IsNullOrWhiteSpace(itemName))
+            {
+                return RedirectToPage(new { success = "Por favor selecione um artigo." });
+            }
+
+            var director = await _context.Diretores.Include(d => d.Agrupamento).FirstOrDefaultAsync(d => d.UserId == userId);
+            
+            var ticket = new Ticket
+            {
+                Description = $"PEDIDO DE STOCK (DIRETOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nAgrupamento: {director?.Agrupamento?.Name}",
+                Level = "Empréstimo",
+                Status = "Pedido",
+                CreatedAt = DateTime.UtcNow,
+                RequestedByUserId = userId
+            };
+
+            // If we have a school context, assign it
+            var firstSchool = await _context.Schools.FirstOrDefaultAsync(s => s.AgrupamentoId == director.AgrupamentoId);
+            if (firstSchool != null) ticket.SchoolId = firstSchool.Id;
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { success = $"Pedido de {itemName} enviado com sucesso para a administração." });
         }
     }
 }

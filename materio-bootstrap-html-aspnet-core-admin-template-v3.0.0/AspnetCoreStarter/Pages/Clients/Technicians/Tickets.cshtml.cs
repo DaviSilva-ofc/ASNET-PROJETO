@@ -130,11 +130,12 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (string.IsNullOrEmpty(sessionUserId) || !int.TryParse(sessionUserId, out int userId))
                 return RedirectToPage("/Auth/Login");
 
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.TechnicianId == null);
+            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.TechnicianId == null && t.Level != "Empréstimo");
             if (ticket != null)
             {
                 ticket.TechnicianId = userId;
                 ticket.Status = "Em Reparação";
+                ticket.AcceptedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"Aceitou o trabalho #{id}. O estado foi alterado para 'Em Reparação'.";
             }
@@ -159,6 +160,10 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (ticket != null)
             {
                 ticket.Status = newStatus;
+                if (newStatus == "Concluído")
+                {
+                    ticket.CompletedAt = DateTime.UtcNow;
+                }
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"O estado do trabalho #{id} foi atualizado para '{newStatus}'.";
             }

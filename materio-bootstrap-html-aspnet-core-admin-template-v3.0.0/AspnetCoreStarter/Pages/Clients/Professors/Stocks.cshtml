@@ -1,0 +1,577 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Professors.ProfessorStocksModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Gestão de Stocks";
+}
+
+@section PageStyles {
+<style>
+    .dark-style .card,
+    [data-bs-theme="dark"] .card {
+        background-color: #2b2c40 !important;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
+    }
+
+    .dark-style h4, .dark-style h6, .dark-style h5,
+    [data-bs-theme="dark"] h4, [data-bs-theme="dark"] h6, [data-bs-theme="dark"] h5 { 
+        color: #f5f5f9 !important; 
+    }
+    
+    .dark-style .text-muted,
+    [data-bs-theme="dark"] .text-muted { color: #a1acb8 !important; }
+
+    .dark-style .bg-label-primary, [data-bs-theme="dark"] .bg-label-primary { background-color: rgba(105, 108, 255, 0.25) !important; color: #8592ff !important; }
+    .dark-style .bg-label-success, [data-bs-theme="dark"] .bg-label-success { background-color: rgba(113, 221, 55, 0.25) !important; color: #71dd37 !important; }
+    .dark-style .bg-label-warning, [data-bs-theme="dark"] .bg-label-warning { background-color: rgba(255, 171, 0, 0.25) !important; color: #ffab00 !important; }
+    .dark-style .bg-label-info, [data-bs-theme="dark"] .bg-label-info { background-color: rgba(3, 195, 236, 0.25) !important; color: #03c3ec !important; }
+
+    .dark-style .table th, [data-bs-theme="dark"] .table th { color: #cbcbe2 !important; }
+    .dark-style .table td, [data-bs-theme="dark"] .table td { color: #a1acb8 !important; }
+
+    /* Print Styles */
+    @@media print {
+        .layout-navbar, .layout-menu-horizontal, .layout-menu, .footer, .btn, .nav-links, .buy-now, .btn-primary, .btn-outline-primary, .nav-tabs {
+            display: none !important;
+        }
+        .container-xxl {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+        }
+        .content-wrapper {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        body {
+            background: white !important;
+            color: black !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .card-header h5 {
+            font-size: 24pt !important;
+            margin-bottom: 20px !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+        .table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd !important;
+            padding: 8px !important;
+            color: black !important;
+        }
+        .table th:last-child, .table td:last-child {
+            display: none !important; /* Hide specific Ações column */
+        }
+        .badge {
+            border: 1px solid #ccc !important;
+            color: black !important;
+            background: transparent !important;
+        }
+        .text-primary, .text-warning, .text-info, .text-success {
+            color: black !important;
+            font-weight: bold !important;
+        }
+        .alert, .d-flex.justify-content-end.align-items-center {
+            display: none !important;
+        }
+        .card-body, .avatar {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    @if (!string.IsNullOrEmpty(Request.Query["success"]))
+    {
+        <div class="alert alert-success alert-dismissible d-flex align-items-center mb-4" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i>
+            <div>@Request.Query["success"]</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold py-3 mb-0"><span class="text-muted fw-light">Professor /</span> Stocks</h4>
+    </div>
+
+    @{
+        var hasAnyFilter = Model.FilterSalaId.HasValue || 
+                          !string.IsNullOrEmpty(Model.FilterArticle) || !string.IsNullOrEmpty(Model.FilterType) || 
+                          !string.IsNullOrEmpty(Model.FilterStatus);
+    }
+
+    <div class="row">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-success"><i class="ri-door-open-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">Minhas Salas</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountSalas</h4>
+                    <p class="text-muted small mb-0">Salas sob sua responsabilidade</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-warning"><i class="ri-computer-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">Artigos</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountEquipamentos</h4>
+                    <p class="text-muted small mb-0">Total de equipamentos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-info"><i class="ri-heart-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">A Funcionar</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountHealthy</h4>
+                    <p class="text-muted small mb-0">Em bom estado</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar me-2">
+                            <span class="avatar-initial rounded bg-label-danger"><i class="ri-ticket-2-line"></i></span>
+                        </div>
+                        <h6 class="mb-0">Tickets Ativos</h6>
+                    </div>
+                    <h4 class="ms-1">@Model.CountTickets</h4>
+                    <p class="text-muted small mb-0">Para equipamentos nestas salas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Navigation Tabs ===== -->
+    <div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+        <button type="button" class="btn btn-outline-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+            <i class="ri-filter-3-line me-1"></i> Filtros
+        </button>
+        <button type="button" class="btn btn-outline-secondary shadow-sm" onclick="window.print()">
+            <i class="ri-file-pdf-line me-1"></i> Exportar para PDF
+        </button>
+        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoPedido">
+            <i class="ri-add-line me-1"></i> Novo Pedido de Stock
+        </button>
+    </div>
+
+    <!-- ===== Visualized Content ===== -->
+    @if (hasAnyFilter)
+    {
+        <div class="alert alert-info d-flex justify-content-between align-items-center mb-4 shadow-sm" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="ri-information-line me-2 ri-xl"></i>
+                <div>
+                    <span class="fw-semibold">Filtros ativos:</span>
+                    <span class="small ms-1">
+                        @{
+                            var filtersList = new List<string>();
+                            if (!string.IsNullOrEmpty(Model.FilterArticle)) filtersList.Add($"Artigo: {Model.FilterArticle}");
+                            if (!string.IsNullOrEmpty(Model.FilterType)) filtersList.Add($"Tipo: {Model.FilterType}");
+                            if (!string.IsNullOrEmpty(Model.FilterStatus)) filtersList.Add($"Estado: {Model.FilterStatus}");
+                            if (Model.FilterSalaId.HasValue) filtersList.Add("Sala específica");
+                            @Html.Raw(string.Join(", ", filtersList))
+                        }
+                    </span>
+                </div>
+            </div>
+            <a asp-page="./Stocks" class="btn btn-sm btn-info border-1 border-white text-white">Limpar Filtros</a>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-white"><i class="ri-archive-line me-2 text-warning"></i> Visão Geral do Stock nas Minhas Salas</h5>
+        </div>
+        <div class="table-responsive text-nowrap" id="stocksTableContainer">
+            <table class="table table-hover table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>Artigo</th>
+                        <th>Tipo</th>
+                        <th>Localização</th>
+                        <th>Quantidade</th>
+                        <th>Estado</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Items.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">Nenhum equipamento encontrado nas suas salas.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td><strong>@item.Name</strong></td>
+                                <td><span class="badge bg-label-secondary">@item.Category</span></td>
+                                <td>@item.Location</td>
+                                <td>@item.Quantity</td>
+                                <td>
+                                    @if (item.Status != null && item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-success">A funcionar</span>
+                                    }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Armazenado", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-info">Armazenado</span>
+                                    }
+                                    else if (item.Status != null && (item.Status.Trim().Equals("Avariado", StringComparison.OrdinalIgnoreCase) || 
+                                             item.Status.Trim().Equals("Indisponível", StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <span class="badge bg-label-danger">Avariado</span>
+                                    }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Emprestado", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-primary">Emprestado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-secondary">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
+                                    <div class="d-flex align-items-center gap-2 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary p-1 px-2" 
+                                                onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                                title="Editar Estado do Equipamento">
+                                            <i class="ri-edit-line me-1"></i> Editar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2" 
+                                                onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                                title="Excluir Equipamentos">
+                                            <i class="ri-delete-bin-line me-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Filtrar Stocks</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Artigo</label>
+                            <select id="filterArtigo" asp-for="FilterArticle" class="form-select" onchange="filterTypesByArtigo()">
+                                <option value="">Todos</option>
+                                <option value="Computador">Computadores</option>
+                                <option value="Monitor">Monitores</option>
+                                <option value="Impressora">Impressoras</option>
+                                <option value="Projetor">Projetores</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Componente">Componentes</option>
+                                <option value="Periférico">Periféricos</option>
+                                <option value="Quadro Interativo">Quadros Interativos</option>
+                                <option value="Outro">Outros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Tipo</label>
+                            <select id="filterTipo" asp-for="FilterType" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Desktop" data-art="Computador">Desktop</option>
+                                <option value="Portátil" data-art="Computador">Portátil</option>
+                                <option value="Monitor" data-art="Monitor">Monitor</option>
+                                <option value="Motherboard" data-art="Componente">Motherboard</option>
+                                <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                                <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                                <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                                <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                                <option value="Teclado" data-art="Periférico">Teclado</option>
+                                <option value="Rato" data-art="Periférico">Rato</option>
+                                <option value="Impressora" data-art="Impressora">Impressora</option>
+                                <option value="Projetor" data-art="Projetor">Projetor</option>
+                                <option value="Router" data-art="Networking">Router</option>
+                                <option value="Switch" data-art="Networking">Switch</option>
+                                <option value="Outro" data-art="Outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Minhas Salas</label>
+                            <select asp-for="FilterSalaId" class="form-select" id="filtSala">
+                                <option value="">Todas as Minhas Salas</option>
+                                @foreach (var sala in Model.AvailableRooms)
+                                {
+                                    <option value="@sala.Id">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" : "")</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase mb-1">Estado</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="">Todos</option>
+                                @foreach (var stat in Model.UniqueStatuses)
+                                {
+                                    <option value="@stat">@stat</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Novo Pedido de Stock -->
+    <div class="modal fade" id="modalNovoPedido" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-page-handler="RequestLoan" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Solicitar Novo Stock / Reposição</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Artigo</label>
+                        <select name="itemName" id="newReqArtigo" class="form-select" required onchange="filterNewRequestTypes()">
+                            <option value="">Selecione o artigo...</option>
+                            <option value="Computador">Computadores</option>
+                            <option value="Monitor">Monitores</option>
+                            <option value="Impressora">Impressoras</option>
+                            <option value="Projetor">Projetores</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Componente">Componentes</option>
+                            <option value="Periférico">Periféricos</option>
+                            <option value="Quadro Interativo">Quadros Interativos</option>
+                            <option value="Outro">Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Tipo</label>
+                        <select name="itemType" id="newReqTipo" class="form-select" required>
+                            <option value="">Selecione o tipo...</option>
+                            <option value="Desktop" data-art="Computador">Desktop</option>
+                            <option value="Portátil" data-art="Computador">Portátil</option>
+                            <option value="Monitor" data-art="Monitor">Monitor</option>
+                            <option value="Motherboard" data-art="Componente">Motherboard</option>
+                            <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                            <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                            <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                            <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                            <option value="Teclado" data-art="Periférico">Teclado</option>
+                            <option value="Rato" data-art="Periférico">Rato</option>
+                            <option value="Impressora" data-art="Impressora">Impressora</option>
+                            <option value="Projetor" data-art="Projetor">Projetor</option>
+                            <option value="Router" data-art="Networking">Router</option>
+                            <option value="Switch" data-art="Networking">Switch</option>
+                            <option value="Outro" data-art="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Quantidade</label>
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-uppercase">Motivo da Necessidade</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Descreva por que este material é necessário na sua sala..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Pedido para Coordenação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Estado -->
+    <div class="modal fade" id="modalEditStatus" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form id="editStatusForm" method="post" asp-page-handler="EditStatus" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title">Atualizar Estado de Equipamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>A alterar o estado mecânico/funcional de: <strong id="editItemName">...</strong></p>
+                    <input type="hidden" name="name" id="editInputName" />
+                    <input type="hidden" name="roomId" id="editInputRoomId" />
+                    <input type="hidden" name="currentStatus" id="editInputCurrentStatus" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Quantidade de Unidades</label>
+                        <div class="input-group">
+                            <input type="number" name="quantity" id="editInputQuantity" class="form-control" value="1" min="1" required />
+                            <span class="input-group-text">de <span id="editMaxQuantity">1</span> disponíveis</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Novo Estado Constatado</label>
+                        <select name="newStatus" class="form-select" required>
+                            <option value="">Selecione o novo estado...</option>
+                            <option value="A funcionar">Em Funcionamento Integral (A funcionar)</option>
+                            <option value="Armazenado">Arrumado (Armazenado)</option>
+                            <option value="Avariado">Apresenta Danos/Avaria (Avariado)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Estado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Excluir -->
+    <div class="modal fade" id="modalDeleteStock" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title text-danger">Remover Equipamento da Sala</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="deleteStockForm" method="post" asp-page-handler="DeleteStock">
+                    <div class="modal-body">
+                        <p>Pretende desvincular ou excluir a entrada para <strong id="deleteItemName">...</strong>?</p>
+                        <input type="hidden" name="name" id="deleteInputName" />
+                        <input type="hidden" name="roomId" id="deleteInputRoomId" />
+                        <input type="hidden" name="currentStatus" id="deleteInputCurrentStatus" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Quantidade a Remover</label>
+                            <div class="input-group">
+                                <input type="number" name="quantity" id="deleteInputQuantity" class="form-control" value="1" min="1" required />
+                                <span class="input-group-text">de <span id="deleteMaxQuantity">1</span></span>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="ri-error-warning-line me-1"></i> Esta ação apaga os equipamentos selecionados dos registos do sistema associados a estas salas.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+<script>
+    function openEditStatusModal(nameEncoded, roomId, statusEncoded, qty) {
+        let name = decodeURIComponent(nameEncoded);
+        let status = decodeURIComponent(statusEncoded);
+        document.getElementById('editItemName').innerText = name + ' (' + status + ')';
+        document.getElementById('editInputName').value = name;
+        document.getElementById('editInputRoomId').value = roomId || '';
+        document.getElementById('editInputCurrentStatus').value = status;
+        document.getElementById('editMaxQuantity').innerText = qty;
+        
+        var qtyInput = document.getElementById('editInputQuantity');
+        qtyInput.max = qty;
+        qtyInput.value = 1;
+        
+        var modal = new bootstrap.Modal(document.getElementById('modalEditStatus'));
+        modal.show();
+    }
+
+    function openDeleteStockModal(nameEncoded, roomId, statusEncoded, qty) {
+        let name = decodeURIComponent(nameEncoded);
+        let status = decodeURIComponent(statusEncoded);
+        document.getElementById('deleteItemName').innerText = name + ' (' + status + ')';
+        document.getElementById('deleteInputName').value = name;
+        document.getElementById('deleteInputRoomId').value = roomId || '';
+        document.getElementById('deleteInputCurrentStatus').value = status;
+        document.getElementById('deleteMaxQuantity').innerText = qty;
+        
+        var qtyInput = document.getElementById('deleteInputQuantity');
+        qtyInput.max = qty;
+        qtyInput.value = 1;
+        
+        var modal = new bootstrap.Modal(document.getElementById('modalDeleteStock'));
+        modal.show();
+    }
+
+    function filterTypesByArtigo() {
+        const artName = document.getElementById('filterArtigo').value;
+        const tipoSelect = document.getElementById('filterTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        
+        tipoSelect.value = "";
+        
+        options.forEach(opt => {
+            if (opt.value === "") {
+                opt.style.display = "";
+                return;
+            }
+            if (artName === "" || opt.getAttribute('data-art') === artName) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    }
+
+    function filterNewRequestTypes() {
+        const artName = document.getElementById('newReqArtigo').value;
+        const tipoSelect = document.getElementById('newReqTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        
+        tipoSelect.value = "";
+        
+        options.forEach(opt => {
+            if (opt.value === "") {
+                opt.style.display = "";
+                return;
+            }
+            if (artName === "" || opt.getAttribute('data-art') === artName) {
+                opt.style.display = "";
+            } else {
+                opt.style.display = "none";
+            }
+        });
+    }
+</script>
+}

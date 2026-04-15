@@ -160,7 +160,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 .Include(t => t.Equipamento)
                 .Where(t => t.Equipamento != null && t.Equipamento.EmpresaId == empresaId && t.Level != "Empréstimo")
                 .OrderByDescending(t => t.CreatedAt)
-                .Take(5)
+                .Take(3)
                 .ToListAsync();
 
             return Page();

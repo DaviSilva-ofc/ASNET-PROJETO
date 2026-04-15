@@ -64,7 +64,14 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
                     .ToListAsync();
             }
 
-            AvailableContacts = profes.Concat(admins).Concat(diretores)
+            // 4. Technicians who accepted an active ticket from this coordinator
+            var technicians = await _context.Tickets
+                .Where(t => t.RequestedByUserId == CurrentUserId && t.TechnicianId != null && t.Status != "Concluído")
+                .Select(t => t.Technician!)
+                .Distinct()
+                .ToListAsync();
+
+            AvailableContacts = profes.Concat(admins).Concat(diretores).Concat(technicians)
                 .Where(u => u != null && u.Id != CurrentUserId)
                 .GroupBy(u => u.Id)
                 .Select(g => g.First())
@@ -100,6 +107,25 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             int senderId = int.Parse(userIdStr);
+
+            // Segurança: Verificar se o destinatário é permitido
+            bool isAdmin = await _context.Administradores.AnyAsync(a => a.UserId == receiverId);
+            bool isTechnician = await _context.Tickets.AnyAsync(t => t.RequestedByUserId == senderId && t.TechnicianId == receiverId && t.Status != "Concluído");
+            
+            var coord = await _context.Coordenadores.Include(c => c.School).FirstOrDefaultAsync(c => c.UserId == senderId);
+            int schoolId = coord?.SchoolId ?? 0;
+            int? agrupamentoId = coord?.School?.AgrupamentoId;
+
+            bool isProfessor = await _context.Professores
+                .Include(p => p.Bloco)
+                .AnyAsync(p => p.UserId == receiverId && p.Bloco != null && p.Bloco.SchoolId == schoolId);
+            
+            bool isDirector = agrupamentoId.HasValue && await _context.Diretores.AnyAsync(d => d.AgrupamentoId == agrupamentoId && d.UserId == receiverId);
+
+            if (!isAdmin && !isTechnician && !isProfessor && !isDirector)
+            {
+                return new BadRequestObjectResult("Destinatário não autorizado.");
+            }
 
             var msg = new Mensagem
             {

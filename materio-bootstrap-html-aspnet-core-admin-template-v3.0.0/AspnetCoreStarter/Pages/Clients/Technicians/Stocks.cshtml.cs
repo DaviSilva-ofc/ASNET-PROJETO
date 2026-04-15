@@ -5,7 +5,6 @@ using AspnetCoreStarter.Data;
 using AspnetCoreStarter.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace AspnetCoreStarter.Pages.Clients.Technicians
 {
@@ -19,14 +18,17 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         }
 
         public List<StockEmpresa> MyStock { get; set; } = new();
-        public List<Ticket> MyStockRequests { get; set; } = new();
-        public List<RequestStockOption> AvailableRequestItems { get; set; } = new();
+        public List<School> AccessibleSchools { get; set; } = new();
+        public List<StockEmpresa> SchoolBaseStock { get; set; } = new();
+        
+        public List<Agrupamento> AccessibleAgrupamentos { get; set; } = new();
+        public List<StockEmpresa> AgrupamentoBaseStock { get; set; } = new();
 
-        public class RequestStockOption
-        {
-            public int StockId { get; set; }
-            public string Label { get; set; } = "";
-        }
+        public List<Bloco> AccessibleBlocos { get; set; } = new();
+        public List<Sala> AccessibleSalas { get; set; } = new();
+
+        public HashSet<int> ActiveSchoolIds { get; set; } = new();
+        public HashSet<int> ActiveAgrupamentoIds { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -37,156 +39,125 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
                 return RedirectToPage("/Auth/Login");
 
-            // Load items currently with the technician
+            // 1. Técnico's directly assigned stock
             MyStock = await _context.StockEmpresa
                 .Where(s => s.TechnicianId == userId && s.AgrupamentoId == null && s.SchoolId == null)
                 .OrderBy(s => s.EquipmentName)
                 .ToListAsync();
 
-            // Load stock requests (tickets of level "Empréstimo" created by this tech)
-            // Note: In this system, technicians might not have an AdminId for the ticket, 
-            // but we can filter by TechnicianId if we set it upon creation.
-            MyStockRequests = await _context.Tickets
-                .Where(t => t.TechnicianId == userId && t.Level == "Empréstimo")
-                .OrderByDescending(t => t.CreatedAt)
+            // 2. Determine accessible School & Agrupamento stocks based on active tickets
+            var activeTickets = await _context.Tickets
+                .Include(t => t.School)
+                .Include(t => t.Equipamento)
+                    .ThenInclude(e => e.Room)
+                        .ThenInclude(r => r.Block)
+                            .ThenInclude(b => b.School)
+                .Where(t => t.TechnicianId == userId && 
+                            t.Status != "Concluído" && 
+                            t.Level != "Empréstimo" && 
+                            t.Level != "Alteração de Estado" && 
+                            (t.Level == null || !t.Level.Contains("ltera")) && 
+                            (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && 
+                            (t.Level == null || !t.Level.Contains("Estado")))
                 .ToListAsync();
 
-            AvailableRequestItems = await _context.StockEmpresa
-                .Where(s => s.TechnicianId == null
-                            && s.AgrupamentoId == null
-                            && s.SchoolId == null
-                            && s.IsAvailable
-                            && (s.Status == null || s.Status == "Disponível"))
-                .GroupBy(s => new { s.EquipmentName, s.Type })
-                .Select(g => new RequestStockOption
+            ActiveSchoolIds = new HashSet<int>();
+            ActiveAgrupamentoIds = new HashSet<int>();
+
+            var debugTickets = new List<dynamic>();
+
+            foreach (var t in activeTickets)
+            {
+                int? directSchoolId = t.SchoolId;
+                int? derivedSchoolId = (t.Equipamento != null && t.Equipamento.Room != null && t.Equipamento.Room.Block != null) 
+                                       ? t.Equipamento.Room.Block.SchoolId 
+                                       : (int?)null;
+
+                debugTickets.Add(new {
+                    Id = t.Id,
+                    Status = t.Status,
+                    DirectSchoolId = directSchoolId,
+                    DerivedSchoolId = derivedSchoolId
+                });
+
+                if (t.SchoolId.HasValue)
                 {
-                    StockId = g.Min(x => x.Id),
-                    Label = (g.Key.EquipmentName ?? "Sem nome")
-                        + " - "
-                        + (g.Key.Type ?? "Sem tipo")
-                        + " (Disponíveis: "
-                        + g.Count()
-                        + ")"
-                })
-                .OrderBy(x => x.Label)
-                .ToListAsync();
+                    ActiveSchoolIds.Add(t.SchoolId.Value);
+                    if (t.School?.AgrupamentoId != null) ActiveAgrupamentoIds.Add(t.School.AgrupamentoId.Value);
+                }
+                else if (t.Equipamento != null && t.Equipamento.Room != null && t.Equipamento.Room.Block != null)
+                {
+                    ActiveSchoolIds.Add(t.Equipamento.Room.Block.SchoolId);
+                    if (t.Equipamento.Room.Block.School?.AgrupamentoId != null)
+                    {
+                        ActiveAgrupamentoIds.Add(t.Equipamento.Room.Block.School.AgrupamentoId.Value);
+                    }
+                }
+            }
+
+            ViewData["DebugTickets"] = debugTickets;
+            ViewData["DebugSchoolIds"] = ActiveSchoolIds.ToList();
+            ViewData["DebugAgrupIds"] = ActiveAgrupamentoIds.ToList();
+
+            // Load parallel flat lists because navigation collections like 'School.Blocos' don't exist
+            if (ActiveSchoolIds.Any())
+            {
+                SchoolBaseStock = await _context.StockEmpresa
+                    .Include(s => s.School)
+                    .Where(s => s.SchoolId.HasValue && ActiveSchoolIds.Contains(s.SchoolId.Value))
+                    .ToListAsync();
+                
+                AccessibleSchools = await _context.Schools
+                    .Where(s => ActiveSchoolIds.Contains(s.Id))
+                    .ToListAsync();
+            }
+
+            if (ActiveAgrupamentoIds.Any())
+            {
+                AgrupamentoBaseStock = await _context.StockEmpresa
+                    .Include(s => s.Agrupamento)
+                    .Where(s => s.AgrupamentoId.HasValue && ActiveAgrupamentoIds.Contains(s.AgrupamentoId.Value))
+                    .ToListAsync();
+                
+                AccessibleAgrupamentos = await _context.Agrupamentos
+                    .Where(a => ActiveAgrupamentoIds.Contains(a.Id))
+                    .ToListAsync();
+
+                // Merge schools from active groupings for the blocks/rooms query
+                var schoolsFromGroups = await _context.Schools
+                    .Where(s => s.AgrupamentoId.HasValue && ActiveAgrupamentoIds.Contains(s.AgrupamentoId.Value))
+                    .ToListAsync();
+                AccessibleSchools.AddRange(schoolsFromGroups);
+                AccessibleSchools = AccessibleSchools.DistinctBy(s => s.Id).ToList();
+            }
+
+            var activeAndAgrupSchoolIds = AccessibleSchools.Select(s => s.Id).ToList();
+            if (activeAndAgrupSchoolIds.Any())
+            {
+                AccessibleBlocos = await _context.Blocos
+                    .Where(b => activeAndAgrupSchoolIds.Contains(b.SchoolId))
+                    .ToListAsync();
+
+                var blocoIds = AccessibleBlocos.Select(b => b.Id).ToList();
+                if (blocoIds.Any())
+                {
+                    AccessibleSalas = await _context.Salas
+                        .Include(s => s.Equipments)
+                        .Where(s => s.BlockId.HasValue && blocoIds.Contains(s.BlockId.Value))
+                        .ToListAsync();
+                }
+            }
 
             return Page();
         }
+    }
 
-        public async Task<IActionResult> OnPostRequestStockAsync(int stockId, int quantity, string notes)
-        {
-            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
-                return RedirectToPage("/Auth/Login");
-
-            if (stockId <= 0 || quantity <= 0)
-            {
-                TempData["Error"] = "Dados de requisição inválidos.";
-                return RedirectToPage();
-            }
-
-            var selectedStock = await _context.StockEmpresa
-                .Where(s => s.Id == stockId
-                            && s.TechnicianId == null
-                            && s.AgrupamentoId == null
-                            && s.SchoolId == null
-                            && s.IsAvailable
-                            && (s.Status == null || s.Status == "Disponível"))
-                .FirstOrDefaultAsync();
-
-            if (selectedStock == null)
-            {
-                TempData["Error"] = "O artigo selecionado já não está disponível.";
-                return RedirectToPage();
-            }
-
-            var itemName = selectedStock.EquipmentName ?? "Sem nome";
-            var itemType = selectedStock.Type ?? "Sem tipo";
-
-            var jsonData = JsonSerializer.Serialize(new { 
-                ItemName = itemName, 
-                ItemType = itemType, 
-                Quantity = quantity,
-                RequestorId = userId,
-                RequestorRole = "Tecnico"
-            });
-
-            var ticket = new Ticket
-            {
-                Description = $"PEDIDO DE STOCK (TÉCNICO):\nArtigo: {itemName}\nTipo: {itemType}\nQtd: {quantity}\nNotas: {notes}\n\n[DATA:{jsonData}]",
-                Level = "Empréstimo",
-                Status = "Pedido",
-                CreatedAt = DateTime.UtcNow,
-                TechnicianId = userId
-            };
-
-            _context.Tickets.Add(ticket);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "Requisição de stock enviada para a administração.";
-            return RedirectToPage();
-        }
-
-        public async Task<IActionResult> OnPostReturnToHQAsync(int id)
-        {
-            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
-                return RedirectToPage("/Auth/Login");
-
-            var item = await _context.StockEmpresa.FirstOrDefaultAsync(s => s.Id == id && s.TechnicianId == userId);
-            if (item != null)
-            {
-                item.TechnicianId = null;
-                item.Status = "Disponível";
-                item.IsAvailable = true;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Item devolvido ao stock central com sucesso.";
-            }
-            return RedirectToPage();
-        }
-
-        public async Task<IActionResult> OnPostFinalDisposalAsync(int id)
-        {
-            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
-                return RedirectToPage("/Auth/Login");
-
-            var item = await _context.StockEmpresa.FirstOrDefaultAsync(s => s.Id == id && s.TechnicianId == userId);
-            if (item != null)
-            {
-                _context.StockEmpresa.Remove(item);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Baixa definitiva efetuada. O item foi removido do inventário.";
-            }
-            return RedirectToPage();
-        }
-        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
-        {
-            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
-                return RedirectToPage("/Auth/Login");
-
-            if (string.IsNullOrWhiteSpace(itemName))
-            {
-                TempData["Error"] = "Por favor selecione um artigo.";
-                return RedirectToPage();
-            }
-
-            var ticket = new Ticket
-            {
-                Description = $"PEDIDO DE EQUIPAMENTO (TÉCNICO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}",
-                Level = "Empréstimo",
-                Status = "Pedido",
-                CreatedAt = DateTime.UtcNow,
-                TechnicianId = userId
-            };
-
-            _context.Tickets.Add(ticket);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = $"Pedido de {itemName} enviado com sucesso para a administração.";
-            return RedirectToPage();
-        }
+    public class TechnicianStockViewModel
+    {
+        public string? Name { get; set; }
+        public string? Type { get; set; }
+        public string? LocationName { get; set; }
+        public string? Source { get; set; }
+        public string? Status { get; set; }
     }
 }

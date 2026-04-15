@@ -8,18 +8,37 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Professor /</span> Equipamentos</h4>
 
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Inventário de Equipamentos</h5>
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
-                    <i class="ri-filter-3-line me-1"></i> Filtros
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#tab-inventario">
+                    Inventário Geral
                 </button>
-                <button class="btn btn-primary" onclick="alert('Funcionalidade administrativa.')">
-                    <i class="ri-add-line me-1"></i> Novo Equipamento
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-devolucoes">
+                    Pedidos e Devoluções
                 </button>
-            </div>
-        </div>
+            </li>
+        </ul>
+        <div class="tab-content" style="background: transparent; padding: 0; box-shadow: none;">
+            <!-- Aba Inventário -->
+            <div class="tab-pane fade show active" id="tab-inventario" role="tabpanel">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Inventário de Equipamentos</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                                <i class="ri-filter-3-line me-1"></i> Filtros
+                            </button>
+                            <button class="btn btn-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
+                                <i class="ri-hand-coin-line me-1"></i> Requisitar Equipamento
+                            </button>
+                            <button class="btn btn-primary" onclick="alert('Funcionalidade administrativa.')">
+                                <i class="ri-add-line me-1"></i> Novo Equipamento
+                            </button>
+                        </div>
+                    </div>
 
         @{
             var activeEQFilterText = "";
@@ -139,62 +158,169 @@
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <!-- Modal Filtros -->
-    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form method="get" class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title">Filtrar Equipamentos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label fw-semibold small">Artigo</label>
-                            <select id="filterArtigo" asp-for="FilterName" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="Computadores">Computadores</option>
-                                <option value="Monitores">Monitores</option>
-                                <option value="Impressoras">Impressoras</option>
-                                <option value="Networking">Networking</option>
-                                <option value="Servidores/Infra">Servidores/Infra</option>
-                                <option value="Componentes">Componentes</option>
-                                <option value="Periféricos">Periféricos</option>
-                                <option value="Projetores">Projetores</option>
-                                <option value="Quadros Interativos">Quadros Interativos</option>
-                                <option value="Outros">Outros</option>
-                            </select>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold small">Estado</label>
-                            <select asp-for="FilterStatus" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="A funcionar">A funcionar</option>
-                                <option value="Avariado">Avariado</option>
-                                <option value="Em reparo">Em reparo</option>
-                            </select>
-                        </div>
-                        
-                        <hr class="my-3">
-                        <h6 class="mb-1 text-muted">Localização</h6>
-                        
-                        <div class="col-12 mt-2">
-                            <label class="form-label fw-semibold small">As Minhas Salas</label>
-                            <select asp-for="SalaId" class="form-select">
-                                <option value="">Todas</option>
-                                @foreach (var room in Model.MyRooms)
-                                {
-                                    <option value="@room.Id">@room.Name (@room.Block?.School?.Name)</option>
-                                }
-                            </select>
-                        </div>
                     </div>
                 </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            </div>
+
+            <!-- Aba Devoluções -->
+            <div class="tab-pane fade" id="tab-devolucoes" role="tabpanel">
+                <!-- Seção de Pedidos Pendentes -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header border-bottom bg-label-warning py-3">
+                        <h5 class="mb-0 text-dark"><i class="ri-time-line me-2"></i>Pedidos em Processamento</h5>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Artigo Pedido</th>
+                                    <th>Estado</th>
+                                    <th>Data do Pedido</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MyStockRequests == null || !Model.MyStockRequests.Any())
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-muted small">
+                                            Não tem pedidos de equipamento pendentes.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var ticket in Model.MyStockRequests)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE EQUIPAMENTO (PROFESSOR):", "").Trim()</span>
+                                                    <small class="text-muted">Aguardando disponibilidade no stock central</small>
+                                                </div>
+                                            </td>
+                                            <td><span class="badge bg-label-warning">Pendente</span></td>
+                                            <td><span class="small text-muted">@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Seção de Itens na Posse -->
+                <div class="card shadow-sm">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0">Os Meus Equipamentos (Na Posse)</h5>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Artigo</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MyBorrowedItems == null || !Model.MyBorrowedItems.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted small">
+                                            Não existem equipamentos requisitados em sua posse.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var item in Model.MyBorrowedItems)
+                                    {
+                                        <tr>
+                                            <td><strong>@item.EquipmentName</strong></td>
+                                            <td>@item.Type</td>
+                                            <td><span class="badge bg-label-info">Em sua posse</span></td>
+                                            <td class="text-center">
+                                                <form method="post" asp-page-handler="ReturnItem" asp-route-id="@item.Id">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm">
+                                                        <i class="ri-arrow-go-back-line me-1"></i> Devolver
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Requisitar Equipamento -->
+    <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: transparent !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #fff;">
+                <div class="modal-header border-bottom border-light border-opacity-25">
+                    <h5 class="modal-title text-white"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Artigo</label>
+                        <select name="itemName" id="reqEqArtigo" class="form-select text-white border-secondary" style="background-color: transparent !important;" required onchange="filterReqEqTypes()">
+                            <option value="">Selecione o artigo...</option>
+                            <option value="Computador">Computadores</option>
+                            <option value="Monitor">Monitores</option>
+                            <option value="Impressora">Impressoras</option>
+                            <option value="Projetor">Projetores</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Componente">Componentes</option>
+                            <option value="Periférico">Periféricos</option>
+                            <option value="Quadro Interativo">Quadros Interativos</option>
+                            <option value="Outro">Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Tipo</label>
+                        <select name="itemType" id="reqEqTipo" class="form-select text-white border-secondary" style="background-color: transparent !important;">
+                            <option value="">Selecione o tipo...</option>
+                            <option value="Desktop" data-art="Computador">Desktop</option>
+                            <option value="Portátil" data-art="Computador">Portátil</option>
+                            <option value="AIO" data-art="Computador">AIO</option>
+                            <option value="Monitor" data-art="Monitor">Monitor</option>
+                            <option value="Televisão" data-art="Monitor">Televisão</option>
+                            <option value="Impressora" data-art="Impressora">Impressora</option>
+                            <option value="Projetor" data-art="Projetor">Projetor</option>
+                            <option value="Router" data-art="Networking">Router</option>
+                            <option value="Switch" data-art="Networking">Switch</option>
+                            <option value="Access Point" data-art="Networking">Access Point</option>
+                            <option value="Motherboard" data-art="Componente">Motherboard</option>
+                            <option value="Disco HDD" data-art="Componente">Disco HDD</option>
+                            <option value="Disco SSD" data-art="Componente">Disco SSD</option>
+                            <option value="Memória RAM" data-art="Componente">Memória RAM</option>
+                            <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
+                            <option value="Teclado" data-art="Periférico">Teclado</option>
+                            <option value="Rato" data-art="Periférico">Rato</option>
+                            <option value="Headphones" data-art="Periférico">Headphones</option>
+                            <option value="Quadro Interativo" data-art="Quadro Interativo">Quadro Interativo</option>
+                            <option value="Mesa Interativa" data-art="Quadro Interativo">Mesa Interativa</option>
+                            <option value="Outro" data-art="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Quantidade</label>
+                        <input type="number" name="quantity" class="form-control text-white border-secondary" style="background-color: transparent !important;" value="1" min="1" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small text-uppercase">Motivo do Pedido</label>
+                        <textarea name="notes" class="form-control text-white border-secondary" style="background-color: transparent !important;" rows="3" placeholder="Descreva a necessidade..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-light border-opacity-25">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning text-dark fw-bold">Solicitar Equipamento</button>
                 </div>
             </form>
         </div>
@@ -203,6 +329,19 @@
 </div>
 
 @section PageScripts {
+<script>
+    function filterReqEqTypes() {
+        const artName = document.getElementById('reqEqArtigo').value;
+        const tipoSelect = document.getElementById('reqEqTipo');
+        const options = tipoSelect.querySelectorAll('option');
+        tipoSelect.value = "";
+        options.forEach(opt => {
+            if (opt.value === "") return;
+            const art = (opt.getAttribute('data-art') || "");
+            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
+        });
+    }
+</script>
 <style>
     [data-bs-theme="dark"] .dark-bg-adjust {
         background-color: #2b2c40 !important;

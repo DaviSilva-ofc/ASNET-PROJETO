@@ -7,6 +7,12 @@ using System.Security.Claims;
 
 namespace AspnetCoreStarter.Pages.Admin
 {
+    public class ContactViewModel
+    {
+        public User User { get; set; }
+        public string Role { get; set; }
+    }
+
     public class ChatModel : PageModel
     {
         private readonly AppDbContext _context;
@@ -16,7 +22,7 @@ namespace AspnetCoreStarter.Pages.Admin
             _context = context;
         }
 
-        public List<User> Contacts { get; set; } = new();
+        public List<ContactViewModel> Contacts { get; set; } = new();
         public List<Mensagem> Messages { get; set; } = new();
         public int CurrentUserId { get; set; }
         public int? SelectedContactId { get; set; }
@@ -29,15 +35,26 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToPage("/Auth/Login");
             CurrentUserId = int.Parse(userIdStr);
 
-            // For now chat is only Admin <-> Técnico
-            var technicians = await _context.Tecnicos
-                .Include(t => t.User)
-                .Where(t => t.User != null)
-                .Select(t => t.User!)
-                .ToListAsync();
+            // Fetch all users and identify their roles
+            var allUsers = await _context.Users.ToListAsync();
+            var adminIds = await _context.Administradores.Select(a => a.UserId).ToListAsync();
+            var techIds = await _context.Tecnicos.Select(t => t.UserId).ToListAsync();
+            var directorIds = await _context.Diretores.Select(d => d.UserId).ToListAsync();
+            var coordIds = await _context.Coordenadores.Select(c => c.UserId).ToListAsync();
+            var profIds = await _context.Professores.Select(p => p.UserId).ToListAsync();
 
-            Contacts = technicians
+            Contacts = allUsers
                 .Where(u => u.Id != CurrentUserId)
+                .Select(u => new ContactViewModel {
+                    User = u,
+                    Role = adminIds.Contains(u.Id) ? "Administrador" :
+                           techIds.Contains(u.Id) ? "Técnico" :
+                           directorIds.Contains(u.Id) ? "Diretor" :
+                           coordIds.Contains(u.Id) ? "Coordenador" :
+                           profIds.Contains(u.Id) ? "Professor" : "Utilizador"
+                })
+                .OrderBy(c => c.Role)
+                .ThenBy(c => c.User.Username)
                 .ToList();
 
             if (contactId.HasValue)

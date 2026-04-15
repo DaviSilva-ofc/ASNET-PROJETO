@@ -255,19 +255,26 @@
                                 </td>
                                 <td><span class="small">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
                                 <td>
-                                    <form method="post" asp-page-handler="UpdateStatus" class="d-inline-flex gap-2">
-                                        <input type="hidden" name="id" value="@t.Id" />
-                                        <input type="hidden" name="FilterStatus" value="@Model.FilterStatus" />
-                                        <input type="hidden" name="FilterArticle" value="@Model.FilterArticle" />
-                                        <input type="hidden" name="FilterType" value="@Model.FilterType" />
-                                        
-                                        <select name="newStatus" class="form-select form-select-sm" style="width: 150px; border-color: #d9dee3;" onchange="this.form.submit()">
-                                            <option value="" disabled selected>Alterar Estado...</option>
-                                            <option value="Pendente" disabled="@(t.Status == "Pendente" ? "disabled" : null)">Pendente</option>
-                                            <option value="Em Reparação" disabled="@(t.Status == "Em Reparação" ? "disabled" : null)">Em Reparação</option>
-                                            <option value="Concluído" disabled="@(t.Status == "Concluído" ? "disabled" : null)">Concluído (Finalizar)</option>
-                                        </select>
-                                    </form>
+                                    @if (t.Status != "Concluído")
+                                    {
+                                        <form method="post" asp-page-handler="UpdateStatus" class="d-inline-flex gap-2">
+                                            <input type="hidden" name="id" value="@t.Id" />
+                                            <input type="hidden" name="FilterStatus" value="@Model.FilterStatus" />
+                                            <input type="hidden" name="FilterArticle" value="@Model.FilterArticle" />
+                                            <input type="hidden" name="FilterType" value="@Model.FilterType" />
+                                            
+                                            <select name="newStatus" class="form-select form-select-sm" style="width: 150px; border-color: #d9dee3;" onchange="this.form.submit()">
+                                                <option value="" disabled selected>Alterar Estado...</option>
+                                                <option value="Pendente" disabled="@(t.Status == "Pendente" ? "disabled" : null)">Pendente</option>
+                                                <option value="Em Reparação" disabled="@(t.Status == "Em Reparação" ? "disabled" : null)">Em Reparação</option>
+                                                <option value="Concluído" disabled="@(t.Status == "Concluído" ? "disabled" : null)">Concluído (Finalizar)</option>
+                                            </select>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-label-secondary"><i class="ri-lock-line me-1"></i>Finalizado</span>
+                                    }
                                 </td>
                             </tr>
                         }

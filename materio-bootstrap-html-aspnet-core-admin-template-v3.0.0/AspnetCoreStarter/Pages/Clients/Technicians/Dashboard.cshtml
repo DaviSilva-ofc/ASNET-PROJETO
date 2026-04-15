@@ -84,6 +84,18 @@
         background: rgba(255,255,255,0.1) !important;
         color: #fff !important;
     }
+
+    /* FullCalendar Custom Styling */
+    .fc { font-family: 'Public Sans', sans-serif; }
+    .fc-header-toolbar { margin-bottom: 1.5rem !important; }
+    .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 600 !important; color: #fff !important; }
+    .fc-button-primary { background-color: #696cff !important; border-color: #696cff !important; }
+    .fc-button-primary:hover { background-color: #5f61e6 !important; border-color: #5f61e6 !important; }
+    .fc-daygrid-event { border-radius: 4px; padding: 2px 5px; font-size: 0.75rem; border: none !important; }
+    .fc-theme-standard td, .fc-theme-standard th { border-color: rgba(255, 255, 255, 0.05) !important; }
+    .fc-col-header-cell-cushion { color: rgba(255, 255, 255, 0.8) !important; font-weight: 500; font-size: 0.85rem; }
+    .fc-daygrid-day-number { color: rgba(255, 255, 255, 0.6) !important; font-size: 0.85rem; }
+    .fc-day-today { background: rgba(105, 108, 255, 0.05) !important; }
 </style>
 }
 
@@ -298,7 +310,7 @@
                 }
                 else
                 {
-                    @foreach (var t in Model.RecentTickets)
+                    @foreach (var t in Model.RecentTickets.Take(3))
                     {
                         <tr>
                             <td><strong class="text-white">@(t.School?.Name ?? "N/A")</strong></td>
@@ -362,6 +374,8 @@
             </div>
         </div>
     </div>
+</div>
+
 </div>
 
 <!-- ======================= MAP SECTION ======================= -->

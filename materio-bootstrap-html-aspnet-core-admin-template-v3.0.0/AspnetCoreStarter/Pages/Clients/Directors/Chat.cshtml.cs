@@ -7,6 +7,12 @@ using System.Security.Claims;
 
 namespace AspnetCoreStarter.Pages.Clients.Directors
 {
+    public class ContactViewModel
+    {
+        public User User { get; set; }
+        public string Role { get; set; }
+    }
+
     public class DirectorChatModel : PageModel
     {
         private readonly AppDbContext _context;
@@ -16,7 +22,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             _context = context;
         }
 
-        public List<User> Contacts { get; set; } = new();
+        public List<ContactViewModel> Contacts { get; set; } = new();
         public List<Mensagem> Messages { get; set; } = new();
         public int CurrentUserId { get; set; }
         public int? SelectedTechId { get; set; }
@@ -29,20 +35,33 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToPage("/Auth/Login");
             CurrentUserId = int.Parse(userIdStr);
 
-            // Load all technicians
-            var technicians = await _context.Tecnicos
-                .Include(t => t.User)
-                .Where(t => t.User != null)
-                .Select(t => t.User!)
+            // 1. Get current Director's AgrupamentoId
+            var agrupamentoId = await _context.Diretores
+                .Where(d => d.UserId == CurrentUserId)
+                .Select(d => d.AgrupamentoId)
+                .FirstOrDefaultAsync();
+
+            // 2. Load all Administrators
+            var administrators = await _context.Administradores
+                .Include(a => a.User)
+                .Select(a => new ContactViewModel { User = a.User!, Role = "Administrador" })
                 .ToListAsync();
 
-            // Load all administrators
-            var administrators = await _context.Users
-                .Join(_context.Administradores, u => u.Id, a => a.UserId, (u, a) => u)
+            // 3. Load Coordinators from the same Grouping
+            var coordinators = await _context.Coordenadores
+                .Include(c => c.User)
+                .Include(c => c.School)
+                .Where(c => c.School != null && c.School.AgrupamentoId == agrupamentoId)
+                .Select(c => new ContactViewModel { 
+                    User = c.User!, 
+                    Role = "Coordenador - " + (c.School!.Name ?? "Escola") 
+                })
                 .ToListAsync();
 
-            Contacts = technicians.Concat(administrators)
-                .Where(u => u.Id != CurrentUserId)
+            Contacts = administrators.Concat(coordinators)
+                .Where(c => c.User.Id != CurrentUserId)
+                .OrderBy(c => c.Role)
+                .ThenBy(c => c.User.Username)
                 .ToList();
 
             if (techId.HasValue)
@@ -74,10 +93,26 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             var senderId = int.Parse(userIdStr);
 
+            var receiverId = request.ReceiverId;
+
+            // Segurança: Verificar se o destinatário é um admin ou um coordenador do mesmo agrupamento
+            bool isAdmin = await _context.Administradores.AnyAsync(a => a.UserId == receiverId);
+            
+            var senderAgrupamentoId = await _context.Diretores
+                .Where(d => d.UserId == senderId)
+                .Select(d => d.AgrupamentoId)
+                .FirstOrDefaultAsync();
+
+            bool isCoordinatorInMyGrouping = await _context.Coordenadores
+                .Include(c => c.School)
+                .AnyAsync(c => c.UserId == receiverId && c.School != null && c.School.AgrupamentoId == senderAgrupamentoId);
+
+            if (!isAdmin && !isCoordinatorInMyGrouping) return new BadRequestObjectResult("Destinatário não autorizado.");
+
             var message = new Mensagem
             {
                 SenderId = senderId,
-                ReceiverId = request.ReceiverId,
+                ReceiverId = receiverId,
                 Content = request.Content,
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false

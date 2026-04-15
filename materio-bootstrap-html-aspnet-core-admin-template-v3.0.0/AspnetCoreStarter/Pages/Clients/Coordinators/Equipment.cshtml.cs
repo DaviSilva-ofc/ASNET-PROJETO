@@ -21,6 +21,8 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
         public List<Equipamento> Equipments { get; set; }
         public List<Sala> Rooms { get; set; } = new();
+        public List<StockEmpresa> MyBorrowedItems { get; set; } = new();
+        public List<Ticket> MyStockRequests { get; set; } = new();
 
 
         [BindProperty]
@@ -96,6 +98,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             var query = _context.Equipamentos
                 .Include(e => e.Room)
                 .ThenInclude(r => r.Block)
+                .ThenInclude(b => b.School)
                 .Where(e => e.RoomId.HasValue && Rooms.Select(r => r.Id).Contains(e.RoomId.Value))
                 .AsQueryable();
 
@@ -123,6 +126,18 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
                 .Select(e => e.Name)
                 .Distinct()
                 .OrderBy(a => a)
+                .ToListAsync();
+
+            // Load school-wide requests
+            MyStockRequests = await _context.Tickets
+                .Include(t => t.RequestedBy)
+                .Where(t => t.SchoolId == schoolId && t.Level == "Empréstimo")
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
+            // Load items currently assigned to the school from central stock
+            MyBorrowedItems = await _context.StockEmpresa
+                .Where(s => s.SchoolId == schoolId && s.Status == "Emprestado")
                 .ToListAsync();
 
             return Page();
@@ -185,6 +200,56 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             await _context.SaveChangesAsync();
             return RedirectToPage(new { success = $"Estado do equipamento alterado para {equip.Status}" });
+        }
+
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            if (string.IsNullOrWhiteSpace(itemName))
+                return RedirectToPage(new { success = "Por favor selecione um artigo." });
+
+            var coord = await _context.Coordenadores.FirstOrDefaultAsync(c => c.UserId == userId);
+            
+            var ticket = new Ticket
+            {
+                Description = $"PEDIDO DE STOCK (COORDENADOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}",
+                Level = "Empréstimo",
+                Status = "Pedido",
+                CreatedAt = DateTime.UtcNow,
+                RequestedByUserId = userId,
+                SchoolId = coord?.SchoolId
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { success = $"Pedido de {itemName} enviado com sucesso para a administração." });
+        }
+
+        public async Task<IActionResult> OnPostReturnItemAsync(int id)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var item = await _context.StockEmpresa.FindAsync(id);
+            if (item != null)
+            {
+                // Return item logic: Clear school/personal assignment and set as available in central stock
+                item.SchoolId = null;
+                item.ProfessorId = null;
+                item.DirectorId = null;
+                item.TechnicianId = null;
+                item.Status = "Disponível";
+                item.IsAvailable = true;
+                
+                await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Item devolvido ao stock central com sucesso." });
+            }
+            return RedirectToPage();
         }
     }
 }

@@ -331,7 +331,7 @@
                             else
                             {
                                 <div class="row g-3">
-                                    <div class="col-12 col-md-4 mb-3">
+                                    <div class="col-12 col-md-6 mb-3">
                                         <div class="border rounded p-3 h-100 bg-light-section">
                                             <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
                                                  data-bs-toggle="collapse" data-bs-target="#empresa-central-collapse">
@@ -375,7 +375,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-md-4 mb-3">
+                                    <div class="col-12 col-md-6 mb-3">
                                         <div class="border rounded p-3 h-100 bg-light-section">
                                             <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
                                                  data-bs-toggle="collapse" data-bs-target="#empresa-tecnicos-collapse">
@@ -412,83 +412,6 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-12 col-md-4 mb-3">
-                                        <div class="border rounded p-3 h-100 bg-light-section">
-                                            <div class="d-flex justify-content-between align-items-center mb-2 cursor-pointer"
-                                                 data-bs-toggle="collapse" data-bs-target="#empresa-requisicoes-collapse">
-                                                <h6 class="mb-0 fw-bold"><i class="ri-inbox-unarchive-line me-2"></i>Requisições</h6>
-                                                <i class="ri-arrow-down-s-line"></i>
-                                            </div>
-                                            <div id="empresa-requisicoes-collapse" class="collapse show mt-3">
-                                                <div class="infra-tree">
-                                                    @if(Model.PendingRequests != null && Model.PendingRequests.Any()) {
-                                                        <div class="mb-3">
-                                                            <div class="d-flex align-items-center p-1 rounded fw-bold text-warning cursor-pointer mb-1" style="font-size: 0.85rem;"
-                                                                 data-bs-toggle="collapse" data-bs-target="#pending-requests-collapse">
-                                                                <i class="ri-arrow-right-s-line me-1" style="font-size:1.1rem; color: var(--bs-warning);"></i>
-                                                                <i class="ri-error-warning-line me-1"></i> Pedidos Pendentes
-                                                                <span class="badge bg-label-warning ms-auto">@Model.PendingRequests.Count</span>
-                                                            </div>
-                                                            <div id="pending-requests-collapse" class="collapse ms-3">
-                                                                @foreach(var req in Model.PendingRequests) {
-                                                                    var reqCollapseId = $"req-details-{req.Id}";
-                                                                    var reqDesc = req.Description?.Contains("[DATA:") == true ? req.Description.Substring(0, req.Description.IndexOf("[DATA:")).Trim() : req.Description;
-                                                                    <div class="tree-node tipo-node mt-1">
-                                                                        <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
-                                                                             data-bs-toggle="collapse" data-bs-target="#@reqCollapseId">
-                                                                            <i class="ri-arrow-right-s-line"></i>
-                                                                            <i class="ri-inbox-line me-1"></i>
-                                                                            <span class="fw-semibold">Ticket #@req.Id</span>
-                                                                            <span class="text-muted ms-2 small">@req.CreatedAt.ToString("dd/MMM HH:mm")</span>
-                                                                        </div>
-                                                                        <div id="@reqCollapseId" class="collapse ms-4 mt-1">
-                                                                            <div class="p-2 rounded border border-warning-subtle" style="font-size: 0.80rem; white-space: pre-wrap; background: rgba(255,171,0,0.04);">
-                                                                                @reqDesc
-                                                                            </div>
-                                                                            <form method="post" class="d-flex gap-1 mt-1">
-                                                                                <input type="hidden" name="ticketId" value="@req.Id" />
-                                                                                <button type="submit" asp-page-handler="ApproveLoanRequest" class="btn btn-sm btn-success flex-grow-1 py-1">
-                                                                                    <i class="ri-check-line me-1"></i>Emprestar
-                                                                                </button>
-                                                                                <button type="submit" asp-page-handler="RejectLoanRequest" class="btn btn-sm btn-danger flex-grow-1 py-1">
-                                                                                    <i class="ri-close-line me-1"></i>Recusar
-                                                                                </button>
-                                                                            </form>
-                                                                        </div>
-                                                                    </div>
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    }
-
-                                                    @foreach (var destGroup in lentItems.GroupBy(i => i.Location ?? "Desconhecido").OrderBy(g => g.Key))
-                                                    {
-                                                        var destId = $"empresa-lent-{destGroup.Key.Replace(" ", "-")}";
-                                                        <div class="tree-node tipo-node">
-                                                            <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed"
-                                                                 data-bs-toggle="collapse" data-bs-target="#@destId">
-                                                                <i class="ri-arrow-right-s-line"></i>
-                                                                <i class="ri-map-pin-line me-1"></i> <strong>@destGroup.Key</strong>
-                                                                <span class="badge bg-label-info ms-auto">@destGroup.Sum(i => i.Quantity)</span>
-                                                            </div>
-                                                            <div id="@destId" class="collapse">
-                                                                @foreach (var item in destGroup.OrderBy(i => i.Name))
-                                                                {
-                                                                    <div class="tree-node artigo-node ms-4 mt-1 small">
-                                                                        <div class="d-flex align-items-center p-1 rounded">
-                                                                            <i class="ri-hard-drive-2-line me-1"></i> @item.Name
-                                                                            <span class="badge bg-label-info ms-auto">@item.Quantity</span>
-                                                                            <button type="button" class="btn btn-sm btn-outline-success p-1 border-0 ms-2 open-return-modal" data-bs-toggle="modal" data-bs-target="#modalLendReturn" data-sample-id="@item.SampleId" data-name="@item.Name" data-type="@item.Type" data-location="@item.Location" data-quantity="@item.Quantity" title="Devolver">📥</button>
-                                                                        </div>
-                                                                    </div>
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             }
                         </div>
@@ -812,16 +735,20 @@
 <!-- Modal Recusar Pedido (Admin) -->
 <div class="modal fade" id="modalAdminReject" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form method="post" asp-page-handler="RejectEscalatedRequest" class="modal-content">
+        <form method="post" asp-page-handler="RejectEscalatedStockRequest" class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title text-danger"><i class="ri-close-circle-line me-2"></i>Recusar Pedido</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="requestId" id="adminRejectRequestId" />
-                <div class="alert alert-warning py-2">
+                <div class="alert alert-warning py-2 small">
                     <i class="ri-error-warning-line me-1"></i>
                     Ao recusar, o coordenador será notificado que o pedido não pode ser atendido.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Motivo da Recusa (Opcional)</label>
+                    <textarea name="adminNotes" class="form-control" rows="3" placeholder="Explique o motivo da recusa..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1094,6 +1021,13 @@
             if (opt.value === "") return;
             opt.style.display = (agrId === "" || opt.getAttribute('data-agr') === agrId) ? 'block' : 'none';
         });
+    }
+
+    function openAdminRejectModal(requestId) {
+        document.getElementById('adminRejectRequestId').value = requestId;
+        var modalElement = document.getElementById('modalAdminReject');
+        var modal = new bootstrap.Modal(modalElement);
+        modal.show();
     }
 
     function toggleLendLocationType(type) {

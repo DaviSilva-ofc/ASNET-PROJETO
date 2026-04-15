@@ -23,6 +23,16 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         [BindProperty]
         public Equipamento NewEquipment { get; set; }
 
+        public List<StockEmpresa> MyStock { get; set; } = new();
+        public List<Ticket> MyStockRequests { get; set; } = new();
+        public List<RequestStockOption> AvailableRequestItems { get; set; } = new();
+
+        public class RequestStockOption
+        {
+            public int StockId { get; set; }
+            public string Label { get; set; } = "";
+        }
+
         public string? SuccessMessage { get; set; }
 
         public Sala ActiveFilterRoom { get; set; }
@@ -87,10 +97,60 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
             if (userRole != "Admin" && userRole != "Tecnico") return RedirectToPage("/Index");
 
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            // Authorization logic for Technicians: only see equipment for entities with active repair tickets
+            HashSet<int> activeSchoolIds = new();
+            HashSet<int> activeAgrupamentoIds = new();
+            HashSet<int> activeEmpresaIds = new();
+
+            if (userRole == "Tecnico")
+            {
+                var activeTickets = await _context.Tickets
+                    .Include(t => t.School)
+                    .Include(t => t.Equipamento)
+                        .ThenInclude(e => e.Room)
+                            .ThenInclude(r => r.Block)
+                                .ThenInclude(b => b.School)
+                    .Where(t => t.TechnicianId == userId && 
+                                t.Status != "Concluído" && 
+                                t.Level != "Empréstimo" && 
+                                t.Level != "Alteração de Estado" && 
+                                (t.Level == null || !t.Level.Contains("ltera")) && 
+                                (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && 
+                                (t.Level == null || !t.Level.Contains("Estado")))
+                    .ToListAsync();
+
+                foreach (var t in activeTickets)
+                {
+                    if (t.SchoolId.HasValue)
+                    {
+                        activeSchoolIds.Add(t.SchoolId.Value);
+                        if (t.School?.AgrupamentoId != null) activeAgrupamentoIds.Add(t.School.AgrupamentoId.Value);
+                    }
+                    else if (t.Equipamento != null && t.Equipamento.Room != null && t.Equipamento.Room.Block != null)
+                    {
+                        activeSchoolIds.Add(t.Equipamento.Room.Block.SchoolId);
+                        if (t.Equipamento.Room.Block.School?.AgrupamentoId != null)
+                            activeAgrupamentoIds.Add(t.Equipamento.Room.Block.School.AgrupamentoId.Value);
+                    }
+                    if (t.Equipamento?.EmpresaId != null) activeEmpresaIds.Add(t.Equipamento.EmpresaId.Value);
+                }
+            }
+
             var query = _context.Equipamentos
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
                 .Include(e => e.Empresa)
                 .AsQueryable();
+
+            if (userRole == "Tecnico")
+            {
+                query = query.Where(e => 
+                    (e.RoomId.HasValue && activeSchoolIds.Contains(e.Room.Block.SchoolId)) ||
+                    (e.EmpresaId.HasValue && activeEmpresaIds.Contains(e.EmpresaId.Value))
+                );
+            }
 
             if (!string.IsNullOrEmpty(FilterName))
             {
@@ -193,6 +253,36 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 .OrderBy(m => m)
                 .ToListAsync();
 
+            MyStock = await _context.StockEmpresa
+                .Where(s => s.TechnicianId == userId && s.AgrupamentoId == null && s.SchoolId == null)
+                .OrderBy(s => s.EquipmentName)
+                .ToListAsync();
+
+            MyStockRequests = await _context.Tickets
+                .Where(t => t.TechnicianId == userId && t.Level == "Empréstimo")
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
+            AvailableRequestItems = await _context.StockEmpresa
+                .Where(s => s.TechnicianId == null
+                            && s.AgrupamentoId == null
+                            && s.SchoolId == null
+                            && s.IsAvailable
+                            && (s.Status == null || s.Status == "Disponível"))
+                .GroupBy(s => new { s.EquipmentName, s.Type })
+                .Select(g => new RequestStockOption
+                {
+                    StockId = g.Min(x => x.Id),
+                    Label = (g.Key.EquipmentName ?? "Sem nome")
+                        + " - "
+                        + (g.Key.Type ?? "Sem tipo")
+                        + " (Disponíveis: "
+                        + g.Count()
+                        + ")"
+                })
+                .OrderBy(x => x.Label)
+                .ToListAsync();
+
             return Page();
         }
 
@@ -215,7 +305,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 await _context.SaveChangesAsync();
                 return RedirectToPage(new { success = "Equipamento registado com sucesso!" });
             }
-            return await OnGetAsync(null);
+            return RedirectToPage(new { success = "Erro: Dados do equipamento inválidos." });
         }
 
         public async Task<IActionResult> OnPostEditAsync()
@@ -269,6 +359,117 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRequestStockAsync(int stockId, int quantity, string notes)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            if (stockId <= 0 || quantity <= 0)
+            {
+                return RedirectToPage(new { success = "Dados de requisição inválidos." });
+            }
+
+            var selectedStock = await _context.StockEmpresa
+                .Where(s => s.Id == stockId
+                            && s.TechnicianId == null
+                            && s.AgrupamentoId == null
+                            && s.SchoolId == null
+                            && s.IsAvailable
+                            && (s.Status == null || s.Status == "Disponível"))
+                .FirstOrDefaultAsync();
+
+            if (selectedStock == null)
+            {
+                return RedirectToPage(new { success = "O artigo selecionado já não está disponível." });
+            }
+
+            var itemName = selectedStock.EquipmentName ?? "Sem nome";
+            var itemType = selectedStock.Type ?? "Sem tipo";
+
+            var jsonData = System.Text.Json.JsonSerializer.Serialize(new { 
+                ItemName = itemName, 
+                ItemType = itemType, 
+                Quantity = quantity,
+                RequestorId = userId,
+                RequestorRole = "Tecnico"
+            });
+
+            var ticket = new Ticket
+            {
+                Description = $"PEDIDO DE STOCK (TÉCNICO):\nArtigo: {itemName}\nTipo: {itemType}\nQtd: {quantity}\nNotas: {notes}\n\n[DATA:{jsonData}]",
+                Level = "Empréstimo",
+                Status = "Pedido",
+                CreatedAt = DateTime.UtcNow,
+                TechnicianId = userId
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { success = "Requisição de stock enviada para a administração." });
+        }
+
+        public async Task<IActionResult> OnPostReturnToHQAsync(int id)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var item = await _context.StockEmpresa.FirstOrDefaultAsync(s => s.Id == id && s.TechnicianId == userId);
+            if (item != null)
+            {
+                item.TechnicianId = null;
+                item.Status = "Disponível";
+                item.IsAvailable = true;
+                await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Item devolvido ao stock central com sucesso." });
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostFinalDisposalAsync(int id)
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var item = await _context.StockEmpresa.FirstOrDefaultAsync(s => s.Id == id && s.TechnicianId == userId);
+            if (item != null)
+            {
+                _context.StockEmpresa.Remove(item);
+                await _context.SaveChangesAsync();
+                return RedirectToPage(new { success = "Baixa definitiva efetuada. O item foi removido do inventário." });
+            }
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostCreateStockRequestAsync(string? itemName, string? itemType, int quantity, string? notes)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            if (string.IsNullOrWhiteSpace(itemName))
+            {
+                return RedirectToPage(new { success = "Por favor selecione um artigo." });
+            }
+
+            var ticket = new Ticket
+            {
+                Description = $"PEDIDO DE EQUIPAMENTO (TÉCNICO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}",
+                Level = "Empréstimo",
+                Status = "Pedido",
+                CreatedAt = DateTime.UtcNow,
+                TechnicianId = userId
+            };
+
+            _context.Tickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { success = $"Pedido de {itemName} enviado com sucesso para a administração." });
         }
 
         private static string NormalizeEquipmentStatus(string? rawStatus)

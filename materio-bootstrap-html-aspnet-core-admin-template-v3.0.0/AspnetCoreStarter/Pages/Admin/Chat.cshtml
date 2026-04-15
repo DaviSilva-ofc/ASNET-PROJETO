@@ -18,15 +18,15 @@
                 <div class="list-group list-group-flush overflow-auto" style="height: calc(100% - 60px);">
                     @foreach (var contact in Model.Contacts)
                     {
-                        <a asp-page="./Chat" asp-route-contactId="@contact.Id" 
-                           class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedContactId == contact.Id ? "active" : "")">
+                        <a asp-page="./Chat" asp-route-contactId="@contact.User.Id" 
+                           class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedContactId == contact.User.Id ? "active" : "")">
                             <div class="d-flex align-items-center">
                                 <div class="avatar me-2">
-                                    <span class="avatar-initial rounded-circle bg-label-primary">@contact.Username[0]</span>
+                                    <span class="avatar-initial rounded-circle bg-label-primary">@contact.User.Username[0]</span>
                                 </div>
                                 <div class="w-100">
-                                    <h6 class="mb-0 small">@contact.Username</h6>
-                                    <p class="mb-0 text-muted x-small">Utilizador ASNET</p>
+                                    <h6 class="mb-0 small">@contact.User.Username</h6>
+                                    <p class="mb-0 text-muted x-small">@contact.Role</p>
                                 </div>
                             </div>
                         </a>
@@ -42,14 +42,17 @@
             <div class="col-12 col-md-9 h-100 d-flex flex-column">
                 @if (Model.SelectedContactId.HasValue)
                 {
-                    var currentContact = Model.Contacts.FirstOrDefault(c => c.Id == Model.SelectedContactId);
+                    var currentContact = Model.Contacts.FirstOrDefault(c => c.User.Id == Model.SelectedContactId);
                     <!-- Header -->
                     <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
                         <div class="d-flex align-items-center">
                             <div class="avatar me-2">
-                                <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.Username[0]</span>
+                                <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.User.Username[0]</span>
                             </div>
-                            <h6 class="mb-0">@currentContact?.Username</h6>
+                            <div>
+                                <h6 class="mb-0">@currentContact?.User.Username</h6>
+                                <small class="text-muted">@currentContact?.Role</small>
+                            </div>
                         </div>
                     </div>
 
@@ -96,7 +99,9 @@
                             <div class="list-group mt-2">
                                 @foreach (var contact in Model.Contacts)
                                 {
-                                    <a asp-page="./Chat" asp-route-contactId="@contact.Id" class="list-group-item list-group-item-action">@contact.Username</a>
+                                    <a asp-page="./Chat" asp-route-contactId="@contact.User.Id" class="list-group-item list-group-item-action">
+                                        @contact.User.Username <small class="text-muted">(@contact.Role)</small>
+                                    </a>
                                 }
                             </div>
                         </div>

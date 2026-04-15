@@ -193,21 +193,22 @@ namespace AspnetCoreStarter.Pages.Admin
                 .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
                 .ToListAsync();
 
-            // Load technician stock requests sent as Tickets (Level = "Empréstimo")
+            // Load all pending stock requests (Level = "Empréstimo") from both Technicians and Clients
             TechnicianStockRequests = await _context.Tickets
                 .Include(t => t.Technician)
+                .Include(t => t.RequestedBy)
                 .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
-            // Recent General Maintenance Tickets (excluding loans)
+            // Recent General Maintenance Tickets (only concluded - last 3)
             RecentMaintenanceTickets = await _context.Tickets
                 .Include(t => t.Technician)
                 .Include(t => t.Equipamento)
                 .Include(t => t.School)
-                .Where(t => t.Level != "Empréstimo")
+                .Where(t => t.Level != "Empréstimo" && t.Status == "Concluído")
                 .OrderByDescending(t => t.CreatedAt)
-                .Take(7)
+                .Take(3)
                 .ToListAsync();
 
             // Load global stock (available items with no school assigned)

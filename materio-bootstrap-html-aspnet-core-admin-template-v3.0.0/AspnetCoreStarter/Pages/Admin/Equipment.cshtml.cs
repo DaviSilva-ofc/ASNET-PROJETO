@@ -63,6 +63,12 @@ namespace AspnetCoreStarter.Pages.Admin
         public int? FilterEmpresaId { get; set; }
 
         [BindProperty(SupportsGet = true)]
+        public string? FilterBrand { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? FilterModel { get; set; }
+
+        [BindProperty(SupportsGet = true)]
         public string? FilterStatus { get; set; }
 
         [BindProperty]
@@ -93,9 +99,17 @@ namespace AspnetCoreStarter.Pages.Admin
             if (!string.IsNullOrEmpty(FilterName)) 
             {
                 var nameLower = FilterName.ToLower();
-                query = query.Where(e => e.Name.ToLower().Contains(nameLower) || 
-                                         (e.Brand != null && e.Brand.ToLower().Contains(nameLower)) || 
-                                         (e.Model != null && e.Model.ToLower().Contains(nameLower)));
+                query = query.Where(e => e.Name.ToLower().Contains(nameLower)); 
+            }
+
+            if (!string.IsNullOrEmpty(FilterBrand))
+            {
+                query = query.Where(e => e.Brand == FilterBrand);
+            }
+
+            if (!string.IsNullOrEmpty(FilterModel))
+            {
+                query = query.Where(e => e.Model == FilterModel);
             }
 
             if (!string.IsNullOrEmpty(FilterType)) 

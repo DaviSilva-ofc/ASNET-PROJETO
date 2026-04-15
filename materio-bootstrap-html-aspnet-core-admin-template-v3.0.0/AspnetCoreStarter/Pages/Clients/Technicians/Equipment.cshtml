@@ -53,6 +53,25 @@
 
     .btn-xs { padding: 0.125rem 0.25rem; font-size: 0.75rem; }
 
+    .stock-stat-card {
+        background: linear-gradient(135deg, #32344d 0%, #2b2c40 100%);
+        border-radius: 12px;
+        transition: transform 0.2s;
+    }
+    .stock-stat-card:hover { transform: translateY(-3px); }
+
+    .btn-asnet {
+        background: #f89223 !important;
+        color: #fff !important;
+        border: none !important;
+        font-weight: 600;
+    }
+    .btn-asnet:hover { background: #e07f1d !important; }
+
+    .badge-soft-warning { background: rgba(255, 171, 0, 0.1); color: #ffab00; }
+    .badge-soft-success { background: rgba(113, 221, 55, 0.1); color: #71dd37; }
+    .badge-soft-info { background: rgba(3, 195, 236, 0.1); color: #03c3ec; }
+
     .modal-content {
         color-scheme: dark !important;
         background-color: #323249 !important; /* Cor exata do Admin */
@@ -89,7 +108,23 @@
         </div>
     }
 
-    <div class="card shadow-sm border-0" style="background: #2b2c40;">
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#tab-inventario">
+                    Inventário Geral
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-minha-mala">
+                    Pedidos e Devoluções
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content" style="background: transparent; padding: 0; box-shadow: none;">
+            <!-- Aba Inventário -->
+            <div class="tab-pane fade show active" id="tab-inventario" role="tabpanel">
+                <div class="card shadow-sm border-0" style="background: #2b2c40;">
         <div class="card-header d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10">
             <h5 class="mb-0 text-white">Invent&aacute;rio de Equipamentos</h5>
             <div class="d-flex align-items-center gap-2">
@@ -232,13 +267,227 @@
                 </tbody>
             </table>
         </div>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="tab-minha-mala" role="tabpanel">
+                <!-- Seção de Pedidos Pendentes (Paridade com Prof/Dir) -->
+                <div class="card shadow-sm border-0 mb-4" style="background: #2b2c40;">
+                    <div class="card-header border-bottom border-light border-opacity-10 bg-label-warning py-3">
+                        <h5 class="mb-0 text-dark"><i class="ri-time-line me-2"></i>Pedidos em Processamento</h5>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr class="border-light border-opacity-10">
+                                    <th class="text-white-50">Artigo Pedido</th>
+                                    <th class="text-white-50">Estado</th>
+                                    <th class="text-white-50">Data do Pedido</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.MyStockRequests == null || !Model.MyStockRequests.Any(t => t.Status == "Pedido"))
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4 text-muted small">
+                                            Não tem pedidos de equipamento pendentes.
+                                        </td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    @foreach (var ticket in Model.MyStockRequests.Where(t => t.Status == "Pedido"))
+                                    {
+                                        <tr class="border-light border-opacity-10">
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-bold text-white">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE EQUIPAMENTO (TÉCNICO):", "").Replace("PEDIDO DE STOCK (TÉCNICO):", "").Trim()</span>
+                                                    <small class="text-white-50">Aguardando disponibilidade no stock central</small>
+                                                </div>
+                                            </td>
+                                            <td><span class="badge bg-label-warning">Pendente</span></td>
+                                            <td><span class="small text-white-50">@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mb-4">
+                    <button class="btn btn-asnet shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRequestStock">
+                        <i class="ri-add-line me-1"></i> Requisitar à Empresa
+                    </button>
+                </div>
+                <div class="row g-4">
+                    <div class="col-xl-8">
+                        <div class="card shadow-none h-100" style="background: #2b2c40;">
+                            <div class="card-header border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 text-white"><i class="ri-archive-line me-2 text-warning"></i>Minha Mala</h5>
+                                <span class="badge bg-label-primary px-3">@Model.MyStock.Count() itens</span>
+                            </div>
+                            <div class="table-responsive text-nowrap">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr class="text-white-50 small text-uppercase">
+                                            <th>Artigo</th>
+                                            <th>Categoria</th>
+                                            <th>Origem</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="table-border-bottom-0">
+                                        @if (!Model.MyStock.Any())
+                                        {
+                                            <tr>
+                                                <td colspan="4" class="text-center py-5 text-muted">Sem itens na mala. Requisita stock à empresa.</td>
+                                            </tr>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var item in Model.MyStock)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="avatar avatar-sm me-2">
+                                                                <span class="avatar-initial rounded bg-label-secondary"><i class="ri-settings-4-line"></i></span>
+                                                            </div>
+                                                            <span class="fw-bold text-white">@item.EquipmentName</span>
+                                                        </div>
+                                                    </td>
+                                                    <td><span class="text-white-50 small">@item.Type</span></td>
+                                                    <td><span class="badge badge-soft-info">Stock Empresa</span></td>
+                                                    <td>
+                                                        <div class="d-flex gap-2">
+                                                            <form method="post" asp-page-handler="ReturnToHQ">
+                                                                <input type="hidden" name="id" value="@item.Id" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-info" title="Devolver para Empresa">
+                                                                    <i class="ri-arrow-go-back-line"></i> Devolver
+                                                                </button>
+                                                            </form>
+                                                            <form method="post" asp-page-handler="FinalDisposal" onsubmit="return confirm('Confirmas a baixa definitiva deste item? Ele será removido do inventário.')">
+                                                                <input type="hidden" name="id" value="@item.Id" />
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Baixa Definitiva">
+                                                                    <i class="ri-delete-bin-line"></i> Baixa Definitiva
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4">
+                        <div class="card shadow-none mb-4" style="background: #2b2c40;">
+                            <div class="card-header border-bottom border-light border-opacity-10">
+                                <h5 class="mb-0 text-white"><i class="ri-history-line me-2 text-info"></i>Requisições</h5>
+                            </div>
+                            <div class="card-body pt-4">
+                                @if (!Model.MyStockRequests.Any())
+                                {
+                                    <div class="text-center py-3 text-muted small">Sem requisições recentes.</div>
+                                }
+                                else
+                                {
+                                    <div class="list-group list-group-flush">
+                                        @foreach (var req in Model.MyStockRequests.Take(5))
+                                        {
+                                            <div class="list-group-item bg-transparent px-0 border-light border-opacity-10">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="fw-bold text-white small">Pedido #@req.Id</span>
+                                                    @{
+                                                        var stClass = req.Status switch {
+                                                            "Pedido" => "badge-soft-info",
+                                                            "Pendente" => "badge-soft-warning",
+                                                            "Concluído" => "badge-soft-success",
+                                                            _ => "bg-label-secondary"
+                                                        };
+                                                    }
+                                                    <span class="badge @stClass" style="font-size: 0.65rem;">@req.Status</span>
+                                                </div>
+                                                <div class="text-white-50 small text-truncate">@(req.Description?.Split('\n').FirstOrDefault() ?? "Sem detalhes")</div>
+                                                <div class="text-muted" style="font-size: 0.65rem;">@req.CreatedAt.ToString("dd MMM, HH:mm")</div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card shadow-none stock-stat-card">
+                            <div class="card-body">
+                                <h6 class="text-white mb-3">Resumo</h6>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="flex-shrink-0 avatar bg-label-warning rounded me-3">
+                                        <i class="ri-hand-coin-line fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0 text-white">@Model.MyStock.Count</h5>
+                                        <small class="text-white-50">Itens emprestados na tua mala</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Request Stock -->
+<div class="modal fade" id="modalRequestStock" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="RequestStock" class="modal-content border-0" style="background: transparent !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #fff;">
+            <div class="modal-header border-bottom border-light border-opacity-25">
+                <h5 class="modal-title text-white">Solicitar Reposição de Mala</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label text-white-50 small text-uppercase">Artigo / Peça</label>
+                        <select name="stockId" class="form-select" required>
+                            <option value="">Selecione um artigo disponível</option>
+                            @foreach (var opt in Model.AvailableRequestItems)
+                            {
+                                <option value="@opt.StockId">@opt.Label</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Quantidade</label>
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Origem</label>
+                        <input type="text" class="form-control" value="Stock Empresa" disabled />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-white-50 small text-uppercase">Notas Adicionais</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Explica brevemente o motivo da requisição..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-25">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-asnet">Enviar Pedido</button>
+            </div>
+        </form>
     </div>
 </div>
 
 @* Modal Requisitar Equipamento *@
 <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form method="post" asp-page="/Clients/Technicians/Stocks" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background:#2b2c40;">
+        <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: transparent !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #fff;">
             <div class="modal-header border-bottom border-light border-opacity-25">
                 <h5 class="modal-title text-white"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

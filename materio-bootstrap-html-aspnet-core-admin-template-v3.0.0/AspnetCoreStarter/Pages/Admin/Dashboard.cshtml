@@ -544,7 +544,7 @@
                                 }
                                 else
                                 {
-                                    @foreach (var t in Model.RecentMaintenanceTickets)
+                                    @foreach (var t in Model.RecentMaintenanceTickets.Take(3))
                                     {
                                         <tr>
                                             <td><span class="badge bg-label-secondary">#@t.Id</span></td>
@@ -617,16 +617,16 @@
         <div class="col-12">
             <div class="card tree-card h-100" style="border-left: 5px solid #ffab00;">
                 <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
-                    <h5 class="mb-0"><i class='bx bx-package me-2'></i>Pedidos de Stock dos Técnicos</h5>
-                    <a href="/Admin/Stocks" class="btn btn-sm btn-outline-warning">Abrir Stocks</a>
+                    <h5 class="mb-0"><i class='bx bx-package me-2'></i>Pedidos de Stock Pendentes</h5>
+                    <a href="/Admin/Stocks" class="btn btn-sm btn-outline-warning">Ver Todos</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Técnico</th>
-                                    <th>Pedido</th>
+                                    <th>Solicitante</th>
+                                    <th>Pedido / Descrição</th>
                                     <th>Estado</th>
                                     <th>Data</th>
                                 </tr>
@@ -635,7 +635,7 @@
                                 @if (Model.TechnicianStockRequests == null || !Model.TechnicianStockRequests.Any())
                                 {
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">Nenhum pedido de stock de técnico pendente.</td>
+                                        <td colspan="4" class="text-center py-4 text-muted">Nenhum pedido de stock pendente.</td>
                                     </tr>
                                 }
                                 else
@@ -644,7 +644,16 @@
                                     {
                                         <tr>
                                             <td>
-                                                <span class="fw-semibold">@(t.Technician?.Username ?? $"Técnico #{t.TechnicianId}")</span>
+                                                <div class="d-flex align-items-center">
+                                                    @{
+                                                        var requesterName = t.Technician?.Username ?? t.RequestedBy?.Username ?? "Utilizador";
+                                                        var requesterRole = t.Technician != null ? "Técnico" : "Cliente";
+                                                    }
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-semibold">@requesterName</span>
+                                                        <small class="text-muted" style="font-size:0.7rem;">@requesterRole</small>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td>
                                                 <small class="text-muted">@(t.Description ?? "Sem descrição")</small>

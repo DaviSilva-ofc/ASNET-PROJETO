@@ -21,6 +21,47 @@ namespace AspnetCoreStarter.Hubs
 
             int senderId = int.Parse(senderIdStr);
 
+            // Segurança: Validar se a comunicação é permitida
+            // 1. Um dos intervenientes é Administrador
+            bool isAllowed = await _context.Administradores.AnyAsync(a => a.UserId == senderId || a.UserId == receiverId);
+            
+            if (!isAllowed)
+            {
+                // 2. Existe um vínculo por Ticket Ativo e Aceite (Técnico <-> Solicitante)
+                isAllowed = await _context.Tickets.AnyAsync(t => 
+                    ((t.TechnicianId == senderId && t.RequestedByUserId == receiverId) ||
+                     (t.TechnicianId == receiverId && t.RequestedByUserId == senderId))
+                    && t.Status != "Concluído" && t.Status != "Recusado");
+            }
+
+            if (!isAllowed)
+            {
+                // 3. Comunicação interna de Escola/Agrupamento
+                // Buscar dados de infraestrutura dos dois utilizadores
+                var senderProf = await _context.Professores.Include(p => p.Bloco).ThenInclude(b => b.School).FirstOrDefaultAsync(p => p.UserId == senderId);
+                var senderCoord = await _context.Coordenadores.FirstOrDefaultAsync(c => c.UserId == senderId);
+                var senderDir = await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == senderId);
+
+                var receiverProf = await _context.Professores.Include(p => p.Bloco).ThenInclude(b => b.School).FirstOrDefaultAsync(p => p.UserId == receiverId);
+                var receiverCoord = await _context.Coordenadores.FirstOrDefaultAsync(c => c.UserId == receiverId);
+                var receiverDir = await _context.Diretores.FirstOrDefaultAsync(d => d.UserId == receiverId);
+
+                // Mesma Escola
+                int? sSchool = senderProf?.Bloco?.SchoolId ?? senderCoord?.SchoolId;
+                int? rSchool = receiverProf?.Bloco?.SchoolId ?? receiverCoord?.SchoolId;
+                if (sSchool.HasValue && rSchool.HasValue && sSchool == rSchool) isAllowed = true;
+
+                // Mesmo Agrupamento (Diretor <-> Alguém da escola)
+                if (!isAllowed)
+                {
+                    int? sAgrup = senderDir?.AgrupamentoId ?? senderProf?.Bloco?.School?.AgrupamentoId ?? senderCoord?.School?.AgrupamentoId;
+                    int? rAgrup = receiverDir?.AgrupamentoId ?? receiverProf?.Bloco?.School?.AgrupamentoId ?? receiverCoord?.School?.AgrupamentoId;
+                    if (sAgrup.HasValue && rAgrup.HasValue && sAgrup == rAgrup) isAllowed = true;
+                }
+            }
+
+            if (!isAllowed) return;
+
             // Save to database (optional here if handled by PageModel, but safer here for real-time)
             var message = new Mensagem
             {

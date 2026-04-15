@@ -322,7 +322,7 @@
                         </thead>
                         <tbody>
                             @if (Model.RecentTickets != null && Model.RecentTickets.Any()) {
-                                @foreach (var ticket in Model.RecentTickets) {
+                                @foreach (var ticket in Model.RecentTickets.Take(3)) {
                                     <tr>
                                         <td><span class="badge bg-label-secondary">#@ticket.Id</span></td>
                                         <td>

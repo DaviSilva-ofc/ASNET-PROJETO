@@ -115,6 +115,7 @@ namespace AspnetCoreStarter.Pages.Admin
             PendingRequests = await _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Admin)
+                .Include(t => t.RequestedBy) // Include Private Client
                 .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
                 .OrderBy(t => t.CreatedAt)
                 .ToListAsync();
@@ -740,17 +741,17 @@ namespace AspnetCoreStarter.Pages.Admin
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostRejectEscalatedRequestAsync(int requestId)
+        public async Task<IActionResult> OnPostRejectEscalatedStockRequestAsync(int requestId, string? adminNotes)
         {
             var pedido = await _context.PedidosStock.FindAsync(requestId);
             if (pedido == null) return RedirectToPage();
 
             pedido.Status = "Recusado";
-            pedido.DirectorNotes = (pedido.DirectorNotes ?? "") + $" | Recusado pelo Admin em {DateTime.Now:dd/MM/yyyy}.";
+            pedido.DirectorNotes = (!string.IsNullOrWhiteSpace(adminNotes) ? adminNotes : "Pedido recusado pelo Administrador.");
             pedido.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Pedido recusado.";
+            TempData["Success"] = "Pedido recusado com sucesso.";
             return RedirectToPage();
         }
 

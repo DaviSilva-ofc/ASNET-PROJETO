@@ -2,269 +2,299 @@
 @model AspnetCoreStarter.Pages.Clients.Technicians.StocksModel
 @{
     Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Minha Mala de Peças";
+    ViewData["Title"] = "Explorador de Stocks";
 }
 
 @section PageStyles {
-<style>
-    :root {
-        --asnet-orange: #f89223;
-        --asnet-blue: #696cff;
-        --card-bg: #2b2c40;
-    }
+    <style>
+        .card-bg { background-color: #2b2c40 !important; }
+        .table-dark-custom th { color: rgba(255,255,255,0.5) !important; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid rgba(255,255,255,0.1); }
+        .table-dark-custom td { color: #fff !important; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
 
-    .dark-style .card, [data-bs-theme="dark"] .card {
-        background-color: var(--card-bg) !important;
-        border: 1px solid rgba(255,255,255,0.05);
-    }
+        /* Tree Styles */
+        .infra-tree .tree-node {
+            position: relative;
+            padding: 4px 0;
+        }
 
-    .stock-stat-card {
-        background: linear-gradient(135deg, #32344d 0%, #2b2c40 100%);
-        border-radius: 12px;
-        transition: transform 0.2s;
-    }
-    .stock-stat-card:hover { transform: translateY(-3px); }
+        .tree-node i {
+            font-size: 1.1rem;
+            vertical-align: middle;
+            opacity: 0.8;
+        }
 
-    .btn-asnet {
-        background: var(--asnet-orange) !important;
-        color: #fff !important;
-        border: none !important;
-        font-weight: 600;
-    }
-    .btn-asnet:hover { background: #e07f1d !important; }
+        .cursor-pointer { cursor: pointer; }
 
-    .table thead th {
-        color: rgba(255,255,255,0.5) !important;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .table tbody td {
-        color: #fff !important;
-        vertical-align: middle;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
+        /* Animation for arrows */
+        [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+            transition: transform 0.3s ease;
+            font-weight: bold;
+            color: #696cff;
+            font-size: 1.4rem;
+            display: inline-block;
+            line-height: 1;
+            background-color: rgba(105, 108, 255, 0.15);
+            border: 1px solid rgba(105, 108, 255, 0.3);
+            border-radius: 4px;
+            padding: 4px;
+            margin-right: 8px;
+        }
+        
+        [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+            transform: rotate(90deg);
+            background-color: #696cff;
+            color: #fff;
+        }
 
-    .badge-soft-warning { background: rgba(255, 171, 0, 0.1); color: #ffab00; }
-    .badge-soft-success { background: rgba(113, 221, 55, 0.1); color: #71dd37; }
-    .badge-soft-info { background: rgba(3, 195, 236, 0.1); color: #03c3ec; }
-
-    .modal-content {
-        background-color: #2b2c40 !important;
-        color: #fff;
-    }
-    .modal-header, .modal-footer { border-color: rgba(255,255,255,0.1); }
-    .form-control, .form-select {
-        background-color: rgba(255,255,255,0.05) !important;
-        border-color: rgba(255,255,255,0.1) !important;
-        color: #fff !important;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: var(--asnet-blue) !important;
-        box-shadow: 0 0 0 0.25rem rgba(105, 108, 255, 0.25) !important;
-    }
-</style>
+        .agrupamento-node { color: #696cff; }
+        .school-node { color: #03c3ec; }
+        .bloc-node { color: #71dd37; }
+        .room-node { color: #ffab00; }
+        .equip-node { color: #a1acb8; }
+        
+        .tree-node i.ri-arrow-right-s-line {
+            background-color: rgba(105, 108, 255, 0.1);
+            border-radius: 4px;
+            padding: 4px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .dark-style .agrupamento-node { color: #696cff; }
+        .dark-style .school-node { color: #03c3ec; }
+        .dark-style .bloc-node { color: #71dd37; }
+        .dark-style .room-node { color: #ffab00; }
+        .dark-style .equip-node { color: #707186; }
+    </style>
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="mb-4">
-        <h4 class="fw-bold mb-3"><span class="text-muted fw-light">Técnico /</span> Stocks</h4>
-        <div class="card shadow-none">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 text-white">Gestão de Stocks do Técnico</h5>
-                <button class="btn btn-asnet shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRequestStock">
-                    <i class="ri-add-line me-1"></i> Requisitar à Empresa
-                </button>
-            </div>
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-white-50 fw-light">Técnico /</span> Explorador de Stocks
+    </h4>
+
+    <div class="alert alert-info border-0 mb-4 bg-label-info d-flex align-items-center">
+        <i class="ri-information-line fs-4 me-3"></i>
+        <div>
+            Bem-vindo ao Explorador de Stocks. Aqui podes consultar o teu stock pessoal de peças. Adicionalmente, tens acesso temporário de visualização aos stocks da <strong>Escola</strong> e <strong>Agrupamento</strong> aos quais tens tickets pendentes para reparação.
         </div>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible shadow-sm mb-4" role="alert">
-            <i class="ri-checkbox-circle-line me-2"></i> @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Technician's Personal Stock -->
+    <div class="card shadow-sm border-0 mb-4 card-bg">
+        <div class="card-header border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-white"><i class="ri-user-settings-line me-2 text-warning"></i> Meu Stock Pessoal</h5>
+            <span class="badge bg-label-warning">@Model.MyStock.Count() itens</span>
         </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible shadow-sm mb-4" role="alert">
-            <i class="ri-error-warning-line me-2"></i> @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="table-responsive">
+            <table class="table table-hover table-dark-custom mb-0">
+                <thead>
+                    <tr>
+                        <th>Artigo / Peça</th>
+                        <th>Categoria / Tipo</th>
+                        <th>Estado Actual</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.MyStock.Any())
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-white-50 italic">Não possuis stock diretamente atribuído à tua conta.</td>
+                        </tr>
+                    }
+                    @foreach (var item in Model.MyStock)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-2">
+                                        <span class="avatar-initial rounded bg-label-secondary"><i class="ri-price-tag-3-line"></i></span>
+                                    </div>
+                                    <strong class="text-white">@item.EquipmentName</strong>
+                                </div>
+                            </td>
+                            <td><span class="text-white-50 small">@item.Type</span></td>
+                            <td><span class="badge bg-label-success">@item.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
+    </div>
 
-    <div class="nav-align-top mb-4">
-        <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item">
-                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#tab-stock-tecnico">
-                    Stock do Técnico
-                </button>
-            </li>
-        </ul>
-        <div class="tab-content">
-            <div class="tab-pane fade show active" id="tab-stock-tecnico" role="tabpanel">
-                <div class="row g-4">
-                    <div class="col-xl-8">
-                        <div class="card shadow-none h-100">
-                            <div class="card-header border-bottom border-secondary d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0 text-white"><i class="ri-archive-line me-2 text-warning"></i>Minha Mala</h5>
-                                <span class="badge bg-label-primary px-3">@Model.MyStock.Count() itens</span>
+    <div class="row g-4">
+        <!-- School Stocks (Linked via Active Tickets) -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm border-0 h-100 card-bg">
+                <div class="card-header border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="ri-school-line me-2 text-info"></i> Stock das Escolas</h5>
+                    <span class="badge bg-label-secondary" title="Acesso devido a tickets em aberto">Acesso Temporário</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="infra-tree p-3">
+                        @if (!Model.AccessibleSchools.Any())
+                        {
+                            <div class="text-center py-5 text-white-50 italic">
+                                Sem detalhe de escola acessível.
                             </div>
-                            <div class="table-responsive text-nowrap">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Artigo</th>
-                                            <th>Categoria</th>
-                                            <th>Origem</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if (!Model.MyStock.Any())
+                        }
+                        else
+                        {
+                            foreach(var school in Model.AccessibleSchools.Where(s => Model.ActiveSchoolIds.Contains(s.Id)))
+                            {
+                                var schBase = Model.SchoolBaseStock.Where(s => s.SchoolId == school.Id).ToList();
+                                <div class="tree-node school-node">
+                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-sch-@school.Id">
+                                        <i class="ri-arrow-right-s-line me-1"></i>
+                                        <i class="ri-school-line me-1 text-info"></i> <strong class="text-white">@school.Name</strong>
+                                    </div>
+                                    <div id="tree-sch-@school.Id" class="collapse">
+                                        
+                                        @foreach(var item in schBase)
                                         {
-                                            <tr>
-                                                <td colspan="4" class="text-center py-5 text-muted">Sem itens na mala. Requisita stock à empresa.</td>
-                                            </tr>
+                                            <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1">
+                                                <span class="d-block text-white">@item.EquipmentName <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Geral / @item.Type</span></span>
+                                            </div>
                                         }
-                                        else
-                                        {
-                                            @foreach (var item in Model.MyStock)
-                                            {
-                                                <tr>
-                                                    <td>
-                                                        <div class="d-flex align-items-center">
-                                                            <div class="avatar avatar-sm me-2">
-                                                                <span class="avatar-initial rounded bg-label-secondary"><i class="ri-settings-4-line"></i></span>
-                                                            </div>
-                                                            <span class="fw-bold">@item.EquipmentName</span>
-                                                        </div>
-                                                    </td>
-                                                    <td><span class="text-white-50 small">@item.Type</span></td>
-                                                    <td><span class="badge badge-soft-info">Stock Empresa</span></td>
-                                                    <td>
-                                                        <div class="d-flex gap-2">
-                                                            <form method="post" asp-page-handler="ReturnToHQ">
-                                                                <input type="hidden" name="id" value="@item.Id" />
-                                                                <button type="submit" class="btn btn-sm btn-outline-info" title="Devolver para Empresa">
-                                                                    <i class="ri-arrow-go-back-line"></i> Devolver
-                                                                </button>
-                                                            </form>
-                                                            <form method="post" asp-page-handler="FinalDisposal" onsubmit="return confirm('Confirmas a baixa definitiva deste item? Ele será removido do inventário.')">
-                                                                <input type="hidden" name="id" value="@item.Id" />
-                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Baixa Definitiva">
-                                                                    <i class="ri-delete-bin-line"></i> Baixa Definitiva
-                                                                </button>
-                                                            </form>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="col-xl-4">
-                        <div class="card shadow-none mb-4">
-                            <div class="card-header border-bottom border-secondary">
-                                <h5 class="mb-0 text-white"><i class="ri-history-line me-2 text-info"></i>Requisições</h5>
-                            </div>
-                            <div class="card-body pt-4">
-                                @if (!Model.MyStockRequests.Any())
-                                {
-                                    <div class="text-center py-3 text-muted small">Sem requisições recentes.</div>
-                                }
-                                else
-                                {
-                                    <div class="list-group list-group-flush">
-                                        @foreach (var req in Model.MyStockRequests.Take(5))
+                                        @{ var blocosEscola = Model.AccessibleBlocos.Where(b => b.SchoolId == school.Id).ToList(); }
+                                        @foreach(var bloco in blocosEscola)
                                         {
-                                            <div class="list-group-item bg-transparent px-0 border-secondary">
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span class="fw-bold text-white small">Pedido #@req.Id</span>
-                                                    @{
-                                                        var stClass = req.Status switch {
-                                                            "Pedido" => "badge-soft-info",
-                                                            "Pendente" => "badge-soft-warning",
-                                                            "Concluído" => "badge-soft-success",
-                                                            _ => "bg-label-secondary"
-                                                        };
-                                                    }
-                                                    <span class="badge @stClass" style="font-size: 0.65rem;">@req.Status</span>
+                                            var blockId = $"b{bloco.Id}";
+                                            <div class="tree-node bloc-node ms-4 mt-2">
+                                                <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@blockId">
+                                                    <i class="ri-arrow-right-s-line me-1"></i>
+                                                    <i class="ri-building-4-line me-1 text-success"></i> <strong class="text-white">@bloco.Name</strong>
                                                 </div>
-                                                <div class="text-white-50 small text-truncate">@(req.Description?.Split('\n').FirstOrDefault() ?? "Sem detalhes")</div>
-                                                <div class="text-muted" style="font-size: 0.65rem;">@req.CreatedAt.ToString("dd MMM, HH:mm")</div>
+                                                <div id="tree-@blockId" class="collapse">
+                                                    @{ var salasBloco = Model.AccessibleSalas.Where(s => s.BlockId == bloco.Id).ToList(); }
+                                                    @foreach(var sala in salasBloco)
+                                                    {
+                                                        var roomId = $"r{sala.Id}";
+                                                        <div class="tree-node room-node ms-4 mt-1">
+                                                            <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@roomId">
+                                                                <i class="ri-arrow-right-s-line me-1"></i>
+                                                                <i class="ri-door-open-line me-1 text-warning"></i> <span class="text-white">@sala.Name</span>
+                                                            </div>
+                                                            <div id="tree-@roomId" class="collapse">
+                                                                @if (!sala.Equipments.Any())
+                                                                {
+                                                                    <div class="ms-4 mt-1 small text-white-50 italic">Sem equipamentos</div>
+                                                                }
+                                                                @foreach(var equip in sala.Equipments)
+                                                                {
+                                                                    <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1">
+                                                                        <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
+                                                                        <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
+                                                                        </span>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
                                             </div>
                                         }
                                     </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="card shadow-none" style="background: linear-gradient(to bottom, #2b2c40, #383952) !important;">
-                            <div class="card-body">
-                                <h6 class="text-white mb-3">Resumo</h6>
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="flex-shrink-0 avatar bg-label-warning rounded me-3">
-                                        <i class="ri-hand-coin-line fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="mb-0 text-white">@Model.MyStock.Count</h5>
-                                        <small class="text-muted">Itens emprestados na tua mala</small>
-                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            }
+                        }
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Modal Request Stock -->
-<div class="modal fade" id="modalRequestStock" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <form method="post" asp-page-handler="RequestStock" class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Solicitar Reposição de Mala</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-12">
-                        <label class="form-label">Artigo / Peça</label>
-                        <select name="stockId" class="form-select" required>
-                            <option value="">Selecione um artigo disponível</option>
-                            @foreach (var opt in Model.AvailableRequestItems)
+        <!-- Agrupamento Stocks (Linked via Active Tickets) -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm border-0 h-100 card-bg">
+                <div class="card-header border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="ri-government-line me-2 text-primary"></i> Stock dos Agrupamentos</h5>
+                    <span class="badge bg-label-secondary" title="Acesso devido a tickets em aberto">Acesso Temporário</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="infra-tree p-3">
+                        @if (!Model.AccessibleAgrupamentos.Any())
+                        {
+                            <div class="text-center py-5 text-white-50 italic">
+                                Sem stock de agrupamento acessível.
+                            </div>
+                        }
+                        else
+                        {
+                            foreach(var agrp in Model.AccessibleAgrupamentos)
                             {
-                                <option value="@opt.StockId">@opt.Label</option>
+                                var agBase = Model.AgrupamentoBaseStock.Where(s => s.AgrupamentoId == agrp.Id).ToList();
+                                <div class="tree-node agrupamento-node">
+                                    <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-agrp-@agrp.Id">
+                                        <i class="ri-arrow-right-s-line me-1"></i>
+                                        <i class="ri-government-line me-1 text-primary"></i> <strong class="text-white">@agrp.Name</strong>
+                                    </div>
+                                    <div id="tree-agrp-@agrp.Id" class="collapse">
+
+                                        @foreach(var item in agBase)
+                                        {
+                                            <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1">
+                                                <span class="d-block text-white">@item.EquipmentName <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Central / @item.Type</span></span>
+                                            </div>
+                                        }
+
+                                        @{ var schoolsAgrp = Model.AccessibleSchools.Where(s => s.AgrupamentoId == agrp.Id).ToList(); }
+                                        @foreach(var school in schoolsAgrp)
+                                        {
+                                            <div class="tree-node school-node ms-4 mt-2">
+                                                <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-agrp-sch-@school.Id">
+                                                    <i class="ri-arrow-right-s-line me-1"></i>
+                                                    <i class="ri-school-line me-1 text-info"></i> <strong class="text-white">@school.Name</strong>
+                                                </div>
+                                                <div id="tree-agrp-sch-@school.Id" class="collapse">
+                                                    @{ var blocosEscola = Model.AccessibleBlocos.Where(b => b.SchoolId == school.Id).ToList(); }
+                                                    @foreach(var bloco in blocosEscola)
+                                                    {
+                                                        var blockId = $"a{agrp.Id}s{school.Id}b{bloco.Id}";
+                                                        <div class="tree-node bloc-node ms-4 mt-2">
+                                                            <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@blockId">
+                                                                <i class="ri-arrow-right-s-line me-1"></i>
+                                                                <i class="ri-building-4-line me-1 text-success"></i> <span class="text-white">@bloco.Name</span>
+                                                            </div>
+                                                            <div id="tree-@blockId" class="collapse">
+                                                                @{ var salasBloco = Model.AccessibleSalas.Where(s => s.BlockId == bloco.Id).ToList(); }
+                                                                @foreach(var sala in salasBloco)
+                                                                {
+                                                                    var roomId = $"a{agrp.Id}s{school.Id}b{bloco.Id}r{sala.Id}";
+                                                                    <div class="tree-node room-node ms-4 mt-1">
+                                                                        <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@roomId">
+                                                                            <i class="ri-arrow-right-s-line me-1"></i>
+                                                                            <i class="ri-door-open-line me-1 text-warning"></i> <span class="text-white">@sala.Name</span>
+                                                                        </div>
+                                                                        <div id="tree-@roomId" class="collapse">
+                                                                            @if (!sala.Equipments.Any())
+                                                                            {
+                                                                                <div class="ms-4 mt-1 small text-white-50 italic">Sem equipamentos</div>
+                                                                            }
+                                                                            @foreach(var equip in sala.Equipments)
+                                                                            {
+                                                                                <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1">
+                                                                                    <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
+                                                                                    <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
+                                                                                    </span>
+                                                                                </div>
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
                             }
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" name="quantity" class="form-control" value="1" min="1" required />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Origem</label>
-                        <input type="text" class="form-control" value="Stock Empresa" disabled />
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Notas Adicionais</label>
-                        <textarea name="notes" class="form-control" rows="2" placeholder="Explica brevemente o motivo da requisição..."></textarea>
+                        }
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-asnet">Enviar Pedido</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>

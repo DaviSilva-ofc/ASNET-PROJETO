@@ -52,6 +52,12 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
+            // 0. Schema Maintenance (Ensure new date columns exist)
+            try {
+                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_aceitacao DATETIME NULL;");
+                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_conclusao DATETIME NULL;");
+            } catch { }
+
             // Counts
             // Refined filtering to include ONLY breakdown/repair tickets
             MyTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
@@ -74,7 +80,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 .Include(t => t.Equipamento)
                 .Where(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .OrderByDescending(t => t.CreatedAt)
-                .Take(5)
+                .Take(3)
                 .ToListAsync();
 
             // Fetch My Stock

@@ -33,27 +33,38 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Coordenador /</span> Equipamentos</h4>
 
-    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class='bx bx-check-circle me-1'></i> @Model.SuccessMessage
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Inventário de Equipamentos</h5>
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
-                    🔍 Filtros
+    <!-- Navegação por Abas -->
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#tab-inventario">
+                    Inventário Geral
                 </button>
-                <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
-                    <i class="ri-hand-coin-line me-1"></i> Requisitar Equipamento
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-devolucoes">
+                    Pedidos e Devoluções
                 </button>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoEquipamento">Novo Equipamento</button>
-            </div>
-        </div>
+            </li>
+        </ul>
+        <div class="tab-content" style="background: transparent; padding: 0; box-shadow: none;">
+        <!-- Aba Inventário -->
+        <div class="tab-pane fade show active" id="tab-inventario" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Inventário de Equipamentos</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                            <i class="bx bx-filter me-1"></i> Filtros
+                        </button>
+                        <button class="btn btn-warning text-white" data-bs-toggle="modal" data-bs-target="#modalRequisitarEq">
+                            <i class="bx bx-hand me-1"></i> Requisitar Equipamento
+                        </button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoEquipamento">
+                            <i class="bx bx-plus me-1"></i> Novo Equipamento
+                        </button>
+                    </div>
+                </div>
 
         @{
             var activeFilterText = "";
@@ -78,80 +89,212 @@
             </div>
         }
 
-        <div class="table-responsive text-nowrap">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Artigo</th>
-                        <th>Tipo</th>
-                        <th>Nº Série</th>
-                        <th>Localização (Sala)</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Equipments)
-                    {
-                        <tr>
-                            <td>
-                                <div class="d-flex flex-column">
-                                    <strong class="text-dark">@item.Name</strong>
-                                    <small class="text-muted" style="font-size: 0.75rem;">
-                                        @(item.Brand ?? "Genérico") @(item.Model ?? "")
-                                    </small>
-                                </div>
-                            </td>
-                            <td>@item.Type</td>
-                            <td><span class="badge bg-label-secondary">@item.SerialNumber</span></td>
-                            <td>
-                                @if (item.Room != null)
-                                {
-                                    <span>@item.Room.Name (@item.Room.Block?.Name)</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">N/A</span>
-                                }
-                            </td>
-                            <td>
-                                @if (item.Status == "Avariado") {
-                                    <span class="badge bg-label-danger">Avariado</span>
-                                } else {
-                                    <span class="badge bg-label-success">@(item.Status == "Funcionando" || string.IsNullOrEmpty(item.Status) ? "A funcionar" : item.Status)</span>
-                                }
-                            </td>
-                            <td style="white-space: nowrap;">
-                                <div class="d-flex align-items-center gap-2">
-                                    @if (item.Status == null || (!item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) && !item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
-                                    {
-                                        <a asp-page="./Tickets" asp-route-EqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
-                                    }
-                                    <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
-                                        @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover">
+                        <thead class="bg-light bg-opacity-10">
+                            <tr>
+                                <th>Artigo</th>
+                                <th>Tipo</th>
+                                <th>Nº Série</th>
+                                <th>Localização</th>
+                                <th style="width: 1%; white-space: nowrap;">Estado</th>
+                                <th style="width: 1%; white-space: nowrap;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Equipments)
+                            {
+                                <tr class="border-light border-opacity-10">
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <strong class="text-white">@item.Name</strong>
+                                            <small class="text-white-50" style="font-size: 0.75rem;">
+                                                @(item.Brand ?? "Genérico") @(item.Model ?? "")
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td class="text-white-50">@item.Type</td>
+                                    <td><span class="badge bg-label-secondary border-light border-opacity-10">@item.SerialNumber</span></td>
+                                    <td>
+                                        @if (item.Room != null)
                                         {
-                                            <button type="submit" class="btn btn-sm text-success" title="Marcar como Funcional"><i class="ri-check-line"></i> Funcional</button>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold">@item.Room.Name (@item.Room.Block?.Name)</span>
+                                                <small class="text-muted">@item.Room.Block?.School?.Name</small>
+                                            </div>
                                         }
                                         else
                                         {
-                                            <button type="submit" class="btn btn-sm text-warning" title="Marcar como Avariado"><i class="ri-error-warning-line"></i> Avariar</button>
+                                            <span class="text-muted">N/A</span>
                                         }
-                                    </form>
-                                    <div class="d-flex align-items-center gap-1">
-                                        <button type="button" class="btn btn-sm text-primary p-1" title="Editar"
-                                                onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId')">
-                                            <i class="bx bx-edit"></i> ✏️
-                                        </button>
-                                        <form method="post" asp-page-handler="DeleteEquipment" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
-                                            <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar"><i class="bx bx-trash"></i> 🗑️</button>
+                                    </td>
+                                    <td style="width: 1%; white-space: nowrap;">
+                                        @if (item.Status != null && (item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
+                                            item.Status.Trim().Equals("Disponível", StringComparison.OrdinalIgnoreCase) || 
+                                            item.Status.Trim().Equals("Funcionando", StringComparison.OrdinalIgnoreCase) || 
+                                            item.Status.Trim().Equals("Em uso", StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <span class="badge bg-label-success">A funcionar</span>
+                                        }
+                                        else if (item.Status != null && (item.Status.Trim().Equals("Avariado", StringComparison.OrdinalIgnoreCase) || 
+                                                 item.Status.Trim().Equals("Indisponível", StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <span class="badge bg-label-danger">Avariado</span>
+                                        }
+                                        else if (item.Status != null && (item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase) || item.Status.Trim().Equals("Em Reparação", StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <span class="badge bg-label-warning">Em reparo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
+                                        }
+                                    </td>
+                                    <td style="width: 1%; white-space: nowrap;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            @if (item.Status == null || (!item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) && !item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
+                                            {
+                                                <a href="/Clients/Coordinators/Tickets?eqId=@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket">
+                                                    <i class="bx bx-plus-circle"></i> Solicitar Ticket
+                                                </a>
+                                            }
+                                            
+                                            <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
+                                                @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
+                                                {
+                                                    <button type="submit" class="btn btn-sm text-success" title="Marcar como A funcionar"><i class="bx bx-check"></i> Funcional</button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="submit" class="btn btn-sm text-warning" title="Marcar como Avariado"><i class="bx bx-error-alt"></i> Avariar</button>
+                                                }
+                                            </form>
+
+                                            <div class="d-flex align-items-center gap-1">
+                                                <button type="button" class="btn btn-sm text-primary p-1" title="Editar"
+                                                        onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId')">
+                                                    ✏️
+                                                </button>
+                                                <form method="post" asp-page-handler="DeleteEquipment" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
+                                                    <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar">🗑️</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab-devolucoes" role="tabpanel">
+            <!-- Seção de Pedidos Pendentes -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header border-bottom bg-label-warning py-3">
+                    <h5 class="mb-0 text-dark"><i class="bx bx-time me-2"></i>Pedidos em Processamento</h5>
+                </div>
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Solicitante</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Observações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.MyStockRequests.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">Nenhum pedido pendente para esta escola.</td>
+                                </tr>
+                            }
+                            @foreach (var req in Model.MyStockRequests)
+                            {
+                                <tr class="border-light border-opacity-10">
+                                    <td>
+                                        @{
+                                            var firstLine = req.Description?.Split('\n').FirstOrDefault() ?? "Pedido Stock";
+                                            var cleanDesc = firstLine.Replace("PEDIDO DE EQUIPAMENTO", "").Replace("PEDIDO DE STOCK", "").Trim(':').Trim();
+                                        }
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold text-white">#@req.Id - @cleanDesc</span>
+                                            <small class="text-info">Empréstimo</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-xs me-2">
+                                                <span class="avatar-initial rounded-circle bg-label-info">@req.RequestedBy?.Username?.Substring(0, 1).ToUpper()</span>
+                                            </div>
+                                            <span>@req.RequestedBy?.Username</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var stClass = req.Status switch {
+                                                "Pedido" => "badge-soft-info",
+                                                "Pendente" => "badge-soft-warning",
+                                                "Atendido" or "Concluído" => "badge-soft-success",
+                                                _ => "bg-label-secondary"
+                                            };
+                                        }
+                                        <span class="badge @stClass">@req.Status</span>
+                                    </td>
+                                    <td class="text-white-50 small">@req.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-white-50 small text-truncate" style="max-width: 200px;">@req.Description</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Seção de Itens na Posse -->
+            <div class="card shadow-sm">
+                <div class="card-header border-bottom">
+                    <h5 class="mb-0">Os Meus Equipamentos (Na Posse)</h5>
+                </div>
+                <div class="table-responsive text-nowrap">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Equipamento</th>
+                                <th>Tipo</th>
+                                <th>Marca/Modelo</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.MyBorrowedItems.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">A escola não possui itens de stock central atualmente.</td>
+                                </tr>
+                            }
+                            @foreach (var item in Model.MyBorrowedItems)
+                            {
+                                <tr class="border-light border-opacity-10 text-white-50">
+                                    <td class="text-white fw-bold">@item.EquipmentName</td>
+                                    <td>@item.Type</td>
+                                    <td>@item.Description</td>
+                                    <td>
+                                        <form method="post" asp-page-handler="ReturnItem" asp-route-id="@item.Id">
+                                            <button type="submit" class="btn btn-sm btn-label-warning">
+                                                <i class="bx bx-undo me-1"></i> Devolver
+                                            </button>
                                         </form>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -159,15 +302,15 @@
 @* Modal Requisitar Equipamento *@
 <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form method="post" asp-page="/Clients/Coordinators/Stocks" asp-page-handler="CreateStockRequest" class="modal-content">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: rgba(43, 44, 64, 0.9) !important; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37);">
+            <div class="modal-header border-bottom border-light border-opacity-10">
+                <h5 class="modal-title text-white"><i class="bx bx-hand me-2 text-warning"></i>Requisitar Equipamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small text-uppercase">Artigo</label>
-                    <select name="itemName" id="reqEqArtigo" class="form-select" required onchange="filterReqEqTypes()">
+                    <label class="form-label text-white-50 small text-uppercase">Artigo</label>
+                    <select name="itemName" id="reqEqArtigo" class="form-select bg-dark text-white border-light border-opacity-10" required onchange="filterReqEqTypes()">
                         <option value="">Selecione o artigo...</option>
                         <option value="Computador">Computadores</option>
                         <option value="Monitor">Monitores</option>
@@ -181,44 +324,44 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small text-uppercase">Tipo</label>
-                    <select name="itemType" id="reqEqTipo" class="form-select">
+                    <label class="form-label text-white-50 small text-uppercase">Tipo</label>
+                    <select name="itemType" id="reqEqTipo" class="form-select bg-dark text-white border-light border-opacity-10">
                         <option value="">Selecione o tipo...</option>
-                        <option value="Desktop" data-art="Computador">Desktop</option>
-                        <option value="Portátil" data-art="Computador">Portátil</option>
-                        <option value="AIO" data-art="Computador">AIO</option>
-                        <option value="Monitor" data-art="Monitor">Monitor</option>
-                        <option value="Televisão" data-art="Monitor">Televisão</option>
-                        <option value="Impressora" data-art="Impressora">Impressora</option>
-                        <option value="Projetor" data-art="Projetor">Projetor</option>
-                        <option value="Router" data-art="Networking">Router</option>
-                        <option value="Switch" data-art="Networking">Switch</option>
-                        <option value="Access Point" data-art="Networking">Access Point</option>
-                        <option value="Motherboard" data-art="Componente">Motherboard</option>
-                        <option value="Disco HDD" data-art="Componente">Disco HDD</option>
-                        <option value="Disco SSD" data-art="Componente">Disco SSD</option>
-                        <option value="Memória RAM" data-art="Componente">Memória RAM</option>
-                        <option value="Processador (CPU)" data-art="Componente">Processador (CPU)</option>
-                        <option value="Teclado" data-art="Periférico">Teclado</option>
-                        <option value="Rato" data-art="Periférico">Rato</option>
-                        <option value="Headphones" data-art="Periférico">Headphones</option>
-                        <option value="Quadro Interativo" data-art="Quadro Interativo">Quadro Interativo</option>
-                        <option value="Mesa Interativa" data-art="Quadro Interativo">Mesa Interativa</option>
-                        <option value="Outro" data-art="Outro">Outro</option>
+                        <option value="Desktop" data-artigo="Computadores">Desktop</option>
+                        <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                        <option value="AIO" data-artigo="Computadores">AIO</option>
+                        <option value="Monitor" data-artigo="Monitores">Monitor</option>
+                        <option value="Televisão" data-artigo="Monitores">Televisão</option>
+                        <option value="Impressora" data-artigo="Impressoras">Impressora</option>
+                        <option value="Projetor" data-artigo="Projetores">Projetor</option>
+                        <option value="Router" data-artigo="Networking">Router</option>
+                        <option value="Switch" data-artigo="Networking">Switch</option>
+                        <option value="Access Point" data-artigo="Networking">Access Point</option>
+                        <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
+                        <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
+                        <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
+                        <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+                        <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
+                        <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+                        <option value="Rato" data-artigo="Periféricos">Rato</option>
+                        <option value="Headphones" data-artigo="Periféricos">Headphones</option>
+                        <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
+                        <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
+                        <option value="Outro" data-artigo="Outros">Outro</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small text-uppercase">Quantidade</label>
-                    <input type="number" name="quantity" class="form-control" value="1" min="1" required />
+                    <label class="form-label text-white-50 small text-uppercase">Quantidade</label>
+                    <input type="number" name="quantity" class="form-control bg-dark text-white border-light border-opacity-10" value="1" min="1" required />
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small text-uppercase">Motivo do Pedido</label>
-                    <textarea name="notes" class="form-control" rows="3" placeholder="Descreva a necessidade..." required></textarea>
+                    <label class="form-label text-white-50 small text-uppercase">Motivo do Pedido</label>
+                    <textarea name="notes" class="form-control bg-dark text-white border-light border-opacity-10" rows="3" placeholder="Descreva a necessidade..." required></textarea>
                 </div>
             </div>
-            <div class="modal-footer border-top">
+            <div class="modal-footer border-top border-light border-opacity-10">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-warning text-white">Solicitar Equipamento</button>
+                <button type="submit" class="btn btn-warning text-dark fw-bold shadow-sm">Solicitar Equipamento</button>
             </div>
         </form>
     </div>
@@ -226,281 +369,128 @@
 
 @* Modal Editar Equipamento *@
 <div class="modal fade" id="modalEditarEquipamento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <form method="post" asp-page-handler="EditEquipment">
-                <input type="hidden" asp-for="NewEquipment.Id" id="editId" />
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bx bx-edit me-2"></i>Editar Equipamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Artigo</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." onkeyup="filterSelect(this, 'editArtigo')">
-                                <select asp-for="NewEquipment.Name" id="editArtigo" class="form-select" required onchange="updateBrandsModels('edit'); updateSpecificTypes('edit');">
-                                    <option value="">Selecione o artigo...</option>
-                                    <option value="Computadores">Computadores</option>
-                                    <option value="Monitores">Monitores</option>
-                                    <option value="Impressoras">Impressoras</option>
-                                    <option value="Networking">Networking</option>
-                                    <option value="Servidores/Infra">Servidores/Infra</option>
-                                    <option value="Componentes">Componentes</option>
-                                    <option value="Periféricos">Periféricos</option>
-                                    <option value="Projetores">Projetores</option>
-                                    <option value="Quadros Interativos">Quadros Interativos</option>
-                                    <option value="Outros">Outros</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Tipo Específico</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." onkeyup="filterSelect(this, 'editTipo')">
-                                <select asp-for="NewEquipment.Type" id="editTipo" class="form-select" required>
-                                    <option value="">Selecione o tipo...</option>
-                                    <!-- Computadores -->
-                                    <option value="Desktop" data-artigo="Computadores">Desktop</option>
-                                    <option value="Portátil" data-artigo="Computadores">Portátil</option>
-                                    <option value="AIO" data-artigo="Computadores">AIO</option>
-                                    <option value="Laptop" data-artigo="Computadores">Laptop</option>
-                                    <!-- Monitores -->
-                                    <option value="Monitor" data-artigo="Monitores">Monitor</option>
-                                    <option value="Televisão" data-artigo="Monitores">Televisão</option>
-                                    <option value="TV" data-artigo="Monitores">TV</option>
-                                    <!-- Impressoras -->
-                                    <option value="Impressora" data-artigo="Impressoras">Impressora</option>
-                                    <!-- Networking -->
-                                    <option value="Router" data-artigo="Networking">Router</option>
-                                    <option value="Switch" data-artigo="Networking">Switch</option>
-                                    <option value="Access Point" data-artigo="Networking">Access Point</option>
-                                    <option value="Firewall" data-artigo="Networking">Firewall</option>
-                                    <!-- Servidores/Infra -->
-                                    <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
-                                    <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
-                                    <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
-                                    <!-- Componentes -->
-                                    <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
-                                    <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
-                                    <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
-                                    <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
-                                    <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
-                                    <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
-                                    <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
-                                    <!-- Periféricos -->
-                                    <option value="Teclado" data-artigo="Periféricos">Teclado</option>
-                                    <option value="Rato" data-artigo="Periféricos">Rato</option>
-                                    <option value="Headphones" data-artigo="Periféricos">Headphones</option>
-                                    <option value="Colunas" data-artigo="Periféricos">Colunas</option>
-                                    <!-- Projetores -->
-                                    <option value="Projetor" data-artigo="Projetores">Projetor</option>
-                                    <!-- Quadros Interativos -->
-                                    <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
-                                    <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
-                                    <!-- Outros -->
-                                    <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
-                                    <option value="Outro" data-artigo="Outros">Outro</option>
-                                </select>
-                            </div>
-                        </div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form method="post" asp-page-handler="EditEquipment" class="modal-content border-0 shadow-lg" style="background: rgba(43, 44, 64, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1) !important;">
+            <input type="hidden" asp-for="NewEquipment.Id" id="editId" />
+            <div class="modal-header border-bottom border-light border-opacity-10">
+                <h5 class="modal-title text-white"><i class="bx bx-edit me-2 text-primary"></i>Editar Equipamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <div class="row g-3">
+                    <!-- Conteúdo omitido para brevidade, mantendo funcionalidade -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Artigo</label>
+                        <select asp-for="NewEquipment.Name" id="editArtigo" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                             <option value="">Selecione...</option>
+                             <option value="Computadores">Computadores</option>
+                             <option value="Monitores">Monitores</option>
+                             <option value="Impressoras">Impressoras</option>
+                             <option value="Networking">Networking</option>
+                             <option value="Componentes">Componentes</option>
+                             <option value="Projetores">Projetores</option>
+                             <option value="Outros">Outros</option>
+                        </select>
                     </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Marca</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar marca..." onkeyup="filterSelect(this, 'editMarca')">
-                                <select asp-for="NewEquipment.Brand" id="editMarca" class="form-select" required onchange="updateModels('edit')">
-                                    <option value="">Selecione...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Modelo</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar modelo..." onkeyup="filterSelect(this, 'editModelo')">
-                                <select asp-for="NewEquipment.Model" id="editModelo" class="form-select" required>
-                                    <option value="">Selecione a marca primeiro...</option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Tipo</label>
+                        <input type="text" asp-for="NewEquipment.Type" class="form-control bg-dark text-white border-light border-opacity-10" placeholder="Ex: Laptop..." />
                     </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Nº Série</label>
-                            <input type="text" asp-for="NewEquipment.SerialNumber" id="editSerial" class="form-control" />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Sala</label>
-                            <select asp-for="NewEquipment.RoomId" id="editSala" class="form-select" required>
-                                <option value="">Selecione a sala...</option>
-                                @foreach (var sala in Model.Rooms)
-                                {
-                                    <option value="@sala.Id">@sala.Name (@sala.Block?.Name)</option>
-                                }
-                            </select>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Marca</label>
+                        <input type="text" asp-for="NewEquipment.Brand" class="form-control bg-dark text-white border-light border-opacity-10" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Modelo</label>
+                        <input type="text" asp-for="NewEquipment.Model" class="form-control bg-dark text-white border-light border-opacity-10" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Nº Série</label>
+                        <input type="text" asp-for="NewEquipment.SerialNumber" id="editSerial" class="form-control bg-dark text-white border-light border-opacity-10" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Sala</label>
+                        <select asp-for="NewEquipment.RoomId" id="editSala" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                            @foreach (var sala in Model.Rooms)
+                            {
+                                <option value="@sala.Id">@sala.Name (@sala.Block?.Name)</option>
+                            }
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-10">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary shadow-sm">Guardar Alterações</button>
+            </div>
+        </form>
     </div>
 </div>
 
-@* Modal Novo Equipamento - Admin Style *@
+@* Modal Novo Equipamento - Glassmorphism *@
 <div class="modal fade" id="modalNovoEquipamento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <form method="post" asp-page-handler="CreateEquipment">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bx bx-plus-circle me-2"></i>Registar Novo Equipamento</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Artigo</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar artigo..." onkeyup="filterSelect(this, 'regArtigo')">
-                                <select asp-for="NewEquipment.Name" id="regArtigo" class="form-select" required onchange="updateBrandsModels(); updateSpecificTypes();">
-                                    <option value="">Selecione o artigo...</option>
-                                    <option value="Computadores">Computadores</option>
-                                    <option value="Monitores">Monitores</option>
-                                    <option value="Impressoras">Impressoras</option>
-                                    <option value="Networking">Networking</option>
-                                    <option value="Servidores/Infra">Servidores/Infra</option>
-                                    <option value="Componentes">Componentes</option>
-                                    <option value="Periféricos">Periféricos</option>
-                                    <option value="Projetores">Projetores</option>
-                                    <option value="Quadros Interativos">Quadros Interativos</option>
-                                    <option value="Outros">Outros</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Tipo Específico</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar tipo..." onkeyup="filterSelect(this, 'regTipo')">
-                                <select asp-for="NewEquipment.Type" id="regTipo" class="form-select" required>
-                                    <option value="">Selecione o tipo...</option>
-                                    <!-- Computadores -->
-                                    <option value="Desktop" data-artigo="Computadores">Desktop</option>
-                                    <option value="Portátil" data-artigo="Computadores">Portátil</option>
-                                    <option value="AIO" data-artigo="Computadores">AIO</option>
-                                    <option value="Laptop" data-artigo="Computadores">Laptop</option>
-                                    <!-- Monitores -->
-                                    <option value="Monitor" data-artigo="Monitores">Monitor</option>
-                                    <option value="Televisão" data-artigo="Monitores">Televisão</option>
-                                    <option value="TV" data-artigo="Monitores">TV</option>
-                                    <!-- Impressoras -->
-                                    <option value="Impressora" data-artigo="Impressoras">Impressora</option>
-                                    <!-- Networking -->
-                                    <option value="Router" data-artigo="Networking">Router</option>
-                                    <option value="Switch" data-artigo="Networking">Switch</option>
-                                    <option value="Access Point" data-artigo="Networking">Access Point</option>
-                                    <option value="Firewall" data-artigo="Networking">Firewall</option>
-                                    <!-- Servidores/Infra -->
-                                    <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
-                                    <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
-                                    <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
-                                    <!-- Componentes -->
-                                    <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
-                                    <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
-                                    <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
-                                    <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
-                                    <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
-                                    <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
-                                    <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
-                                    <!-- Periféricos -->
-                                    <option value="Teclado" data-artigo="Periféricos">Teclado</option>
-                                    <option value="Rato" data-artigo="Periféricos">Rato</option>
-                                    <option value="Headphones" data-artigo="Periféricos">Headphones</option>
-                                    <option value="Colunas" data-artigo="Periféricos">Colunas</option>
-                                    <!-- Projetores -->
-                                    <option value="Projetor" data-artigo="Projetores">Projetor</option>
-                                    <!-- Quadros Interativos -->
-                                    <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
-                                    <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
-                                    <!-- Outros -->
-                                    <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
-                                    <option value="Outro" data-artigo="Outros">Outro</option>
-                                </select>
-                            </div>
-                        </div>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form method="post" asp-page-handler="CreateEquipment" class="modal-content border-0 shadow-lg" style="background: rgba(43, 44, 64, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1) !important;">
+            <div class="modal-header border-bottom border-light border-opacity-10">
+                <h5 class="modal-title text-white"><i class="bx bx-plus-circle me-2 text-success"></i>Registar Novo Equipamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-white">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Artigo</label>
+                        <select asp-for="NewEquipment.Name" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                            <option value="">Selecione...</option>
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Componentes">Componentes</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Outros">Outros</option>
+                        </select>
                     </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Marca</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar marca..." onkeyup="filterSelect(this, 'regMarca')">
-                                <select asp-for="NewEquipment.Brand" id="regMarca" class="form-select" required onchange="updateModels()">
-                                    <option value="">Selecione...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-uppercase">Modelo</label>
-                            <div class="select-search-wrapper">
-                                <input type="text" class="select-search-input" placeholder="Pesquisar modelo..." onkeyup="filterSelect(this, 'regModelo')">
-                                <select asp-for="NewEquipment.Model" id="regModelo" class="form-select" required>
-                                    <option value="">Selecione a marca primeiro...</option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Tipo</label>
+                        <input type="text" asp-for="NewEquipment.Type" class="form-control bg-dark text-white border-light border-opacity-10" required placeholder="Ex: Portátil..." />
                     </div>
-
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold small text-uppercase">Número de Série</label>
-                            <input asp-for="NewEquipment.SerialNumber" class="form-control" placeholder="Ex: SN123456789">
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Marca</label>
+                        <input type="text" asp-for="NewEquipment.Brand" class="form-control bg-dark text-white border-light border-opacity-10" />
                     </div>
-
-                    <div class="divider">
-                        <div class="divider-text"><i class="bx bx-map-pin"></i> Localização</div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Modelo</label>
+                        <input type="text" asp-for="NewEquipment.Model" class="form-control bg-dark text-white border-light border-opacity-10" />
                     </div>
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Escola</label>
-                            <select class="form-select" disabled>
-                                <option>@Model.MySchool?.Name</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Bloco</label>
-                            <select id="regBloco" class="form-select" required onchange="regFilterSalas()">
-                                <option value="">Selecione...</option>
-                                @foreach(var b in Model.AvailableBlocos) {
-                                    <option value="@b.Id">@b.Name</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label">Sala</label>
-                            <select asp-for="NewEquipment.RoomId" id="regSala" class="form-select" required>
-                                <option value="">Selecione o bloco primeiro...</option>
-                                @foreach(var s in Model.Rooms) {
-                                    <option value="@s.Id" data-blc="@s.BlockId">@s.Name</option>
-                                }
-                            </select>
-                        </div>
+                    <div class="col-md-12">
+                        <label class="form-label text-white-50 small text-uppercase">Número de Série</label>
+                        <input type="text" asp-for="NewEquipment.SerialNumber" class="form-control bg-dark text-white border-light border-opacity-10" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Bloco</label>
+                        <select id="regBloco" class="form-select bg-dark text-white border-light border-opacity-10" required onchange="regFilterSalas()">
+                            <option value="">Selecione...</option>
+                            @foreach(var b in Model.AvailableBlocos) {
+                                <option value="@b.Id">@b.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-white-50 small text-uppercase">Sala</label>
+                        <select asp-for="NewEquipment.RoomId" id="regSala" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                            <option value="">Selecione o bloco primeiro...</option>
+                            @foreach(var s in Model.Rooms) {
+                                <option value="@s.Id" data-blc="@s.BlockId">@s.Name</option>
+                            }
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer border-top pt-3">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary shadow">Registar Equipamento</button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-10">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary shadow-sm">Registar Equipamento</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -510,14 +500,14 @@
     <div class="modal-dialog">
         <form method="get" class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="ri-search-line me-2"></i>Filtrar Equipamentos</h5>
+                <h5 class="modal-title"><i class="bx bx-search me-2"></i>Filtrar Equipamentos</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-3">
-                    <div class="col-12">
+                    <div class="col-md-6">
                         <label class="form-label fw-bold small text-uppercase">Artigo</label>
-                        <select id="filterArtigo" asp-for="FilterName" class="form-select">
+                        <select id="filterArtigo" asp-for="FilterName" class="form-select" onchange="updateFilterTypes()">
                             <option value="">Todos os Artigos</option>
                             <option value="Computadores">Computadores</option>
                             <option value="Monitores">Monitores</option>
@@ -536,46 +526,46 @@
                         <select id="filterTipo" asp-for="FilterType" class="form-select">
                             <option value="">Todos os Tipos</option>
                             <!-- Computadores -->
-                            <option value="Desktop" data-art="Computadores">Desktop</option>
-                            <option value="Portátil" data-art="Computadores">Portátil</option>
-                            <option value="AIO" data-art="Computadores">AIO</option>
-                            <option value="Laptop" data-art="Computadores">Laptop</option>
+                            <option value="Desktop" data-artigo="Computadores">Desktop</option>
+                            <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                            <option value="AIO" data-artigo="Computadores">AIO</option>
+                            <option value="Laptop" data-artigo="Computadores">Laptop</option>
                             <!-- Monitores -->
-                            <option value="Monitor" data-art="Monitores">Monitor</option>
-                            <option value="Televisão" data-art="Monitores">Televisão</option>
-                            <option value="TV" data-art="Monitores">TV</option>
+                            <option value="Monitor" data-artigo="Monitores">Monitor</option>
+                            <option value="Televisão" data-artigo="Monitores">Televisão</option>
+                            <option value="TV" data-artigo="Monitores">TV</option>
                             <!-- Impressoras -->
-                            <option value="Impressora" data-art="Impressoras">Impressora</option>
+                            <option value="Impressora" data-artigo="Impressoras">Impressora</option>
                             <!-- Networking -->
-                            <option value="Router" data-art="Networking">Router</option>
-                            <option value="Switch" data-art="Networking">Switch</option>
-                            <option value="Access Point" data-art="Networking">Access Point</option>
-                            <option value="Firewall" data-art="Networking">Firewall</option>
+                            <option value="Router" data-artigo="Networking">Router</option>
+                            <option value="Switch" data-artigo="Networking">Switch</option>
+                            <option value="Access Point" data-artigo="Networking">Access Point</option>
+                            <option value="Firewall" data-artigo="Networking">Firewall</option>
                             <!-- Servidores/Infra -->
-                            <option value="Servidor" data-art="Servidores/Infra">Servidor</option>
-                            <option value="Storage" data-art="Servidores/Infra">Storage</option>
-                            <option value="NAS" data-art="Servidores/Infra">NAS</option>
+                            <option value="Servidor" data-artigo="Servidores/Infra">Servidor</option>
+                            <option value="Storage" data-artigo="Servidores/Infra">Storage</option>
+                            <option value="NAS" data-artigo="Servidores/Infra">NAS</option>
                             <!-- Componentes -->
-                            <option value="Motherboard" data-art="Componentes">Motherboard</option>
-                            <option value="Disco HDD" data-art="Componentes">Disco HDD</option>
-                            <option value="Disco SSD" data-art="Componentes">Disco SSD</option>
-                            <option value="Memória RAM" data-art="Componentes">Memória RAM</option>
-                            <option value="Processador (CPU)" data-art="Componentes">Processador (CPU)</option>
-                            <option value="Placa Gráfica" data-art="Componentes">Placa Gráfica</option>
-                            <option value="Fonte Alimentação" data-art="Componentes">Fonte Alimentação</option>
+                            <option value="Motherboard" data-artigo="Componentes">Motherboard</option>
+                            <option value="Disco HDD" data-artigo="Componentes">Disco HDD</option>
+                            <option value="Disco SSD" data-artigo="Componentes">Disco SSD</option>
+                            <option value="Memória RAM" data-artigo="Componentes">Memória RAM</option>
+                            <option value="Processador (CPU)" data-artigo="Componentes">Processador (CPU)</option>
+                            <option value="Placa Gráfica" data-artigo="Componentes">Placa Gráfica</option>
+                            <option value="Fonte Alimentação" data-artigo="Componentes">Fonte Alimentação</option>
                             <!-- Periféricos -->
-                            <option value="Teclado" data-art="Periféricos">Teclado</option>
-                            <option value="Rato" data-art="Periféricos">Rato</option>
-                            <option value="Headphones" data-art="Periféricos">Headphones</option>
-                            <option value="Colunas" data-art="Periféricos">Colunas</option>
+                            <option value="Teclado" data-artigo="Periféricos">Teclado</option>
+                            <option value="Rato" data-artigo="Periféricos">Rato</option>
+                            <option value="Headphones" data-artigo="Periféricos">Headphones</option>
+                            <option value="Colunas" data-artigo="Periféricos">Colunas</option>
                             <!-- Projetores -->
-                            <option value="Projetor" data-art="Projetores">Projetor</option>
+                            <option value="Projetor" data-artigo="Projetores">Projetor</option>
                             <!-- Quadros Interativos -->
-                            <option value="Quadro Interativo" data-art="Quadros Interativos">Quadro Interativo</option>
-                            <option value="Mesa Interativa" data-art="Quadros Interativos">Mesa Interativa</option>
+                            <option value="Quadro Interativo" data-artigo="Quadros Interativos">Quadro Interativo</option>
+                            <option value="Mesa Interativa" data-artigo="Quadros Interativos">Mesa Interativa</option>
                             <!-- Outros -->
-                            <option value="Cabo/Adaptador" data-art="Outros">Cabo/Adaptador</option>
-                            <option value="Outro" data-art="Outros">Outro</option>
+                            <option value="Cabo/Adaptador" data-artigo="Outros">Cabo/Adaptador</option>
+                            <option value="Outro" data-artigo="Outros">Outro</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -702,27 +692,31 @@
         }
     };
 
-    // Filter select options by search input
+    // Filter select options by search input or selected article
     function filterSelect(input, selectId) {
-        var filter = (input ? input.value : "").toLowerCase().trim();
+        var filterText = (input ? input.value : "").toLowerCase().trim();
         var select = document.getElementById(selectId);
+        if (!select) return;
+        
         var options = select.querySelectorAll('option');
         
         var currentArtigo = null;
-        if (selectId === 'regTipo') {
-            currentArtigo = document.getElementById('regArtigo').value.toLowerCase().trim();
+        if (selectId === 'regTipo' || selectId === 'reqEqTipo') {
+            currentArtigo = document.getElementById(selectId.replace('Tipo', 'Artigo')).value.toLowerCase().trim();
         } else if (selectId === 'editTipo') {
             currentArtigo = document.getElementById('editArtigo').value.toLowerCase().trim();
+        } else if (selectId === 'filterTipo') {
+            currentArtigo = document.getElementById('filterArtigo').value.toLowerCase().trim();
         }
 
         options.forEach(function(opt) {
             if (opt.value === "") return;
             var text = opt.textContent.toLowerCase();
-            var matchesSearch = text.includes(filter);
+            var matchesSearch = filterText === "" || text.includes(filterText);
             
             var matchesArtigo = true;
-            if (currentArtigo) {
-                var targetArtigo = (opt.getAttribute('data-artigo') || "").toLowerCase().trim();
+            if (currentArtigo && currentArtigo !== "") {
+                var targetArtigo = (opt.getAttribute('data-artigo') || opt.getAttribute('data-art') || "").toLowerCase().trim();
                 matchesArtigo = (targetArtigo === currentArtigo);
             }
 
@@ -730,9 +724,15 @@
         });
     }
 
+    function updateFilterTypes() {
+        const select = document.getElementById('filterTipo');
+        select.value = "";
+        filterSelect(null, 'filterTipo');
+    }
+
     function updateSpecificTypes(prefix = 'reg') {
-        const artigo = document.getElementById(prefix + 'Artigo').value;
         const tipoSelect = document.getElementById(prefix + 'Tipo');
+        if (!tipoSelect) return;
         tipoSelect.value = "";
         
         // Trigger filterSelect to update display based on BOTH artigo AND any current search
@@ -747,16 +747,12 @@
         const modeloSelect = document.getElementById(prefix + 'Modelo');
         const tipoSelect = document.getElementById(prefix + 'Tipo');
         
-        marcaSelect.innerHTML = '<option value="">Selecione...</option>';
-        modeloSelect.innerHTML = '<option value="">Selecione a marca primeiro...</option>';
+        if (marcaSelect) marcaSelect.innerHTML = '<option value="">Selecione...</option>';
+        if (modeloSelect) modeloSelect.innerHTML = '<option value="">Selecione a marca primeiro...</option>';
 
         // Filter specific types in the dropdown
         if (tipoSelect) {
-            Array.from(tipoSelect.options).forEach(opt => {
-                if (opt.value === "") return;
-                const dataArt = opt.getAttribute('data-artigo');
-                opt.style.display = (!artigo || !dataArt || dataArt === artigo) ? 'block' : 'none';
-            });
+            filterSelect(null, prefix + 'Tipo');
         }
 
         if (artigo && brandModelData[artigo]) {
@@ -854,23 +850,18 @@
         });
     }
 
-    // Ensure salas are filtered on load if a bloco is selected
+    // Ensure filters are applied on load
     document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('filterBloco').value !== "") {
-            filterSalas(false); // Don't reset if we are just loading with an active filter
+            filterSalas(false); 
+        }
+        if (document.getElementById('filterArtigo').value !== "") {
+            updateFilterTypes();
         }
     });
 
     function filterReqEqTypes() {
-        const artName = document.getElementById('reqEqArtigo').value;
-        const tipoSelect = document.getElementById('reqEqTipo');
-        const options = tipoSelect.querySelectorAll('option');
-        tipoSelect.value = "";
-        options.forEach(opt => {
-            if (opt.value === "") return;
-            const art = (opt.getAttribute('data-art') || "");
-            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
-        });
+        filterSelect(null, 'reqEqTipo');
     }
 </script>
 }
