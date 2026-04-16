@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("emprestimos")]
-    public class Emprestimo
+    public class Emprestimo : ISoftDeletable
     {
         [Key]
         [Column("id_emprestimo")]
@@ -28,5 +28,8 @@ namespace AspnetCoreStarter.Models
 
         [ForeignKey("EquipamentoId")]
         public Equipamento? Equipamento { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
     }
 }

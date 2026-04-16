@@ -144,7 +144,11 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             if (!string.IsNullOrEmpty(FilterStatus))
             {
-                if (FilterStatus == "A funcionar")
+                if (FilterStatus == "Associado")
+                {
+                    query = query.Where(e => e.TicketId != null);
+                }
+                else if (FilterStatus == "A funcionar")
                 {
                     query = query.Where(e => e.Status == "A funcionar" || e.Status == "Disponível" || e.Status == "Funcionando" || e.Status == "Em uso" || string.IsNullOrEmpty(e.Status));
                 }

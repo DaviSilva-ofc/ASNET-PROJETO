@@ -1,0 +1,354 @@
+@page
+@model AspnetCoreStarter.Pages.Admin.RelatorioModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Relatório Analítico";
+}
+
+@section PageStyles {
+<style>
+    .stat-card {
+        background: linear-gradient(135deg, rgba(105,108,255,0.12), rgba(105,108,255,0.05));
+        border: 1px solid rgba(105,108,255,0.25);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .stat-card .stat-value { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+    .stat-card .stat-label { font-size: 0.8rem; color: #8592a3; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; }
+    
+    .report-table th { background: #696cff; color: #fff; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .report-table td { font-size: 0.875rem; vertical-align: middle; }
+    .report-table tbody tr:hover { background: rgba(105,108,255,0.05); }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #566a7f;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(105,108,255,0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .quarter-btn.active { background: #696cff; color: white; border-color: #696cff; }
+    
+    .action-btns { display: flex; gap: 0.5rem; }
+    .download-btn {
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: opacity 0.2s, transform 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: none;
+    }
+    .btn-pdf { background: linear-gradient(135deg, #ff3e1d, #ff6b6b); color: white; }
+    .btn-excel { background: linear-gradient(135deg, #71dd37, #2c974b); color: white; }
+    .download-btn:hover { opacity: 0.9; transform: translateY(-1px); color: white; }
+    .text-csat { color: #ffab00 !important; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-bold m-0">
+            <span class="text-muted fw-light">Admin /</span> Relatório Analítico
+        </h4>
+        <div class="action-btns">
+            <!-- Download PDF -->
+            <a href="?handler=DownloadPdf&Trimestre=@Model.Trimestre&Ano=@Model.Ano" class="download-btn btn-pdf">
+                <i class="ri-file-pdf-line"></i> Exportar PDF
+            </a>
+            <!-- Download Excel -->
+            <a href="?handler=DownloadExcel&Trimestre=@Model.Trimestre&Ano=@Model.Ano" class="download-btn btn-excel">
+                <i class="ri-file-excel-line"></i> Exportar Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="ri-bar-chart-grouped-line me-2 text-primary"></i>
+                        @Model.TrimestralLabel
+                    </h5>
+                    <small class="text-muted">
+                        <i class="ri-calendar-line me-1"></i>
+                        @Model.PeriodoInicio.ToString("dd MMM yyyy") — @Model.PeriodoFim.ToString("dd MMM yyyy")
+                    </small>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <div class="btn-group" role="group">
+                        <a href="?Trimestre=0&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 0 ? "active" : "")">Últimos 90d</a>
+                        <a href="?Trimestre=1&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 1 ? "active" : "")">Q1</a>
+                        <a href="?Trimestre=2&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 2 ? "active" : "")">Q2</a>
+                        <a href="?Trimestre=3&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 3 ? "active" : "")">Q3</a>
+                        <a href="?Trimestre=4&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 4 ? "active" : "")">Q4</a>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <a href="?Trimestre=@Model.Trimestre&Ano=@(Model.Ano - 1)" class="btn btn-sm btn-outline-secondary"><i class="ri-arrow-left-s-line"></i></a>
+                        <span class="btn btn-sm btn-outline-secondary disabled">@Model.Ano</span>
+                        <a href="?Trimestre=@Model.Trimestre&Ano=@(Model.Ano + 1)" class="btn btn-sm btn-outline-secondary"><i class="ri-arrow-right-s-line"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-md">
+            <div class="stat-card">
+                <div class="stat-value text-primary">@Model.TotalTickets</div>
+                <div class="stat-label"><i class="ri-ticket-line me-1"></i>Total de Chamadas</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md">
+            <div class="stat-card">
+                <div class="stat-value text-success">@Model.TicketsConcluidos</div>
+                <div class="stat-label"><i class="ri-checkbox-circle-line me-1"></i>Concluídas</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md">
+            <div class="stat-card text-csat">
+                <div class="stat-value">@Model.CsatGlobal.ToString("0.0")</div>
+                <div class="stat-label"><i class="ri-star-fill me-1"></i>Satisfação (CSAT)</div>
+                <div class="d-flex justify-content-center mt-1">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <i class="ri-star-@(i <= Math.Round(Model.CsatGlobal) ? "fill" : "line") small"></i>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md">
+            <div class="stat-card">
+                <div class="stat-value text-warning">@Model.TicketsAbertos</div>
+                <div class="stat-label"><i class="ri-loader-4-line me-1"></i>Em Aberto</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md">
+            <div class="stat-card">
+                <div class="stat-value text-info">@Model.TaxaDeSucesso%</div>
+                <div class="stat-label"><i class="ri-percent-line me-1"></i>Taxa de Sucesso</div>
+                <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-info" style="width: @Model.TaxaDeSucesso%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Schools and Despesa -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="ri-money-euro-circle-line text-primary"></i> 
+                        Escolas com Maior Despesa Operacional 
+                        <i class="ri-information-line ms-auto text-muted small" title="Score = Chamadas + Artigos de Stock"></i>
+                    </div>
+                    @if (Model.EscolasComMaisDespesa.Any())
+                    {
+                        int rankDesp = 1;
+                        <table class="table report-table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Escola</th>
+                                    <th class="text-center">Tickets</th>
+                                    <th class="text-center">Stock</th>
+                                    <th class="text-end">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.EscolasComMaisDespesa)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-label-primary">@rankDesp</span></td>
+                                        <td>@item.Nome</td>
+                                        <td class="text-center">@item.Chamadas</td>
+                                        <td class="text-center">@item.Stock</td>
+                                        <td class="text-end fw-bold text-primary">@item.TotalScore</td>
+                                    </tr>
+                                    rankDesp++;
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted"><i class="ri-information-line me-1"></i>Sem dados para este período.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Technician Performance -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="section-title"><i class="ri-tools-line text-success"></i> Performance dos Técnicos</div>
+                    @if (Model.PerformanceTecnicos.Any())
+                    {
+                        <table class="table report-table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Técnico</th>
+                                    <th class="text-center">Tickets</th>
+                                    <th class="text-center">Eficiência</th>
+                                    <th class="text-end">Avaliação (CSAT)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.PerformanceTecnicos)
+                                {
+                                    double effVal = item.Total > 0 ? Math.Round((double)item.Concluidos / item.Total * 100, 1) : 0;
+                                    string badgeClass = effVal >= 80 ? "success" : effVal >= 50 ? "warning" : "danger";
+                                    <tr>
+                                        <td class="fw-semibold">@item.Tecnico</td>
+                                        <td class="text-center">@item.Total</td>
+                                        <td class="text-center"><span class="badge bg-label-@badgeClass">@effVal%</span></td>
+                                        <td class="text-end fw-bold text-csat">
+                                            @item.Csat.ToString("0.0") <i class="ri-star-fill small"></i>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted"><i class="ri-information-line me-1"></i>Sem dados para este período.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Fragile Brands -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="section-title"><i class="ri-error-warning-line text-danger"></i> Marcas com Mais Avarias</div>
+                    @if (Model.MarcasMaisFrageis.Any())
+                    {
+                        int rankMarca = 1;
+                        int maxMarca = Model.MarcasMaisFrageis[0].Total;
+                        <table class="table report-table table-hover mb-0">
+                            <thead><tr><th>#</th><th>Marca</th><th class="text-end">Avarias</th><th>Frequência</th></tr></thead>
+                            <tbody>
+                                @foreach (var item in Model.MarcasMaisFrageis)
+                                {
+                                    int pctMarca = maxMarca > 0 ? (int)((double)item.Total / maxMarca * 100) : 0;
+                                    <tr>
+                                        <td><span class="badge bg-label-danger">@rankMarca</span></td>
+                                        <td>@item.Marca</td>
+                                        <td class="text-end fw-bold text-danger">@item.Total</td>
+                                        <td style="min-width: 80px;"><div class="progress" style="height:6px;"><div class="progress-bar bg-danger" style="width:@pctMarca%"></div></div></td>
+                                    </tr>
+                                    rankMarca++;
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted"><i class="ri-information-line me-1"></i>Sem dados para este período.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Professors -->
+        <div class="col-xl-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <div class="section-title"><i class="ri-user-line text-warning"></i> Professores mais Ativos</div>
+                    @if (Model.ProfessoresMaisChamadores.Any())
+                    {
+                        int rankProf = 1;
+                        <table class="table report-table table-hover mb-0">
+                            <thead><tr><th>#</th><th>Utilizador</th><th>Email</th><th class="text-end">Chamadas</th></tr></thead>
+                            <tbody>
+                                @foreach (var item in Model.ProfessoresMaisChamadores)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-label-warning">@rankProf</span></td>
+                                        <td>@item.Professor</td>
+                                        <td class="text-muted small">@item.Email</td>
+                                        <td class="text-end fw-bold">@item.Total</td>
+                                    </tr>
+                                    rankProf++;
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted"><i class="ri-information-line me-1"></i>Sem dados para este período.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Comentários Recentes dos Clientes (Web-only, não exportado) ── -->
+    @if (Model.FeedbacksRecentes.Any())
+    {
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body">
+                <div class="section-title mb-3">
+                    <i class="ri-chat-quote-line text-primary"></i> Últimos Comentários de Clientes
+                    <span class="badge bg-label-secondary ms-auto" style="font-size:0.7rem;">Apenas visível nesta página</span>
+                </div>
+                <div class="row g-3">
+                    @foreach (var fb in Model.FeedbacksRecentes)
+                    {
+                        int rating = fb.SatisfacaoRating ?? 0;
+                        string cardColor = rating >= 5 ? "success" : rating >= 4 ? "primary" : rating >= 3 ? "info" : rating >= 2 ? "warning" : "danger";
+                        string ratingLabel = rating switch { 5 => "Excelente", 4 => "Bom", 3 => "Médio", 2 => "Mau", 1 => "Péssimo", _ => "N/A" };
+                        <div class="col-md-6 col-xl-4">
+                            <div class="card border-0 h-100" style="border-left: 4px solid !important; background: rgba(105,108,255,0.04);">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div>
+                                            <span class="fw-semibold small">@(fb.Equipamento?.Name ?? "Equipamento")</span>
+                                            <div class="text-muted" style="font-size: 0.75rem;">
+                                                Técnico: @(fb.Technician?.Username ?? "—")
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-label-@cardColor">@ratingLabel @rating★</span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(fb.SatisfacaoFeedback))
+                                    {
+                                        <blockquote class="mb-1 ps-2" style="border-left: 3px solid rgba(105,108,255,0.4); font-style: italic; font-size: 0.85rem; color: #8592a3;">
+                                            "@fb.SatisfacaoFeedback"
+                                        </blockquote>
+                                    }
+                                    else
+                                    {
+                                        <p class="mb-0 text-muted small fst-italic">Sem comentário adicional.</p>
+                                    }
+                                    <div class="text-end mt-2">
+                                        <small class="text-muted">@((fb.DataAvaliacao ?? fb.CreatedAt).ToString("dd/MM/yyyy"))</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

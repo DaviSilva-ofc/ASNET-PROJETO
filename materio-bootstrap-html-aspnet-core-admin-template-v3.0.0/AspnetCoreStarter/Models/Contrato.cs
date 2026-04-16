@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("contratos")]
-    public class Contrato
+    public class Contrato : ISoftDeletable
     {
         [Key]
         [Column("id_contrato")]
@@ -56,5 +56,8 @@ namespace AspnetCoreStarter.Models
 
         [Column("data_expiracao")]
         public DateTime? ExpiryDate { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
     }
 }

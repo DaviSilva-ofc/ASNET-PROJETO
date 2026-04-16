@@ -123,33 +123,36 @@
                                     {
                                         <span class="badge bg-label-warning">Em reparo</span>
                                     }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Associado", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-warning">Associado (Em Intervenção)</span>
+                                    }
                                     else
                                     {
                                         <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
                                     }
                                 </td>
                                 <td style="white-space: nowrap;">
-                                    <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center gap-1">
                                         @if (item.Status != null && (item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) || item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
                                         {
-                                            <span class="text-muted small ps-2"><i class="ri-settings-line me-1"></i> Em Manutenção</span>
+                                            <span class="text-muted small px-1" title="Em Manutenção"><i class="ri-settings-line"></i></span>
                                         }
                                         else
                                         {
-                                            <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary" title="Solicitar Ticket"><i class="ri-add-circle-line"></i> Solicitar Ticket</a>
+                                            <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm btn-icon text-primary p-0" title="Solicitar Ticket">
+                                                <i class="ri-ticket-line"></i>
+                                            </a>
                                             <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
-                                                @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
-                                                {
-                                                    <button type="submit" class="btn btn-sm text-success" title="Marcar como A funcionar"><i class="ri-check-line"></i> Funcional</button>
-                                                }
-                                                else
-                                                {
-                                                    <button type="submit" class="btn btn-sm text-warning" title="Marcar como Avariado"><i class="ri-error-warning-line"></i> Avariar</button>
-                                                }
+                                                <button type="submit" class="btn btn-sm btn-icon text-warning p-0" title="Marcar como Avariado">
+                                                    <i class="ri-error-warning-line"></i>
+                                                </button>
                                             </form>
+                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                    onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ?? "S/N N/A")')">
+                                                <i class="ri-qr-code-line"></i>
+                                            </button>
                                         }
-                                        
-
                                     </div>
                                 </td>
                             </tr>
@@ -323,7 +326,50 @@
                     <button type="submit" class="btn btn-warning text-dark fw-bold">Solicitar Equipamento</button>
                 </div>
             </form>
+            <!-- Modal Filtros -->
+    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="get" class="modal-content">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title"><i class="ri-filter-3-line me-2"></i>Filtrar Equipamentos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-uppercase">Pesquisar Artigo</label>
+                            <input type="text" asp-for="FilterName" class="form-control" placeholder="Nome do equipamento..." />
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase">Sala</label>
+                            <select asp-for="SalaId" class="form-select">
+                                <option value="">Todas as minhas salas</option>
+                                @foreach (var sala in Model.MyRooms)
+                                {
+                                    <option value="@sala.Id">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" : "")</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold small text-uppercase">Estado</label>
+                            <select asp-for="FilterStatus" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="Funcionando">A funcionar</option>
+                                <option value="Avariado">Avariado</option>
+                                <option value="Associado">Associado (Em Intervenção)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
         </div>
+    </div>
+
+</div>
     </div>
 
 </div>
@@ -348,3 +394,5 @@
     }
 </style>
 }
+
+@await Html.PartialAsync("_QrModal")

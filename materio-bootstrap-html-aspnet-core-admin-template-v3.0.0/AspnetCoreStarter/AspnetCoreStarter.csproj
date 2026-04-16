@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <!-- Update Entity Framework Core packages to .NET 9 compatible versions -->
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
@@ -28,6 +29,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Remove="check_users.cs" />
+    <PackageReference Include="QuestPDF" Version="2024.12.2" />
   </ItemGroup>
 
 </Project>

@@ -253,22 +253,31 @@
                                     {
                                         <span class="badge bg-label-primary">Emprestado</span>
                                     }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Associado", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-warning">Associado (Em Intervenção)</span>
+                                    }
                                     else
                                     {
                                         <span class="badge bg-label-secondary">@item.Status</span>
                                     }
                                 </td>
                                 <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
-                                    <div class="d-flex align-items-center gap-2 justify-content-center">
-                                        <button type="button" class="btn btn-sm btn-outline-primary p-1 px-2" 
-                                                onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
-                                                title="Editar Estado do Equipamento">
-                                            <i class="ri-edit-line me-1"></i> Editar
+                                    <div class="d-flex align-items-center gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-icon text-info p-0" 
+                                                onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" 
+                                                title="Código QR">
+                                            <i class="ri-qr-code-line"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2" 
+                                        <button type="button" class="btn btn-sm btn-icon text-primary p-0" 
+                                                onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                                title="Editar Estado">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-icon text-danger p-0" 
                                                 onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
-                                                title="Excluir Equipamentos">
-                                            <i class="ri-delete-bin-line me-1"></i> Excluir
+                                                title="Excluir">
+                                            <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -731,4 +740,5 @@
         filterRooms();
     });
 </script>
+<partial name="Shared/_QrModal" />
 }

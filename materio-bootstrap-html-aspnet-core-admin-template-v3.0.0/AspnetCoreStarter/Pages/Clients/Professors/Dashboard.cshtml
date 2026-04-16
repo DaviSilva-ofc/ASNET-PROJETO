@@ -318,6 +318,7 @@
                                 <th>TÉCNICO</th>
                                 <th>DATA / HORA</th>
                                 <th>ESTADO</th>
+                                <th class="text-center">AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -355,13 +356,18 @@
                                         </td>
                                         <td>@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
-                                            @if (ticket.Status == "Pedido" || ticket.Status == "Pendente") {
-                                                <span class="badge bg-label-warning text-uppercase" style="font-size: 0.65rem;"><i class="ri-time-line me-1"></i> ⏳ A aguardar Técnico</span>
+                                                <span class="badge bg-label-warning text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-time me-1"></i> A aguardar Técnico</span>
                                             } else if (ticket.Status == "Em andamento" || ticket.Status == "Atribuído") {
-                                                <span class="badge bg-label-info text-uppercase" style="font-size: 0.65rem;"><i class="ri-tools-line me-1"></i> 🔧 Em Reparação</span>
+                                                <span class="badge bg-label-info text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-wrench me-1"></i> Em Reparação</span>
                                             } else {
-                                                <span class="badge bg-label-success text-uppercase" style="font-size: 0.65rem;"><i class="ri-checkbox-circle-line me-1"></i> ✅ Resolvido</span>
+                                                <span class="badge bg-label-success text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-check-circle me-1"></i> Resolvido</span>
                                             }
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                    onclick="showQRCode('@ticket.Equipamento?.Id', 'equip', '@(ticket.Equipamento?.Name?.Replace("'", "\\'"))', '@(ticket.Equipamento?.SerialNumber ?? "S/N N/A")')">
+                                                <i class="ri-qr-code-line"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 }
@@ -377,6 +383,9 @@
         </div>
     </div>
 </div>
+
+
+
 
 @section PageScripts {
 <script>
@@ -480,4 +489,5 @@
         }
     });
 </script>
+<partial name="Shared/_QrModal" />
 }

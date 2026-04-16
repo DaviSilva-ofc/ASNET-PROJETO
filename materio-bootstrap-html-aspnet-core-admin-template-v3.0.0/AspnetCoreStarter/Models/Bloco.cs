@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("blocos")]
-    public class Bloco
+    public class Bloco : ISoftDeletable
     {
         [Key]
         [Column("id_bloco")]
@@ -20,6 +20,9 @@ namespace AspnetCoreStarter.Models
 
         [ForeignKey("SchoolId")]
         public School School { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
 
         public ICollection<Sala> Rooms { get; set; } = new List<Sala>();
     }

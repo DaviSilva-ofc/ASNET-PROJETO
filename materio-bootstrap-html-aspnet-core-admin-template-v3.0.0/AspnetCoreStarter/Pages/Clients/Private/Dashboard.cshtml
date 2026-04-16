@@ -245,6 +245,7 @@
                             <th class="text-white-50">TÉCNICO</th>
                             <th class="text-white-50">DATA</th>
                             <th class="text-white-50">ESTADO</th>
+                            <th class="text-white-50 text-center">AÇÕES</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -292,6 +293,12 @@
                                         }
                                         <span class="@statusLabel text-uppercase" style="font-size: 0.65rem;">@statusDisplayName</span>
                                     </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                            onclick="showQRCode('@ticket.Equipamento?.Id', 'equip', '@(ticket.Equipamento?.Name?.Replace("'", "\\'"))', '@(ticket.Equipamento?.SerialNumber ?? "S/N N/A")')">
+                                        <i class="ri-qr-code-line"></i>
+                                    </button>
+                                    </td>
                                 </tr>
                             }
                         } else {
@@ -305,6 +312,8 @@
         </div>
     </div>
 </div>
+
+
 
 <!-- Map Row -->
 <div class="row g-4 mb-4">
@@ -378,6 +387,7 @@
         }
     });
 </script>
+<partial name="Shared/_QrModal" />
 <script>
     function initMap() {
         var myLatLng = { lat: 41.5454, lng: -8.4265 }; // Default: Braga
@@ -409,4 +419,8 @@
     }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
+
+
 }
+
+

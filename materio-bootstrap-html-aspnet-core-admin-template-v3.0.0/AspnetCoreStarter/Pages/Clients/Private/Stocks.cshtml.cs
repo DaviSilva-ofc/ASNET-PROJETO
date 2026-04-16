@@ -120,7 +120,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 stockTemp = stockTemp.Where(s => NormalizeEquipmentName(s.EquipmentName) == FilterArticle).ToList();
             }
 
-            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparo" };
+            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparo", "Associado" };
 
             var equipsMappedList = equipsTemp.Select(e => new PrivateStockItemViewModel
             {
@@ -160,14 +160,19 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 Status = e.Status
             });
 
-            Items = groupedItems.Select(g => new PrivateStockItemViewModel {
-                Id = g.First().Id,
-                Name = g.Key.Name,
-                Category = g.Key.Category,
-                Location = g.Key.Location,
-                RoomId = g.Key.RoomId,
-                Quantity = g.Count(),
-                Status = g.Key.Status
+            Items = groupedItems.Select(g => {
+                var first = g.First();
+                return new PrivateStockItemViewModel {
+                    Id = first.Id,
+                    Prefix = first.Prefix,
+                    IdWithPrefix = (first.Prefix ?? "eq") + "_" + first.Id,
+                    Name = g.Key.Name,
+                    Category = g.Key.Category,
+                    Location = g.Key.Location,
+                    RoomId = g.Key.RoomId,
+                    Quantity = g.Count(),
+                    Status = g.Key.Status
+                };
             }).OrderBy(i => i.Location).ThenBy(i => i.Name).ToList();
 
             // Stats
@@ -314,6 +319,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
 
         private string MapStatus(Equipamento eq)
         {
+            if (eq.TicketId != null) return "Associado";
             if (eq.Status == "Avariado") return "Avariado";
             if (eq.Status == "Reparação" || eq.Status == "Em reparo") return "Em reparo";
             if (eq.Status == "A funcionar") return "A funcionar";
@@ -332,5 +338,6 @@ namespace AspnetCoreStarter.Pages.Clients.Private
         public int? RoomId { get; set; }
         public int Quantity { get; set; }
         public string Status { get; set; } = string.Empty;
+        public string? IdWithPrefix { get; set; }
     }
 }

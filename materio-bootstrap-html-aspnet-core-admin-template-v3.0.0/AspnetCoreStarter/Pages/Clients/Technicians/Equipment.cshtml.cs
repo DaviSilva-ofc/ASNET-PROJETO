@@ -205,7 +205,14 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
             if (!string.IsNullOrEmpty(FilterStatus))
             {
-                query = query.Where(e => e.Status == FilterStatus);
+                if (FilterStatus == "Associado")
+                {
+                    query = query.Where(e => e.TicketId != null);
+                }
+                else
+                {
+                    query = query.Where(e => e.Status == FilterStatus);
+                }
             }
 
             if (!string.IsNullOrEmpty(FilterBrand))

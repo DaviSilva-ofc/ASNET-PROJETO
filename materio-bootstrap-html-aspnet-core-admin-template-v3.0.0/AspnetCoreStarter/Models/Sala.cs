@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("salas")]
-    public class Sala
+    public class Sala : ISoftDeletable
     {
         [Key]
         [Column("id_sala")]
@@ -32,6 +32,9 @@ namespace AspnetCoreStarter.Models
 
         [ForeignKey("ResponsibleProfessorId")]
         public virtual Professor? ResponsibleProfessor { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
 
         public ICollection<Equipamento> Equipments { get; set; } = new List<Equipamento>();
     }

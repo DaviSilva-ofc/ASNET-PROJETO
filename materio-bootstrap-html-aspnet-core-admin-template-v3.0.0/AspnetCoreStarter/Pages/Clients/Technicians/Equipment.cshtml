@@ -217,14 +217,15 @@
                             <td>
                                 @if (isBroken) { <span class="badge bg-label-danger status-pill">Avariado</span> }
                                 else if (isRepair) { <span class="badge bg-label-warning status-pill">Em Repara&ccedil;&atilde;o</span> }
-                                else { <span class="badge bg-label-success status-pill">A funcionar</span> }
+                                else if (normalizedStatus.Contains("funciona")) { <span class="badge bg-label-success status-pill">A funcionar</span> }
+                                else { <span class="badge @(normalizedStatus == "disponivel" || normalizedStatus == "disponível" || normalizedStatus == "armazenado" ? "bg-label-success" : "bg-label-secondary") status-pill">@item.Status</span> }
                             </td>
                             <td>
-                                <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center gap-1">
                                     @* Menu de Mudança de Estado *@
                                     <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            Mudar estado
+                                        <button class="btn btn-sm btn-icon btn-outline-warning p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Mudar estado">
+                                            <i class="ri-settings-4-line"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary shadow-lg">
                                             <form method="post" asp-page-handler="UpdateStatus" asp-route-id="@item.Id">
@@ -247,19 +248,21 @@
                                         </ul>
                                     </div>
 
-                                    <div class="d-flex gap-3 ms-3">
-                                        <button type="button" class="btn btn-sm p-0 border-0 bg-transparent" title="Editar"
-                                                onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@(item.Brand ?? "")', '@(item.Model ?? "")', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId', '@item.Status')"
-                                                style="transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                                            <span style="font-size: 1.3rem;">✏️</span>
+                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                            onclick="showQRCode('@item.Id', 'equip', '@(item.Name?.Replace("'", "\\'"))', '@(item.SerialNumber ?? "S/N N/A")')">
+                                        <i class="ri-qr-code-line"></i>
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-icon text-primary p-0" title="Editar"
+                                            onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@(item.Brand ?? "")', '@(item.Model ?? "")', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId', '@item.Status')">
+                                        <i class="ri-edit-line"></i>
+                                    </button>
+
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
+                                        <button type="submit" class="btn btn-sm btn-icon text-danger p-0" title="Eliminar">
+                                            <i class="ri-delete-bin-line"></i>
                                         </button>
-                                        <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline;">
-                                            <button type="submit" class="btn btn-sm p-0 border-0 bg-transparent" title="Eliminar"
-                                                    style="transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                                                <span style="font-size: 1.3rem;">🗑️</span>
-                                            </button>
-                                        </form>
-                                    </div>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -357,20 +360,24 @@
                                                             <span class="fw-bold text-white">@item.EquipmentName</span>
                                                         </div>
                                                     </td>
-                                                    <td><span class="text-white-50 small">@item.Type</span></td>
+                                                    <td><span class="text-white-50 small">@item.Description</span></td>
                                                     <td><span class="badge badge-soft-info">Stock Empresa</span></td>
                                                     <td>
                                                         <div class="d-flex gap-2">
+                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                                    onclick="showQRCode('@item.Id', 'stock', '@(item.EquipmentName?.Replace("'", "\\'"))', 'Minha Mala')">
+                                                                <i class="ri-qr-code-line"></i>
+                                                            </button>
                                                             <form method="post" asp-page-handler="ReturnToHQ">
                                                                 <input type="hidden" name="id" value="@item.Id" />
-                                                                <button type="submit" class="btn btn-sm btn-outline-info" title="Devolver para Empresa">
-                                                                    <i class="ri-arrow-go-back-line"></i> Devolver
+                                                                <button type="submit" class="btn btn-sm btn-icon text-info p-0" title="Devolver para Empresa">
+                                                                    <i class="ri-arrow-go-back-line"></i>
                                                                 </button>
                                                             </form>
                                                             <form method="post" asp-page-handler="FinalDisposal" onsubmit="return confirm('Confirmas a baixa definitiva deste item? Ele será removido do inventário.')">
                                                                 <input type="hidden" name="id" value="@item.Id" />
-                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Baixa Definitiva">
-                                                                    <i class="ri-delete-bin-line"></i> Baixa Definitiva
+                                                                <button type="submit" class="btn btn-sm btn-icon text-danger p-0" title="Baixa Definitiva">
+                                                                    <i class="ri-delete-bin-line"></i>
                                                                 </button>
                                                             </form>
                                                         </div>
@@ -632,6 +639,7 @@
                             <option value="A funcionar">A funcionar</option>
                             <option value="Avariado">Avariado</option>
                             <option value="Em Repara&ccedil;&atilde;o">Em Repara&ccedil;&atilde;o</option>
+                            <option value="Associado">Associado (Em Intervenção)</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -824,6 +832,7 @@
                                 <option value="Avariado">Avariado</option>
                                 <option value="Indispon&iacute;vel">Indispon&iacute;vel</option>
                                 <option value="Em Repara&ccedil;&atilde;o">Em Repara&ccedil;&atilde;o</option>
+                                <option value="Associado">Associado (Em Intervenção)</option>
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -1483,4 +1492,7 @@
         });
     }
 </script>
+<partial name="Shared/_QrModal" />
 }
+
+

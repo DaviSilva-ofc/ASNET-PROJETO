@@ -265,21 +265,43 @@
                     </div>
                     <h5 class="mb-0 fw-bold text-white">Mala de Peças</h5>
                 </div>
-                <div class="mb-3">
-                    <span class="fw-bolder" style="font-size: 3rem; color: #fff; line-height: 1;">@Model.MyStock.Count()</span>
-                    <span class="fw-bold" style="color: #f89223; font-size: 1.2rem;"> em uso</span>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fw-bolder" style="font-size: 3rem; color: #fff; line-height: 1;">@Model.MyStock.Count()</span>
+                        <p class="text-white mb-0 opacity-75">itens em stock pessoal</p>
+                    </div>
                 </div>
-                <p class="text-white-50 small" style="margin-bottom: 2rem;">equipamentos da ASNET atualmente à tua disposição para usares.</p>
-
-                <div class="d-flex justify-content-between text-white-50 small mt-2">
-                    <span title="Total de equipamentos armazenados na Sede global da ASNET prontos a solicitar" data-bs-toggle="tooltip">Stock Global Livre (ASNET): <strong class="text-white">@Model.GlobalAvailableStockCount</strong></span>
+                <div class="card-body p-0 px-4">
+                    <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                        <table class="table table-sm table-borderless table-dark mb-0" style="background: transparent;">
+                            <tbody class="small text-white-50">
+                                @if (!Model.MyStock.Any())
+                                {
+                                    <tr><td class="py-3 italic">Mala vazia</td></tr>
+                                }
+                                @foreach (var item in Model.MyStock.Take(5))
+                                {
+                                    <tr class="border-bottom border-light border-opacity-10">
+                                        <td class="py-2">
+                                            <div class="fw-bold text-white">@item.EquipmentName</div>
+                                            <div class="text-xs text-white-50">@item.Description</div>
+                                        </td>
+                                        <td class="text-end py-2">
+                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                    onclick="showQRCode('@item.Id', 'Equipamento', '@item.EquipmentName', 'Mala de Ferramentas')">
+                                                <i class="ri-qr-code-line"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <div class="p-4 pt-0">
-                <a asp-page="/Clients/Technicians/Stocks" class="btn btn-warning w-100 fw-bold py-2 shadow-sm text-white" style="background: var(--asnet-orange) !important; border:none;">
-                    Gerir Mala De Peças
-                </a>
-            </div>
+                <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                    <a href="/Clients/Technicians/Stocks" class="btn btn-warning w-100 fw-bold py-2 shadow-sm text-white" style="background: var(--asnet-orange) !important; border:none;">
+                        Gerir Stock Completo <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </div>
         </div>
     </div>
 </div>
@@ -299,6 +321,7 @@
                     <th class="text-white-50">Nível</th>
                     <th class="text-white-50">Estado</th>
                     <th class="text-white-50">Data de Abertura</th>
+                    <th class="text-white-50 text-center">Ações</th>
                 </tr>
             </thead>
             <tbody class="table-border-bottom-0">
@@ -342,6 +365,12 @@
                                 <span class="badge @stClass">@t.Status</span>
                             </td>
                             <td class="text-white-50">@t.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                        onclick="showQRCode('@t.Equipamento?.Id', 'equip', '@(t.Equipamento?.Name?.Replace("'", "\\'"))', '@(t.Equipamento?.SerialNumber ?? "S/N N/A")')">
+                                    <i class="ri-qr-code-line"></i>
+                                </button>
+                            </td>
                         </tr>
                     }
                 }
@@ -349,6 +378,8 @@
         </table>
     </div>
 </div>
+
+
 
 <!-- ======================= CHARTS SECTION ======================= -->
 <div class="row g-4 mb-4">
@@ -376,10 +407,10 @@
     </div>
 </div>
 
-</div>
 
 <!-- ======================= MAP SECTION ======================= -->
-<div class="col-12 mt-4">
+<div class="row g-4 mt-2 mb-4">
+    <div class="col-12">
     <div class="card map-card h-100 border-0 shadow-sm" style="background: #2b2c40 !important;">
         <div class="card-header d-flex align-items-center gap-2 text-white border-bottom border-secondary pb-3">
             <i class='bx bx-map-pin' style="color:#f89223;"></i> Mapa de Locais de Atendimento
@@ -388,6 +419,7 @@
             <div id="clientMap" style="height: 400px; width: 100%; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;"></div>
         </div>
     </div>
+</div>
 </div>
 
 @section PageScripts {
@@ -578,4 +610,5 @@
     }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
+<partial name="Shared/_QrModal" />
 }

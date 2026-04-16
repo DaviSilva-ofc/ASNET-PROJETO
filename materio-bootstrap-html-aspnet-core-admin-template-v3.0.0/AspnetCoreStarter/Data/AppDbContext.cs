@@ -38,5 +38,54 @@ namespace AspnetCoreStarter.Data
         public DbSet<Departamento> Departamentos { get; set; }
         public DbSet<Setor> Setores { get; set; }
         public DbSet<TechnicianActivity> TechnicianActivities { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // ── GLOBAL SOFT DELETE QUERY FILTERS ──────────────────────────────────
+            // Any entity implementing ISoftDeletable will automatically be filtered.
+            // Queries will only return records where IsDeleted == false.
+            modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<School>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Agrupamento>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Bloco>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Sala>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Equipamento>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Ticket>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<StockEmpresa>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Empresa>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Contrato>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Emprestimo>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<Reparo>().HasQueryFilter(e => !e.IsDeleted);
+            modelBuilder.Entity<PedidoStock>().HasQueryFilter(e => !e.IsDeleted);
+        }
+
+        // ── SOFT DELETE INTERCEPTOR ────────────────────────────────────────────────
+        // Overrides SaveChangesAsync to intercept any Delete state on ISoftDeletable
+        // entities and convert it to a soft delete instead of a physical row removal.
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            foreach (var entry in ChangeTracker.Entries<ISoftDeletable>()
+                         .Where(e => e.State == EntityState.Deleted))
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.IsDeleted = true;
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override int SaveChanges()
+        {
+            foreach (var entry in ChangeTracker.Entries<ISoftDeletable>()
+                         .Where(e => e.State == EntityState.Deleted))
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.IsDeleted = true;
+            }
+
+            return base.SaveChanges();
+        }
     }
 }

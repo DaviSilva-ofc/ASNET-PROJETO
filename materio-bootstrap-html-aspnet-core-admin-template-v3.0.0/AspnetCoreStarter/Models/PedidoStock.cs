@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("pedidos_stock")]
-    public class PedidoStock
+    public class PedidoStock : ISoftDeletable
     {
         [Key]
         [Column("id_pedido")]
@@ -64,5 +64,8 @@ namespace AspnetCoreStarter.Models
 
         [Column("data_atualizacao")]
         public DateTime? UpdatedAt { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
     }
 }

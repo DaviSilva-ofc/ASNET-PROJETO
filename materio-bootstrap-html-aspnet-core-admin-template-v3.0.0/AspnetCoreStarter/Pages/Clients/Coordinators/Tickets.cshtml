@@ -5,6 +5,14 @@
     ViewData["Title"] = "Tickets de Suporte";
 }
 
+@section PageStyles {
+<style>
+    .star-btn:hover, .star-btn.active { color: #ffab00 !important; }
+    .star-btn.bxs-star { color: #ffab00 !important; }
+    .cursor-pointer { cursor: pointer; }
+</style>
+}
+
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Coordenador /</span> Tickets</h4>
 
@@ -75,7 +83,16 @@
                                 <td><span class="fw-bold">#@ticket.Id</span></td>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <span class="fw-bold">@ticket.Equipamento?.Name</span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fw-bold">@ticket.Equipamento?.Name</span>
+                                            @if (ticket.Equipamento != null)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-icon border-0 p-1 me-1" title="Código QR" 
+                                                        onclick="showQRCode('@ticket.Equipamento.Id', 'Equipamento', '@(ticket.Equipamento.Name?.Replace("'", "\\'"))', '@(ticket.Equipamento.SerialNumber ?? "S/N N/A")')">
+                                                    <i class="ri-qr-code-line text-warning fs-4"></i>
+                                                </button>
+                                            }
+                                        </div>
                                         <small class="text-muted small">
                                             @(ticket.Equipamento?.Brand ?? "Genérico") @(ticket.Equipamento?.Model ?? "")
                                             @if (!string.IsNullOrEmpty(ticket.Equipamento?.SerialNumber))
@@ -122,6 +139,25 @@
                                         case "Cancelado": <span class="badge bg-label-secondary text-uppercase">Cancelado</span> break;
                                         default: <span class="badge bg-label-primary text-uppercase">@ticket.Status</span> break;
                                     }
+                                    
+                                    @if (ticket.Status == "Concluído" && ticket.SatisfacaoRating == null)
+                                    {
+                                        <div class="mt-1">
+                                            <button type="button" class="btn btn-xs btn-outline-success rounded-pill" 
+                                                    onclick="openEvalModal(@ticket.Id, '@ticket.Equipamento?.Name')">
+                                                <i class="bx bx-star me-1"></i> Avaliar
+                                            </button>
+                                        </div>
+                                    }
+                                    else if (ticket.SatisfacaoRating != null)
+                                    {
+                                        <div class="mt-1 d-flex align-items-center">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bx @(i <= ticket.SatisfacaoRating ? "bxs-star" : "bx-star") @(i <= ticket.SatisfacaoRating ? "text-warning" : "text-muted")" style="font-size: 0.7rem;"></i>
+                                            }
+                                        </div>
+                                    }
                                 </td>
                                 <td>
                                     @if (ticket.Technician != null)
@@ -145,6 +181,45 @@
             </table>
         </div>
     </div>
+</div>
+
+<!-- Modal Avaliação CSAT -->
+<div class="modal fade" id="modalAvaliacao" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="SubmitEvaluation" class="modal-content shadow-lg border-0">
+            <input type="hidden" name="ticketId" id="evalTicketId" />
+            <input type="hidden" name="rating" id="evalRatingValue" value="5" />
+            
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title text-white"><i class="ri-thumb-up-line me-2"></i>Avaliar Assistência Técnica</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body text-center p-4">
+                <p class="mb-4">Como avalia a resolução do problema para <strong id="evalEquipName"></strong>?</p>
+                <div class="csat-rating-buttons mb-3 d-flex justify-content-center gap-2">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <button type="button" class="btn btn-outline-secondary rounded-pill rating-btn" style="width: 45px; height: 45px;" data-value="@i" onclick="setRating(@i)">@i</button>
+                    }
+                </div>
+                <div class="mb-4">
+                    <span id="ratingLabel" class="badge bg-label-secondary">Selecione uma nota</span>
+                </div>
+                
+                <div class="mb-0 text-start">
+                    <label class="form-label fw-bold">Feedback Adicional (Opcional)</label>
+                    <textarea name="feedback" class="form-control" rows="3" placeholder="O seu feedback ajuda-nos a melhorar o serviço..."></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-success">Enviar Avaliação</button>
+            </div>
+        </form>
+    </div>
+</div>
 </div>
 
 <!-- Modal Novo Ticket -->
@@ -300,6 +375,41 @@
 
 @section PageScripts {
     <script>
+        function openEvalModal(id, name) {
+            document.getElementById('evalTicketId').value = id;
+            document.getElementById('evalEquipName').innerText = name || "Equipamento";
+            setRating(5);
+            var modal = new bootstrap.Modal(document.getElementById('modalAvaliacao'));
+            modal.show();
+        }
+
+        function setRating(val) {
+            document.getElementById('evalRatingValue').value = val;
+            const btns = document.querySelectorAll('.csat-rating-buttons .rating-btn');
+            const label = document.getElementById('ratingLabel');
+            
+            const labels = {
+                1: { text: 'Péssimo', class: 'bg-label-danger', btn: 'btn-danger' },
+                2: { text: 'Mau', class: 'bg-label-warning', btn: 'btn-warning' },
+                3: { text: 'Médio', class: 'bg-label-info', btn: 'btn-info' },
+                4: { text: 'Bom', class: 'bg-label-primary', btn: 'btn-primary' },
+                5: { text: 'Excelente', class: 'bg-label-success', btn: 'btn-success' }
+            };
+
+            btns.forEach((btn, idx) => {
+                const btnVal = parseInt(btn.getAttribute('data-value'));
+                btn.className = 'btn btn-outline-secondary rounded-pill rating-btn';
+                if (btnVal === val) {
+                    btn.classList.replace('btn-outline-secondary', labels[val].btn);
+                }
+            });
+
+            if (labels[val]) {
+                label.innerText = labels[val].text;
+                label.className = 'badge ' + labels[val].class;
+            }
+        }
+
         function filterTypesByArtigo() {
             const artName = document.getElementById('filterArtigo').value;
             const tipoSelect = document.getElementById('filterTipo');
@@ -427,4 +537,6 @@
             }
         });
     </script>
+
+<partial name="Shared/_QrModal" />
 }

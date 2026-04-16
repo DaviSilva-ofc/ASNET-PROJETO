@@ -6,7 +6,7 @@ using System.Linq;
 namespace AspnetCoreStarter.Models
 {
     [Table("equipamentos")]
-    public class Equipamento
+    public class Equipamento : ISoftDeletable
     {
         [Key]
         [Column("id_equipamento")]
@@ -56,6 +56,15 @@ namespace AspnetCoreStarter.Models
         [Column("status")]
         [MaxLength(50)]
         public string? Status { get; set; } = "A funcionar";
+
+        [Column("id_ticket")]
+        public int? TicketId { get; set; }
+
+        [ForeignKey("TicketId")]
+        public virtual Ticket? AssociatedTicket { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
 
         public virtual ICollection<StatusEquipamento> StatusEquipamentos { get; set; } = new List<StatusEquipamento>();
     }

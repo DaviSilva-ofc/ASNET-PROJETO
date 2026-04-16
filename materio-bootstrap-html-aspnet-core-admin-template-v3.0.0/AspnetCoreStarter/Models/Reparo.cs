@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("reparos")]
-    public class Reparo
+    public class Reparo : ISoftDeletable
     {
         [Key]
         [Column("id_reparo")]
@@ -27,5 +27,8 @@ namespace AspnetCoreStarter.Models
 
         [Column("data_reparo")]
         public DateTime? RepairDate { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
     }
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("tickets")]
-    public class Ticket
+    public class Ticket : ISoftDeletable
     {
         [Key]
         [Column("id_ticket")]
@@ -63,5 +63,22 @@ namespace AspnetCoreStarter.Models
 
         [Column("data_conclusao")]
         public DateTime? CompletedAt { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
+        [Column("satisfacao_rating")]
+        public int? SatisfacaoRating { get; set; }
+
+        [Column("satisfacao_feedback")]
+        public string? SatisfacaoFeedback { get; set; }
+
+        [Column("data_avaliacao")]
+        public DateTime? DataAvaliacao { get; set; }
+
+        public virtual ICollection<StockEmpresa> UtilizedStocks { get; set; } = new List<StockEmpresa>();
+
+        [InverseProperty("AssociatedTicket")]
+        public virtual ICollection<Equipamento> UtilizedEquipments { get; set; } = new List<Equipamento>();
     }
 }

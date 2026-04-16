@@ -5,6 +5,14 @@
     ViewData["Title"] = "Gestão de Tickets - Private";
 }
 
+@section PageStyles {
+    <style>
+        .star-btn:hover, .star-btn.active { color: #ffab00 !important; }
+        .star-btn.bxs-star { color: #ffab00 !important; }
+        .cursor-pointer { cursor: pointer; }
+    </style>
+}
+
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Private Client /</span> Tickets</h4>
 
@@ -96,7 +104,13 @@
                                     @if (t.Equipamento != null)
                                     {
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold">@t.Equipamento.Name</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-bold">@t.Equipamento.Name</span>
+                                                <button type="button" class="btn btn-sm btn-icon text-info p-0 me-1" title="Código QR" 
+                                                        onclick="showQRCode('@t.Equipamento.Id', 'Equipamento', '@(t.Equipamento.Name?.Replace("'", "\\'"))', '@(t.Equipamento.SerialNumber ?? "S/N N/A")')">
+                                                    <i class="ri-qr-code-line"></i>
+                                                </button>
+                                            </div>
                                             <small class="text-muted small">
                                                 @(t.Equipamento.Brand ?? "Genérico") @(t.Equipamento.Model ?? "")
                                                 @if (!string.IsNullOrEmpty(t.Equipamento.SerialNumber))
@@ -150,6 +164,25 @@
                                         };
                                     }
                                     <span class="badge @statusClass">@t.Status</span>
+                                    
+                                    @if (t.Status == "Concluído" && t.SatisfacaoRating == null)
+                                    {
+                                        <div class="mt-1">
+                                            <button type="button" class="btn btn-sm btn-icon text-success p-0" 
+                                                    onclick="openEvalModal(@t.Id, '@t.Equipamento?.Name')" title="Avaliar Serviço">
+                                                <i class="ri-star-line"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                    else if (t.SatisfacaoRating != null)
+                                    {
+                                        <div class="mt-1 d-flex align-items-center">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bx @(i <= t.SatisfacaoRating ? "bxs-star" : "bx-star") @(i <= t.SatisfacaoRating ? "text-warning" : "text-muted")" style="font-size: 0.7rem;"></i>
+                                            }
+                                        </div>
+                                    }
                                 </td>
                                 <td><small>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small></td>
                             </tr>
@@ -157,6 +190,45 @@
                     }
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Modal Avaliação CSAT -->
+    <div class="modal fade" id="modalAvaliacao" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" asp-page-handler="SubmitEvaluation" class="modal-content shadow-lg border-0">
+                <input type="hidden" name="ticketId" id="evalTicketId" />
+                <input type="hidden" name="rating" id="evalRatingValue" value="5" />
+                
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title text-white"><i class="ri-heart-pulse-line me-2"></i>Avaliar Serviço</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body text-center p-4">
+                    <p class="mb-4">Como avalia o suporte prestado para o equipamento <strong id="evalEquipName"></strong>?</p>
+                    
+                    <div class="csat-rating-buttons mb-3 d-flex justify-content-center gap-2">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <button type="button" class="btn btn-outline-secondary rounded-pill rating-btn" style="width: 45px; height: 45px;" data-value="@i" onclick="setRating(@i)">@i</button>
+                        }
+                    </div>
+                    <div class="mb-4">
+                        <span id="ratingLabel" class="badge bg-label-secondary">Selecione uma nota</span>
+                    </div>
+                    
+                    <div class="mb-0 text-start">
+                        <label class="form-label fw-bold">Feedback Adicional (Opcional)</label>
+                        <textarea name="feedback" class="form-control" rows="3" placeholder="A sua opinião é muito importante para nós..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-success px-4">Submeter</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -325,6 +397,43 @@
         processPriority(type);
     }
 
+    function openEvalModal(id, name) {
+        document.getElementById('evalTicketId').value = id;
+        document.getElementById('evalEquipName').innerText = name || "Equipamento";
+        setRating(5);
+        var modal = new bootstrap.Modal(document.getElementById('modalAvaliacao'));
+        modal.show();
+    }
+
+    function setRating(val) {
+        document.getElementById('evalRatingValue').value = val;
+        const btns = document.querySelectorAll('.csat-rating-buttons .rating-btn');
+        const label = document.getElementById('ratingLabel');
+        
+        const labels = {
+            1: { text: 'Péssimo', class: 'bg-label-danger', btn: 'btn-danger' },
+            2: { text: 'Mau', class: 'bg-label-warning', btn: 'btn-warning' },
+            3: { text: 'Médio', class: 'bg-label-info', btn: 'btn-info' },
+            4: { text: 'Bom', class: 'bg-label-primary', btn: 'btn-primary' },
+            5: { text: 'Excelente', class: 'bg-label-success', btn: 'btn-success' }
+        };
+
+        btns.forEach((btn, idx) => {
+            const btnVal = parseInt(btn.getAttribute('data-value'));
+            // Reset to default
+            btn.className = 'btn btn-outline-secondary rounded-pill rating-btn';
+            
+            if (btnVal === val) {
+                btn.classList.replace('btn-outline-secondary', labels[val].btn);
+            }
+        });
+
+        if (labels[val]) {
+            label.innerText = labels[val].text;
+            label.className = 'badge ' + labels[val].class;
+        }
+    }
+
     function processPriority(type) {
         const selectPri = document.getElementById('selectPriority');
         const hint = document.getElementById('priorityHint');
@@ -373,4 +482,6 @@
         }
     }
 </script>
+
+<partial name="Shared/_QrModal" />
 }

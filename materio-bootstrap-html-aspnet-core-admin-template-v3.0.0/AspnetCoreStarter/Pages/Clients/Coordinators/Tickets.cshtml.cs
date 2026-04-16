@@ -159,5 +159,22 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             }
             return RedirectToPage();
         }
+
+        public async Task<IActionResult> OnPostSubmitEvaluationAsync(int ticketId, int rating, string? feedback)
+        {
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null || ticket.Status != "Concluído" || ticket.SatisfacaoRating != null)
+            {
+                return RedirectToPage();
+            }
+
+            ticket.SatisfacaoRating = rating;
+            ticket.SatisfacaoFeedback = feedback;
+            ticket.DataAvaliacao = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Agradecemos o seu feedback sobre o suporte técnico!";
+            return RedirectToPage();
+        }
     }
 }

@@ -105,7 +105,16 @@
                                 <td>
                                     <div class="text-wrap" style="max-width: 300px;">
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold text-dark">@(t.Equipamento?.Name ?? "Indefinido")</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-bold text-dark">@(t.Equipamento?.Name ?? "Indefinido")</span>
+                                                @if (t.Equipamento != null)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                            onclick="showQRCode('@t.Equipamento.Id', 'equip', '@(t.Equipamento.Name?.Replace("'", "\\'"))', '@(t.Equipamento.SerialNumber ?? "S/N N/A")')">
+                                                        <i class="ri-qr-code-line"></i>
+                                                    </button>
+                                                }
+                                            </div>
                                             <small class="text-muted" style="font-size: 0.75rem;">
                                                 @(t.Equipamento?.Brand ?? "Genérico") @(t.Equipamento?.Model ?? "")
                                                 @if (!string.IsNullOrEmpty(t.Equipamento?.SerialNumber)) {
@@ -217,7 +226,16 @@
                                             desc = desc.Substring(0, cutAt).Trim();
                                         }
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold text-dark">@(t.Equipamento?.Name ?? "Indefinido")</span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="fw-bold text-dark">@(t.Equipamento?.Name ?? "Indefinido")</span>
+                                                @if (t.Equipamento != null)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                            onclick="showQRCode('@t.Equipamento.Id', 'equip', '@(t.Equipamento.Name?.Replace("'", "\\'"))', '@(t.Equipamento.SerialNumber ?? "S/N N/A")')">
+                                                        <i class="ri-qr-code-line"></i>
+                                                    </button>
+                                                }
+                                            </div>
                                             <small class="text-muted" style="font-size: 0.75rem;">
                                                 @(t.Equipamento?.Brand ?? "Genérico") @(t.Equipamento?.Model ?? "")
                                                 @if (!string.IsNullOrEmpty(t.Equipamento?.SerialNumber)) {
@@ -226,6 +244,32 @@
                                             </small>
                                         </div>
                                         <div class="small text-muted mt-1" title="@desc">@(desc.Length > 60 ? desc.Substring(0, 60) + "..." : desc)</div>
+                                        @if ((t.UtilizedStocks != null && t.UtilizedStocks.Any()) || (t.UtilizedEquipments != null && t.UtilizedEquipments.Any()))
+                                        {
+                                            <div class="mt-2 border-top pt-2">
+                                                <span class="d-block text-xs text-uppercase fw-bold text-muted mb-1">Peças Aplicadas</span>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    @if (t.UtilizedStocks != null)
+                                                    {
+                                                        foreach(var peca in t.UtilizedStocks)
+                                                        {
+                                                            <span class="badge bg-label-secondary border border-secondary" style="font-size: 0.65rem;" title="@peca.Type">
+                                                                <i class="ri-cpu-line me-1"></i> @peca.EquipmentName
+                                                            </span>
+                                                        }
+                                                    }
+                                                    @if (t.UtilizedEquipments != null)
+                                                    {
+                                                        foreach(var pecaE in t.UtilizedEquipments)
+                                                        {
+                                                            <span class="badge bg-label-info border border-info" style="font-size: 0.65rem;" title="@pecaE.Type">
+                                                                <i class="ri-mac-line me-1"></i> @pecaE.Name
+                                                            </span>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
                                 </td>
                                 <td>
@@ -270,6 +314,9 @@
                                                 <option value="Concluído" disabled="@(t.Status == "Concluído" ? "disabled" : null)">Concluído (Finalizar)</option>
                                             </select>
                                         </form>
+                                        <a href="/Clients/Technicians/Stocks?ticketId=@t.Id" class="btn btn-sm btn-outline-primary" title="Abrir Stock para aplicar peças a este ticket">
+                                            <i class="ri-links-line me-1"></i> Material
+                                        </a>
                                     }
                                     else
                                     {
@@ -497,5 +544,7 @@
         }
     }
 </script>
+
+<partial name="Shared/_QrModal" />
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
 }

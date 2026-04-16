@@ -237,6 +237,10 @@
                                                 {
                                                     <span class="badge bg-label-warning">Em reparo</span>
                                                 }
+                                                else if (item.Status == "Associado")
+                                                {
+                                                    <span class="badge bg-label-warning">Associado (Em Intervenção)</span>
+                                                }
                                                 else
                                                 {
                                                     <span class="badge bg-label-success">A funcionar</span>
@@ -246,33 +250,39 @@
                                                 <div class="d-flex align-items-center justify-content-center gap-2">
                                                     @if (item.Status == null || (!item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) && !item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
                                                     {
-                                                        <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm text-primary p-1" title="Solicitar Ticket">
-                                                            <i class="ri-add-circle-line"></i> Solicitar Ticket
+                                                        <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm btn-icon text-primary p-0" title="Solicitar Ticket">
+                                                            <i class="ri-ticket-line"></i>
                                                         </a>
                                                     }
                                                     <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
                                                         @if (item.Status == "Avariado" || item.Status == "Danificado")
                                                         {
-                                                            <button type="submit" class="btn btn-sm text-success p-1" title="Marcar como Funcional">
-                                                                <i class="ri-check-line"></i> Funcional
+                                                            <button type="submit" class="btn btn-sm btn-icon text-success p-0" title="Marcar como Funcional">
+                                                                <i class="ri-check-line"></i>
                                                             </button>
                                                         }
                                                         else
                                                         {
-                                                            <button type="submit" class="btn btn-sm text-warning p-1" title="Marcar como Avariado">
-                                                                <i class="ri-error-warning-line"></i> Avariar
+                                                            <button type="submit" class="btn btn-sm btn-icon text-warning p-0" title="Marcar como Avariado">
+                                                                <i class="ri-error-warning-line"></i>
                                                             </button>
                                                         }
                                                     </form>
-                                                    <div class="vr mx-1 opacity-25"></div>
-                                                    <button type="button" class="btn btn-sm text-primary p-1" title="Editar" 
-                                                            onclick="openEditModal(@item.Id, '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@(item.RoomId)', '@(item.Room?.SetorId)', '@(item.Room?.Setor?.DepartamentoId)', '@item.Status')">
-                                                        <i class="bx bx-edit"></i> ✏️
+                                                    
+                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                            onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ?? "S/N N/A")')">
+                                                        <i class="ri-qr-code-line"></i>
                                                     </button>
+
+                                                    <button type="button" class="btn btn-sm btn-icon text-primary p-0" title="Editar" 
+                                                            onclick="openEditModal(@item.Id, '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@(item.RoomId)', '@(item.Room?.SetorId)', '@(item.Room?.Setor?.DepartamentoId)', '@item.Status')">
+                                                        <i class="ri-edit-line"></i>
+                                                    </button>
+                                                    
                                                     <form method="post" asp-page-handler="DeleteEquipment" asp-route-id="@item.Id" 
                                                           onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?')" style="display:inline-block;">
-                                                        <button type="submit" class="btn btn-sm text-danger p-1" title="Eliminar">
-                                                            <i class="bx bx-trash"></i> 🗑️
+                                                        <button type="submit" class="btn btn-sm btn-icon text-danger p-0" title="Eliminar">
+                                                            <i class="ri-delete-bin-line"></i>
                                                         </button>
                                                     </form>
                                                 </div>
@@ -675,6 +685,7 @@
                             <option value="A funcionar">A funcionar</option>
                             <option value="Avariado">Avariado</option>
                             <option value="Em reparo">Em reparo</option>
+                            <option value="Associado">Associado (Em Intervenção)</option>
                         </select>
                     </div>
                     <div class="col-12">
@@ -1043,3 +1054,5 @@
     // Removida função redundante filterReqEqTypes
 </script>
 }
+
+@await Html.PartialAsync("_QrModal")

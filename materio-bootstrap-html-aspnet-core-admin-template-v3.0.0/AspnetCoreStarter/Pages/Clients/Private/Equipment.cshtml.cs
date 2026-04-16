@@ -103,7 +103,17 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             if (!string.IsNullOrEmpty(FilterType)) query = query.Where(e => e.Type == FilterType);
             if (!string.IsNullOrEmpty(FilterSerialNumber)) query = query.Where(e => e.SerialNumber == FilterSerialNumber);
             if (FilterRoomId.HasValue) query = query.Where(e => e.RoomId == FilterRoomId.Value);
-            if (!string.IsNullOrEmpty(FilterStatus)) query = query.Where(e => e.Status == FilterStatus);
+            if (!string.IsNullOrEmpty(FilterStatus))
+            {
+                if (FilterStatus == "Associado")
+                {
+                    query = query.Where(e => e.TicketId != null);
+                }
+                else
+                {
+                    query = query.Where(e => e.Status == FilterStatus);
+                }
+            }
 
             Equipments = await query.ToListAsync();
 

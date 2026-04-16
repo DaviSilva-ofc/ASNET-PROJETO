@@ -110,7 +110,16 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             if (!string.IsNullOrEmpty(FilterSerialNumber))
                 query = query.Where(e => e.SerialNumber.Contains(FilterSerialNumber));
             if (!string.IsNullOrEmpty(FilterStatus))
-                query = query.Where(e => e.Status == FilterStatus);
+            {
+                if (FilterStatus == "Associado")
+                {
+                    query = query.Where(e => e.TicketId != null);
+                }
+                else
+                {
+                    query = query.Where(e => e.Status == FilterStatus);
+                }
+            }
             if (FilterBlocoId.HasValue)
                 query = query.Where(e => e.Room.BlockId == FilterBlocoId);
             if (FilterRoomId.HasValue)

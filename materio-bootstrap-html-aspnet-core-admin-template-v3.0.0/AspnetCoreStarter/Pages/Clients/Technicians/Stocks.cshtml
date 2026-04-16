@@ -93,13 +93,14 @@
                         <th>Artigo / Peça</th>
                         <th>Categoria / Tipo</th>
                         <th>Estado Actual</th>
+                        <th class="text-end">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if (!Model.MyStock.Any())
                     {
                         <tr>
-                            <td colspan="3" class="text-center py-5 text-white-50 italic">Não possuis stock diretamente atribuído à tua conta.</td>
+                            <td colspan="4" class="text-center py-5 text-white-50 italic">Não possuis stock diretamente atribuído à tua conta.</td>
                         </tr>
                     }
                     @foreach (var item in Model.MyStock)
@@ -113,8 +114,30 @@
                                     <strong class="text-white">@item.EquipmentName</strong>
                                 </div>
                             </td>
-                            <td><span class="text-white-50 small">@item.Type</span></td>
-                            <td><span class="badge bg-label-success">@item.Status</span></td>
+                            <td><span class="text-white-50 small">@item.Description</span></td>
+                            <td>
+                                @if (item.Status == "Usado na Intervenção")
+                                {
+                                    <span class="badge bg-label-secondary">Usado #@item.TicketId</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-label-success">@item.Status</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', 'Meu Stock')" title="Código QR">
+                                        <i class="ri-qr-code-line"></i>
+                                    </button>
+                                    @if(item.IsAvailable || item.Status == "Disponível" || item.Status == "A funcionar" || item.Status == "Funcionando")
+                                    {
+                                        <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
+                                            <i class="ri-links-line"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -152,8 +175,25 @@
                                         
                                         @foreach(var item in schBase)
                                         {
-                                            <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1">
-                                                <span class="d-block text-white">@item.EquipmentName <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Geral / @item.Type</span></span>
+                                            <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1 d-flex justify-content-between align-items-center">
+                                                <span class="d-block text-white">
+                                                    @item.EquipmentName 
+                                                    <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Geral / @item.Type</span>
+                                                    @if(item.Status == "Usado na Intervenção") {
+                                                        <span class="badge bg-label-secondary ms-2" style="font-size:0.6rem;">(Usado #@item.TicketId)</span>
+                                                    }
+                                                </span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', '@school.Name.Replace("'", "\\'")')" title="Código QR">
+                                                        <i class="ri-qr-code-line"></i>
+                                                    </button>
+                                                    @if(item.IsAvailable || item.Status == "Disponível" || item.Status == "A funcionar" || item.Status == "Funcionando")
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
+                                                            <i class="ri-links-line"></i>
+                                                        </button>
+                                                    }
+                                                </div>
                                             </div>
                                         }
 
@@ -183,10 +223,24 @@
                                                                 }
                                                                 @foreach(var equip in sala.Equipments)
                                                                 {
-                                                                    <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1">
+                                                                    <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1 d-flex justify-content-between align-items-center">
                                                                         <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
-                                                                        <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
+                                                                            <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
                                                                         </span>
+                                                                        <div class="d-flex align-items-center gap-2">
+                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'", "\\'")', '@sala.Name.Replace("'", "\\'")')" title="Código QR">
+                                                                                <i class="ri-qr-code-line"></i>
+                                                                            </button>
+                                                                            @{
+                                                                                var isOp = equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando";
+                                                                            }
+                                                                            @if(isOp)
+                                                                            {
+                                                                                <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@equip.Id, '@equip.Name', 'Equipamento')" title="Associar a Trabalho Ativo">
+                                                                                    <i class="ri-links-line"></i>
+                                                                                </button>
+                                                                            }
+                                                                        </div>
                                                                     </div>
                                                                 }
                                                             </div>
@@ -233,8 +287,25 @@
 
                                         @foreach(var item in agBase)
                                         {
-                                            <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1">
-                                                <span class="d-block text-white">@item.EquipmentName <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Central / @item.Type</span></span>
+                                            <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1 d-flex justify-content-between align-items-center">
+                                                <span class="d-block text-white">
+                                                    @item.EquipmentName 
+                                                    <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Central / @item.Type</span>
+                                                    @if(item.Status == "Usado na Intervenção") {
+                                                        <span class="badge bg-label-secondary ms-2" style="font-size:0.6rem;">(Usado #@item.TicketId)</span>
+                                                    }
+                                                </span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', '@agrp.Name.Replace("'", "\\'")')" title="Código QR">
+                                                        <i class="ri-qr-code-line"></i>
+                                                    </button>
+                                                    @if(item.IsAvailable || item.Status == "Disponível" || item.Status == "A funcionar" || item.Status == "Funcionando")
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
+                                                            <i class="ri-links-line"></i>
+                                                        </button>
+                                                    }
+                                                </div>
                                             </div>
                                         }
 
@@ -273,10 +344,24 @@
                                                                             }
                                                                             @foreach(var equip in sala.Equipments)
                                                                             {
-                                                                                <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1">
+                                                                                <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1 d-flex justify-content-between align-items-center">
                                                                                     <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
-                                                                                    <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
+                                                                                    <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
                                                                                     </span>
+                                                                                <div class="d-flex align-items-center gap-2">
+                                                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'", "\\'")', '@sala.Name.Replace("'", "\\'")')" title="Código QR">
+                                                                                        <i class="ri-qr-code-line"></i>
+                                                                                    </button>
+                                                                                    @{
+                                                                                        var isOp2 = equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando";
+                                                                                    }
+                                                                                    @if(isOp2)
+                                                                                    {
+                                                                                        <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@equip.Id, '@equip.Name', 'Equipamento')" title="Associar a Trabalho Ativo">
+                                                                                            <i class="ri-links-line"></i>
+                                                                                        </button>
+                                                                                    }
+                                                                                </div>
                                                                                 </div>
                                                                             }
                                                                         </div>
@@ -298,3 +383,66 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Atribuir Stock -->
+<div class="modal fade" id="assignStockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="AssignStock" class="modal-content card-bg border-light border-opacity-10">
+            <div class="modal-header border-bottom border-light border-opacity-10">
+                <h5 class="modal-title text-white">Associar Stock a Trabalho</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalStockId" name="stockId" value="" />
+                <input type="hidden" id="modalItemType" name="itemType" value="" />
+                
+                <p class="text-white-50">Estás prestes a aplicar <strong id="modalStockName" class="text-white"></strong> numa intervenção ativa.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label text-white-50">Trabalho Associado</label>
+                    <select class="form-select bg-transparent text-white border-secondary" name="ticketId" required>
+                        <option value="" disabled selected>Selecionar o trabalho...</option>
+                        @foreach(var ticket in Model.ActiveTickets)
+                        {
+                            <option value="@ticket.Id">
+                                #@ticket.Id - @(ticket.Equipamento?.Name ?? "Outro") (@(ticket.School?.Name ?? "Indefinida"))
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-10">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success"><i class="ri-links-line me-1"></i> Associar Artigo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section PageScripts {
+    <script>
+        function openAssignModal(stockId, stockName, itemType) {
+            document.getElementById('modalStockId').value = stockId;
+            document.getElementById('modalStockName').textContent = stockName;
+            document.getElementById('modalItemType').value = itemType;
+            
+            var modal = new bootstrap.Modal(document.getElementById('assignStockModal'));
+            modal.show();
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('ticketId')) {
+                var tid = urlParams.get('ticketId');
+                var select = document.querySelector('select[name="ticketId"]');
+                if (select) {
+                    select.value = tid;
+                    // Optional visual highlight that a ticket is pre-selected
+                    select.classList.add('border-success');
+                }
+            }
+        });
+    </script>
+
+<partial name="Shared/_QrModal" />
+}

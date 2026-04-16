@@ -82,6 +82,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
                 .CountAsync(t => t.Equipamento != null && t.Equipamento.RoomId.HasValue && salaIds.Contains(t.Equipamento.RoomId.Value));
 
             var baseQuery = _context.Equipamentos
+                .Include(e => e.StatusEquipamentos)
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                         .ThenInclude(b => b.School)
@@ -99,7 +100,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
                 equipsTemp = equipsTemp.Where(e => NormalizeEquipmentName(e.Name) == FilterArticle).ToList();
             }
 
-            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparo" };
+            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparo", "Associado" };
 
             if (!string.IsNullOrEmpty(FilterStatus))
             {
@@ -120,7 +121,8 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
                 Location = g.Key.Location,
                 RoomId = g.Key.RoomId,
                 Quantity = g.Count(),
-                Status = g.Key.Status
+                Status = g.Key.Status,
+                SampleId = g.First().Id.ToString()
             }).OrderBy(i => i.Location).ThenBy(i => i.Name).ToList();
 
             return Page();
@@ -158,6 +160,8 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
 
         private string MapStatus(Equipamento e)
         {
+            if (e.TicketId != null) return "Associado";
+
             var estado = e.StatusEquipamentos?.OrderByDescending(s => s.Id).FirstOrDefault()?.Estado ?? e.Status ?? "";
 
             return estado.ToLower() switch
@@ -292,5 +296,6 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
         public int? RoomId { get; set; }
         public int Quantity { get; set; }
         public string? Status { get; set; }
+        public string? SampleId { get; set; }
     }
 }

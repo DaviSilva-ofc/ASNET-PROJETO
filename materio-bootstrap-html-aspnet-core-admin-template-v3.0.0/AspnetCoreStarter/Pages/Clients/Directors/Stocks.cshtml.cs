@@ -187,7 +187,8 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 Location = g.Key.Location,
                 RoomId = g.Key.RoomId,
                 Quantity = g.Count(),
-                Status = g.Key.Status
+                Status = g.Key.Status,
+                SampleId = g.First().Id.ToString()
             }).OrderBy(i => i.Location).ThenBy(i => i.Name).ToList();
 
             return Page();
@@ -434,5 +435,6 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public int? RoomId { get; set; }
         public int Quantity { get; set; }
         public string? Status { get; set; }
+        public string? SampleId { get; set; }
     }
 }

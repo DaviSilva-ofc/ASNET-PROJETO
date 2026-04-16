@@ -158,7 +158,14 @@ namespace AspnetCoreStarter.Pages.Admin
 
             if (!string.IsNullOrEmpty(FilterStatus))
             {
-                query = query.Where(e => e.Status == FilterStatus || e.StatusEquipamentos.Any(s => s.Estado == FilterStatus));
+                if (FilterStatus == "Associado")
+                {
+                    query = query.Where(e => e.TicketId != null);
+                }
+                else
+                {
+                    query = query.Where(e => e.Status == FilterStatus || e.StatusEquipamentos.Any(s => s.Estado == FilterStatus));
+                }
             }
 
             Equipments = await query.ToListAsync();

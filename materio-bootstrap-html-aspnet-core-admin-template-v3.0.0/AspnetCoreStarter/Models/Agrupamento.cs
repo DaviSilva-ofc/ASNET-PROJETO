@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("agrupamentos")]
-    public class Agrupamento
+    public class Agrupamento : ISoftDeletable
     {
         [Key]
         [Column("id_agrupamento")]
@@ -14,6 +14,9 @@ namespace AspnetCoreStarter.Models
         [Column("nome_agrupamento")]
         [MaxLength(100)]
         public string Name { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
 
         // Navigation properties
         public ICollection<School> Schools { get; set; } = new List<School>();

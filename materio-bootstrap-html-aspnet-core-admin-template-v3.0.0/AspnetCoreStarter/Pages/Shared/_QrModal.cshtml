@@ -1,0 +1,140 @@
+<!-- QR Code Modal -->
+<div class="modal fade" id="modalQRCode" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white border-bottom-0">
+                <h5 class="modal-title text-white" id="qrModalLabel"><i class="ri-qr-code-line me-2"></i>Código QR</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div id="qrCodeContainer" class="d-flex justify-content-center mb-0 p-3 bg-white border rounded shadow-sm" style="min-height: 200px;">
+                    <!-- QR Code will be generated here -->
+                </div>
+                <div class="mt-4 pt-2">
+                    <h6 id="qrItemTitle" class="fw-bold mb-1">Equipamento</h6>
+                    <p id="qrItemSubtitle" class="text-muted small mb-0">Localização / Ref</p>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 d-flex justify-content-center pb-4">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="printQRCode()">
+                    <i class="ri-printer-line me-1"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    window.qrGenerator = null;
+    window.bsModalInstance = null;
+
+    function showQRCode(itemId, type, title, subtitle) {
+        console.log("showQRCode called with:", {itemId, type, title, subtitle});
+        
+        if (!itemId || itemId === 'null' || itemId === '') {
+            console.error("QR Code Error: No itemId provided");
+            return;
+        }
+
+        const container = document.getElementById('qrCodeContainer');
+        if (!container) {
+            console.error("QR Code Error: Container not found");
+            return;
+        }
+        
+        container.innerHTML = ''; // Clear previous QR
+        
+        document.getElementById('qrItemTitle').innerText = title || "Equipamento";
+        document.getElementById('qrItemSubtitle').innerText = subtitle || "S/N N/A";
+
+        const detailUrl = `${window.location.origin}/Equipment/Details?id=${itemId}&type=${type}`;
+        console.log("Generating QR URL:", detailUrl);
+        
+        try {
+            if (typeof QRCode === 'undefined') {
+                console.error("QRCode library not loaded!");
+                container.innerHTML = '<p class="text-danger small">Erro: Biblioteca QR não carregada.</p>';
+                return;
+            }
+
+            window.qrGenerator = new QRCode(container, {
+                text: detailUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            const modalEl = document.getElementById('modalQRCode');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                if (!window.bsModalInstance) {
+                    window.bsModalInstance = new bootstrap.Modal(modalEl);
+                }
+                window.bsModalInstance.show();
+                console.log("Modal shown");
+            } else {
+                console.error("Bootstrap or Modal element not found", { modalEl, bootstrap: typeof bootstrap });
+            }
+        } catch (err) {
+            console.error("Error generating QR Code:", err);
+        }
+    }
+
+    function printQRCode() {
+        const container = document.getElementById('qrCodeContainer');
+        const canvas = container.querySelector('canvas');
+        const img = container.querySelector('img');
+        
+        let qrImage = "";
+        if (canvas) {
+            qrImage = canvas.toDataURL("image/png");
+        } else if (img && img.src) {
+            qrImage = img.src;
+        }
+        
+        if (!qrImage) {
+            alert("O código QR ainda não está pronto. Por favor, aguarde um segundo e tente novamente.");
+            return;
+        }
+
+        const title = document.getElementById('qrItemTitle').innerText;
+        const subtitle = document.getElementById('qrItemSubtitle').innerText;
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Imprimir QR Code - ${title}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 40px; margin: 0; background: #fff; }
+                        .ticket { border: 2px dashed #444; padding: 30px; display: inline-block; min-width: 250px; border-radius: 10px; }
+                        img { margin: 20px auto; display: block; border: 1px solid #eee; padding: 5px; }
+                        .title { font-weight: bold; font-size: 1.4rem; margin-bottom: 5px; color: #000; text-transform: uppercase; }
+                        .subtitle { color: #666; font-size: 1rem; margin-bottom: 5px; }
+                        .footer { font-size: 0.8rem; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="ticket">
+                        <div class="title">${title}</div>
+                        <div class="subtitle">${subtitle}</div>
+                        <img src="${qrImage}" width="200" height="200" />
+                        <div class="footer">Digitalize para ficha técnica - ASNET</div>
+                    </div>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() {
+                                window.print();
+                                setTimeout(function() { window.close(); }, 500);
+                            }, 500);
+                        };
+                    <\/script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+</script>

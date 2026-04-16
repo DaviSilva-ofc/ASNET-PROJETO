@@ -24,6 +24,8 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         public List<Agrupamento> AccessibleAgrupamentos { get; set; } = new();
         public List<StockEmpresa> AgrupamentoBaseStock { get; set; } = new();
 
+        public List<Ticket> ActiveTickets { get; set; } = new();
+
         public List<Bloco> AccessibleBlocos { get; set; } = new();
         public List<Sala> AccessibleSalas { get; set; } = new();
 
@@ -60,6 +62,8 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                             (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && 
                             (t.Level == null || !t.Level.Contains("Estado")))
                 .ToListAsync();
+
+            ActiveTickets = activeTickets;
 
             ActiveSchoolIds = new HashSet<int>();
             ActiveAgrupamentoIds = new HashSet<int>();
@@ -149,6 +153,55 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             }
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostAssignStockAsync(int stockId, int ticketId, string itemType = "Stock")
+        {
+            if (!User.Identity.IsAuthenticated || !User.IsInRole("Tecnico")) 
+                return RedirectToPage("/Auth/Login");
+
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null || ticket.TechnicianId != userId)
+            {
+                TempData["ErrorMessage"] = "Trabalho não encontrado ou sem permissão.";
+                return RedirectToPage();
+            }
+
+            if (itemType == "Equipamento")
+            {
+                var equip = await _context.Equipamentos.FindAsync(stockId);
+                if (equip == null)
+                {
+                    TempData["ErrorMessage"] = "Equipamento não encontrado.";
+                    return RedirectToPage();
+                }
+                equip.TicketId = ticketId;
+                equip.Status = "Usado na Intervenção";
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"O equipamento '{equip.Name}' foi associado com sucesso ao Trabalho #{ticketId}.";
+            }
+            else
+            {
+                var stock = await _context.StockEmpresa.FindAsync(stockId);
+                if (stock == null)
+                {
+                    TempData["ErrorMessage"] = "Item de stock não encontrado.";
+                    return RedirectToPage();
+                }
+
+                stock.TicketId = ticketId;
+                stock.Status = "Usado na Intervenção";
+                stock.IsAvailable = false;
+                
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"O artigo '{stock.EquipmentName}' foi associado com sucesso ao Trabalho #{ticketId}.";
+            }
+
+            return RedirectToPage();
         }
     }
 

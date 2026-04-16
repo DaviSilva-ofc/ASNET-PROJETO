@@ -156,6 +156,7 @@
                         <th>Localização</th>
                         <th>Quantidade</th>
                         <th>Estado</th>
+                        <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,10 +202,21 @@
                                     {
                                         <span class="badge bg-label-primary">Emprestado</span>
                                     }
+                                    else if (item.Status != null && item.Status.Trim().Equals("Associado", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge bg-label-warning">Associado (Em Intervenção)</span>
+                                    }
                                     else
                                     {
                                         <span class="badge bg-label-secondary">@item.Status</span>
                                     }
+                                </td>
+                                <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
+                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" 
+                                            onclick="showQRCode('@item.IdWithPrefix', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" 
+                                            title="Código QR">
+                                        <i class="ri-qr-code-line"></i>
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -250,11 +262,18 @@
                                 <td><span class="fw-semibold">@item.Quantity</span> unidade(s)</td>
                                 <td><span class="badge bg-label-primary">@item.Status</span></td>
                                 <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
-                                    <button type="button" class="btn btn-sm btn-outline-warning p-1 px-2"
-                                            onclick="openReturnLoanModal('@Uri.EscapeDataString(item.Name ?? "")', @item.Id, @item.Quantity)"
-                                            title="Devolver Empréstimo à Administração">
-                                        <i class="ri-arrow-go-back-line me-1"></i> Devolver
-                                    </button>
+                                    <div class="d-flex align-items-center gap-2 justify-content-center">
+                                        <button type="button" class="btn btn-sm btn-icon btn-outline-info" 
+                                                onclick="showQRCode('@item.IdWithPrefix', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" 
+                                                title="Código QR">
+                                            <i class="ri-qr-code-line"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-icon btn-outline-warning"
+                                                onclick="openReturnLoanModal('@Uri.EscapeDataString(item.Name ?? "")', @item.Id, @item.Quantity)"
+                                                title="Devolver Empréstimo">
+                                            <i class="ri-arrow-go-back-line"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -546,4 +565,5 @@
         new bootstrap.Modal(document.getElementById('modalReturnLoan')).show();
     }
 </script>
+<partial name="Shared/_QrModal" />
 }

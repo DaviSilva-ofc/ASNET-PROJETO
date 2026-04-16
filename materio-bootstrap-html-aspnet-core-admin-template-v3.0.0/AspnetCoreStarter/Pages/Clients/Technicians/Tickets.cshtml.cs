@@ -55,6 +55,8 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 .Include(t => t.School)
                 .Include(t => t.Equipamento).ThenInclude(e => e.Empresa)
                 .Include(t => t.Equipamento).ThenInclude(e => e.Room)
+                .Include(t => t.UtilizedStocks)
+                .Include(t => t.UtilizedEquipments)
                 .Where(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .AsQueryable();
 

@@ -409,6 +409,7 @@
                                 <th>TÉCNICO</th>
                                 <th>DATA</th>
                                 <th>ESTADO</th>
+                                <th class="text-center">AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -457,11 +458,17 @@
                                             }
                                             <span class="@statusLabel text-uppercase" style="font-size: 0.65rem;">@statusDisplayName</span>
                                         </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                    onclick="showQRCode('@ticket.Equipamento?.Id', 'equip', '@(ticket.Equipamento?.Name?.Replace("'", "\\'"))', '@(ticket.Equipamento?.SerialNumber ?? "S/N N/A")')">
+                                                <i class="ri-qr-code-line"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 }
                             } else {
                                 <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted">Sem tickets recentes a reportar.</td>
+                                    <td colspan="6" class="text-center py-5 text-muted">Sem tickets recentes a reportar.</td>
                                 </tr>
                             }
                         </tbody>
@@ -470,6 +477,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- ===== My Requests Row ===== -->
     <div class="row g-4 mb-4">
@@ -645,4 +653,5 @@
         }
     });
 </script>
+<partial name="Shared/_QrModal" />
 }

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("utilizadores")]
-    public class User
+    public class User : ISoftDeletable
     {
         [Key]
         [Column("id_utilizador")]
@@ -51,6 +51,8 @@ namespace AspnetCoreStarter.Models
 
         [ForeignKey("EmpresaId")]
         public virtual Empresa? Empresa { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
     }
 }
-

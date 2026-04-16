@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("empresas")]
-    public class Empresa
+    public class Empresa : ISoftDeletable
     {
         [Key]
         [Column("id_empresa")]
@@ -19,6 +19,9 @@ namespace AspnetCoreStarter.Models
         [Column("localizacao")]
         [MaxLength(255)]
         public string? Location { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
 
         // Navigation property for users linked to this company
         public virtual ICollection<User> Users { get; set; } = new List<User>();

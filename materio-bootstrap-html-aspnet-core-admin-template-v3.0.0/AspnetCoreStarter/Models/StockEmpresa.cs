@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace AspnetCoreStarter.Models
 {
     [Table("stock_empresa")]
-    public class StockEmpresa
+    public class StockEmpresa : ISoftDeletable
     {
         [Key]
         [Column("id_stock")]
@@ -69,5 +69,14 @@ namespace AspnetCoreStarter.Models
 
         [ForeignKey("EmpresaId")]
         public virtual Empresa? Empresa { get; set; }
+
+        [Column("id_ticket")]
+        public int? TicketId { get; set; }
+
+        [ForeignKey("TicketId")]
+        public virtual Ticket? Ticket { get; set; }
+
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
     }
 }

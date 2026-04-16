@@ -70,6 +70,33 @@ using (var scope = app.Services.CreateScope())
         try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_diretor INT NULL;"); } catch { }
         try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD CONSTRAINT FK_stock_empresa_diretores_id_diretor FOREIGN KEY (id_diretor) REFERENCES utilizadores(id_utilizador);"); } catch { }
 
+        // StockEmpresa updates for Tickets
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_ticket INT NULL;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD CONSTRAINT FK_stock_empresa_tickets_id_ticket FOREIGN KEY (id_ticket) REFERENCES tickets(id_ticket);"); } catch { }
+
+        // Equipamento updates for Tickets
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN id_ticket INT NULL;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD CONSTRAINT FK_equipamentos_tickets_id_ticket FOREIGN KEY (id_ticket) REFERENCES tickets(id_ticket);"); } catch { }
+
+        // CSAT columns for Tickets
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN satisfacao_rating INT NULL;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN satisfacao_feedback TEXT NULL;"); } catch { }
+        try { await context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_avaliacao DATETIME NULL;"); } catch { }
+
+        // ── SOFT DELETE COLUMNS ──────────────────────────────────────────────────
+        // Ensure is_deleted column exists on all soft-deletable tables.
+        // ALTER TABLE ignores silently if column already exists.
+        var softDeleteTables = new[]
+        {
+            "utilizadores", "escolas", "agrupamentos", "blocos", "salas",
+            "equipamentos", "tickets", "stock_empresa", "empresas",
+            "contratos", "emprestimos", "reparos", "pedidos_stock"
+        };
+        foreach (var table in softDeleteTables)
+        {
+            try { await context.Database.ExecuteSqlRawAsync($"ALTER TABLE {table} ADD COLUMN is_deleted TINYINT(1) NOT NULL DEFAULT 0;"); } catch { }
+        }
+
         context.Database.Migrate();
         Console.WriteLine("Base de dados atualizada com sucesso.");
     }
