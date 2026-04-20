@@ -25,6 +25,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
         public List<StockEmpresa> MyStock { get; set; } = new();
         public List<Ticket> MyStockRequests { get; set; } = new();
+        public List<Ticket> ActiveTickets { get; set; } = new();
         public List<RequestStockOption> AvailableRequestItems { get; set; } = new();
 
         public class RequestStockOption
@@ -246,6 +247,13 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 .OrderBy(n => n)
                 .ToList();
 
+            // Fetch Active Tickets for association modal
+            ActiveTickets = await _context.Tickets
+                .Include(t => t.School)
+                .Include(t => t.Equipamento)
+                .Where(t => t.TechnicianId == userId && t.Status != "Concluído" && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
+                .ToListAsync();
+
             UniqueBrands = await _context.Equipamentos
                 .Where(e => !string.IsNullOrEmpty(e.Brand))
                 .Select(e => e.Brand)
@@ -343,6 +351,35 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
             await _context.SaveChangesAsync();
             return RedirectToPage(new { success = "Equipamento atualizado com sucesso!" });
+        }
+
+        public async Task<IActionResult> OnPostAssignStockAsync(int stockId, int ticketId, string itemType = "Stock")
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
+
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null || ticket.TechnicianId != userId)
+            {
+                TempData["ErrorMessage"] = "Trabalho não encontrado ou sem permissão.";
+                return RedirectToPage();
+            }
+
+            var stock = await _context.StockEmpresa.FindAsync(stockId);
+            if (stock == null)
+            {
+                TempData["ErrorMessage"] = "Item de stock não encontrado.";
+                return RedirectToPage();
+            }
+
+            stock.TicketId = ticketId;
+            stock.Status = "Usado na Intervenção";
+            stock.IsAvailable = false;
+            
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"O artigo '{stock.EquipmentName}' foi associado com sucesso ao Trabalho #{ticketId}.";
+
+            return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)

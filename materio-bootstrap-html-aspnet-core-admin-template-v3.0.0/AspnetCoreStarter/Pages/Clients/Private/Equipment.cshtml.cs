@@ -313,9 +313,19 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             if (string.IsNullOrWhiteSpace(itemName))
                 return RedirectToPage(new { success = "" });
 
+            var dataObj = new {
+                ItemName = itemName,
+                ItemType = itemType,
+                Quantity = quantity,
+                AgrupamentoId = 0,
+                RequestorId = userId,
+                RequestorRole = "Cliente Individual"
+            };
+            var dataJson = System.Text.Json.JsonSerializer.Serialize(dataObj);
+
             var ticket = new Ticket
             {
-                Description = $"PEDIDO DE STOCK (CLIENTE PRIVADO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nEmpresa: {user.Empresa?.Name ?? "N/A"}",
+                Description = $"PEDIDO DE STOCK (CLIENTE PRIVADO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nEmpresa: {user.Empresa?.Name ?? "N/A"}\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
                 Status = "Pedido",
                 CreatedAt = DateTime.UtcNow,

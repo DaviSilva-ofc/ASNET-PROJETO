@@ -222,9 +222,19 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             var coord = await _context.Coordenadores.FirstOrDefaultAsync(c => c.UserId == userId);
             
+            var dataObj = new {
+                ItemName = itemName,
+                ItemType = itemType,
+                Quantity = quantity,
+                AgrupamentoId = 0, // Fallback if no agrupamento exists
+                RequestorId = userId,
+                RequestorRole = "Coordenador"
+            };
+            var dataJson = System.Text.Json.JsonSerializer.Serialize(dataObj);
+
             var ticket = new Ticket
             {
-                Description = $"PEDIDO DE STOCK (COORDENADOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}",
+                Description = $"PEDIDO DE STOCK (COORDENADOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
                 Status = "Pedido",
                 CreatedAt = DateTime.UtcNow,

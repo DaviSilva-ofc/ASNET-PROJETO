@@ -134,7 +134,9 @@
                                     {
                                         case "Pendente":
                                         case "Pedido": <span class="badge bg-label-warning text-uppercase">Pendente</span> break;
-                                        case "Em Resolução": <span class="badge bg-label-info text-uppercase">Em Resolução</span> break;
+                                        case "Em Resolução": 
+                                        case "Em Reparação": 
+                                        case "Em andamento": <span class="badge bg-label-info text-uppercase">@ticket.Status</span> break;
                                         case "Concluído": <span class="badge bg-label-success text-uppercase">Concluído</span> break;
                                         case "Cancelado": <span class="badge bg-label-secondary text-uppercase">Cancelado</span> break;
                                         default: <span class="badge bg-label-primary text-uppercase">@ticket.Status</span> break;

@@ -118,7 +118,7 @@
                             <td>
                                 @if (item.Status == "Usado na Intervenção")
                                 {
-                                    <span class="badge bg-label-secondary">Usado #@item.TicketId</span>
+                                    <span class="badge bg-label-info">Usado na Intervenção</span>
                                 }
                                 else
                                 {
@@ -187,10 +187,10 @@
                                                     <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', '@school.Name.Replace("'", "\\'")')" title="Código QR">
                                                         <i class="ri-qr-code-line"></i>
                                                     </button>
-                                                    @if(item.IsAvailable || item.Status == "Disponível" || item.Status == "A funcionar" || item.Status == "Funcionando")
+                                                    @if(item.Status == "Armazenado")
                                                     {
                                                         <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
-                                                            <i class="ri-links-line"></i>
+                                                            🔗
                                                         </button>
                                                     }
                                                 </div>
@@ -225,19 +225,18 @@
                                                                 {
                                                                     <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1 d-flex justify-content-between align-items-center">
                                                                         <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
-                                                                            <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
+                                                                            <span class="badge bg-label-@(equip.Status == "Armazenado" ? "warning" : (equip.Status == "Disponível" || equip.Status == "A funcionar" || equip.Status == "Funcionando" ? "success" : "danger")) ms-1" style="font-size:0.6rem;">
+                                                                                @(equip.Status == "Armazenado" ? "📦 Armazenado" : equip.Status)
+                                                                            </span>
                                                                         </span>
                                                                         <div class="d-flex align-items-center gap-2">
                                                                             <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'", "\\'")', '@sala.Name.Replace("'", "\\'")')" title="Código QR">
                                                                                 <i class="ri-qr-code-line"></i>
                                                                             </button>
-                                                                            @{
-                                                                                var isOp = equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando";
-                                                                            }
-                                                                            @if(isOp)
+                                                                            @if(equip.Status == "Armazenado")
                                                                             {
                                                                                 <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@equip.Id, '@equip.Name', 'Equipamento')" title="Associar a Trabalho Ativo">
-                                                                                    <i class="ri-links-line"></i>
+                                                                                    🔗
                                                                                 </button>
                                                                             }
                                                                         </div>
@@ -299,10 +298,10 @@
                                                     <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', '@agrp.Name.Replace("'", "\\'")')" title="Código QR">
                                                         <i class="ri-qr-code-line"></i>
                                                     </button>
-                                                    @if(item.IsAvailable || item.Status == "Disponível" || item.Status == "A funcionar" || item.Status == "Funcionando")
+                                                    @if(item.Status == "Armazenado")
                                                     {
                                                         <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
-                                                            <i class="ri-links-line"></i>
+                                                            🔗
                                                         </button>
                                                     }
                                                 </div>
@@ -346,19 +345,18 @@
                                                                             {
                                                                                 <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1 d-flex justify-content-between align-items-center">
                                                                                     <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
-                                                                                    <span class="badge bg-label-@(equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando" ? "success" : "danger") ms-1" style="font-size:0.6rem;">@equip.Status</span>
+                                                                                    <span class="badge bg-label-@(equip.Status == "Armazenado" ? "warning" : (equip.Status == "Disponível" || equip.Status == "A funcionar" || equip.Status == "Funcionando" ? "success" : "danger")) ms-1" style="font-size:0.6rem;">
+                                                                                        @(equip.Status == "Armazenado" ? "📦 Armazenado" : equip.Status)
+                                                                                    </span>
                                                                                     </span>
                                                                                 <div class="d-flex align-items-center gap-2">
                                                                                     <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'", "\\'")', '@sala.Name.Replace("'", "\\'")')" title="Código QR">
                                                                                         <i class="ri-qr-code-line"></i>
                                                                                     </button>
-                                                                                    @{
-                                                                                        var isOp2 = equip.Status == "Disponível" || equip.Status == "Armazenado" || equip.Status == "A funcionar" || equip.Status == "Funcionando";
-                                                                                    }
-                                                                                    @if(isOp2)
+                                                                                    @if(equip.Status == "Armazenado")
                                                                                     {
                                                                                         <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@equip.Id, '@equip.Name', 'Equipamento')" title="Associar a Trabalho Ativo">
-                                                                                            <i class="ri-links-line"></i>
+                                                                                            🔗
                                                                                         </button>
                                                                                     }
                                                                                 </div>

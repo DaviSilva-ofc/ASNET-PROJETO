@@ -126,9 +126,9 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge @(t.Level?.Contains("Alta") == true || t.Level?.Contains("Crítica") == true ? "bg-label-danger" : "bg-label-info")">
-                                        @t.Level
-                                    </span>
+                                     <span class="badge @(t.Level?.Contains("Alta") == true || t.Level?.Contains("Crítica") == true ? "bg-label-danger" : (t.Level?.Contains("Média") == true || t.Level?.Contains("Médio") == true ? "bg-label-warning" : "bg-label-info"))">
+                                         @t.Level
+                                     </span>
                                 </td>
                                 <td><span class="small">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
                                 <td>
@@ -218,7 +218,7 @@
                                         @{
                                             var desc = t.Description ?? string.Empty;
                                             var cutAt = desc.Length;
-                                            foreach (var marker in new[] { "( [DATA:", "[DATA:", "[RESOLVIDO:", "( IDATA:" })
+                                            foreach (var marker in new[] { "( [DATA:", "[DATA:", "[RESOLVIDO:", "[IDATA:" })
                                             {
                                                 var idx = desc.IndexOf(marker);
                                                 if (idx >= 0 && idx < cutAt) cutAt = idx;
@@ -285,16 +285,15 @@
                                     }
                                 </td>
                                 <td>
-                                    @{
-                                        var statusClass = t.Status switch
-                                        {
-                                            "Pendente" => "bg-label-warning",
-                                            "Em Reparação" => "bg-label-info",
-                                            "Em Resolução" => "bg-label-info",
-                                            "Concluído" => "bg-label-success",
-                                            _ => "bg-label-secondary"
-                                        };
-                                    }
+                                     @{
+                                         var statusClass = t.Status switch
+                                         {
+                                             "Pendente" => "bg-label-warning",
+                                             "Em Reparação" or "Em Resolução" => "bg-label-info",
+                                             "Concluído" => "bg-label-success",
+                                             _ => "bg-label-secondary"
+                                         };
+                                     }
                                     <span class="badge @statusClass">@t.Status</span>
                                 </td>
                                 <td><span class="small">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>

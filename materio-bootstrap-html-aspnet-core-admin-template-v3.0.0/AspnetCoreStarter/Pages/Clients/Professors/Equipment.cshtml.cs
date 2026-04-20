@@ -159,9 +159,19 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             // Get professor's school to help administration route the request
             var room = await _context.Salas.Include(r => r.Block).ThenInclude(b => b.School).FirstOrDefaultAsync(r => r.ResponsibleProfessorId == userId);
 
+            var dataObj = new {
+                ItemName = itemName,
+                ItemType = itemType,
+                Quantity = quantity,
+                AgrupamentoId = 0,
+                RequestorId = userId,
+                RequestorRole = "Professor"
+            };
+            var dataJson = System.Text.Json.JsonSerializer.Serialize(dataObj);
+
             var ticket = new Ticket
             {
-                Description = $"PEDIDO DE EQUIPAMENTO (PROFESSOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nLocalização Sugerida: {room?.Name} ({room?.Block?.School?.Name})",
+                Description = $"PEDIDO DE EQUIPAMENTO (PROFESSOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nLocalização Sugerida: {room?.Name} ({room?.Block?.School?.Name})\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
                 Status = "Pedido",
                 CreatedAt = DateTime.UtcNow,

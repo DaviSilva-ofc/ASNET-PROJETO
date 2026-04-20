@@ -425,9 +425,19 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             var director = await _context.Diretores.Include(d => d.Agrupamento).FirstOrDefaultAsync(d => d.UserId == userId);
             
+            var dataObj = new {
+                ItemName = itemName,
+                ItemType = itemType,
+                Quantity = quantity,
+                AgrupamentoId = director?.AgrupamentoId ?? 0,
+                RequestorId = userId,
+                RequestorRole = "Diretor"
+            };
+            var dataJson = System.Text.Json.JsonSerializer.Serialize(dataObj);
+
             var ticket = new Ticket
             {
-                Description = $"PEDIDO DE STOCK (DIRETOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nAgrupamento: {director?.Agrupamento?.Name}",
+                Description = $"PEDIDO DE STOCK (DIRETOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nAgrupamento: {director?.Agrupamento?.Name}\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
                 Status = "Pedido",
                 CreatedAt = DateTime.UtcNow,

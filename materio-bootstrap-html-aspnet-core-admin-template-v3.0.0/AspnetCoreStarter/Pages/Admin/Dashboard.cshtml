@@ -629,6 +629,7 @@
                                     <th>Pedido / Descrição</th>
                                     <th>Estado</th>
                                     <th>Data</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -660,6 +661,22 @@
                                             </td>
                                             <td><span class="badge bg-label-warning">@t.Status</span></td>
                                             <td><small>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small></td>
+                                            <td>
+                                                <div class="d-flex gap-2">
+                                                    <form method="post" action="/Admin/Stocks?handler=ApproveLoanRequest" class="m-0 p-0" onsubmit="return confirm('Deseja alocar equipamento(s) automaticamente para este pedido?');">
+                                                        <input type="hidden" name="ticketId" value="@t.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-success p-1" title="Aceitar Automático">
+                                                            <i class="bx bx-check"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" action="/Admin/Stocks?handler=RejectLoanRequest" class="m-0 p-0" onsubmit="return confirm('Tem certeza que deseja recusar este pedido?');">
+                                                        <input type="hidden" name="ticketId" value="@t.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-danger p-1" title="Recusar">
+                                                            <i class="bx bx-x"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
                                         </tr>
                                     }
                                 }

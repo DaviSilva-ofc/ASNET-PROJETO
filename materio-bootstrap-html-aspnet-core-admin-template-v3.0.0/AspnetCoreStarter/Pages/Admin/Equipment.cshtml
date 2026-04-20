@@ -148,11 +148,13 @@
                             </td>
                             <td>
                                 @if (item.Status == "Avariado") {
-                                    <span class="badge bg-label-danger">Avariado</span>
-                                } else if (item.Status == "Associado") {
-                                    <span class="badge bg-label-warning">Associado (Em Intervenção)</span>
+                                    <span class="badge bg-label-danger">🛠️ Avariado</span>
+                                } else if (item.Status == "Associado" || item.Status == "Armazenado") {
+                                    <span class="badge bg-label-warning">@(item.Status == "Armazenado" ? "📦 Armazenado" : "🔗 Associado")</span>
+                                } else if (item.Status == "Usado na Intervenção") {
+                                    <span class="badge bg-label-info">📦 Usado na Intervenção</span>
                                 } else {
-                                    <span class="badge bg-label-success">@(item.Status == "Funcionando" || string.IsNullOrEmpty(item.Status) ? "A funcionar" : item.Status)</span>
+                                    <span class="badge bg-label-success">@(item.Status == "Funcionando" || string.IsNullOrEmpty(item.Status) ? "✅ A funcionar" : "📦 " + item.Status)</span>
                                 }
                             </td>
                             <td style="white-space: nowrap; width: 1%;">
@@ -160,34 +162,34 @@
                                     @if (item.Status == null || (!item.Status.Contains("repara", StringComparison.OrdinalIgnoreCase) && !item.Status.Contains("manutenção", StringComparison.OrdinalIgnoreCase)))
                                     {
                                         <a asp-page="./Tickets" asp-route-eqId="@item.Id" class="btn btn-sm btn-icon text-primary p-0" title="Solicitar Ticket">
-                                            <i class="ri-add-circle-line"></i>
+                                            ➕
                                         </a>
                                     }
                                     <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
                                         @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
                                         {
-                                            <button type="submit" class="btn btn-sm btn-icon text-success p-0" title="Marcar como Funcional">
-                                                <i class="ri-check-line"></i>
+                                            <button type="submit" class="border-0 bg-transparent p-1 lh-1" title="Marcar como Funcional">
+                                                ✅
                                             </button>
                                         }
                                         else
                                         {
-                                            <button type="submit" class="btn btn-sm btn-icon text-warning p-0" title="Marcar como Avariado">
-                                                <i class="ri-error-warning-line"></i>
+                                            <button type="submit" class="border-0 bg-transparent p-1 lh-1" title="Marcar como Avariado">
+                                                ⚠️
                                             </button>
                                         }
                                     </form>
-                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                    <button type="button" class="border-0 bg-transparent p-1 lh-1" title="Código QR" 
                                             onclick="showQRCode('@item.Id', 'equip', '@(item.Name?.Replace("'", "\\'"))', '@(item.Room?.Name?.Replace("'", "\\'"))')">
-                                        <i class="ri-qr-code-line"></i>
+                                        📱
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-icon text-primary p-0" title="Editar"
+                                    <button type="button" class="border-0 bg-transparent p-1 lh-1" title="Editar"
                                             onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@item.Brand', '@item.Model', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId', '@item.Status')">
-                                        <i class="ri-edit-line"></i>
+                                        ✏️
                                     </button>
                                     <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
-                                        <button type="submit" class="btn btn-sm btn-icon text-danger p-0" title="Eliminar">
-                                            <i class="ri-delete-bin-line"></i>
+                                        <button type="submit" class="border-0 bg-transparent p-1 lh-1" title="Eliminar">
+                                            🗑️
                                         </button>
                                     </form>
                                 </div>

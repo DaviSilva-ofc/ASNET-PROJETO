@@ -129,27 +129,27 @@
                                     }
                                 </td>
                                 <td>
-                                    @if (!string.IsNullOrEmpty(t.Level))
-                                    {
-                                        <span class="badge @(t.Level.Contains("Alta") || t.Level.Contains("Crítica") ? "bg-label-danger" : (t.Level.Contains("Média") ? "bg-label-warning" : "bg-label-info"))">
-                                            @t.Level
-                                        </span>
-                                    }
+                                     @if (!string.IsNullOrEmpty(t.Level))
+                                     {
+                                         <span class="badge @(t.Level.Contains("Alta") || t.Level.Contains("Crítica") || t.Level.Contains("Extremo") ? "bg-label-danger" : (t.Level.Contains("Médio") || t.Level.Contains("Média") ? "bg-label-warning" : "bg-label-info"))">
+                                             @t.Level
+                                         </span>
+                                     }
                                     else
                                     {
                                         <span class="text-muted small">N/A</span>
                                     }
                                 </td>
                                 <td>
-                                    @{
-                                        var statusClass = t.Status switch
-                                        {
-                                            "Pendente" => "bg-label-warning",
-                                            "Em Resolução" => "bg-label-info",
-                                            "Concluído" => "bg-label-success",
-                                            _ => "bg-label-secondary"
-                                        };
-                                    }
+                                     @{
+                                         var statusClass = t.Status switch
+                                         {
+                                             "Pendente" => "bg-label-warning",
+                                             "Em Resolução" or "Em Reparação" or "Em andamento" => "bg-label-info",
+                                             "Concluído" => "bg-label-success",
+                                             _ => "bg-label-secondary"
+                                         };
+                                     }
                                     <span class="badge @statusClass">@t.Status</span>
                                 </td>
                                 <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>

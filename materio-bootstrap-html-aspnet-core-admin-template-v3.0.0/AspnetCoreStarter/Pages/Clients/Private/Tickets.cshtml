@@ -111,6 +111,19 @@
                                                     <i class="ri-qr-code-line"></i>
                                                 </button>
                                             </div>
+
+
+
+
+
+
+
+
+
+
+
+
+                                            
                                             <small class="text-muted small">
                                                 @(t.Equipamento.Brand ?? "Genérico") @(t.Equipamento.Model ?? "")
                                                 @if (!string.IsNullOrEmpty(t.Equipamento.SerialNumber))
@@ -158,7 +171,7 @@
                                         var statusClass = t.Status switch
                                         {
                                             "Pendente" or "Pedido" => "bg-label-warning",
-                                            "Em Resolução" => "bg-label-info",
+                                            "Em Resolução" or "Em Reparação" or "Em andamento" => "bg-label-info",
                                             "Concluído" => "bg-label-success",
                                             _ => "bg-label-secondary"
                                         };

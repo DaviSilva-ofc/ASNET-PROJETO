@@ -547,7 +547,7 @@
                                             </td>
                                             <td>@s.EquipmentName</td>
                                             <td><span class="badge bg-label-secondary">@s.Type</span></td>
-                                            <td><span class="badge bg-label-info">@s.Status</span></td>
+                                            <td><span class="badge @(s.Status == "Armazenado" || s.Status == "Disponível" ? "bg-label-warning" : "bg-label-info")">@s.Status</span></td>
                                         </tr>
                                     }
                                 </tbody>

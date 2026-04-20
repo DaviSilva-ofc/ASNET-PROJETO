@@ -285,12 +285,26 @@
                                             <div class="fw-bold text-white">@item.EquipmentName</div>
                                             <div class="text-xs text-white-50">@item.Description</div>
                                         </td>
-                                        <td class="text-end py-2">
-                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
-                                                    onclick="showQRCode('@item.Id', 'Equipamento', '@item.EquipmentName', 'Mala de Ferramentas')">
-                                                <i class="ri-qr-code-line"></i>
-                                            </button>
-                                        </td>
+                                         <td class="text-end py-2">
+                                            <div class="d-flex align-items-center justify-content-end gap-2">
+                                                <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                                        onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName?.Replace("'", "\\'")', 'Mala de Ferramentas')">
+                                                    📱
+                                                </button>
+                                                @if (item.IsAvailable || item.Status == "Disponível")
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-icon text-success p-0" 
+                                                            onclick="openAssignModal(@item.Id, '@item.EquipmentName?.Replace("'", "\\'")', 'Stock')" 
+                                                            title="Associar a Trabalho">
+                                                        🔗
+                                                    </button>
+                                                }
+                                                else if (item.Status == "Usado na Intervenção")
+                                                {
+                                                    <span class="badge bg-label-info p-1" title="Usado no Trabalho #@item.TicketId">#@item.TicketId</span>
+                                                }
+                                            </div>
+                                         </td>
                                     </tr>
                                 }
                             </tbody>
@@ -349,27 +363,52 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge @(t.Level?.Contains("Alto") == true || t.Level?.Contains("Extremo") == true ? "bg-label-danger" : (t.Level?.Contains("Médio") == true ? "bg-label-warning" : "bg-label-info"))">
-                                    @t.Level
+                                @{
+                                    var priorityEmoji = t.Level switch {
+                                        var l when l?.Contains("Alto") == true || l?.Contains("Extremo") == true => "🔴",
+                                        var l when l?.Contains("Médio") == true => "🟠",
+                                        _ => "🔵"
+                                    };
+                                }
+                                <span class="badge @(priorityEmoji == "🔴" ? "bg-label-danger" : (priorityEmoji == "🟠" ? "bg-label-warning" : "bg-label-info"))">
+                                    @priorityEmoji @t.Level
                                 </span>
                             </td>
                             <td>
                                 @{
                                     var stClass = t.Status switch {
                                         "Pendente" => "bg-label-warning",
-                                        "Em Resolução" => "bg-label-info",
+                                        "Em Resolução" or "Em Reparação" => "bg-label-info",
                                         "Concluído" => "bg-label-success",
                                         _ => "bg-label-secondary"
                                     };
+                                    var stEmoji = t.Status switch {
+                                        "Pendente" => "⏳ ",
+                                        "Em Resolução" or "Em Reparação" => "🔧 ",
+                                        "Concluído" => "✅ ",
+                                        _ => "📦 "
+                                    };
                                 }
-                                <span class="badge @stClass">@t.Status</span>
+                                <span class="badge @stClass">@stEmoji@t.Status</span>
                             </td>
                             <td class="text-white-50">@t.CreatedAt.ToString("dd/MM/yyyy")</td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
-                                        onclick="showQRCode('@t.Equipamento?.Id', 'equip', '@(t.Equipamento?.Name?.Replace("'", "\\'"))', '@(t.Equipamento?.SerialNumber ?? "S/N N/A")')">
-                                    <i class="ri-qr-code-line"></i>
-                                </button>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                            onclick="showQRCode('@t.Equipamento?.Id', 'equip', '@(t.Equipamento?.Name?.Replace("'", "\\'"))', '@(t.Equipamento?.SerialNumber ?? "S/N N/A")')">
+                                        📱
+                                    </button>
+                                    
+                                    @if (t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Equipamento?.Status != "Em Reparação")
+                                    {
+                                        <form method="post" asp-page-handler="UpdateStatus" asp-route-id="@t.EquipamentoId" class="d-inline">
+                                            <input type="hidden" name="status" value="Em Reparação" />
+                                            <button type="submit" class="btn btn-sm btn-icon text-warning p-0" title="Enviar para Reparação">
+                                                <i class="ri-tools-line"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -610,5 +649,51 @@
     }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
+<!-- Modal Atribuir Stock -->
+<div class="modal fade" id="assignStockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="AssignStock" class="modal-content card-bg border-light border-opacity-10" style="background: #2b2c40 !important;">
+            <div class="modal-header border-bottom border-light border-opacity-10">
+                <h5 class="modal-title text-white">Associar Stock a Trabalho</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalStockId" name="stockId" value="" />
+                <input type="hidden" id="modalItemType" name="itemType" value="" />
+                
+                <p class="text-white-50">Estás prestes a aplicar <strong id="modalStockName" class="text-white"></strong> numa intervenção ativa.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label text-white-50">Trabalho Associado</label>
+                    <select class="form-select bg-dark text-white border-secondary" name="ticketId" required>
+                        <option value="" disabled selected>Selecionar o trabalho...</option>
+                        @foreach(var ticket in Model.ActiveTickets)
+                        {
+                            <option value="@ticket.Id">
+                                #@ticket.Id - @(ticket.Equipamento?.Name ?? "Outro") (@(ticket.School?.Name ?? "Indefinida"))
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-10">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">✅ Associar Artigo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAssignModal(stockId, stockName, itemType) {
+        document.getElementById('modalStockId').value = stockId;
+        document.getElementById('modalStockName').textContent = stockName;
+        document.getElementById('modalItemType').value = itemType;
+        
+        var modal = new bootstrap.Modal(document.getElementById('assignStockModal'));
+        modal.show();
+    }
+</script>
+
 <partial name="Shared/_QrModal" />
 }

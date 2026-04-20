@@ -215,52 +215,63 @@
                                 }
                             </td>
                             <td>
-                                @if (isBroken) { <span class="badge bg-label-danger status-pill">Avariado</span> }
-                                else if (isRepair) { <span class="badge bg-label-warning status-pill">Em Repara&ccedil;&atilde;o</span> }
-                                else if (normalizedStatus.Contains("funciona")) { <span class="badge bg-label-success status-pill">A funcionar</span> }
-                                else { <span class="badge @(normalizedStatus == "disponivel" || normalizedStatus == "disponível" || normalizedStatus == "armazenado" ? "bg-label-success" : "bg-label-secondary") status-pill">@item.Status</span> }
+                                @if (isBroken) { <span class="badge bg-label-danger status-pill">❌ Avariado</span> }
+                                else if (isRepair) { <span class="badge bg-label-info status-pill">🛠️ Em Reparação</span> }
+                                else if (normalizedStatus.Contains("funciona")) { <span class="badge bg-label-success status-pill">✅ A funcionar</span> }
+                                else if (normalizedStatus == "armazenado") { <span class="badge bg-label-warning status-pill">📦 @item.Status</span> }
+                                else { <span class="badge @(normalizedStatus == "disponivel" || normalizedStatus == "disponível" ? "bg-label-success" : "bg-label-secondary") status-pill">📦 @item.Status</span> }
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-1">
                                     @* Menu de Mudança de Estado *@
                                     <div class="dropdown">
-                                        <button class="btn btn-sm btn-icon btn-outline-warning p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Mudar estado">
-                                            <i class="ri-settings-4-line"></i>
+                                        <button class="border-0 bg-transparent p-1 lh-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Mudar estado">
+                                            ⚙️
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary shadow-lg">
                                             <form method="post" asp-page-handler="UpdateStatus" asp-route-id="@item.Id">
                                                 @if (isBroken)
                                                 {
-                                                    <li><button type="submit" name="status" value="Em Repara&ccedil;&atilde;o" class="dropdown-item text-warning py-2"><i class="ri-tools-line me-2"></i>Em Repara&ccedil;&atilde;o</button></li>
-                                                    <li><button type="submit" name="status" value="A funcionar" class="dropdown-item text-success py-2"><i class="ri-check-line me-2"></i>Funcional</button></li>
+                                                    <li><button type="submit" name="status" value="Em Repara&ccedil;&atilde;o" class="dropdown-item text-warning py-2">🛠️ Em Repara&ccedil;&atilde;o</button></li>
+                                                    <li><button type="submit" name="status" value="A funcionar" class="dropdown-item text-success py-2">✅ Funcional</button></li>
                                                 }
                                                 else if (isRepair)
                                                 {
-                                                    <li><button type="submit" name="status" value="A funcionar" class="dropdown-item text-success py-2"><i class="ri-check-line me-2"></i>Marcar como Conclu&iacute;do</button></li>
-                                                    <li><button type="submit" name="status" value="Avariado" class="dropdown-item text-danger py-2"><i class="ri-error-warning-line me-2"></i>Voltar a Avariado</button></li>
+                                                    <li><button type="submit" name="status" value="A funcionar" class="dropdown-item text-success py-2">✅ Conclu&iacute;do</button></li>
+                                                    <li><button type="submit" name="status" value="Avariado" class="dropdown-item text-danger py-2">❌ Voltar a Avariado</button></li>
                                                 }
                                                 else
                                                 {
-                                                    <li><button type="submit" name="status" value="Avariado" class="dropdown-item text-danger py-2"><i class="ri-error-warning-line me-2"></i>Marcar como Avariado</button></li>
-                                                    <li><button type="submit" name="status" value="Em Repara&ccedil;&atilde;o" class="dropdown-item text-warning py-2"><i class="ri-tools-line me-2"></i>Enviar para Repara&ccedil;&atilde;o</button></li>
+                                                    <li><button type="submit" name="status" value="Avariado" class="dropdown-item text-danger py-2">⚠️ Marcar como Avariado</button></li>
+                                                    <li><button type="submit" name="status" value="Em Repara&ccedil;&atilde;o" class="dropdown-item text-warning py-2">🛠️ Enviar para Repara&ccedil;&atilde;o</button></li>
                                                 }
                                             </form>
                                         </ul>
                                     </div>
+                                    
+                                    @if (!isRepair)
+                                    {
+                                        <form method="post" asp-page-handler="UpdateStatus" asp-route-id="@item.Id" style="display:inline-block;">
+                                            <input type="hidden" name="status" value="Em Reparação" />
+                                            <button type="submit" class="border-0 bg-transparent p-1 lh-1" title="Enviar para Reparação">
+                                                🛠️
+                                            </button>
+                                        </form>
+                                    }
 
-                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
+                                    <button type="button" class="border-0 bg-transparent p-1 lh-1" title="Código QR" 
                                             onclick="showQRCode('@item.Id', 'equip', '@(item.Name?.Replace("'", "\\'"))', '@(item.SerialNumber ?? "S/N N/A")')">
-                                        <i class="ri-qr-code-line"></i>
+                                        📱
                                     </button>
 
-                                    <button type="button" class="btn btn-sm btn-icon text-primary p-0" title="Editar"
+                                    <button type="button" class="border-0 bg-transparent p-1 lh-1" title="Editar"
                                             onclick="openEditModal('@item.Id', '@item.Name', '@item.Type', '@(item.Brand ?? "")', '@(item.Model ?? "")', '@item.SerialNumber', '@item.RoomId', '@item.EmpresaId', '@item.Status')">
-                                        <i class="ri-edit-line"></i>
+                                        ✏️
                                     </button>
 
                                     <form method="post" asp-page-handler="Delete" asp-route-id="@item.Id" onsubmit="return confirm('Tem a certeza que deseja eliminar este equipamento?');" style="display:inline-block;">
-                                        <button type="submit" class="btn btn-sm btn-icon text-danger p-0" title="Eliminar">
-                                            <i class="ri-delete-bin-line"></i>
+                                        <button type="submit" class="border-0 bg-transparent p-1 lh-1" title="Eliminar">
+                                            🗑️
                                         </button>
                                     </form>
                                 </div>
@@ -374,6 +385,18 @@
                                                                     <i class="ri-arrow-go-back-line"></i>
                                                                 </button>
                                                             </form>
+                                                            @if (item.IsAvailable || item.Status == "Disponível")
+                                                            {
+                                                                <button type="button" class="btn btn-sm btn-icon text-success p-0" 
+                                                                        onclick="openAssignModal(@item.Id, '@item.EquipmentName?.Replace("'", "\\'")', 'Stock')" 
+                                                                        title="Associar a Trabalho">
+                                                                    🔗
+                                                                </button>
+                                                            }
+                                                            else if (item.Status == "Usado na Intervenção")
+                                                            {
+                                                                <span class="badge bg-label-info p-1" title="Usado no Trabalho #@item.TicketId">#@item.TicketId</span>
+                                                            }
                                                             <form method="post" asp-page-handler="FinalDisposal" onsubmit="return confirm('Confirmas a baixa definitiva deste item? Ele será removido do inventário.')">
                                                                 <input type="hidden" name="id" value="@item.Id" />
                                                                 <button type="submit" class="btn btn-sm btn-icon text-danger p-0" title="Baixa Definitiva">
@@ -1492,6 +1515,52 @@
         });
     }
 </script>
+<!-- Modal Atribuir Stock -->
+<div class="modal fade" id="assignStockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="AssignStock" class="modal-content card-bg border-light border-opacity-10" style="background: #2b2c40 !important;">
+            <div class="modal-header border-bottom border-light border-opacity-10">
+                <h5 class="modal-title text-white">Associar Stock a Trabalho</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalStockId" name="stockId" value="" />
+                <input type="hidden" id="modalItemType" name="itemType" value="" />
+                
+                <p class="text-white-50">Estás prestes a aplicar <strong id="modalStockName" class="text-white"></strong> numa intervenção ativa.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label text-white-50">Trabalho Associado</label>
+                    <select class="form-select bg-dark text-white border-secondary" name="ticketId" required>
+                        <option value="" disabled selected>Selecionar o trabalho...</option>
+                        @foreach(var ticket in Model.ActiveTickets)
+                        {
+                            <option value="@ticket.Id">
+                                #@ticket.Id - @(ticket.Equipamento?.Name ?? "Outro") (@(ticket.School?.Name ?? "Indefinida"))
+                            </option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-10">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">✅ Associar Artigo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAssignModal(stockId, stockName, itemType) {
+        document.getElementById('modalStockId').value = stockId;
+        document.getElementById('modalStockName').textContent = stockName;
+        document.getElementById('modalItemType').value = itemType;
+        
+        var modal = new bootstrap.Modal(document.getElementById('assignStockModal'));
+        modal.show();
+    }
+</script>
+
 <partial name="Shared/_QrModal" />
 }
 

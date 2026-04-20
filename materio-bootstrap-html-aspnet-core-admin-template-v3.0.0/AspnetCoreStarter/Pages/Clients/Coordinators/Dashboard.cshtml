@@ -450,7 +450,7 @@
                                             @{
                                                 var statusLabel = ticket.Status switch {
                                                     "Pendente" or "Pedido" => "badge bg-label-warning",
-                                                    "Em Reparação" or "EmResolução" or "Em andamento" => "badge bg-label-info",
+                                                    "Em Reparação" or "EmResolução" or "Em andamento" => "badge bg-label-warning",
                                                     "Concluído" => "badge bg-label-success",
                                                     _ => "badge bg-label-secondary"
                                                 };
