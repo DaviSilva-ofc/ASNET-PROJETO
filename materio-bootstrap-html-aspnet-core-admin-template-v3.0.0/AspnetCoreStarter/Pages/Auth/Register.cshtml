@@ -1,93 +1,111 @@
-@page
-@model AspnetCoreStarter.Pages.Auth.RegisterModel
 @{
-  Layout = "Layouts/_FrontLayout";
+  Layout = "Layouts/_BlankLayout";
   ViewData["Title"] = "Registo";
-  ViewData["isFront"] = true;
 }
 
 @section PageStyles {
   <link rel="stylesheet" href="~/vendor/css/pages/page-auth.dist.css">
 }
 
-<div class="position-relative">
-  <div class="authentication-wrapper authentication-basic container-p-y p-4 p-sm-0">
-    <div class="authentication-inner py-6">
+<div class="authentication-wrapper authentication-cover">
+  <!-- /Left Text -->
+  <div class="authentication-inner row m-0">
+    <div class="d-none d-lg-flex col-lg-7 col-xl-8 align-items-center justify-content-center p-12 pb-2">
+      <img src="~/img/illustrations/auth-cover-register-illustration-light.png" class="auth-cover-illustration w-100" alt="auth-illustration" data-app-light-img="illustrations/auth-cover-register-illustration-light.png" data-app-dark-img="illustrations/auth-cover-register-illustration-dark.png">
+      <img src="~/img/illustrations/auth-cover-mask-light.png" class="authentication-image" alt="mask" data-app-light-img="illustrations/auth-cover-mask-light.png" data-app-dark-img="illustrations/auth-cover-mask-dark.png">
+    </div>
+    <!-- /Left Text -->
 
-      <!-- Register Card -->
-      <div class="card p-md-7 p-1">
-        <div class="card-body">
-          <!-- Logo -->
-          <div class="app-brand justify-content-center mt-5">
-            <a asp-page="/Index" class="app-brand-link gap-2">
-              <span class="app-brand-logo demo">
-                <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="30" />
-              </span>
-              <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
-            </a>
-          </div><br>
-          <!-- /Logo -->
-          @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-          {
-              <div class="alert alert-danger" role="alert">
-                  @Model.ErrorMessage
+    <!-- Register -->
+    <div class="d-flex col-12 col-lg-5 col-xl-4 align-items-center authentication-bg position-relative p-sm-12 p-6">
+      <div class="w-px-400 mx-auto pt-5 pt-lg-0">
+        <!-- Logo -->
+        <div class="app-brand mb-10">
+          <a asp-page="/Index" class="app-brand-link gap-2">
+            <span class="app-brand-logo demo">
+              <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="40" />
+            </span>
+            <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
+          </a>
+        </div>
+        <!-- /Logo -->
+        <h4 class="mb-1">A aventura começa aqui 🚀</h4>
+        <p class="mb-5">Torne a gestão da sua organização fácil e divertida!</p>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        <form id="formAuthentication" class="mb-5" method="POST" enctype="multipart/form-data">
+          <div class="mb-5 text-center">
+            <div class="d-flex align-items-center justify-content-center flex-column gap-2">
+              <div class="avatar avatar-xl border border-primary border-2 rounded-circle p-1">
+                <img src="~/img/avatars/1.png" alt="Avatar" class="rounded-circle" id="avatar-preview">
               </div>
-          }
-          <form id="formAuthentication" class="mb-5" method="POST" enctype="multipart/form-data">
-            <div class="mb-5 text-center">
-              <div class="d-flex align-items-center justify-content-center flex-column gap-2">
-                <div class="avatar avatar-xl border border-primary border-2 rounded-circle p-1">
-                  <img src="~/img/avatars/1.png" alt="Avatar" class="rounded-circle" id="avatar-preview">
-                </div><br>
-                 <h4 class="mb-1 text-center">Registe-se!</h4><br>
-                <div class="form-floating form-floating-outline w-100">
-                  <input type="file" class="form-control" id="profile-photo" asp-for="Input.ProfilePhoto" accept="image/*" onchange="document.getElementById('avatar-preview').src = window.URL.createObjectURL(this.files[0])">
-                  <label for="profile-photo">Foto de Perfil (Opcional)</label>
+              <div class="form-floating form-floating-outline w-100 mt-2">
+                <input type="file" class="form-control" id="profile-photo" asp-for="Input.ProfilePhoto" accept="image/*" onchange="document.getElementById('avatar-preview').src = window.URL.createObjectURL(this.files[0])">
+                <label for="profile-photo">Foto de Perfil (Opcional)</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-floating form-floating-outline mb-5">
+            <input type="text" class="form-control" id="username" asp-for="Input.Username" placeholder="Insira o seu nome de utilizador" autofocus>
+            <label for="username">Nome de Utilizador</label>
+          </div>
+          <div class="form-floating form-floating-outline mb-5">
+            <input type="email" class="form-control" id="email" asp-for="Input.Email" placeholder="Insira o seu email">
+            <label for="email">Email</label>
+          </div>
+          <div class="mb-5">
+            <div class="form-password-toggle">
+              <div class="input-group input-group-merge">
+                <div class="form-floating form-floating-outline">
+                  <input type="password" id="password" class="form-control" asp-for="Input.Password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                  <label for="password">Palavra-passe</label>
                 </div>
+                <span class="input-group-text cursor-pointer"><i class="ri-eye-off-line"></i></span>
               </div>
             </div>
-            <div class="form-floating form-floating-outline mb-5">
-              <input type="text" class="form-control" id="username" asp-for="Input.Username" placeholder="Insira o seu nome de utilizador" autofocus>
-              <label for="username">Nome de Utilizador</label>
-            </div>
-            <div class="form-floating form-floating-outline mb-5">
-              <input type="email" class="form-control" id="email" asp-for="Input.Email" placeholder="Insira o seu email">
-              <label for="email">Email</label>
-            </div>
-            <div class="mb-5">
-              <div class="form-password-toggle">
-                <div class="input-group input-group-merge">
-                  <div class="form-floating form-floating-outline">
-                    <input type="password" id="password" class="form-control" asp-for="Input.Password" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" aria-describedby="password" />
-                    <label for="password">Palavra-passe</label>
-                  </div>
-                  <span class="input-group-text cursor-pointer ps-1 pe-0"><i class="icon-base ri-eye-off-line icon-md"></i></span>
-                </div>
-              </div>
-            </div>
+          </div>
 
-            <div class="mb-5">
-              <div class="form-check mt-2">
-                <input class="form-check-input" type="checkbox" id="terms-conditions" asp-for="Input.Terms">
-                <label class="form-check-label" for="terms-conditions">
-                  Eu concordo com os
-                  <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#termsModal">termos e condições</a>
-                </label>
-              </div>
+          <div class="mb-5">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="terms-conditions" asp-for="Input.Terms">
+              <label class="form-check-label" for="terms-conditions">
+                Eu concordo com os
+                <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#termsModal">termos e condições</a>
+              </label>
             </div>
-            <button class="btn btn-primary d-grid w-100">Criar conta</button>
-          </form>
+          </div>
+          <button class="btn btn-primary d-grid w-100">Criar conta</button>
+        </form>
 
-          <p class="text-center">
-            <span>Já tens uma conta?</span>
-            <a href="/Auth/Login">
-              <span>Entre em vez disso</span>
-            </a>
-          </p>
+        <p class="text-center">
+          <span>Já tens uma conta?</span>
+          <a href="/Auth/Login">
+            <span>Entre em vez disso</span>
+          </a>
+        </p>
+
+        <div class="divider my-5">
+          <div class="divider-text">ou</div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-2">
+          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-google-plus">
+            <i class="tf-icons ri-google-fill ri-24px"></i>
+          </a>
+          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-secondary">
+            <i class="tf-icons ri-microsoft-fill ri-24px"></i>
+          </a>
         </div>
       </div>
-      <!-- Register Card -->
     </div>
+    <!-- /Register -->
   </div>
 </div>
 

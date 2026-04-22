@@ -11,11 +11,11 @@ using System;
 
 namespace AspnetCoreStarter.Pages.Clients.Professors
 {
-    public class ChatModel : PageModel
+    public class ProfessorChatModel : PageModel
     {
         private readonly AppDbContext _context;
 
-        public ChatModel(AppDbContext context)
+        public ProfessorChatModel(AppDbContext context)
         {
             _context = context;
         }

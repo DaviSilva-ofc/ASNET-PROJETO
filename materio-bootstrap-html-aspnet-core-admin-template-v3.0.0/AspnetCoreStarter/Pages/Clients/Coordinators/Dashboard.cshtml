@@ -160,8 +160,8 @@
         <div class="col-6 col-lg-3">
             <div class="card stat-card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:var(--asnet-blue);">
-                        <i class='bx bx-user-voice'></i>
+                    <div class="stat-icon" style="background:var(--asnet-blue); font-size: 1.2rem;">
+                        👥
                     </div>
                     <div>
                         <p class="stat-number">@Model.TotalProfessores</p>
@@ -173,8 +173,8 @@
         <div class="col-6 col-lg-3">
             <div class="card stat-card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#ff3e1d;">
-                        <i class='bx bx-support'></i>
+                    <div class="stat-icon" style="background:#ff3e1d; font-size: 1.2rem;">
+                        🚨
                     </div>
                     <div>
                         <p class="stat-number">@Model.PendingTicketsCount</p>
@@ -186,8 +186,8 @@
         <div class="col-6 col-lg-3">
             <div class="card stat-card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#03c3ec;">
-                        <i class='bx bx-door-open'></i>
+                    <div class="stat-icon" style="background:#03c3ec; font-size: 1.2rem;">
+                        🚪
                     </div>
                     <div>
                         <p class="stat-number">@Model.TotalSalas</p>
@@ -199,8 +199,8 @@
         <div class="col-6 col-lg-3">
             <div class="card stat-card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <div class="stat-icon" style="background:#fd7e14;">
-                        <i class='bx bx-package'></i>
+                    <div class="stat-icon" style="background:#fd7e14; font-size: 1.2rem;">
+                        📦
                     </div>
                     <div>
                         <p class="stat-number">@Model.LowStockAlertsCount</p>
@@ -227,8 +227,8 @@
                         {
                             <li class="tree-item">
                                 <div class="tree-toggle open" onclick="toggleTree(this)">
-                                    <span class="tree-badge tree-badge-school">@Model.Blocos?.Count</span>
-                                    <span class="tree-label">@Model.MySchool.Name</span>
+                                    <span class="tree-badge tree-badge-school" style="font-size: 1rem;">🏫</span>
+                                    <span class="tree-label">@Model.MySchool.Name (@Model.Blocos?.Count Blocos)</span>
                                     <span class="tree-arrow">▶</span>
                                 </div>
                                 <ul class="tree-children show">
@@ -239,8 +239,8 @@
                                             var blocoSalas = Model.Salas?.Where(s => s.BlockId == bloco.Id).ToList();
                                             <li class="tree-item">
                                                 <div class="tree-toggle" onclick="toggleTree(this)">
-                                                    <span class="tree-badge tree-badge-bloco">@blocoSalas?.Count</span>
-                                                    <span class="tree-label">@bloco.Name</span>
+                                                    <span class="tree-badge tree-badge-bloco" style="font-size: 1rem;">🧱</span>
+                                                    <span class="tree-label">@bloco.Name (@blocoSalas?.Count Salas)</span>
                                                     @if (blocoSalas != null && blocoSalas.Any()) { <span class="tree-arrow">▶</span> }
                                                 </div>
                                                 @if (blocoSalas != null && blocoSalas.Any())
@@ -249,7 +249,7 @@
                                                         @foreach (var sala in blocoSalas)
                                                         {
                                                             <li class="tree-item px-2 py-1">
-                                                                <span class="tree-badge tree-badge-sala"><i class='bx bx-door-open' style="font-size:.7rem;"></i></span>
+                                                                <span class="tree-badge tree-badge-sala" style="font-size: 1rem;">🚪</span>
                                                                 <span class="tree-label">@sala.Name</span>
                                                             </li>
                                                         }
@@ -272,8 +272,8 @@
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="stat-icon" style="background:#71dd37;">
-                                <i class='bx bx-chat'></i>
+                            <div class="stat-icon" style="background:#71dd37; font-size: 1.2rem;">
+                                💬
                             </div>
                             <h6 class="mb-0 fw-bold">Mensagens</h6>
                         </div>
@@ -305,8 +305,8 @@
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="stat-icon" style="background:#ff4d4d;">
-                                <i class='bx bx-wrench'></i>
+                            <div class="stat-icon" style="background:#ff4d4d; font-size: 1.2rem;">
+                                🔧
                             </div>
                             <h6 class="mb-0 fw-bold">Pedir Reparo</h6>
                         </div>
@@ -340,8 +340,19 @@
                                 <div class="col">
                                     <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-label-secondary">
                                         <div class="d-flex align-items-center gap-2">
-                                            <div class="stat-icon bg-warning" style="width: 32px; height: 32px; font-size: 1rem;">
-                                                <i class='bx bx-box'></i>
+                                            <div class="stat-icon bg-warning" style="width: 32px; height: 32px; font-size: 1rem; border-radius: 6px;">
+                                                @{
+                                                    var atype = item.Name ?? "";
+                                                    var aemoji = atype.ToLower() switch {
+                                                        var s when s.Contains("monitor") => "🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("portátil") || s.Contains("pc") => "💻",
+                                                        var s when s.Contains("impressora") => "🖨️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
+                                                        var s when s.Contains("teclado") => "⌨️",
+                                                        _ => "📦"
+                                                    };
+                                                }
+                                                @aemoji
                                             </div>
                                             <span class="fw-semibold">@item.Name</span>
                                         </div>
@@ -419,7 +430,24 @@
                                         <td><span class="badge bg-label-secondary">#@ticket.Id</span></td>
                                         <td>
                                             <div class="d-flex flex-column">
-                                                <span class="fw-bold">@ticket.Equipamento?.Name</span>
+                                                @{
+                                                    var ttype = ticket.Equipamento?.Type ?? "";
+                                                    var tname = ticket.Equipamento?.Name ?? "";
+                                                    var temoji = ttype.ToLower() switch {
+                                                        var s when s.Contains("monitor") => "🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
+                                                        var s when s.Contains("impressora") => "🖨️",
+                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
+                                                        var s when s.Contains("projetor") => "📽️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
+                                                        var s when s.Contains("teclado") => "⌨️",
+                                                        var s when s.Contains("servidor") => "🗄️",
+                                                        var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
+                                                        var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
+                                                        _ => tname.Contains("Monitor") ? "🖥️" : (tname.Contains("Computador") ? "💻" : (tname.Contains("Impressora") ? "🖨️" : "🔧"))
+                                                    };
+                                                }
+                                                <span class="fw-bold">@temoji @ticket.Equipamento?.Name</span>
                                                 <small class="text-muted small">
                                                     @(ticket.Equipamento?.Brand ?? "Genérico") @(ticket.Equipamento?.Model ?? "")
                                                     @if (!string.IsNullOrEmpty(ticket.Equipamento?.SerialNumber))
@@ -511,7 +539,22 @@
                                     @foreach (var r in Model.MyRequests)
                                     {
                                         <tr>
-                                            <td><span class="fw-bold">@r.ItemName</span></td>
+                                            <td>
+                                                @{
+                                                    var mrtype = r.ItemType ?? "";
+                                                    var mrname = r.ItemName ?? "";
+                                                    var mremoji = mrtype.ToLower() switch {
+                                                        var s when s.Contains("monitor") => "🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
+                                                        var s when s.Contains("impressora") => "🖨️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
+                                                        var s when s.Contains("teclado") => "⌨️",
+                                                        var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
+                                                        _ => mrname.Contains("Monitor") ? "🖥️" : (mrname.Contains("Computador") ? "💻" : "📦")
+                                                    };
+                                                }
+                                                <span class="fw-bold">@mremoji @r.ItemName</span>
+                                            </td>
                                             <td><span class="badge bg-label-secondary">@r.ItemType</span></td>
                                             <td>@r.Quantity</td>
                                             <td style="font-size: 0.85rem;">@r.CreatedAt.ToString("g")</td>

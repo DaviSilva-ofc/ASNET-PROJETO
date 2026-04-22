@@ -5,18 +5,14 @@
     ViewData["Title"] = "Gestão de Tickets - Private";
 }
 
-@section PageStyles {
-    <style>
-        .star-btn:hover, .star-btn.active { color: #ffab00 !important; }
-        .star-btn.bxs-star { color: #ffab00 !important; }
-        .cursor-pointer { cursor: pointer; }
-    </style>
-}
+<link rel="stylesheet" href="~/css/tickets-v2.css" />
+<style>
+    .cursor-pointer { cursor: pointer; }
+</style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Private Client /</span> Tickets</h4>
 
-    <!-- Exibição de Alertas TempData -->
     @if (TempData["SuccessMessage"] != null)
     {
         <div class="alert alert-success alert-dismissible" role="alert">
@@ -65,296 +61,338 @@
             </div>
         }
 
-        <div class="table-responsive text-nowrap">
-            <table class="table table-hover">
-                <thead class="table-light text-uppercase small fw-bold">
-                    <tr>
-                        <th>ID</th>
-                        <th>Assunto / Descrição</th>
-                        <th>Equipamento</th>
-                        <th>Localização</th>
-                        <th>Técnico</th>
-                        <th>Prioridade</th>
-                        <th>Estado</th>
-                        <th>Data</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Tickets == null || !Model.Tickets.Any())
-                    {
-                        <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <i class="bx bx-receipt fs-1 text-muted mb-2"></i>
-                                <p class="text-muted">Nenhum ticket encontrado.</p>
-                            </td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var t in Model.Tickets)
-                        {
-                            <tr>
-                                <td><span class="fw-bold">#@t.Id</span></td>
-                                <td>
-                                    <div class="text-wrap" style="max-width: 250px;">
-                                        @t.Description
-                                    </div>
-                                </td>
-                                <td>
-                                    @if (t.Equipamento != null)
-                                    {
-                                        <div class="d-flex flex-column">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="fw-bold">@t.Equipamento.Name</span>
-                                                <button type="button" class="btn btn-sm btn-icon text-info p-0 me-1" title="Código QR" 
-                                                        onclick="showQRCode('@t.Equipamento.Id', 'Equipamento', '@(t.Equipamento.Name?.Replace("'", "\\'"))', '@(t.Equipamento.SerialNumber ?? "S/N N/A")')">
-                                                    <i class="ri-qr-code-line"></i>
-                                                </button>
-                                            </div>
-
-
-
-
-
-
-
-
-
-
-
-
-                                            
-                                            <small class="text-muted small">
-                                                @(t.Equipamento.Brand ?? "Genérico") @(t.Equipamento.Model ?? "")
-                                                @if (!string.IsNullOrEmpty(t.Equipamento.SerialNumber))
-                                                {
-                                                    <span class="ms-1">(S/N: @t.Equipamento.SerialNumber)</span>
-                                                }
-                                            </small>
-                                        </div>
-                                    }
-                                </td>
-                                <td>
-                                    @if (t.Equipamento?.Room != null)
-                                    {
-                                        <span class="small">@t.Equipamento.Room.Name (@(t.Equipamento.Room.Setor?.Name ?? "N/A"))</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (t.Technician != null)
-                                    {
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar avatar-xs me-2">
-                                                <span class="avatar-initial rounded-circle bg-label-primary shadow-sm" style="font-size: 0.6rem;">@(t.Technician.Username?.Substring(0, 1).ToUpper())</span>
-                                            </div>
-                                            <span class="fw-medium text-heading small">@t.Technician.Username</span>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small italic">A aguardar...</span>
-                                    }
-                                </td>
-                                <td>
-                                    @{
-                                        var levelClass = t.Level switch
-                                        {
-                                            "Alto" or "Extremo" => "bg-label-danger",
-                                            "Médio" => "bg-label-warning",
-                                            _ => "bg-label-info"
-                                        };
-                                    }
-                                    <span class="badge @levelClass">@t.Level</span>
-                                </td>
-                                <td>
-                                    @{
-                                        var statusClass = t.Status switch
-                                        {
-                                            "Pendente" or "Pedido" => "bg-label-warning",
-                                            "Em Resolução" or "Em Reparação" or "Em andamento" => "bg-label-info",
-                                            "Concluído" => "bg-label-success",
-                                            _ => "bg-label-secondary"
-                                        };
-                                    }
-                                    <span class="badge @statusClass">@t.Status</span>
-                                    
-                                    @if (t.Status == "Concluído" && t.SatisfacaoRating == null)
-                                    {
-                                        <div class="mt-1">
-                                            <button type="button" class="btn btn-sm btn-icon text-success p-0" 
-                                                    onclick="openEvalModal(@t.Id, '@t.Equipamento?.Name')" title="Avaliar Serviço">
-                                                <i class="ri-star-line"></i>
-                                            </button>
-                                        </div>
-                                    }
-                                    else if (t.SatisfacaoRating != null)
-                                    {
-                                        <div class="mt-1 d-flex align-items-center">
-                                            @for (int i = 1; i <= 5; i++)
-                                            {
-                                                <i class="bx @(i <= t.SatisfacaoRating ? "bxs-star" : "bx-star") @(i <= t.SatisfacaoRating ? "text-warning" : "text-muted")" style="font-size: 0.7rem;"></i>
-                                            }
-                                        </div>
-                                    }
-                                </td>
-                                <td><small>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small></td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Modal Avaliação CSAT -->
-    <div class="modal fade" id="modalAvaliacao" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-page-handler="SubmitEvaluation" class="modal-content shadow-lg border-0">
-                <input type="hidden" name="ticketId" id="evalTicketId" />
-                <input type="hidden" name="rating" id="evalRatingValue" value="5" />
-                
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title text-white"><i class="ri-heart-pulse-line me-2"></i>Avaliar Serviço</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="tk-list">
+            @if (Model.Tickets == null || !Model.Tickets.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="ri-inbox-line fs-1 d-block mb-2"></i>
+                    Nenhum ticket encontrado.
                 </div>
-                
-                <div class="modal-body text-center p-4">
-                    <p class="mb-4">Como avalia o suporte prestado para o equipamento <strong id="evalEquipName"></strong>?</p>
-                    
-                    <div class="csat-rating-buttons mb-3 d-flex justify-content-center gap-2">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            <button type="button" class="btn btn-outline-secondary rounded-pill rating-btn" style="width: 45px; height: 45px;" data-value="@i" onclick="setRating(@i)">@i</button>
-                        }
-                    </div>
-                    <div class="mb-4">
-                        <span id="ratingLabel" class="badge bg-label-secondary">Selecione uma nota</span>
-                    </div>
-                    
-                    <div class="mb-0 text-start">
-                        <label class="form-label fw-bold">Feedback Adicional (Opcional)</label>
-                        <textarea name="feedback" class="form-control" rows="3" placeholder="A sua opinião é muito importante para nós..."></textarea>
-                    </div>
-                </div>
-                
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-success px-4">Submeter</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Novo Ticket -->
-    <div class="modal fade" id="modalNovoTicket" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-page-handler="Create" class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold">Criar Novo Ticket de Manutenção</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Equipamento</label>
-                        @if (Model.eqId.HasValue)
-                        {
-                            var eq = Model.AvailableEquipment.FirstOrDefault(e => e.Id == Model.eqId);
-                            <input type="hidden" asp-for="NewTicket.EquipamentoId" />
-                            <input type="text" id="selectedEqType" class="form-control bg-light" value="@(eq?.Name ?? "Equipamento") (@(eq?.SerialNumber ?? "S/N"))" data-type="@(eq?.Name + " " + eq?.Type)" readonly />
-                        }
-                        else
-                        {
-                            <select asp-for="NewTicket.EquipamentoId" id="selectEquipamento" class="form-select select2" required onchange="updatePriorityLevels()">
-                                <option value="">Selecione o equipamento...</option>
-                                @foreach (var eq in Model.AvailableEquipment)
-                                {
-                                    <option value="@eq.Id" data-type="@(eq.Name + " " + eq.Type)">@eq.Name (@eq.SerialNumber) - @eq.Room?.Name</option>
+            }
+            else
+            {
+                @foreach (var t in Model.Tickets)
+                {
+                    <div class="tk-row" onclick="openTicketPanel(@t.Id)">
+                        <div class="tk-left">
+                            <div class="tk-icon">
+                                @{
+                                    var type = t.Equipamento?.Type ?? "";
+                                    var name = t.Equipamento?.Name ?? "";
+                                    var emoji = type switch {
+                                        var s when s.Contains("Monitor") => "🖥️",
+                                        var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
+                                        var s when s.Contains("Impressora") => "🖨️",
+                                        var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
+                                        var s when s.Contains("Projetor") => "📽️",
+                                        var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
+                                        var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
+                                        var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
+                                        var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
+                                        var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
+                                        var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
+                                        _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                                    };
                                 }
-                            </select>
-                        }
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Prioridade</label>
-                            <select asp-for="NewTicket.Level" id="selectPriority" class="form-select" required>
-                                <option value="Baixo">Baixo</option>
-                                <option value="Médio" selected>Médio</option>
-                                <option value="Alto">Alto</option>
-                                <option value="Extremo">Extremo</option>
-                            </select>
-                            <div id="priorityHint" class="form-text text-muted small mt-1"></div>
+                                @emoji
+                            </div>
+                            <div class="tk-details">
+                                <div class="tk-title">@(t.Equipamento?.Name ?? "Avaria Geral")</div>
+                                <div class="tk-sub">
+                                    <i class="ri-map-pin-line me-1"></i> @(t.Equipamento?.Room?.Name ?? "N/A") • @t.CreatedAt.ToString("dd/MM HH:mm")
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">Período</label>
-                            <select asp-for="NewTicket.Period" class="form-select" required>
-                                <option value="Manhã">Manhã</option>
-                                <option value="Tarde" selected>Tarde</option>
-                                <option value="Integral">Integral</option>
-                            </select>
+                        <div class="tk-right">
+                            @{
+                                var stCol = t.Status switch {
+                                    "Concluído" => "var(--tk-green)",
+                                    "Em Reparação" or "Em Resolução" => "var(--tk-primary)",
+                                    "Pedido" or "Pendente" => "var(--tk-amber)",
+                                    _ => "var(--tk-muted)"
+                                };
+                            }
+                            <span class="badge-tk" style="color: @stCol; border-color: @stCol; background: @(stCol)11;">@t.Status</span>
+                            <i class="ri-arrow-right-s-line text-muted"></i>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Descrição do Pedido</label>
-                        <textarea asp-for="NewTicket.Description" class="form-control" rows="3" required placeholder="Descreva o problema detalhadamente..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-primary px-4">Submeter Pedido</button>
-                </div>
-            </form>
+                }
+            }
         </div>
     </div>
+</div>
 
-    <!-- Modal Filtros -->
-    <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form method="get" class="modal-content">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold">Filtrar Tickets</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Panel Overlay & Slide-over Panel -->
+<div class="tk-overlay @(Model.SelectedTicketId.HasValue ? "open" : "")" onclick="closeTicketPanel()"></div>
+
+<div class="tk-panel @(Model.SelectedTicketId.HasValue ? "open" : "")" id="ticketPanel">
+    @if (Model.SelectedTicket != null)
+    {
+        var t = Model.SelectedTicket;
+        
+        <div class="tk-ph">
+            <div class="tk-ph-top">
+                <div class="tk-ph-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                    @{
+                        var type = t.Equipamento?.Type ?? "";
+                        var name = t.Equipamento?.Name ?? "";
+                        var emoji = type switch {
+                            var s when s.Contains("Monitor") => "🖥️",
+                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
+                            var s when s.Contains("Impressora") => "🖨️",
+                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
+                            var s when s.Contains("Projetor") => "📽️",
+                            _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                        };
+                    }
+                    @emoji
                 </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Estado do Ticket</label>
-                            <select asp-for="FilterStatus" class="form-select">
-                                <option value="Todos os Estados">Todos os Estados</option>
-                                <option value="Pendente">Pendente</option>
-                                <option value="Em Resolução">Em Resolução</option>
-                                <option value="Concluído">Concluído</option>
-                            </select>
+                <div class="tk-ph-info">
+                    <div class="tk-ph-badges">
+                        <span class="badge-tk" style="color: var(--tk-muted); border-color: var(--tk-border);">TK-@t.Id.ToString("D3")</span>
+                        <span class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary); background: rgba(255, 171, 0, 0.1);">@t.Status</span>
+                    </div>
+                    <h2 class="tk-ph-title">@(t.Equipamento?.Name ?? "Avaria Geral"): @(t.Description?.Length > 30 ? t.Description.Substring(0, 30) + "..." : t.Description)</h2>
+                </div>
+                <button class="tk-close" onclick="closeTicketPanel()">✕</button>
+            </div>
+
+            <div class="tk-stepper">
+                @{
+                    var steps = new[] { "Aberto", "Aceite", "Em Reparação", "Concluído" };
+                    int si = Array.IndexOf(steps, t.Status);
+                    if (si == -1 && t.Status == "Pedido") si = 0;
+                    if (si == -1 && t.Status == "Em Resolução") si = 2;
+                    if (si == -1 && t.Status == "Pendente") si = 0;
+                }
+                @for (int i = 0; i < steps.Length; i++)
+                {
+                    bool done = i < si || t.Status == "Concluído";
+                    bool active = i == si && t.Status != "Concluído";
+                    <div class="tk-step">
+                        @if (i < steps.Length - 1) {
+                            <div class="tk-step-line @(i < si || t.Status == "Concluído" ? "done" : "")"></div>
+                        }
+                        <div class="tk-step-dot @(done ? "done" : "") @(active ? "active" : "")">
+                            @(done ? "✓" : (i + 1).ToString())
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-uppercase small">Artigo</label>
-                            <select asp-for="FilterArticle" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="Computadores">Computadores</option>
-                                <option value="Monitores">Monitores</option>
-                                <option value="Impressoras">Impressoras</option>
-                                <option value="Projetores">Projetores</option>
-                                <option value="Networking">Networking</option>
-                                <option value="Outros">Outros</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-uppercase small">Tipo</label>
-                            <select asp-for="FilterType" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="Desktop">Desktop</option>
-                                <option value="Portátil">Portátil</option>
-                                <option value="Monitor">Monitor</option>
-                                <option value="Impressora">Impressora</option>
-                            </select>
-                        </div>
+                        <div class="tk-step-label @(active ? "active" : "")">@steps[i]</div>
+                    </div>
+                }
+            </div>
+            
+            @if(t.Status == "Concluído" && t.SatisfacaoRating == null) {
+                <div class="tk-advance-row">
+                    <button type="button" class="tk-advance-btn" onclick="openEvalModal(@t.Id, '@t.Equipamento?.Name')">⭐ Avaliar Serviço</button>
+                </div>
+            }
+        </div>
+
+        <div class="tk-tabs">
+            <div class="tk-tab active" onclick="showTab(0)">📁 Detalhes</div>
+            <div class="tk-tab" onclick="showTab(2)">🕒 Histórico</div>
+        </div>
+
+        <div class="tk-body">
+            <div class="tk-tab-content" id="tab-0">
+                <div class="tk-info-grid">
+                    <div class="tk-info-card"><div class="tk-info-label">Solicitante</div><div class="tk-info-val">@(t.RequestedBy?.Username ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Técnico</div><div class="tk-info-val">@(t.Technician?.Username ?? "A aguardar...")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Empresa</div><div class="tk-info-val">@(Model.Empresa?.Name ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Criado em</div><div class="tk-info-val">@t.CreatedAt.ToString("dd/MM/yyyy, HH:mm")</div></div>
+                </div>
+                
+                <div class="tk-desc-card">
+                    <div class="tk-info-label">Descrição</div>
+                    <div style="margin-top:6px;font-size:14px;line-height:1.6">@t.Description</div>
+                </div>
+
+                @if (Model.AssociatedEquipment.Any())
+                {
+                    <div class="tk-eq-card">
+                        <div class="tk-eq-header">Material Aplicado</div>
+                        @foreach (var eq in Model.AssociatedEquipment)
+                        {
+                            <div class="tk-eq-item">
+                                <span><strong>@eq.Name</strong> · <span style="color:#6b7280;font-size:12px">@eq.SerialNumber</span></span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="tk-tab-content d-none" id="tab-2">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                    @if (!Model.TicketHistory.Any()) {
+                        <div style="color:var(--tk-muted);font-size:13px;padding:20px;text-align:center">Sem histórico registado.</div>
+                    } else {
+                        @foreach(var h in Model.TicketHistory) {
+                            <div style="background:#1a232e;border-left:3px solid @(h.TipoAcao == TipoAcaoHistorico.Comentario ? "var(--tk-primary)" : "var(--tk-muted)");padding:12px;border-radius:0 8px 8px 0">
+                                <div style="font-size:13px;line-height:1.5">@h.Acao</div>
+                                <div style="font-size:11px;color:var(--tk-muted);margin-top:4px">@h.Autor · @h.Data.ToString("dd/MM HH:mm")</div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if(t.Status != "Concluído") {
+            <div class="tk-footer">
+                <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@t.Id" class="d-flex w-100 gap-2">
+                    <input type="text" name="comment" class="tk-comment" placeholder="Enviar mensagem ao técnico..." required autocomplete="off">
+                    <button type="submit" class="tk-send-btn">✈ Enviar</button>
+                </form>
+            </div>
+        }
+    }
+</div>
+
+<!-- Modal Avaliação CSAT -->
+<div class="modal fade" id="modalAvaliacao" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="SubmitEvaluation" class="modal-content shadow-lg border-0">
+            <input type="hidden" name="ticketId" id="evalTicketId" />
+            <input type="hidden" name="rating" id="evalRatingValue" value="5" />
+            
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title text-white"><i class="ri-heart-pulse-line me-2"></i>Avaliar Serviço</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body text-center p-4">
+                <p class="mb-4">Como avalia o suporte prestado para o equipamento <strong id="evalEquipName"></strong>?</p>
+                
+                <div class="csat-rating-buttons mb-3 d-flex justify-content-center gap-2">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <button type="button" class="btn btn-outline-secondary rounded-pill rating-btn" style="width: 45px; height: 45px;" data-value="@i" onclick="setRating(@i)">@i</button>
+                    }
+                </div>
+                <div class="mb-4">
+                    <span id="ratingLabel" class="badge bg-label-secondary">Selecione uma nota</span>
+                </div>
+                
+                <div class="mb-0 text-start">
+                    <label class="form-label fw-bold">Feedback Adicional (Opcional)</label>
+                    <textarea name="feedback" class="form-control" rows="3" placeholder="A sua opinião é muito importante para nós..."></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-success px-4">Submeter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Novo Ticket -->
+<div class="modal fade" id="modalNovoTicket" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="CreateTicket" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">Criar Novo Ticket de Manutenção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Equipamento</label>
+                    <select asp-for="NewTicket.EquipamentoId" id="selectEquipamento" class="form-select select2" required onchange="updatePriorityLevels()">
+                        <option value="">Selecione o equipamento...</option>
+                        @foreach (var eq in Model.AvailableEquipment)
+                        {
+                            var hasActive = Model.EqIdsWithActiveTickets.Contains(eq.Id);
+                            var isBroken = eq.Status != null && (eq.Status.Contains("repara") || eq.Status.Contains("manutenção") || eq.Status.Contains("Avariado"));
+                            var indicator = (hasActive || isBroken) ? "⚠️" : "✅";
+                            
+                            <option value="@eq.Id" data-type="@(eq.Name + " " + eq.Type)">
+                                @indicator @eq.Name (@eq.SerialNumber) - @eq.Room?.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Prioridade</label>
+                        <select asp-for="NewTicket.Level" id="selectPriority" class="form-select" required>
+                            <option value="Baixo">Baixo</option>
+                            <option value="Médio" selected>Médio</option>
+                            <option value="Alto">Alto</option>
+                            <option value="Extremo">Extremo</option>
+                        </select>
+                        <div id="priorityHint" class="form-text text-muted small mt-1"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Período</label>
+                        <select asp-for="NewTicket.Period" class="form-select" required>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde" selected>Tarde</option>
+                            <option value="Integral">Integral</option>
+                        </select>
                     </div>
                 </div>
-                <div class="modal-footer border-top">
-                    <a asp-page="./Tickets" class="btn btn-outline-secondary">Limpar</a>
-                    <button type="submit" class="btn btn-primary px-4">Aplicar</button>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descrição do Pedido</label>
+                    <textarea asp-for="NewTicket.Description" class="form-control" rows="3" required placeholder="Descreva o problema detalhadamente..."></textarea>
                 </div>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-primary px-4">Submeter Pedido</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Filtros -->
+<div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="get" class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">Filtrar Tickets</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-bold">Estado do Ticket</label>
+                        <select asp-for="FilterStatus" class="form-select">
+                            <option value="Todos os Estados">Todos os Estados</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Em Resolução">Em Resolução</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-uppercase small">Artigo</label>
+                        <select asp-for="FilterArticle" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Computadores">Computadores</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Impressoras">Impressoras</option>
+                            <option value="Projetores">Projetores</option>
+                            <option value="Networking">Networking</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-uppercase small">Tipo</label>
+                        <select asp-for="FilterType" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Desktop">Desktop</option>
+                            <option value="Portátil">Portátil</option>
+                            <option value="Monitor">Monitor</option>
+                            <option value="Impressora">Impressora</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <a asp-page="./Tickets" class="btn btn-outline-secondary">Limpar</a>
+                <button type="submit" class="btn btn-primary px-4">Aplicar</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -365,14 +403,12 @@
 @section PageScripts {
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Auto-open new ticket modal if eqId is present
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('eqId')) {
             const modalEl = document.getElementById('modalNovoTicket');
             const modal = new bootstrap.Modal(modalEl);
             modal.show();
             
-            // Wait for modal to be ready then process priority
             modalEl.addEventListener('shown.bs.modal', function() {
                 updatePriorityLevels();
             });
@@ -381,12 +417,11 @@
                 if (window.location.search.includes('eqId')) {
                     const url = new URL(window.location.href);
                     url.searchParams.delete('eqId');
-                    window.location.href = url.toString();
+                    window.history.replaceState({}, '', url);
                 }
             });
         }
 
-        // Initialize Select2
         $('.select2').each(function() {
             var $this = $(this);
             $this.select2({
@@ -410,6 +445,20 @@
         processPriority(type);
     }
 
+    function openTicketPanel(id) {
+        const url = new URL(window.location);
+        url.searchParams.set('SelectedTicketId', id);
+        window.location.href = url.toString();
+    }
+    function closeTicketPanel() {
+        const url = new URL(window.location);
+        url.searchParams.delete('SelectedTicketId');
+        window.location.href = url.toString();
+    }
+    function showTab(idx) {
+        document.querySelectorAll('.tk-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+        document.querySelectorAll('.tk-tab-content').forEach((c, i) => c.classList.toggle('d-none', i !== idx));
+    }
     function openEvalModal(id, name) {
         document.getElementById('evalTicketId').value = id;
         document.getElementById('evalEquipName').innerText = name || "Equipamento";
@@ -433,9 +482,7 @@
 
         btns.forEach((btn, idx) => {
             const btnVal = parseInt(btn.getAttribute('data-value'));
-            // Reset to default
             btn.className = 'btn btn-outline-secondary rounded-pill rating-btn';
-            
             if (btnVal === val) {
                 btn.classList.replace('btn-outline-secondary', labels[val].btn);
             }
@@ -452,7 +499,6 @@
         const hint = document.getElementById('priorityHint');
         if (!selectPri) return;
 
-        // Reset all options
         for (let i = 0; i < selectPri.options.length; i++) {
             selectPri.options[i].disabled = false;
         }
@@ -468,30 +514,26 @@
         };
 
         if (typeLower.includes('aio') || typeLower.includes('computador') || typeLower.includes('desktop') || typeLower.includes('portátil') || typeLower.includes('laptop')) {
-            // Médio ONLY
             selectPri.value = 'Médio';
             disableByValue('Baixo');
             disableByValue('Alto');
             disableByValue('Extremo');
-            hint.innerText = "Equipamentos de produtividade: Prioridade sugerida: Médio.";
+            hint.innerText = "Prioridade: Médio.";
         } else if (typeLower.includes('quadro interativo') || typeLower.includes('smartboard') || typeLower.includes('networking') || typeLower.includes('switch') || typeLower.includes('router') || typeLower.includes('access point')) {
-            // Médio/Alto
             if (selectPri.value === 'Baixo' || selectPri.value === 'Extremo') selectPri.value = 'Médio';
             disableByValue('Baixo');
             disableByValue('Extremo');
-            hint.innerText = "Infraestrutura de sala/rede: Prioridade Médio ou Alto.";
+            hint.innerText = "Prioridade: Médio / Alto.";
         } else if (typeLower.includes('impressora') || typeLower.includes('monitor') || typeLower.includes('projetor') || typeLower.includes('componente') || typeLower.includes('ram') || typeLower.includes('disco') || typeLower.includes('ssd') || typeLower.includes('hdd') || typeLower.includes('memória')) {
-            // Baixo/Médio
             if (selectPri.value === 'Alto' || selectPri.value === 'Extremo') selectPri.value = 'Baixo';
             disableByValue('Alto');
             disableByValue('Extremo');
-            hint.innerText = "Periféricos e Componentes: Prioridade Baixo ou Médio.";
+            hint.innerText = "Prioridade: Baixo / Médio.";
         } else if (typeLower.includes('servidor') || typeLower.includes('storage') || typeLower.includes('nas')) {
-            // Alto/Extremo
             if (selectPri.value === 'Baixo' || selectPri.value === 'Médio') selectPri.value = 'Alto';
             disableByValue('Baixo');
             disableByValue('Médio');
-            hint.innerText = "Infraestrutura crítica: Prioridade Alto ou Extremo.";
+            hint.innerText = "Prioridade: Alto / Extremo.";
         }
     }
 </script>

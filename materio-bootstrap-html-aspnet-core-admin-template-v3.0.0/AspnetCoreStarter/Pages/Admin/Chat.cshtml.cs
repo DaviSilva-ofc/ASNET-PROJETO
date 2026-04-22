@@ -13,11 +13,11 @@ namespace AspnetCoreStarter.Pages.Admin
         public string Role { get; set; }
     }
 
-    public class ChatModel : PageModel
+    public class AdminChatModel : PageModel
     {
         private readonly AppDbContext _context;
 
-        public ChatModel(AppDbContext context)
+        public AdminChatModel(AppDbContext context)
         {
             _context = context;
         }
@@ -25,6 +25,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<ContactViewModel> Contacts { get; set; } = new();
         public List<Mensagem> Messages { get; set; } = new();
         public int CurrentUserId { get; set; }
+        public string CurrentUserPhoto { get; set; }
         public int? SelectedContactId { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? contactId)
@@ -34,6 +35,9 @@ namespace AspnetCoreStarter.Pages.Admin
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr)) return RedirectToPage("/Auth/Login");
             CurrentUserId = int.Parse(userIdStr);
+
+            var currentUser = await _context.Users.FindAsync(CurrentUserId);
+            CurrentUserPhoto = currentUser?.ProfilePhotoPath ?? "";
 
             // Fetch all users and identify their roles
             var allUsers = await _context.Users.ToListAsync();

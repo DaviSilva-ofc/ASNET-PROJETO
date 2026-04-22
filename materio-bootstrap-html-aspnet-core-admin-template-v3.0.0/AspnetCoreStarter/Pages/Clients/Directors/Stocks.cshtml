@@ -115,7 +115,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-2">
                         <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-primary"><i class="ri-government-line"></i></span>
+                            <span class="avatar-initial rounded bg-label-primary" style="font-size: 1.2rem;">🏫</span>
                         </div>
                         <h6 class="mb-0">Escolas</h6>
                     </div>
@@ -129,7 +129,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-2">
                         <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-success"><i class="ri-door-open-line"></i></span>
+                            <span class="avatar-initial rounded bg-label-success" style="font-size: 1.2rem;">🚪</span>
                         </div>
                         <h6 class="mb-0">Salas</h6>
                     </div>
@@ -143,7 +143,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-2">
                         <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-warning"><i class="ri-computer-line"></i></span>
+                            <span class="avatar-initial rounded bg-label-warning" style="font-size: 1.2rem;">📦</span>
                         </div>
                         <h6 class="mb-0">Artigos</h6>
                     </div>
@@ -157,7 +157,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-2">
                         <div class="avatar me-2">
-                            <span class="avatar-initial rounded bg-label-info"><i class="ri-ticket-2-line"></i></span>
+                            <span class="avatar-initial rounded bg-label-info" style="font-size: 1.2rem;">🚨</span>
                         </div>
                         <h6 class="mb-0">Tickets</h6>
                     </div>
@@ -258,7 +258,26 @@
                                 @foreach (var item in Model.Items)
                                 {
                                     <tr>
-                                        <td><strong>@item.Name</strong></td>
+                                        <td>
+                                            @{
+                                                var itype = item.Category ?? "";
+                                                var iname = item.Name ?? "";
+                                                var iemoji = itype.ToLower() switch {
+                                                    var s when s.Contains("monitor") => "🖥️",
+                                                    var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
+                                                    var s when s.Contains("impressora") => "🖨️",
+                                                    var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
+                                                    var s when s.Contains("projetor") => "📽️",
+                                                    var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
+                                                    var s when s.Contains("teclado") => "⌨️",
+                                                    var s when s.Contains("servidor") => "🗄️",
+                                                    var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
+                                                    var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
+                                                    _ => iname.Contains("Monitor") ? "🖥️" : (iname.Contains("Computador") ? "💻" : (iname.Contains("Impressora") ? "🖨️" : "📦"))
+                                                };
+                                            }
+                                            <strong>@iemoji @item.Name</strong>
+                                        </td>
                                         <td><span class="badge bg-label-secondary">@item.Category</span></td>
                                         <td>@item.Location</td>
                                         <td>@item.Quantity</td>
@@ -339,7 +358,24 @@
                                     <div class="d-flex align-items-start justify-content-between mb-3">
                                         <div>
                                             <h5 class="mb-1 fw-bold">
-                                                @req.ItemName
+                                                @{
+                                                    var rtype = req.ItemType ?? "";
+                                                    var rname = req.ItemName ?? "";
+                                                    var remoji = rtype.ToLower() switch {
+                                                        var s when s.Contains("monitor") => "🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
+                                                        var s when s.Contains("impressora") => "🖨️",
+                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
+                                                        var s when s.Contains("projetor") => "📽️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
+                                                        var s when s.Contains("teclado") => "⌨️",
+                                                        var s when s.Contains("servidor") => "🗄️",
+                                                        var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
+                                                        var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
+                                                        _ => rname.Contains("Monitor") ? "🖥️" : (rname.Contains("Computador") ? "💻" : (rname.Contains("Impressora") ? "🖨️" : "📦"))
+                                                    };
+                                                }
+                                                @remoji @req.ItemName
                                                 @if (req.Status == "Pendente_Admin")
                                                 {
                                                     <span class="badge bg-label-info ms-2"><i class="ri-arrow-up-line me-1"></i>A aguardar Admin</span>
@@ -391,7 +427,23 @@
                                                             bool isPreChecked = preSelected.Contains(stock);
                                                             <tr>
                                                                 <td><input type="checkbox" name="selectedIds" value="@stock.IdWithPrefix" @(isPreChecked ? "checked" : "") /></td>
-                                                                <td>@stock.Name <small class="text-muted d-block" style="font-size: 0.7rem;">@stock.Type</small></td>
+                                                                <td>
+                                                                    @{
+                                                                        var stype = stock.Type ?? "";
+                                                                        var sname = stock.Name ?? "";
+                                                                        var semoji = stype.ToLower() switch {
+                                                                            var str when str.Contains("monitor") => "🖥️",
+                                                                            var str when str.Contains("portátil") || str.Contains("laptop") => "💻",
+                                                                            var str when str.Contains("ups") || str.Contains("bateria") => "🔋",
+                                                                            var str when str.Contains("quadro") || str.Contains("interativo") => "📺",
+                                                                            var str when str.Contains("impressora") => "🖨️",
+                                                                            var str when str.Contains("rato") || str.Contains("mouse") => "🖱️",
+                                                                            var str when str.Contains("teclado") => "⌨️",
+                                                                            _ => "📦"
+                                                                        };
+                                                                    }
+                                                                    @semoji @stock.Name <small class="text-muted d-block" style="font-size: 0.7rem;">@stock.Type</small>
+                                                                </td>
                                                                 <td>
                                                                     <span class="badge bg-label-@(stock.Source == "Stock Central" ? "info" : "primary") small" style="font-size: 0.65rem;">
                                                                         @stock.Source

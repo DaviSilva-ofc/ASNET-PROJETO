@@ -40,6 +40,15 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
         public List<Equipamento> EquipamentosDisponiveis { get; set; } = new();
 
+        // --- Panel Support ---
+        public Ticket? SelectedTicket { get; set; }
+        public List<TicketHistorico> TicketHistory { get; set; } = new();
+        public List<Equipamento> AssociatedEquipment { get; set; } = new();
+        public List<int> EqIdsWithActiveTickets { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public int? SelectedTicketId { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -110,6 +119,33 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
                 }
             }
 
+            // --- Load Selected Ticket for Panel ---
+            if (SelectedTicketId.HasValue)
+            {
+                SelectedTicket = await _context.Tickets
+                    .Include(t => t.School).ThenInclude(s => s.Agrupamento)
+                    .Include(t => t.RequestedBy)
+                    .Include(t => t.Technician)
+                    .Include(t => t.Equipamento)
+                    .Include(t => t.UtilizedEquipments).ThenInclude(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
+                    .FirstOrDefaultAsync(t => t.Id == SelectedTicketId.Value);
+
+                if (SelectedTicket != null)
+                {
+                    TicketHistory = await _context.TicketHistorico
+                        .Where(h => h.TicketId == SelectedTicketId.Value)
+                        .OrderByDescending(h => h.Data)
+                        .ToListAsync();
+
+                    AssociatedEquipment = SelectedTicket.UtilizedEquipments.ToList();
+                }
+            }
+
+            EqIdsWithActiveTickets = await _context.Tickets
+                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
+                .Select(t => t.EquipamentoId!.Value)
+                .ToListAsync();
+
             return Page();
         }
 
@@ -175,6 +211,25 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Agradecemos o seu feedback sobre o suporte técnico!";
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostAddCommentAsync(int ticketId, string comment)
+        {
+            if (!string.IsNullOrEmpty(comment))
+            {
+                var username = User.Identity?.Name ?? "Coordenador";
+                var history = new TicketHistorico
+                {
+                    TicketId = ticketId,
+                    Acao = comment,
+                    TipoAcao = TipoAcaoHistorico.Comentario,
+                    Autor = username,
+                    Data = DateTime.UtcNow
+                };
+                _context.TicketHistorico.Add(history);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
         }
     }
 }

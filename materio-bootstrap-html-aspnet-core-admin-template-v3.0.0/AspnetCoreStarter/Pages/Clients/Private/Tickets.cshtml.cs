@@ -36,6 +36,15 @@ namespace AspnetCoreStarter.Pages.Clients.Private
         public List<Equipamento> AvailableEquipment { get; set; } = new();
         public Empresa Empresa { get; set; }
 
+        // --- Panel Support ---
+        public Ticket? SelectedTicket { get; set; }
+        public List<TicketHistorico> TicketHistory { get; set; } = new();
+        public List<Equipamento> AssociatedEquipment { get; set; } = new();
+        public List<int> EqIdsWithActiveTickets { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public int? SelectedTicketId { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -74,16 +83,15 @@ namespace AspnetCoreStarter.Pages.Clients.Private
 
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
-            var eqIdsWithActiveTickets = await _context.Tickets
-                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
-                .Select(t => t.EquipamentoId!.Value)
-                .ToListAsync();
-
             AvailableEquipment = await _context.Equipamentos
                 .Include(e => e.Room)
                 .Where(e => e.EmpresaId == empresaId)
-                .Where(e => e.Status == null || (!e.Status.Contains("repara") && !e.Status.Contains("manutenção")))
                 .OrderBy(e => e.Name)
+                .ToListAsync();
+
+            EqIdsWithActiveTickets = await _context.Tickets
+                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
+                .Select(t => t.EquipamentoId!.Value)
                 .ToListAsync();
 
             if (eqId.HasValue)
@@ -93,6 +101,29 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 if (eq != null)
                 {
                     NewTicket.Description = $"Reparação de {eq.Name} (S/N: {eq.SerialNumber})";
+                    NewTicket.Description = $"Reparação de {eq.Name} (S/N: {eq.SerialNumber})";
+                }
+            }
+
+            // --- Load Selected Ticket for Panel ---
+            if (SelectedTicketId.HasValue)
+            {
+                SelectedTicket = await _context.Tickets
+                    .Include(t => t.School).ThenInclude(s => s.Agrupamento)
+                    .Include(t => t.RequestedBy)
+                    .Include(t => t.Technician)
+                    .Include(t => t.Equipamento)
+                    .Include(t => t.UtilizedEquipments).ThenInclude(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
+                    .FirstOrDefaultAsync(t => t.Id == SelectedTicketId.Value);
+
+                if (SelectedTicket != null)
+                {
+                    TicketHistory = await _context.TicketHistorico
+                        .Where(h => h.TicketId == SelectedTicketId.Value)
+                        .OrderByDescending(h => h.Data)
+                        .ToListAsync();
+
+                    AssociatedEquipment = SelectedTicket.UtilizedEquipments.ToList();
                 }
             }
 
@@ -118,7 +149,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             return RedirectToPage(new { FilterStatus = FilterStatus });
         }
 
-        public async Task<IActionResult> OnPostCreateAsync()
+        public async Task<IActionResult> OnPostCreateTicketAsync()
         {
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _context.Users.FindAsync(int.Parse(userIdStr!));
@@ -136,8 +167,8 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 }
             }
 
-            NewTicket.AdminId = user!.Id; // Using the logged in user as reporter
-            NewTicket.Status = "Pendente";
+            NewTicket.AdminId = user!.Id;
+            NewTicket.Status = "Pedido";
             NewTicket.CreatedAt = DateTime.UtcNow;
             
             _context.Tickets.Add(NewTicket);
@@ -162,6 +193,25 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = "Agradecemos a sua avaliação! O seu feedback ajuda-nos a melhorar.";
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostAddCommentAsync(int ticketId, string comment)
+        {
+            if (!string.IsNullOrEmpty(comment))
+            {
+                var username = User.Identity?.Name ?? "Cliente Privado";
+                var history = new TicketHistorico
+                {
+                    TicketId = ticketId,
+                    Acao = comment,
+                    TipoAcao = TipoAcaoHistorico.Comentario,
+                    Autor = username,
+                    Data = DateTime.UtcNow
+                };
+                _context.TicketHistorico.Add(history);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
         }
     }
 }

@@ -40,7 +40,7 @@
         <i class="icon-base ri ri-sun-line icon-md theme-icon-active"></i>
         <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
       </a>
-      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-theme-text" style="z-index: 3000;">
+      <ul class="dropdown-menu" aria-labelledby="nav-theme-text" style="z-index: 3000;">
         <li>
           <button type="button" class="dropdown-item align-items-center active" data-bs-theme-value="light" aria-pressed="false">
             <span> <i class="icon-base ri ri-sun-line icon-md me-3" data-icon="sun-line"></i>Light</span>
@@ -84,6 +84,13 @@
       </li>
     }
 
+    <!-- Install App Button (PWA) -->
+    <li class="nav-item me-2 d-none" id="installAppBtn">
+      <a class="nav-link" href="javascript:void(0);" onclick="installPWA()">
+        <i class="icon-base ri ri-download-cloud-2-line icon-md text-primary"></i>
+        <span class="d-none d-md-inline ms-1">Instalar App</span>
+      </a>
+    </li>
 
     @if (isAuthenticated)
     {

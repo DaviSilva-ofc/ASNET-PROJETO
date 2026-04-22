@@ -17,6 +17,14 @@ namespace AspnetCoreStarter.Models
         [Column("descricao")]
         public string? Description { get; set; }
 
+        [Column("tipo_ticket")]
+        [MaxLength(50)]
+        public string? Type { get; set; } // Manutenção, Empréstimo, Incidente, Transferência
+
+        [Column("prioridade")]
+        [MaxLength(20)]
+        public string? Priority { get; set; } // Baixa, Média, Alta, Crítica
+
         [Column("periodo")]
         [MaxLength(50)]
         public string? Period { get; set; }

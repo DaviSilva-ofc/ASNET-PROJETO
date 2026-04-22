@@ -41,6 +41,20 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         [BindProperty(SupportsGet = true)]
         public int? FilterEmpresaId { get; set; }
 
+        // --- Panel Support ---
+        public Ticket? SelectedTicket { get; set; }
+        public List<TicketHistorico> TicketHistory { get; set; } = new();
+        public List<Equipamento> AssociatedEquipment { get; set; } = new();
+        public List<Equipamento> AvailableEquipment { get; set; } = new();
+        public int CountStock { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? SelectedTicketId { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string StockSearch { get; set; } = "";
+        [BindProperty(SupportsGet = true)]
+        public string StockScope { get; set; } = "Escola";
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated || !User.IsInRole("Tecnico")) 
@@ -120,6 +134,43 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var uniqueLocations = mapLocations.GroupBy(l => new { ((dynamic)l).name, ((dynamic)l).address }).Select(g => g.First()).ToList();
             ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(uniqueLocations);
 
+            // --- Load Selected Ticket for Panel ---
+            if (SelectedTicketId.HasValue)
+            {
+                SelectedTicket = await _context.Tickets
+                    .Include(t => t.School).ThenInclude(s => s.Agrupamento)
+                    .Include(t => t.RequestedBy)
+                    .Include(t => t.Technician)
+                    .Include(t => t.UtilizedEquipments).ThenInclude(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
+                    .FirstOrDefaultAsync(t => t.Id == SelectedTicketId.Value);
+
+                if (SelectedTicket != null && (SelectedTicket.TechnicianId == userId || SelectedTicket.TechnicianId == null))
+                {
+                    TicketHistory = await _context.TicketHistorico
+                        .Where(h => h.TicketId == SelectedTicketId.Value)
+                        .OrderByDescending(h => h.Data)
+                        .ToListAsync();
+
+                    AssociatedEquipment = SelectedTicket.UtilizedEquipments.ToList();
+
+                    var stockQuery = _context.Equipamentos
+                        .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
+                        .Where(e => e.Status == "Armazenado" && e.TicketId == null)
+                        .AsQueryable();
+
+                    if (StockScope == "Escola" && SelectedTicket.SchoolId.HasValue)
+                        stockQuery = stockQuery.Where(e => e.Room.Block.SchoolId == SelectedTicket.SchoolId);
+                    else if (StockScope == "Agrupamento" && SelectedTicket.School?.AgrupamentoId != null)
+                        stockQuery = stockQuery.Where(e => e.Room.Block.School.AgrupamentoId == SelectedTicket.School.AgrupamentoId);
+
+                    if (!string.IsNullOrEmpty(StockSearch))
+                        stockQuery = stockQuery.Where(e => e.Name.Contains(StockSearch) || e.SerialNumber.Contains(StockSearch));
+
+                    CountStock = await stockQuery.CountAsync();
+                    AvailableEquipment = await stockQuery.Take(20).ToListAsync();
+                }
+            }
+
             return Page();
         }
 
@@ -138,6 +189,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 ticket.TechnicianId = userId;
                 ticket.Status = "Em Reparação";
                 ticket.AcceptedAt = DateTime.UtcNow;
+                await LogHistory(id, "Trabalho aceite pelo técnico", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"Aceitou o trabalho #{id}. O estado foi alterado para 'Em Reparação'.";
             }
@@ -166,6 +218,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 {
                     ticket.CompletedAt = DateTime.UtcNow;
                 }
+                await LogHistory(id, $"Status atualizado para {newStatus}", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"O estado do trabalho #{id} foi atualizado para '{newStatus}'.";
             }
@@ -175,6 +228,133 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             }
 
             return RedirectToPage(new { FilterStatus = FilterStatus, FilterArticle = FilterArticle, FilterType = FilterType });
+        }
+
+        // --- Panel Actions (Technician Context) ---
+
+        public async Task<IActionResult> OnPostAdvanceStatusAsync(int ticketId)
+        {
+            var sessionUserId = HttpContext.Session.GetString("UserId");
+            if (string.IsNullOrEmpty(sessionUserId) || !int.TryParse(sessionUserId, out int userId))
+                return RedirectToPage("/Auth/Login");
+
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
+            if (ticket == null || (ticket.TechnicianId != userId && ticket.TechnicianId != null)) return NotFound();
+
+            string oldStatus = ticket.Status;
+            string newStatus = oldStatus switch
+            {
+                "Aberto" or "Pedido" or "Pendente" => "Aceite",
+                "Aceite" => "Em Reparação",
+                // "Em Reparação" will now be handled by specific Complete methods for better granularity
+                _ => oldStatus
+            };
+
+            if (newStatus != oldStatus)
+            {
+                ticket.Status = newStatus;
+                if (newStatus == "Aceite") {
+                    ticket.TechnicianId = userId;
+                    ticket.AcceptedAt = DateTime.UtcNow;
+                }
+
+                await LogHistory(ticketId, $"Status alterado para {newStatus}", TipoAcaoHistorico.Status);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostCompleteRepairedAsync(int ticketId)
+        {
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
+            if (ticket != null)
+            {
+                ticket.Status = "Concluído";
+                ticket.CompletedAt = DateTime.UtcNow;
+                
+                if (ticket.Equipamento != null)
+                {
+                    ticket.Equipamento.Status = "A funcionar";
+                }
+
+                await LogHistory(ticketId, "Ticket Concluído: Equipamento Reparado", TipoAcaoHistorico.Status);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Ticket concluído com sucesso. Equipamento marcado como 'A funcionar'.";
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostCompleteUnrepairableAsync(int ticketId)
+        {
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
+            if (ticket != null)
+            {
+                ticket.Status = "Concluído";
+                ticket.CompletedAt = DateTime.UtcNow;
+                
+                if (ticket.Equipamento != null)
+                {
+                    ticket.Equipamento.Status = "Sem reparação";
+                }
+
+                await LogHistory(ticketId, "Ticket Concluído: Equipamento Sem Reparação", TipoAcaoHistorico.Status);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Ticket concluído. Equipamento marcado como 'Sem reparação'.";
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostAssociateEquipmentAsync(int ticketId, int equipmentId)
+        {
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            var equipment = await _context.Equipamentos.FindAsync(equipmentId);
+
+            if (ticket != null && equipment != null && equipment.Status == "Armazenado")
+            {
+                equipment.TicketId = ticketId;
+                equipment.Status = "Em uso/Alocado";
+                await LogHistory(ticketId, $"Equipamento associado: {equipment.Name}", TipoAcaoHistorico.Equipamento);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostRemoveEquipmentAsync(int ticketId, int equipmentId)
+        {
+            var equipment = await _context.Equipamentos.FindAsync(equipmentId);
+            if (equipment != null && equipment.TicketId == ticketId)
+            {
+                equipment.TicketId = null;
+                equipment.Status = "Armazenado";
+                await LogHistory(ticketId, $"Equipamento removido: {equipment.Name}", TipoAcaoHistorico.Equipamento);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostAddCommentAsync(int ticketId, string comment)
+        {
+            if (!string.IsNullOrEmpty(comment))
+            {
+                await LogHistory(ticketId, comment, TipoAcaoHistorico.Comentario);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        private async Task LogHistory(int ticketId, string action, TipoAcaoHistorico type)
+        {
+            var username = User.Identity?.Name ?? "Sistema";
+            var history = new TicketHistorico
+            {
+                TicketId = ticketId,
+                Acao = action,
+                TipoAcao = type,
+                Autor = username,
+                Data = DateTime.UtcNow
+            };
+            _context.TicketHistorico.Add(history);
         }
     }
 }

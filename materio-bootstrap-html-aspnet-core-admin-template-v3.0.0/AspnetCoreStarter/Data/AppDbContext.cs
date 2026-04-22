@@ -38,6 +38,7 @@ namespace AspnetCoreStarter.Data
         public DbSet<Departamento> Departamentos { get; set; }
         public DbSet<Setor> Setores { get; set; }
         public DbSet<TechnicianActivity> TechnicianActivities { get; set; }
+        public DbSet<TicketHistorico> TicketHistorico { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

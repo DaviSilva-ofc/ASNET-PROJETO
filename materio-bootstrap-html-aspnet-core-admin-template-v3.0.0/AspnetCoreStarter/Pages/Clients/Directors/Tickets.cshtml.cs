@@ -23,6 +23,15 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public List<School> Schools { get; set; } = new();
         public List<Equipamento> AvailableEquipment { get; set; } = new();
 
+        // --- Panel Support ---
+        public Ticket? SelectedTicket { get; set; }
+        public List<TicketHistorico> TicketHistory { get; set; } = new();
+        public List<Equipamento> AssociatedEquipment { get; set; } = new();
+        public List<int> EqIdsWithActiveTickets { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public int? SelectedTicketId { get; set; }
+
         [BindProperty(SupportsGet = true)]
         public string? FilterStatus { get; set; }
 
@@ -112,22 +121,42 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 }
             }
 
-            // Find IDs of equipment that already have active tickets
-            var eqIdsWithActiveTickets = await _context.Tickets
-                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
-                .Select(t => t.EquipamentoId!.Value)
-                .ToListAsync();
-
-            // Available equipment for the "Novo Ticket" modal - ALL EQUIPMENT (except those in maintenance)
+            // Available equipment for the "Novo Ticket" modal - ALL EQUIPMENT
             AvailableEquipment = await _context.Equipamentos
                 .Include(e => e.Room)
                     .ThenInclude(r => r.Block)
                         .ThenInclude(b => b.School)
                 .Where(e => e.Room != null && e.Room.Block != null && schoolIds.Contains(e.Room.Block.SchoolId))
-                .Where(e => e.Status == null || (!e.Status.Contains("repara") && !e.Status.Contains("manutenção")))
                 .OrderBy(e => e.Room.Block.School.Name)
                 .ThenBy(e => e.Type)
                 .ToListAsync();
+
+            EqIdsWithActiveTickets = await _context.Tickets
+                .Where(t => t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Status != "Recusado")
+                .Select(t => t.EquipamentoId!.Value)
+                .ToListAsync();
+
+            // --- Load Selected Ticket for Panel ---
+            if (SelectedTicketId.HasValue)
+            {
+                SelectedTicket = await _context.Tickets
+                    .Include(t => t.School).ThenInclude(s => s.Agrupamento)
+                    .Include(t => t.RequestedBy)
+                    .Include(t => t.Technician)
+                    .Include(t => t.Equipamento)
+                    .Include(t => t.UtilizedEquipments).ThenInclude(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
+                    .FirstOrDefaultAsync(t => t.Id == SelectedTicketId.Value);
+
+                if (SelectedTicket != null)
+                {
+                    TicketHistory = await _context.TicketHistorico
+                        .Where(h => h.TicketId == SelectedTicketId.Value)
+                        .OrderByDescending(h => h.Data)
+                        .ToListAsync();
+
+                    AssociatedEquipment = SelectedTicket.UtilizedEquipments.ToList();
+                }
+            }
 
             return Page();
         }
@@ -172,13 +201,13 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
                 if (alreadyOpen)
                 {
-                    TempData["ErrorMessage"] = "Erro: Este equipamento já possui um ticket de suporte em aberto.";
+                    TempData["ErrorMessage"] = "Já existe um ticket ativo para este equipamento. Aguarde a conclusão antes de criar outro.";
                     return RedirectToPage();
                 }
             }
 
-            // Standardizing status to "Pendente"
-            NewTicket.Status = "Pendente";
+            // Standardizing status to "Pedido"
+            NewTicket.Status = "Pedido";
             NewTicket.CreatedAt = System.DateTime.UtcNow;
             
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -189,6 +218,25 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 
             TempData["SuccessMessage"] = "Ticket criado com sucesso!";
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostAddCommentAsync(int ticketId, string comment)
+        {
+            if (!string.IsNullOrEmpty(comment))
+            {
+                var username = User.Identity?.Name ?? "Diretor";
+                var history = new TicketHistorico
+                {
+                    TicketId = ticketId,
+                    Acao = comment,
+                    TipoAcao = TipoAcaoHistorico.Comentario,
+                    Autor = username,
+                    Data = DateTime.UtcNow
+                };
+                _context.TicketHistorico.Add(history);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
         }
     }
 }

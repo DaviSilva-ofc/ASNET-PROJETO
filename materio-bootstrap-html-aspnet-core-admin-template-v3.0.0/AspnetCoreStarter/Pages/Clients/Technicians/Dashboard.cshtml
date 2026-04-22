@@ -8,6 +8,7 @@
 }
 
 @section PageStyles {
+<link rel="stylesheet" href="~/css/tickets-v2.css" asp-append-version="true" />
 <style>
     :root {
         --asnet-navy: #1e2130;
@@ -320,101 +321,81 @@
     </div>
 </div>
 
-<!-- ======================= FULL WIDTH TICKETS TABLE ======================= -->
-<div class="card mb-4" style="background: #2b2c40 !important;">
-    <div class="card-header border-bottom border-secondary d-flex justify-content-between align-items-center">
-        <h5 class="mb-0 text-white">Os meus Trabalhos Recentes (Últimos atribuídos)</h5>
-        <a href="/Clients/Technicians/Tickets" class="btn btn-sm btn-outline-primary shadow-none">Ver Todos</a>
+<!-- ======================= FULL WIDTH TICKETS LIST ======================= -->
+<div class="card mb-4" style="background: transparent; border:none; box-shadow:none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 text-white">Os meus Trabalhos Recentes</h5>
+        <a href="/Clients/Technicians/Tickets" class="btn btn-sm text-primary p-0">Ver Todos <i class="ri-arrow-right-s-line"></i></a>
     </div>
-    <div class="table-responsive text-nowrap">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th class="text-white-50">Local</th>
-                    <th class="text-white-50">Equipamento</th>
-                    <th class="text-white-50">Nível</th>
-                    <th class="text-white-50">Estado</th>
-                    <th class="text-white-50">Data de Abertura</th>
-                    <th class="text-white-50 text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody class="table-border-bottom-0">
-                @if (!Model.RecentTickets.Any())
-                {
-                    <tr>
-                        <td colspan="4" class="text-center py-4 text-white-50">Nenhum ticket te foi atribuído ainda.</td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var t in Model.RecentTickets.Take(3))
-                    {
-                        <tr>
-                            <td><strong class="text-white">@(t.School?.Name ?? "N/A")</strong></td>
-                            <td>
-                                <div class="d-flex flex-column">
-                                    <span class="fw-bold text-white">@(t.Equipamento?.Name ?? "Indefinido")</span>
-                                    <small class="text-white-50" style="font-size: 0.75rem;">
-                                        @(t.Equipamento?.Brand ?? "Genérico") @(t.Equipamento?.Model ?? "")
-                                        @if (!string.IsNullOrEmpty(t.Equipamento?.SerialNumber)) {
-                                            <span class="ms-1">(S/N: @t.Equipamento.SerialNumber)</span>
-                                        }
-                                    </small>
-                                </div>
-                            </td>
-                            <td>
-                                @{
-                                    var priorityEmoji = t.Level switch {
-                                        var l when l?.Contains("Alto") == true || l?.Contains("Extremo") == true => "🔴",
-                                        var l when l?.Contains("Médio") == true => "🟠",
-                                        _ => "🔵"
-                                    };
-                                }
-                                <span class="badge @(priorityEmoji == "🔴" ? "bg-label-danger" : (priorityEmoji == "🟠" ? "bg-label-warning" : "bg-label-info"))">
-                                    @priorityEmoji @t.Level
+    
+    <div class="tk-list">
+        @if (!Model.RecentTickets.Any())
+        {
+            <div class="tk-row" style="justify-content:center; cursor:default;">
+                <p class="text-white-50 mb-0 py-2">Nenhum ticket atribuído recentemente.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var t in Model.RecentTickets)
+            {
+                <div class="tk-row" onclick="openTicketPanel(@t.Id)">
+                    <div class="tk-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.2rem;">
+                        @{
+                            var type = t.Equipamento?.Type ?? "";
+                            var name = t.Equipamento?.Name ?? "";
+                            var emoji = type switch {
+                                var s when s.Contains("Monitor") => "🖥️",
+                                var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
+                                var s when s.Contains("Impressora") => "🖨️",
+                                var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
+                                var s when s.Contains("Projetor") => "📽️",
+                                var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
+                                var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
+                                var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
+                                var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
+                                var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
+                                var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
+                                _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                            };
+                        }
+                        @emoji
+                    </div>
+                    <div class="tk-main">
+                        <div class="tk-meta">
+                            <span class="tk-id">#@t.Id</span>
+                            <span class="badge-tk" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); border-color: rgba(255, 171, 0, 0.2);">
+                                @(t.Equipamento?.Type ?? "Geral")
+                            </span>
+                            @if (!string.IsNullOrEmpty(t.Level))
+                            {
+                                var color = t.Level.Contains("Alt") || t.Level.Contains("Crít") ? "var(--tk-red)" : "var(--tk-amber)";
+                                <span class="badge-tk" style="color: @color; border-color: @color; background: @(color)11;">
+                                    @t.Level
                                 </span>
-                            </td>
-                            <td>
-                                @{
-                                    var stClass = t.Status switch {
-                                        "Pendente" => "bg-label-warning",
-                                        "Em Resolução" or "Em Reparação" => "bg-label-info",
-                                        "Concluído" => "bg-label-success",
-                                        _ => "bg-label-secondary"
-                                    };
-                                    var stEmoji = t.Status switch {
-                                        "Pendente" => "⏳ ",
-                                        "Em Resolução" or "Em Reparação" => "🔧 ",
-                                        "Concluído" => "✅ ",
-                                        _ => "📦 "
-                                    };
-                                }
-                                <span class="badge @stClass">@stEmoji@t.Status</span>
-                            </td>
-                            <td class="text-white-50">@t.CreatedAt.ToString("dd/MM/yyyy")</td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
-                                            onclick="showQRCode('@t.Equipamento?.Id', 'equip', '@(t.Equipamento?.Name?.Replace("'", "\\'"))', '@(t.Equipamento?.SerialNumber ?? "S/N N/A")')">
-                                        📱
-                                    </button>
-                                    
-                                    @if (t.EquipamentoId.HasValue && t.Status != "Concluído" && t.Equipamento?.Status != "Em Reparação")
-                                    {
-                                        <form method="post" asp-page-handler="UpdateStatus" asp-route-id="@t.EquipamentoId" class="d-inline">
-                                            <input type="hidden" name="status" value="Em Reparação" />
-                                            <button type="submit" class="btn btn-sm btn-icon text-warning p-0" title="Enviar para Reparação">
-                                                <i class="ri-tools-line"></i>
-                                            </button>
-                                        </form>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
+                            }
+                        </div>
+                        <div class="tk-title">@(t.Equipamento?.Name ?? "Avaria Geral")</div>
+                        <div class="tk-sub">
+                            <i class="ri-map-pin-line me-1"></i> @(t.School?.Name ?? "Sede") • @(t.Equipamento?.Room?.Name ?? "N/A")
+                        </div>
+                    </div>
+                    <div class="tk-right">
+                        @{
+                            var stCol = t.Status switch {
+                                "Concluído" => "var(--tk-green)",
+                                "Em Reparação" or "Em Resolução" => "var(--tk-primary)",
+                                _ => "var(--tk-muted)"
+                            };
+                        }
+                        <span class="badge-tk" style="color: @stCol; border-color: @stCol; background: @(stCol)11;">
+                            @t.Status
+                        </span>
+                        <i class="ri-arrow-right-s-line text-muted"></i>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 
@@ -649,50 +630,290 @@
     }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
-<!-- Modal Atribuir Stock -->
-<div class="modal fade" id="assignStockModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <form method="post" asp-page-handler="AssignStock" class="modal-content card-bg border-light border-opacity-10" style="background: #2b2c40 !important;">
-            <div class="modal-header border-bottom border-light border-opacity-10">
-                <h5 class="modal-title text-white">Associar Stock a Trabalho</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="modalStockId" name="stockId" value="" />
-                <input type="hidden" id="modalItemType" name="itemType" value="" />
-                
-                <p class="text-white-50">Estás prestes a aplicar <strong id="modalStockName" class="text-white"></strong> numa intervenção ativa.</p>
-                
-                <div class="mb-3">
-                    <label class="form-label text-white-50">Trabalho Associado</label>
-                    <select class="form-select bg-dark text-white border-secondary" name="ticketId" required>
-                        <option value="" disabled selected>Selecionar o trabalho...</option>
-                        @foreach(var ticket in Model.ActiveTickets)
-                        {
-                            <option value="@ticket.Id">
-                                #@ticket.Id - @(ticket.Equipamento?.Name ?? "Outro") (@(ticket.School?.Name ?? "Indefinida"))
-                            </option>
+<!-- Panel Overlay & Slide-over Panel -->
+<div class="tk-overlay @(Model.SelectedTicketId.HasValue ? "open" : "")" onclick="closeTicketPanel()"></div>
+
+<div class="tk-panel @(Model.SelectedTicketId.HasValue ? "open" : "")" id="ticketPanel">
+    @if (Model.SelectedTicket != null)
+    {
+        var t = Model.SelectedTicket;
+        
+        <!-- Header -->
+        <div class="tk-ph">
+            <div class="tk-ph-top">
+                <div class="tk-ph-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                    @{
+                        var type = t.Equipamento?.Type ?? "";
+                        var name = t.Equipamento?.Name ?? "";
+                        var emoji = type switch {
+                            var s when s.Contains("Monitor") => "🖥️",
+                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
+                            var s when s.Contains("Impressora") => "🖨️",
+                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
+                            var s when s.Contains("Projetor") => "📽️",
+                            var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
+                            var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
+                            var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
+                            var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
+                            var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
+                            var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
+                            _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                        };
+                    }
+                    @emoji
+                </div>
+                <div class="tk-ph-info">
+                    <div class="tk-ph-badges">
+                        <span class="badge-tk" style="color: var(--tk-muted); border-color: var(--tk-border);">TK-@t.Id.ToString("D3")</span>
+                        @if(!string.IsNullOrEmpty(t.Type)) {
+                            <span class="badge-tk" style="color: var(--tk-amber); border-color: var(--tk-amber); background: rgba(245, 158, 11, 0.1);">@t.Type</span>
                         }
-                    </select>
+                        <span class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary); background: rgba(255, 171, 0, 0.1);">@t.Status</span>
+                    </div>
+                    <h2 class="tk-ph-title">@(t.Equipamento?.Name ?? "Avaria Geral"): @(t.Description?.Length > 30 ? t.Description.Substring(0, 30) + "..." : t.Description)</h2>
+                </div>
+                <button class="tk-close" onclick="closeTicketPanel()">✕</button>
+            </div>
+
+            <!-- Stepper -->
+            <div class="tk-stepper">
+                @{
+                    var steps = new[] { "Aberto", "Aceite", "Em Reparação", "Concluído" };
+                    int si = Array.IndexOf(steps, t.Status);
+                    if (si == -1 && t.Status == "Pedido") si = 0;
+                    if (si == -1 && t.Status == "Em Resolução") si = 2;
+                    if (si == -1 && t.Status == "Pendente") si = 0;
+                    
+                    var nextLabel = si < 3 ? (si == 0 ? "Aceite" : si == 1 ? "Em Reparação" : "Concluído") : "";
+                }
+                @for (int i = 0; i < steps.Length; i++)
+                {
+                    bool done = i < si || t.Status == "Concluído";
+                    bool active = i == si && t.Status != "Concluído";
+                    <div class="tk-step">
+                        @if (i < steps.Length - 1) {
+                            <div class="tk-step-line @(i < si || t.Status == "Concluído" ? "done" : "")"></div>
+                        }
+                        <div class="tk-step-dot @(done ? "done" : "") @(active ? "active" : "")">
+                            @(done ? "✓" : (i + 1).ToString())
+                        </div>
+                        <div class="tk-step-label @(active ? "active" : "")">@steps[i]</div>
+                    </div>
+                }
+            </div>
+
+            @if (t.Status != "Concluído" && !string.IsNullOrEmpty(nextLabel))
+            {
+                <div class="tk-advance-row">
+                    <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@t.Id">
+                        <button type="submit" class="tk-advance-btn">→ Avançar para "@nextLabel"</button>
+                    </form>
+                </div>
+            }
+        </div>
+
+        <!-- Tabs -->
+        <div class="tk-tabs">
+            <div class="tk-tab active" onclick="showTab(0)">📁 Detalhes</div>
+            <div class="tk-tab" onclick="showTab(1)">📦 Stock (@Model.AssociatedEquipment.Count)</div>
+            <div class="tk-tab" onclick="showTab(2)">🕒 Histórico</div>
+        </div>
+
+        <!-- Body -->
+        <div class="tk-body">
+            <!-- Tab: Detalhes -->
+            <div class="tk-tab-content" id="tab-0">
+                <div class="tk-info-grid">
+                    <div class="tk-info-card"><div class="tk-info-label">Solicitante</div><div class="tk-info-val">@(t.RequestedBy?.Username ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Técnico Responsável</div><div class="tk-info-val">@(t.Technician?.Username ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Escola</div><div class="tk-info-val">@(t.School?.Name ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Agrupamento</div><div class="tk-info-val">@(t.School?.Agrupamento?.Name ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Criado em</div><div class="tk-info-val">@t.CreatedAt.ToString("dd/MM/yyyy, HH:mm")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Atualizado em</div><div class="tk-info-val">@DateTime.Now.ToString("dd/MM/yyyy, HH:mm")</div></div>
+                </div>
+                
+                <div class="tk-desc-card">
+                    <div class="tk-info-label">Descrição</div>
+                    <div style="margin-top:6px;font-size:14px;line-height:1.6">@t.Description</div>
+                </div>
+
+                @{ var comments = Model.TicketHistory.Where(h => h.TipoAcao == TipoAcaoHistorico.Comentario).ToList(); }
+                <div style="margin-top:20px;margin-bottom:20px">
+                    <div class="tk-info-label">Notas Técnicas</div>
+                    @if (!comments.Any()) {
+                        <div style="color:var(--tk-muted);font-size:13px;padding:10px 0">Sem notas registadas.</div>
+                    } else {
+                        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+                            @foreach(var c in comments) {
+                                <div style="background:#1a232e;border-left:3px solid var(--tk-primary);padding:10px 14px;border-radius:0 8px 8px 0">
+                                    <div style="font-size:13px;line-height:1.5">@c.Acao</div>
+                                    <div style="font-size:11px;color:var(--tk-muted);margin-top:4px">@c.Autor · @c.Data.ToString("dd/MM HH:mm")</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @if (Model.AssociatedEquipment.Any())
+                {
+                    <div class="tk-eq-card">
+                        <div class="tk-eq-header">@Model.AssociatedEquipment.Count equipamento(s) associado(s)</div>
+                        @foreach (var eq in Model.AssociatedEquipment)
+                        {
+                            <div class="tk-eq-item">
+                                <span><strong>@eq.Name</strong> · <span style="color:#6b7280;font-size:12px">@eq.SerialNumber</span></span>
+                                @if(t.Status != "Concluído") {
+                                    <form method="post" asp-page-handler="RemoveEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id" style="display:inline">
+                                        <button type="submit" class="btn-remove" style="background:transparent;border:none;color:var(--tk-red);font-size:12px;cursor:pointer">Remover</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Tab: Stock -->
+            <div class="tk-tab-content d-none" id="tab-1">
+                <div class="tk-stock-top">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="tk-info-label">Material Disponível</div>
+                        <div class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary);">@Model.CountStock itens</div>
+                    </div>
+                    
+                    <div class="tk-scope-row">
+                        <button class="tk-scope-btn @(Model.StockScope == "Escola" ? "active" : "")" onclick="setStockScope('Escola')">Nesta Escola</button>
+                        <button class="tk-scope-btn @(Model.StockScope == "Agrupamento" ? "active" : "")" onclick="setStockScope('Agrupamento')">No Agrupamento</button>
+                        <button class="tk-scope-btn @(Model.StockScope == "Global" ? "active" : "")" onclick="setStockScope('Global')">Global</button>
+                    </div>
+
+                    <div class="tk-stock-filters">
+                        <input type="text" class="tk-stock-search" id="stockSearchInput" placeholder="Procurar no stock..." value="@Model.StockSearch" onkeydown="if(event.key==='Enter') applyStockSearch()">
+                    </div>
+
+                    <div class="tk-stock-list">
+                        @if (!Model.AvailableEquipment.Any())
+                        {
+                            <div class="text-center py-4 text-muted small">Nenhum material encontrado com estes filtros.</div>
+                        }
+                        else
+                        {
+                            @foreach (var eq in Model.AvailableEquipment)
+                            {
+                                <div class="tk-avail-item">
+                                    <div class="tk-avail-icon"><i class="ri-cpu-line"></i></div>
+                                    <div class="tk-avail-info">
+                                        <div class="tk-avail-name">@eq.Name</div>
+                                        <div class="tk-avail-sub">S/N: @eq.SerialNumber • @(eq.Room?.Block?.School?.Name ?? "Sede")</div>
+                                    </div>
+                                    @if(t.Status != "Concluído") {
+                                        <form method="post" asp-page-handler="AssociateEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id">
+                                            <button type="submit" class="btn-assoc">Associar</button>
+                                        </form>
+                                    } else {
+                                        <div class="small text-muted">Ticket Fechado</div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="/Clients/Technicians/Stocks" class="small text-primary" style="text-decoration: none;">Ver gestão de stock completa →</a>
                 </div>
             </div>
-            <div class="modal-footer border-top border-light border-opacity-10">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-success">✅ Associar Artigo</button>
+
+            <!-- Tab: Histórico -->
+            <div class="tk-tab-content d-none" id="tab-2">
+                <div class="tk-timeline">
+                    @foreach (var h in Model.TicketHistory)
+                    {
+                        <div class="tk-hist-item">
+                            @{
+                                var dotCol = h.TipoAcao switch {
+                                    TipoAcaoHistorico.Status => "var(--tk-primary)",
+                                    TipoAcaoHistorico.Comentario => "var(--tk-purple)",
+                                    TipoAcaoHistorico.Equipamento => "var(--tk-green)",
+                                    _ => "var(--tk-muted)"
+                                };
+                                var icon = h.TipoAcao switch {
+                                    TipoAcaoHistorico.Status => "ri-refresh-line",
+                                    TipoAcaoHistorico.Comentario => "ri-chat-1-line",
+                                    TipoAcaoHistorico.Equipamento => "ri-cpu-line",
+                                    _ => "ri-checkbox-blank-circle-line"
+                                };
+                            }
+                            <div class="tk-hist-dot" style="color: @dotCol; border-color: @dotCol;"><i class="@icon"></i></div>
+                            <div class="tk-hist-top">
+                                <span class="tk-hist-action">@h.Acao</span>
+                                <span class="tk-hist-date">@h.Data.ToString("dd/MM HH:mm")</span>
+                            </div>
+                            <div class="tk-hist-by">Por @h.Autor</div>
+                        </div>
+                    }
+                </div>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <!-- Footer -->
+        @if(t.Status != "Concluído") {
+            <div class="tk-footer">
+                <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@t.Id" class="d-flex w-100 gap-2">
+                    <input type="text" name="comment" class="tk-comment" placeholder="Adicionar nota técnica ou comentário..." required autocomplete="off">
+                    <button type="submit" class="tk-send-btn">✈ Enviar</button>
+                </form>
+            </div>
+        } else {
+            <div class="tk-footer" style="background: rgba(0,0,0,0.2); justify-content: center; opacity: 0.6;">
+                <span class="small text-muted"><i class="ri-lock-line me-1"></i> Este ticket está concluído e não permite mais alterações.</span>
+            </div>
+        }
+    }
 </div>
 
 <script>
-    function openAssignModal(stockId, stockName, itemType) {
-        document.getElementById('modalStockId').value = stockId;
-        document.getElementById('modalStockName').textContent = stockName;
-        document.getElementById('modalItemType').value = itemType;
-        
-        var modal = new bootstrap.Modal(document.getElementById('assignStockModal'));
-        modal.show();
+    function openTicketPanel(id) {
+        const url = new URL(window.location);
+        url.searchParams.set('SelectedTicketId', id);
+        window.location.href = url.toString();
     }
+
+    function closeTicketPanel() {
+        const url = new URL(window.location);
+        url.searchParams.delete('SelectedTicketId');
+        window.location.href = url.toString();
+    }
+
+    function showTab(idx) {
+        document.querySelectorAll('.tk-tab').forEach((t, i) => {
+            t.classList.toggle('active', i === idx);
+        });
+        document.querySelectorAll('.tk-tab-content').forEach((c, i) => {
+            c.classList.toggle('d-none', i !== idx);
+        });
+    }
+
+    function setStockScope(scope) {
+        const url = new URL(window.location);
+        url.searchParams.set('StockScope', scope);
+        window.location.href = url.toString();
+    }
+
+    function applyStockSearch() {
+        const val = document.getElementById('stockSearchInput').value;
+        const url = new URL(window.location);
+        url.searchParams.set('StockSearch', val);
+        window.location.href = url.toString();
+    }
+
+    // Preserve scroll position or auto-open tab 1 if we just searched stock
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('StockSearch') || urlParams.has('StockScope')) {
+            showTab(1);
+        }
+    });
 </script>
 
 <partial name="Shared/_QrModal" />

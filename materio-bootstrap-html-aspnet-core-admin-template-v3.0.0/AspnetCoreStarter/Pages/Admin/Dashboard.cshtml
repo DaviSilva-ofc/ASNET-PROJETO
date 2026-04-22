@@ -242,9 +242,14 @@
     <!-- Title -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h4 class="dash-title mb-0">Administrativo</h4>
-        <a href="/Admin/Infrastructure" class="btn btn-sm" style="background:var(--asnet-orange);color:#fff;">
-            <i class='bx bx-cog me-1'></i> Gerir Infraestrutura
-        </a>
+        <div class="d-flex gap-2">
+            <a href="/Admin/Calendar" class="btn btn-sm btn-primary">
+                <i class='bx bx-calendar me-1'></i> Calendário Global
+            </a>
+            <a href="/Admin/Infrastructure" class="btn btn-sm" style="background:var(--asnet-orange);color:#fff;">
+                <i class='bx bx-cog me-1'></i> Gerir Infraestrutura
+            </a>
+        </div>
     </div>
 
     <!-- ===== Stat mini-cards ===== -->
@@ -253,7 +258,7 @@
             <div class="card stat-card">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="stat-icon" style="background:var(--asnet-blue);">
-                        <i class='bx bx-user'></i>
+                        <span style="font-size: 1.5rem;">👥</span>
                     </div>
                     <div>
                         <p class="stat-number">@Model.TotalUsers</p>
@@ -266,7 +271,7 @@
             <div class="card stat-card">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="stat-icon" style="background:#ffab00;"> <!-- Yellow -->
-                        <i class='bx bx-file'></i>
+                        <span style="font-size: 1.5rem;">📄</span>
                     </div>
                     <div>
                         <p class="stat-number">@Model.ExpiringContractsCount</p>
@@ -279,7 +284,7 @@
             <div class="card stat-card">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="stat-icon" style="background:#ff3e1d;"> <!-- Red -->
-                        <i class='bx bx-support'></i>
+                        <span style="font-size: 1.5rem;">🚨</span>
                     </div>
                     <div>
                         <p class="stat-number">@Model.PendingTicketsCount</p>
@@ -292,7 +297,7 @@
             <div class="card stat-card">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="stat-icon" style="background:#f89223;"> <!-- Orange -->
-                        <i class='bx bx-package'></i>
+                        <span style="font-size: 1.5rem;">📦</span>
                     </div>
                     <div>
                         <p class="stat-number">@Model.LowStockAlertsCount</p>
@@ -330,7 +335,7 @@
                                                 <span class="tree-badge tree-badge-agrup">@agrupSchools.Count</span>
                                                 @if (agrupSchools.Any()) { <span class="tree-arrow">▶</span> }
                                             </div>
-                                            <span class="tree-label">@agrup.Name</span>
+                                            <span class="tree-label">🏢 @agrup.Name</span>
                                         </div>
                                         @if (agrupSchools.Any())
                                         {
@@ -344,7 +349,7 @@
                                                                 <span class="tree-badge tree-badge-school">@schoolBlocos.Count</span>
                                                                 @if (schoolBlocos.Any()) { <span class="tree-arrow">▶</span> }
                                                             </div>
-                                                            <span class="tree-label">@school.Name</span>
+                                                            <span class="tree-label">🏫 @school.Name</span>
                                                         </div>
                                                         @if (schoolBlocos.Any())
                                                         {
@@ -358,7 +363,7 @@
                                                                                 <span class="tree-badge tree-badge-bloco">@blocoSalas.Count</span>
                                                                                 @if (blocoSalas.Any()) { <span class="tree-arrow">▶</span> }
                                                                             </div>
-                                                                            <span class="tree-label">@bloco.Name</span>
+                                                                            <span class="tree-label">🧱 @bloco.Name</span>
                                                                         </div>
                                                                         @if (blocoSalas.Any())
                                                                         {
@@ -369,7 +374,7 @@
                                                                                         <div class="badge-col">
                                                                                             <span class="tree-badge tree-badge-sala"><i class='bx bx-door-open' style="font-size:.7rem;"></i></span>
                                                                                         </div>
-                                                                                        <span class="tree-label">@sala.Name</span>
+                                                                                        <span class="tree-label">🚪 @sala.Name</span>
                                                                                     </li>
                                                                                 }
                                                                             </ul>
@@ -398,7 +403,7 @@
                                 {
                                     <li class="tree-item d-flex align-items-center gap-2 py-2">
                                         <span class="tree-badge tree-badge-school"><i class='bx bx-buildings' style="font-size:.7rem;"></i></span>
-                                        <span class="tree-label">@school.Name</span>
+                                        <span class="tree-label">🏫 @school.Name</span>
                                         <small class="text-muted ms-auto">@(school.Agrupamento?.Name ?? "Sem Agrupamento")</small>
                                     </li>
                                 }
@@ -412,7 +417,7 @@
                                 {
                                     <li class="tree-item d-flex align-items-center gap-2 py-2">
                                         <span class="tree-badge tree-badge-bloco"><i class='bx bx-cube' style="font-size:.7rem;"></i></span>
-                                        <span class="tree-label">@bloco.Name</span>
+                                        <span class="tree-label">🧱 @bloco.Name</span>
                                         <small class="text-muted ms-auto">@(bloco.School?.Name ?? "—")</small>
                                     </li>
                                 }
@@ -426,7 +431,7 @@
                                 {
                                     <li class="tree-item d-flex align-items-center gap-2 py-2">
                                         <span class="tree-badge tree-badge-sala"><i class='bx bx-door-open' style="font-size:.7rem;"></i></span>
-                                        <span class="tree-label">@sala.Name</span>
+                                        <span class="tree-label">🚪 @sala.Name</span>
                                         <small class="text-muted ms-auto">@(sala.Block?.Name ?? "—")</small>
                                     </li>
                                 }
@@ -444,7 +449,7 @@
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-3">
                             <div class="stat-icon" style="background:#71dd37;">
-                                <i class='bx bx-chat'></i>
+                                <span style="font-size: 1.5rem;">💬</span>
                             </div>
                             <h6 class="mb-0 fw-bold">Mensagens</h6>
                         </div>
@@ -484,7 +489,7 @@
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-3">
                             <div class="stat-icon" style="background:var(--asnet-pink);">
-                                <i class='bx bx-user-plus'></i>
+                                <span style="font-size: 1.5rem;">📝</span>
                             </div>
                             <h6 class="mb-0 fw-bold">Pedidos Pendentes</h6>
                         </div>
@@ -550,7 +555,22 @@
                                             <td><span class="badge bg-label-secondary">#@t.Id</span></td>
                                             <td>
                                                 <div class="d-flex flex-column">
-                                                    <span class="fw-bold">@t.Equipamento?.Name</span>
+                                                         @{ var type = t.Equipamento?.Type ?? ""; var name = t.Equipamento?.Name ?? ""; var emoji = type switch {
+                                                             var s when s.Contains("Monitor") => "🖥️",
+                                                             var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
+                                                             var s when s.Contains("Impressora") => "🖨️",
+                                                             var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
+                                                             var s when s.Contains("Projetor") => "📽️",
+                                                             var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
+                                                             var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
+                                                             var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
+                                                             var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
+                                                             var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
+                                                             var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
+                                                             _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                                                         };
+                                                     }
+                                                     <span class="fw-bold">@emoji @t.Equipamento?.Name</span>
                                                     <small class="text-muted small">
                                                         @(t.Equipamento?.Brand ?? "Genérico") @(t.Equipamento?.Model ?? "")
                                                         @if (!string.IsNullOrEmpty(t.Equipamento?.SerialNumber))
@@ -819,7 +839,7 @@
                 <div class="card shadow-sm" style="border-left: 5px solid #ffab00;">
                     <div class="card-header d-flex align-items-center justify-content-between bg-transparent border-bottom">
                         <div class="d-flex align-items-center gap-2">
-                            <i class='bx bx-error text-warning' style="font-size: 1.5rem;"></i>
+                            <span style="font-size: 1.5rem;">⚠️</span>
                             <h5 class="mb-0 fw-bold">Alertas de Stock Baixo</h5>
                         </div>
                         <a href="/Admin/Stocks" class="btn btn-xs btn-outline-warning">Gerir Stock</a>
@@ -831,8 +851,22 @@
                                 <div class="col">
                                     <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-light">
                                         <div class="d-flex align-items-center gap-2">
-                                            <div class="stat-icon bg-warning" style="width: 32px; height: 32px; font-size: 1rem;">
-                                                <i class='bx bx-box'></i>
+                                            @{
+                                                var lowerName = item.Name?.ToLower() ?? "";
+                                                var stockEmoji = lowerName switch {
+                                                    var s when s.Contains("monitor") => "🖥️",
+                                                    var s when s.Contains("portátil") || s.Contains("laptop") => "💻",
+                                                    var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
+                                                    var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
+                                                    var s when s.Contains("impressora") => "🖨️",
+                                                    var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
+                                                    var s when s.Contains("teclado") => "⌨️",
+                                                    var s when s.Contains("cabo") || s.Contains("rede") => "🌐",
+                                                    _ => "📦"
+                                                };
+                                            }
+                                            <div class="stat-icon bg-warning" style="width: 32px; height: 32px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">
+                                                @stockEmoji
                                             </div>
                                             <span class="fw-semibold text-dark">@item.Name</span>
                                         </div>

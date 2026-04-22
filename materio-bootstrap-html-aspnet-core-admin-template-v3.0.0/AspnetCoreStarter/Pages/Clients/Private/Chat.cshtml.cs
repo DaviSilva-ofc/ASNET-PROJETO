@@ -22,6 +22,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
         public List<User> Contacts { get; set; } = new();
         public List<Mensagem> Messages { get; set; } = new();
         public int CurrentUserId { get; set; }
+        public string CurrentUserPhoto { get; set; }
         public int? SelectedContactId { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? contactId)
@@ -31,6 +32,9 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
             CurrentUserId = userId;
+
+            var currentUser = await _context.Users.FindAsync(CurrentUserId);
+            CurrentUserPhoto = currentUser?.ProfilePhotoPath ?? "";
 
             // For Private Clients, contacts are all Administrators (Support)
             var administrators = await _context.Administradores

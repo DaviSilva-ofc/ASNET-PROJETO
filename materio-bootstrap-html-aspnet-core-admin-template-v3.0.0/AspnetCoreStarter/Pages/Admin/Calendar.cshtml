@@ -1,0 +1,244 @@
+@page
+@model AspnetCoreStarter.Pages.Admin.CalendarModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Calendário Global de Atividades - Admin";
+}
+
+@section PageStyles {
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
+<style>
+    :root {
+        --fc-border-color: rgba(255, 255, 255, 0.05);
+        --fc-daygrid-event-dot-width: 8px;
+    }
+
+    .dark-style .card {
+        background-color: #2b2c40 !important;
+    }
+
+    #calendar {
+        height: calc(100vh - 250px);
+        min-height: 600px;
+    }
+
+    /* FullCalendar Custom Premium Styling */
+    .fc { font-family: 'Public Sans', sans-serif; }
+    .fc-header-toolbar { margin-bottom: 2rem !important; flex-wrap: wrap; gap: 10px; }
+    .fc-toolbar-title { font-size: 1.5rem !important; font-weight: 700 !important; color: #fff !important; }
+    
+    .fc-button-primary { 
+        background-color: #f89223 !important; 
+        border-color: #f89223 !important; 
+        text-transform: capitalize;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+    }
+    .fc-button-primary:hover { background-color: #e67e1a !important; border-color: #e67e1a !important; }
+    .fc-button-active { background-color: #d46f14 !important; }
+
+    .fc-daygrid-event { 
+        border-radius: 6px; 
+        padding: 3px 8px; 
+        font-size: 0.8rem; 
+        border: none !important;
+        margin-top: 2px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .fc-daygrid-event:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .fc-theme-standard td, .fc-theme-standard th { border-color: var(--fc-border-color) !important; }
+    .fc-col-header-cell-cushion { color: rgba(255, 255, 255, 0.8) !important; font-weight: 600; padding: 10px 0; }
+    .fc-daygrid-day-number { color: rgba(255, 255, 255, 0.5) !important; padding: 10px !important; }
+    
+    .fc-day-today { background: rgba(248, 146, 35, 0.08) !important; }
+
+    /* Custom Event Classes - Using Orange as Primary */
+    .bg-label-primary { background-color: rgba(248, 146, 35, 0.16) !important; color: #f89223 !important; }
+    .bg-label-success { background-color: rgba(113, 221, 55, 0.16) !important; color: #71dd37 !important; }
+    .bg-label-warning { background-color: rgba(255, 171, 0, 0.16) !important; color: #ffab00 !important; }
+    .bg-label-info { background-color: rgba(3, 195, 236, 0.16) !important; color: #03c3ec !important; }
+
+    /* Transparent Form Inputs */
+    .form-control-transparent {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #fff !important;
+    }
+    .form-control-transparent:focus {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-color: #696cff !important;
+        box-shadow: none !important;
+    }
+
+    .fc-list-event-title { color: #fff !important; }
+    .fc-list-day-text, .fc-list-day-side-text { color: #f89223 !important; font-weight: 600; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Calendário Global</h4>
+            <p class="text-muted mb-0">Visão panorâmica de todos os pedidos e intervenções no sistema.</p>
+        </div>
+        <a href="/Admin/Dashboard" class="btn btn-outline-secondary">
+            <i class="ri-arrow-left-line me-1"></i> Voltar ao Dashboard
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible" role="alert">
+            <i class="ri-checkbox-circle-line me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalhes -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white" style="background: #2b2c40;">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title" id="eventTitle">Detalhes do Evento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="text-muted small d-block">Descrição</label>
+                    <p id="eventDescription" class="mb-0 fw-medium"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted small d-block">Técnico Responsável</label>
+                    <p id="eventTech" class="mb-0 text-orange fw-bold"></p>
+                </div>
+
+                <div id="assignSection" class="mt-4 pt-3 border-top border-secondary d-none">
+                    <h6 class="text-white mb-3"><i class="ri-user-add-line me-1"></i> Alterar Atribuição</h6>
+                    <form method="post" asp-page-handler="AssignTechnician">
+                        <input type="hidden" name="ticketId" id="modalTicketId" />
+                        <div class="d-flex gap-2">
+                            <select name="technicianId" class="form-select form-control-transparent" required>
+                                <option value="">Selecionar Técnico...</option>
+                                @foreach(var tech in Model.Technicians) {
+                                    <option value="@tech.Id">@tech.Username</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-primary">Atribuir</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Adicionar Tarefa -->
+<div class="modal fade" id="addActivityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-white" style="background: #2b2c40;">
+            <form method="post" asp-page-handler="CreateTask">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title">Agendar Nova Tarefa</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">O que deve ser feito?</label>
+                        <textarea name="description" class="form-control form-control-transparent" rows="3" placeholder="Ex: Verificar rede na Sala 4..." required></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Data</label>
+                            <input type="date" name="date" id="activityDateInput" class="form-control form-control-transparent" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Atribuir a (Opcional)</label>
+                            <select name="technicianId" class="form-select form-control-transparent">
+                                <option value="">Sem técnico (Aberto)</option>
+                                @foreach(var tech in Model.Technicians) {
+                                    <option value="@tech.Id">@tech.Username</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Tarefa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+        var addModal = new bootstrap.Modal(document.getElementById('addActivityModal'));
+        
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            selectable: true,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listMonth'
+            },
+            buttonText: {
+                today: 'Hoje',
+                month: 'Mês',
+                week: 'Semana',
+                list: 'Lista'
+            },
+            locale: 'pt-pt',
+            events: @Html.Raw(Model.CalendarEventsJson ?? "[]"),
+            select: function(info) {
+                document.getElementById('activityDateInput').value = info.startStr;
+                addModal.show();
+            },
+            eventClick: function(info) {
+                const props = info.event.extendedProps;
+                
+                document.getElementById('eventTitle').innerText = info.event.title;
+                document.getElementById('eventDescription').innerText = props.description || info.event.title;
+                document.getElementById('eventTech').innerText = props.technicianName || "Nenhum atribuído";
+                
+                const assignSec = document.getElementById('assignSection');
+                const ticketInput = document.getElementById('modalTicketId');
+                
+                if (props.ticketId && props.status !== 'Concluído') {
+                    assignSec.classList.remove('d-none');
+                    ticketInput.value = props.ticketId;
+                } else {
+                    assignSec.classList.add('d-none');
+                }
+                
+                eventModal.show();
+            },
+            height: 'auto',
+            themeSystem: 'standard',
+            dayMaxEvents: true,
+            navLinks: true,
+        });
+        calendar.render();
+    });
+</script>
+}

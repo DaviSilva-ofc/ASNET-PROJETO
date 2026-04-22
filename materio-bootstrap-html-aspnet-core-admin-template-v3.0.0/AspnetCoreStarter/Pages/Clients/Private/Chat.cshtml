@@ -2,219 +2,388 @@
 @model AspnetCoreStarter.Pages.Clients.Private.PrivateChatModel
 @{
     Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Centro de Mensagens - Suporte ASNET";
+    ViewData["Title"] = "Centro de Mensagens - Premium";
+    ViewData["isFlex"] = true;
+    ViewData["container"] = "container-fluid"; 
 }
 
-<div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Private Client /</span> Chat de Suporte</h4>
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/bootstrap-maxlength/bootstrap-maxlength.dist.css" />
+}
 
-    <div class="card overflow-hidden" style="height: calc(100vh - 200px);">
-        <div class="row g-0 h-100">
-            <!-- Sidebar de Contactos (Administradores/Suporte) -->
-            <div class="col-3 border-end h-100 bg-light d-none d-md-block">
-                <div class="p-3 border-bottom bg-white d-flex align-items-center">
-                    <h6 class="mb-0 fw-bold"><i class="ri-customer-service-2-line me-2"></i>Suporte ASNET</h6>
-                </div>
-                <div class="list-group list-group-flush overflow-auto" style="height: calc(100% - 60px);">
-                    @foreach (var contact in Model.Contacts)
-                    {
-                        <a asp-page="./Chat" asp-route-contactId="@contact.Id" 
-                           class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedContactId == contact.Id ? "active" : "")">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar me-2">
-                                    <span class="avatar-initial rounded-circle bg-label-primary">@contact.Username[0]</span>
+@section PageStyles {
+    <link rel="stylesheet" href="~/vendor/css/pages/app-chat.dist.css" />
+    <style>
+        /* Ajustar para caber perfeitamente sem scrolls na janela principal */
+        .app-chat { 
+            height: calc(100vh - 12rem) !important; 
+            background-color: #2b2c40; 
+            margin: 0 !important; 
+            width: 100% !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1) !important;
+        }
+        
+        .chat-history-body { 
+            height: calc(100vh - 22rem) !important; 
+            padding: 1rem !important; 
+        }
+        
+        @@media (min-width: 992px) {
+            .app-chat .app-sidebar {
+                position: static !important;
+                flex-basis: 22rem !important;
+                height: 100% !important;
+                transform: none !important;
+                z-index: 1 !important;
+                background-color: #2b2c40;
+            }
+        }
+
+        /* Esconder o botão de configurações (Customizer) */
+        .template-customizer-open-btn { display: none !important; }
+
+        /* Sidebar Styling */
+        .chat-sidebar-left-user { padding: 1.5rem; background-color: #2b2c40; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .chat-search-input { background-color: #363754 !important; border: none !important; color: #fff !important; border-radius: 20px !important; }
+        .chat-contact-list-item { padding: 0.75rem 1.5rem !important; margin: 0.25rem 0.75rem; border-radius: 0.5rem; transition: all 0.2s; }
+        .chat-contact-list-item:hover:not(.active) { background-color: rgba(255,255,255,0.05); }
+        
+        .chat-contact-list-item.active {
+            background: linear-gradient(72.47deg, #ffab00 22.16%, #ffc107 76.47%) !important;
+            box-shadow: 0px 4px 12px rgba(255, 171, 0, 0.3) !important;
+        }
+        .chat-contact-list-item.active h6, .chat-contact-list-item.active p, .chat-contact-list-item.active small { color: #fff !important; }
+
+        /* Message Bubble Styling - TOTALMENTE COMPACTO */
+        .chat-message-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            width: fit-content;
+        }
+
+        .chat-message:not(.chat-message-right) .chat-message-wrapper { align-items: flex-start; margin-right: auto; }
+        .chat-message-right .chat-message-wrapper { align-items: flex-end; margin-left: auto; }
+
+        .chat-message-text {
+            padding: 0.5rem 0.8rem !important;
+            border-radius: 12px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            width: fit-content !important;
+            display: inline-block !important;
+            font-size: 0.92rem;
+            white-space: normal !important;
+            word-wrap: break-word;
+            min-width: 0 !important;
+        }
+        .chat-message-text p { margin: 0 !important; display: inline; }
+        
+        .chat-message:not(.chat-message-right) .chat-message-text {
+            background-color: #363754 !important;
+            color: #dbdade !important;
+            border-top-left-radius: 2px !important;
+        }
+        
+        .chat-message-right .chat-message-text {
+            background-color: #ffab00 !important;
+            color: #fff !important;
+            border-top-right-radius: 2px !important;
+        }
+
+        .chat-history-footer {
+            padding: 1.5rem 2.5rem !important;
+            background-color: #2b2c40 !important;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .form-send-message {
+            background-color: #363754;
+            border-radius: 12px;
+            padding: 8px 15px;
+        }
+        .message-input { background: transparent !important; border: none !important; color: #fff !important; box-shadow: none !important; font-size: 1.1rem !important; }
+        
+        .chat-history-header { background-color: #2b2c40; padding: 1.2rem 1.8rem !important; }
+        .chat-history-header i { color: #dbdade; transition: color 0.2s; }
+        .chat-history-header i:hover { color: #ffab00; }
+
+        .avatar img { object-fit: cover; width: 100%; height: 100%; }
+        
+        @@media (min-width: 1400px) {
+            .app-chat .app-sidebar { flex-basis: 26rem !important; }
+        }
+    </style>
+}
+
+@section VendorScripts {
+    <script src="~/vendor/libs/bootstrap-maxlength/bootstrap-maxlength.dist.js"></script>
+}
+
+@section PageScripts {
+    <script src="~/js/app-chat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        $(function() {
+            const chatHistoryBody = document.querySelector('.chat-history-body');
+            const messageContainer = document.getElementById('messageContainer');
+            const chatForm = document.querySelector('.form-send-message');
+            const messageInput = document.querySelector('.message-input');
+            const receiverId = "@Model.SelectedContactId";
+            const currentUserId = "@Model.CurrentUserId";
+            const currentUserPhoto = "@Model.CurrentUserPhoto";
+
+            const scrollToBottom = () => {
+                if (chatHistoryBody) {
+                    chatHistoryBody.scrollTop = chatHistoryBody.scrollHeight;
+                }
+            };
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveMessage", function (msg) {
+                const isFromSelectedContact = msg.senderId == receiverId;
+                const isFromMe = msg.senderId == currentUserId;
+
+                if (isFromSelectedContact || isFromMe) {
+                    const li = document.createElement('li');
+                    li.className = `chat-message ${isFromMe ? 'chat-message-right' : ''} animate__animated animate__fadeInUp mb-1`;
+                    
+                    const photo = msg.senderPhoto ? msg.senderPhoto : '';
+                    const avatarContent = photo ? `<img src="${photo}" alt="Avatar" class="rounded-circle" onerror="this.parentElement.innerHTML='<span class=\'avatar-initial rounded-circle bg-label-primary\'>${msg.senderName[0]}</span>'">` : 
+                                                 `<span class="avatar-initial rounded-circle bg-label-primary">${msg.senderName[0]}</span>`;
+
+                    li.innerHTML = `
+                        <div class="d-flex overflow-hidden">
+                            ${!isFromMe ? `
+                            <div class="user-avatar flex-shrink-0 me-3">
+                                <div class="avatar avatar-sm">
+                                    ${avatarContent}
                                 </div>
-                                <div class="w-100">
-                                    <h6 class="mb-0 small fw-medium">@contact.Username</h6>
-                                    <p class="mb-0 text-muted x-small">Técnico/Administrador</p>
+                            </div>` : ''}
+                            <div class="chat-message-wrapper">
+                                <div class="chat-message-text">
+                                    <p>${msg.content}</p>
+                                </div>
+                                <div class="text-${isFromMe ? 'end' : 'start'} text-muted mt-1 d-flex align-items-center ${isFromMe ? 'justify-content-end' : ''}">
+                                    <small class="me-2">${msg.createdAt}</small>
+                                    ${isFromMe ? '<i class="ri-check-double-line ri-16px text-success"></i>' : ''}
                                 </div>
                             </div>
-                        </a>
+                            ${isFromMe ? `
+                            <div class="user-avatar flex-shrink-0 ms-3">
+                                <div class="avatar avatar-sm">
+                                    ${currentUserPhoto ? `<img src="${currentUserPhoto}" alt="Avatar" class="rounded-circle" onerror="this.parentElement.innerHTML='<span class=\'avatar-initial rounded-circle bg-warning text-white\'>M</span>'">` : 
+                                                         `<span class="avatar-initial rounded-circle bg-warning text-white">M</span>`}
+                                </div>
+                            </div>` : ''}
+                        </div>
+                    `;
+                    
+                    if (messageContainer) {
+                        messageContainer.appendChild(li);
+                        scrollToBottom();
                     }
-                    @if (!Model.Contacts.Any())
-                    {
-                        <div class="p-3 text-center text-muted small">Nenhum administrador disponível no momento.</div>
-                    }
+                }
+            });
+
+            connection.start().catch(err => console.error(err.toString()));
+
+            if (chatForm) {
+                scrollToBottom();
+                chatForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const content = messageInput.value;
+                    if (!content.trim()) return;
+                    messageInput.value = '';
+                    try {
+                        await connection.invoke("SendMessage", parseInt(receiverId), content);
+                    } catch (err) { console.error(err); }
+                });
+            }
+        });
+    </script>
+}
+
+<div class="app-chat card overflow-hidden border-0 shadow-none">
+    <div class="row g-0 h-100">
+        <!-- Sidebar Contacts -->
+        <div class="col app-chat-contacts app-sidebar flex-grow-0 overflow-hidden border-end h-100" id="app-chat-contacts">
+            <div class="chat-sidebar-left-user">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 avatar avatar-online avatar-md">
+                        @if (!string.IsNullOrEmpty(Model.CurrentUserPhoto))
+                        {
+                            <img src="@Model.CurrentUserPhoto" alt="Avatar" class="rounded-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <span class="avatar-initial rounded-circle bg-label-warning" style="display:none;">C</span>
+                        }
+                        else
+                        {
+                            <span class="avatar-initial rounded-circle bg-label-warning">C</span>
+                        }
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-0 text-white">Área de Cliente</h6>
+                        <small class="text-muted">Online</small>
+                    </div>
+                    <i class="ri-close-line ri-24px cursor-pointer d-lg-none" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-contacts"></i>
+                </div>
+                <div class="mt-4">
+                    <div class="input-group input-group-merge rounded-pill shadow-none">
+                        <span class="input-group-text border-0 bg-lighter"><i class="ri-search-line ri-20px text-muted"></i></span>
+                        <input type="text" class="form-control chat-search-input border-0 bg-lighter" placeholder="Pesquisar suporte..." aria-label="Pesquisar suporte...">
+                    </div>
                 </div>
             </div>
+            <div class="sidebar-body pb-3 h-100 overflow-auto">
+                <ul class="list-unstyled chat-contact-list mb-0" id="chat-list">
+                    <li class="chat-contact-list-item chat-contact-list-item-title mt-2">
+                        <h5 class="text-primary mb-0 small text-uppercase">Técnicos</h5>
+                    </li>
+                    @foreach (var contact in Model.Contacts)
+                    {
+                        <li class="chat-contact-list-item @(Model.SelectedContactId == contact.Id ? "active" : "")">
+                            <a asp-page="./Chat" asp-route-contactId="@contact.Id" class="d-flex align-items-center">
+                                <div class="flex-shrink-0 avatar avatar-online">
+                                    @if (!string.IsNullOrEmpty(contact.ProfilePhotoPath))
+                                    {
+                                        <img src="@contact.ProfilePhotoPath" alt="Avatar" class="rounded-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <span class="avatar-initial rounded-circle bg-label-primary" style="display:none;">@contact.Username[0]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar-initial rounded-circle bg-label-primary">@contact.Username[0]</span>
+                                    }
+                                </div>
+                                <div class="chat-contact-info flex-grow-1 ms-3 overflow-hidden">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="chat-contact-name text-truncate m-0 text-white">@contact.Username</h6>
+                                    </div>
+                                    <p class="chat-contact-status text-truncate mb-0 text-muted small">Suporte Técnico</p>
+                                </div>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
 
-            <!-- Janela de Chat -->
-            <div class="col-12 col-md-9 h-100 d-flex flex-column">
+        <!-- Chat History -->
+        <div class="col app-chat-history h-100">
+            <div class="chat-history-wrapper h-100 d-flex flex-column">
                 @if (Model.SelectedContactId.HasValue)
                 {
                     var currentContact = Model.Contacts.FirstOrDefault(c => c.Id == Model.SelectedContactId);
-                    <!-- Header -->
-                    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white shadow-sm" style="z-index: 5;">
-                        <div class="d-flex align-items-center">
-                            <a asp-page="./Chat" class="btn btn-sm btn-icon d-md-none me-2"><i class="bx bx-chevron-left"></i></a>
-                            <div class="avatar me-2">
-                                <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.Username[0]</span>
+                    
+                    <div class="chat-history-header border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-menu-line ri-24px cursor-pointer d-lg-none me-3" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-contacts"></i>
+                                <div class="flex-shrink-0 avatar avatar-online">
+                                    @if (!string.IsNullOrEmpty(currentContact?.ProfilePhotoPath))
+                                    {
+                                        <img src="@currentContact.ProfilePhotoPath" alt="Avatar" class="rounded-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <span class="avatar-initial rounded-circle bg-label-primary" style="display:none;">@currentContact?.Username[0]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.Username[0]</span>
+                                    }
+                                </div>
+                                <div class="chat-contact-info flex-grow-1 ms-3">
+                                    <h6 class="m-0 text-white">@currentContact?.Username</h6>
+                                    <small class="user-status text-muted">Técnico de Suporte</small>
+                                </div>
                             </div>
-                            <div>
-                                <h6 class="mb-0">@currentContact?.Username</h6>
-                                <small class="text-success"><span class="badge badge-dot bg-success me-1"></span>Online/Suporte</small>
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="ri-phone-line ri-22px cursor-pointer"></i>
+                                <i class="ri-vidicon-line ri-22px cursor-pointer"></i>
+                                <i class="ri-search-line ri-22px cursor-pointer"></i>
+                                <i class="ri-more-2-fill ri-22px cursor-pointer"></i>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Mensagens -->
-                    <div id="chatWindow" class="flex-grow-1 p-3 overflow-auto bg-white">
-                        <div id="messageContainer" class="d-flex flex-column gap-3">
+                    
+                    <div class="chat-history-body flex-grow-1 overflow-auto">
+                        <ul class="list-unstyled chat-history mb-0" id="messageContainer">
                             @foreach (var msg in Model.Messages)
                             {
                                 bool isMe = msg.SenderId == Model.CurrentUserId;
-                                <div class="message-wrapper d-flex @(isMe ? "justify-content-end" : "justify-content-start") align-items-center w-100 mb-3" data-msg-id="@msg.Id">
-                                    <div class="@(isMe ? "text-white bg-primary" : "bg-light") p-2 rounded-3 shadow-sm msg-bubble" 
-                                         style="max-width: 70%;">
-                                        <p class="mb-0 small">@msg.Content</p>
-                                        <div class="d-flex justify-content-between align-items-center mt-1">
-                                            <small class="@(isMe ? "text-white-50" : "text-muted") x-small">@msg.CreatedAt.ToString("HH:mm")</small>
-                                            @if (isMe && msg.IsRead) { <i class="ri-check-double-line @(isMe ? "text-white-50" : "text-primary") ms-1 x-small"></i> }
+                                <li class="chat-message @(isMe ? "chat-message-right" : "") mb-1">
+                                    <div class="d-flex overflow-hidden">
+                                        @if (!isMe)
+                                        {
+                                            <div class="user-avatar flex-shrink-0 me-3">
+                                                <div class="avatar avatar-sm">
+                                                    @if (!string.IsNullOrEmpty(currentContact?.ProfilePhotoPath))
+                                                    {
+                                                        <img src="@currentContact.ProfilePhotoPath" alt="Avatar" class="rounded-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <span class="avatar-initial rounded-circle bg-label-primary" style="display:none;">@currentContact?.Username[0]</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.Username[0]</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        <div class="chat-message-wrapper">
+                                            <div class="chat-message-text">
+                                                <p>@msg.Content</p>
+                                            </div>
+                                            <div class="text-@(isMe ? "end" : "start") text-muted mt-1 d-flex align-items-center @(isMe ? "justify-content-end" : "")">
+                                                <small class="me-2">@msg.CreatedAt.ToString("HH:mm")</small>
+                                                @if (isMe) { <i class="ri-check-double-line ri-16px text-success"></i> }
+                                            </div>
                                         </div>
+                                        @if (isMe)
+                                        {
+                                            <div class="user-avatar flex-shrink-0 ms-3">
+                                                <div class="avatar avatar-sm">
+                                                    @if (!string.IsNullOrEmpty(Model.CurrentUserPhoto))
+                                                    {
+                                                        <img src="@Model.CurrentUserPhoto" alt="Avatar" class="rounded-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <span class="avatar-initial rounded-circle bg-warning text-white" style="display:none;">M</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="avatar-initial rounded-circle bg-warning text-white">M</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
-                                    @if (isMe)
-                                    {
-                                        <button class="btn btn-link btn-sm p-0 ms-2 delete-msg-btn text-muted" onclick="deleteMsg(@msg.Id)" title="Apagar">
-                                            <i class="ri-delete-bin-line"></i>
-                                        </button>
-                                    }
-                                </div>
+                                </li>
                             }
-                        </div>
+                        </ul>
                     </div>
-
-                    <!-- Input -->
-                    <div class="p-3 border-top bg-white">
-                        <form id="chatForm" class="input-group overflow-hidden">
-                            <input type="text" id="messageInput" class="form-control border-0 bg-light px-3" placeholder="Escreva a sua mensagem..." required autocomplete="off" />
-                            <input type="hidden" id="receiverId" value="@Model.SelectedContactId" />
-                            <button type="submit" class="btn btn-warning px-4 shadow-sm fw-bold">
-                                <i class="ri-send-plane-2-line me-1"></i> Enviar
-                            </button>
+                    
+                    <div class="chat-history-footer shadow-sm">
+                        <form class="form-send-message d-flex justify-content-between align-items-center px-2">
+                            <input class="form-control message-input" placeholder="Escreva a sua mensagem aqui..." required>
+                            <div class="message-actions d-flex align-items-center gap-2">
+                                <i class="ri-mic-line ri-22px cursor-pointer"></i>
+                                <i class="ri-attachment-2 ri-22px cursor-pointer"></i>
+                                <button class="btn btn-warning px-4 py-2 d-flex align-items-center gap-2 rounded-3 shadow-sm border-0">
+                                    <span class="fw-bold">Enviar</span>
+                                    <i class="ri-send-plane-2-line ri-18px"></i>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 }
                 else
                 {
-                    <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center bg-light text-center p-5">
-                        <div class="mb-4 text-primary opacity-25" style="font-size: 5rem;"><i class="ri-chat-smile-2-line"></i></div>
-                        <h5 class="fw-bold">Centro de Ajuda ASNET</h5>
-                        <p class="text-muted" style="max-width: 400px;">Selecione um técnico de suporte na lista lateral para iniciar uma conversa ou tirar dúvidas sobre os seus equipamentos.</p>
-                        <div class="d-md-none mt-4 w-100">
-                            <h6 class="small text-uppercase fw-bold text-muted mb-3">Técnicos Disponíveis:</h6>
-                            <div class="list-group shadow-sm">
-                                @foreach (var contact in Model.Contacts)
-                                {
-                                    <a asp-page="./Chat" asp-route-contactId="@contact.Id" class="list-group-item list-group-item-action d-flex align-items-center py-3">
-                                        <div class="avatar avatar-sm me-2">
-                                            <span class="avatar-initial rounded-circle bg-label-primary">@contact.Username[0]</span>
-                                        </div>
-                                        <span>@contact.Username</span>
-                                    </a>
-                                }
-                            </div>
-                        </div>
+                    <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center bg-body h-100">
+                        <div class="mb-4 text-warning opacity-25" style="font-size: 8rem;"><i class="ri-customer-service-2-line"></i></div>
+                        <h3 class="fw-bold text-white">Centro de Ajuda ASNET</h3>
+                        <p class="text-muted" style="max-width: 400px; text-align: center; font-size: 1.1rem;">Selecione um técnico de suporte para iniciar uma conversa ou tirar dúvidas sobre os seus equipamentos.</p>
+                        <button class="btn btn-warning mt-4 px-5 py-2 rounded-pill d-lg-none shadow" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-contacts">Ver Técnicos</button>
                     </div>
                 }
             </div>
         </div>
     </div>
 </div>
-
-@section PageScripts {
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
-<script>
-    const chatWindow = document.getElementById('chatWindow');
-    const messageContainer = document.getElementById('messageContainer');
-    const chatForm = document.getElementById('chatForm');
-    const messageInput = document.getElementById('messageInput');
-    const receiverId = document.getElementById('receiverId')?.value;
-
-    const currentUserId = "@Model.CurrentUserId";
-
-    const scrollToBottom = () => {
-        if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
-    };
-
-    // Initialize SignalR
-    const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/chatHub")
-        .withAutomaticReconnect()
-        .build();
-
-    connection.on("ReceiveMessage", function (msg) {
-        // Only show if it's from the person we are chatting with OR if it's from us
-        const isFromSelectedContact = msg.senderId == receiverId;
-        const isFromMe = msg.senderId == currentUserId;
-
-        if (isFromSelectedContact || isFromMe) {
-            const wrapper = document.createElement('div');
-            wrapper.className = `message-wrapper d-flex ${isFromMe ? 'justify-content-end' : 'justify-content-start'} align-items-center w-100 mb-3 animate__animated animate__fadeInUp`;
-            wrapper.setAttribute('data-msg-id', msg.id);
-
-            wrapper.innerHTML = `
-                <div class="${isFromMe ? 'text-white bg-primary' : 'bg-light'} p-2 rounded-3 shadow-sm msg-bubble" style="max-width: 70%;">
-                    <p class="mb-0 small">${msg.content}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-1">
-                        <small class="${isFromMe ? 'text-white-50' : 'text-muted'} x-small">${msg.createdAt}</small>
-                    </div>
-                </div>
-                ${isFromMe ? `<button class="btn btn-link btn-sm p-0 ms-2 delete-msg-btn text-muted" onclick="deleteMsg(${msg.id})" title="Apagar"><i class="ri-delete-bin-line"></i></button>` : ''}
-            `;
-            messageContainer.appendChild(wrapper);
-            scrollToBottom();
-        }
-    });
-
-    connection.on("MessageDeleted", function (msgId) {
-        const msgElement = document.querySelector(`.message-wrapper[data-msg-id="${msgId}"]`);
-        if (msgElement) {
-            msgElement.classList.add('animate__animated', 'animate__fadeOut');
-            setTimeout(() => msgElement.remove(), 500);
-        }
-    });
-
-    window.deleteMsg = async function(msgId) {
-        if (confirm("Deseja apagar esta mensagem para todos?")) {
-            try {
-                await connection.invoke("DeleteMessage", msgId);
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao apagar mensagem.");
-            }
-        }
-    };
-
-    connection.start().catch(err => console.error(err.toString()));
-
-    if (chatForm) {
-        scrollToBottom();
-
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const content = messageInput.value;
-            if (!content.trim()) return;
-
-            messageInput.value = '';
-
-            try {
-                await connection.invoke("SendMessage", parseInt(receiverId), content);
-            } catch (err) {
-                console.error('Error sending message:', err);
-                alert("Erro ao enviar mensagem.");
-            }
-        });
-    }
-</script>
-}
-
-<style>
-    .x-small { font-size: 0.7rem; }
-    .avatar-initial { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .msg-bubble { border-radius: 12px !important; }
-    .dark-style .bg-white, [data-bs-theme="dark"] .bg-white { background-color: #2b2c40 !important; }
-    .dark-style .bg-light, [data-bs-theme="dark"] .bg-light { background-color: rgba(255,255,255,0.05) !important; }
-    
-    .message-wrapper .delete-msg-btn { opacity: 0; transition: opacity 0.2s; }
-    .message-wrapper:hover .delete-msg-btn { opacity: 1; }
-</style>

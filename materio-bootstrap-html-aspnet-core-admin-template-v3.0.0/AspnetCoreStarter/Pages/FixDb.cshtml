@@ -4,37 +4,60 @@
 
 @{
     ViewData["Title"] = "Fix Database";
-    string result = "A aguardar execução...";
-    try
-    {
-        // Add Empresa column to utilizadores
-        _context.Database.ExecuteSqlRaw("ALTER TABLE utilizadores ADD COLUMN IF NOT EXISTS id_empresa INT NULL;");
-        
-        // Create empresas table if not exists with correct column names
-        _context.Database.ExecuteSqlRaw(@"
-            CREATE TABLE IF NOT EXISTS empresas (
-                id_empresa INT AUTO_INCREMENT PRIMARY KEY,
-                nome_empresa VARCHAR(100) NOT NULL,
-                localizacao VARCHAR(255) NULL
-            );
-        ");
-        
-        result = "Sucesso: Coluna id_empresa adicionada e tabela empresas verificada.";
-    }
-    catch (Exception ex)
-    {
-        result = "Erro: " + ex.Message;
-    }
+    List<string> logs = new List<string>();
+    
+    // Helper to run SQL and log result
+    Action<string, string> runSql = (sql, description) => {
+        try {
+            _context.Database.ExecuteSqlRaw(sql);
+            logs.Add("✅ " + description + ": Sucesso.");
+        } catch (Exception ex) {
+            if (ex.Message.Contains("Duplicate column name") || ex.Message.Contains("already exists")) {
+                logs.Add("ℹ️ " + description + ": Já existe.");
+            } else {
+                logs.Add("❌ " + description + ": Erro - " + ex.Message);
+            }
+        }
+    };
+
+    runSql("ALTER TABLE tickets ADD tipo_ticket VARCHAR(50) NULL;", "Adicionar coluna tipo_ticket");
+    runSql("ALTER TABLE tickets ADD prioridade VARCHAR(20) NULL;", "Adicionar coluna prioridade");
+
+    runSql(@"
+        CREATE TABLE IF NOT EXISTS ticket_historico (
+            id_historico INT AUTO_INCREMENT PRIMARY KEY,
+            id_ticket INT NOT NULL,
+            data_acao DATETIME NOT NULL,
+            acao TEXT NULL,
+            autor VARCHAR(100) NULL,
+            tipo_acao INT NOT NULL,
+            CONSTRAINT FK_TicketHistory_Ticket FOREIGN KEY (id_ticket) REFERENCES tickets(id_ticket) ON DELETE CASCADE
+        );
+    ", "Criar tabela ticket_historico");
 }
 
 <div class="container mt-5">
-    <div class="card">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0 text-white">Resultado da Correção da Base de Dados</h3>
+        </div>
         <div class="card-body">
-            <h3>Resultado da Correção da Base de Dados</h3>
-            <div class="alert alert-info">
-                @result
+            <div class="list-group mb-4">
+                @foreach (var log in logs)
+                {
+                    <div class="list-group-item">@log</div>
+                }
             </div>
-            <a href="/Auth/Login" class="btn btn-primary">Voltar para Login</a>
+            
+            <div class="alert alert-info">
+                Se as mensagens acima indicarem "Sucesso" ou "Já existe", a sua base de dados está pronta.
+            </div>
+            
+            <div class="d-flex gap-2">
+                <a href="/Admin/Tickets" class="btn btn-success">Ir para Gestão de Tickets</a>
+                <a href="/Admin/Dashboard" class="btn btn-primary">Ir para Dashboard</a>
+                <a href="/FixDb" class="btn btn-outline-secondary">Tentar Novamente</a>
+            </div>
         </div>
     </div>
 </div>

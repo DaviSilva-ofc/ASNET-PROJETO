@@ -75,12 +75,17 @@ namespace AspnetCoreStarter.Hubs
             _context.Mensagens.Add(message);
             await _context.SaveChangesAsync();
 
+            // Fetch sender details for the UI (photo)
+            var senderUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == senderId);
+            string senderPhoto = senderUser?.ProfilePhotoPath ?? "";
+
             // Broadcast to the specifically targeted user and the sender
-            // SignalR uses the NameIdentifier claim by default as the UserIdentifier
             await Clients.User(receiverId.ToString()).SendAsync("ReceiveMessage", new
             {
                 id = message.Id,
                 senderId = senderId,
+                senderName = senderUser?.Username ?? "Utilizador",
+                senderPhoto = senderPhoto,
                 content = content,
                 createdAt = message.CreatedAt.ToString("HH:mm"),
                 isMe = false
@@ -90,6 +95,8 @@ namespace AspnetCoreStarter.Hubs
             {
                 id = message.Id,
                 senderId = senderId,
+                senderName = senderUser?.Username ?? "Utilizador",
+                senderPhoto = senderPhoto,
                 content = content,
                 createdAt = message.CreatedAt.ToString("HH:mm"),
                 isMe = true
