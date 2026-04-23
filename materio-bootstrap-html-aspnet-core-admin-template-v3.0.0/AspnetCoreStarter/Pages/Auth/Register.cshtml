@@ -1,10 +1,14 @@
+@page
+@model AspnetCoreStarter.Pages.Auth.RegisterModel
 @{
   Layout = "Layouts/_BlankLayout";
   ViewData["Title"] = "Registo";
+  ViewData["isFront"] = true;
 }
 
 @section PageStyles {
   <link rel="stylesheet" href="~/vendor/css/pages/page-auth.dist.css">
+  <link rel="stylesheet" href="~/css/asnet-theme.css">
 }
 
 <div class="authentication-wrapper authentication-cover">
@@ -25,7 +29,6 @@
             <span class="app-brand-logo demo">
               <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="40" />
             </span>
-            <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
           </a>
         </div>
         <!-- /Logo -->
@@ -77,7 +80,7 @@
               <input class="form-check-input" type="checkbox" id="terms-conditions" asp-for="Input.Terms">
               <label class="form-check-label" for="terms-conditions">
                 Eu concordo com os
-                <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#termsModal">termos e condições</a>
+                <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-primary">termos e condições</a>
               </label>
             </div>
           </div>
@@ -86,7 +89,7 @@
 
         <p class="text-center">
           <span>Já tens uma conta?</span>
-          <a href="/Auth/Login">
+          <a href="/Auth/Login" class="text-primary">
             <span>Entre em vez disso</span>
           </a>
         </p>
@@ -96,11 +99,11 @@
         </div>
 
         <div class="d-flex justify-content-center gap-2">
-          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-google-plus">
-            <i class="tf-icons ri-google-fill ri-24px"></i>
+          <a asp-page="/Auth/Login" asp-page-handler="ExternalLogin" asp-route-provider="Google" class="btn btn-icon btn-lg rounded-circle btn-outline-secondary" title="Entrar com Google">
+            <img src="~/img/icons/brands/google.png" alt="Google" width="22">
           </a>
-          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-secondary">
-            <i class="tf-icons ri-microsoft-fill ri-24px"></i>
+          <a asp-page="/Auth/Login" asp-page-handler="ExternalLogin" asp-route-provider="Microsoft" class="btn btn-icon btn-lg rounded-circle btn-outline-secondary" title="Entrar com Office 365">
+            <img src="~/img/branding/office365-logo.png" alt="Office 365" width="22">
           </a>
         </div>
       </div>

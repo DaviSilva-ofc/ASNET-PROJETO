@@ -285,9 +285,16 @@
                             <div class="d-flex mt-3 mb-3">
                                 @foreach (var u in Model.RecentMessageSenders)
                                 {
-                                    <div class="pending-avatar" style="width:32px;height:32px;border-radius:50%;background:rgba(113,221,55,0.1);color:#71dd37;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;margin-right:-8px;border:2px solid var(--dash-card-bg);" title="@u.Username">
-                                        @(u.Username?.Substring(0, Math.Min(2, u.Username.Length)).ToUpper())
-                                    </div>
+                                    <a asp-page="/Profile" asp-route-id="@u.Id" class="pending-avatar" title="@u.Username" style="border: 2px solid #fff; text-decoration:none; background:rgba(113,221,55,0.1);color:#71dd37;">
+                                        @if (!string.IsNullOrEmpty(u.ProfilePhotoPath))
+                                        {
+                                            <img src="@u.ProfilePhotoPath" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+                                        }
+                                        else
+                                        {
+                                            @(u.Username?.Substring(0, Math.Min(2, u.Username.Length)).ToUpper())
+                                        }
+                                    </a>
                                 }
                             </div>
                         }
@@ -461,12 +468,12 @@
                                         <td>
                                             @if (ticket.Technician != null)
                                             {
-                                                <div class="d-flex align-items-center">
+                                                <a asp-page="/Profile" asp-route-id="@ticket.Technician.Id" class="d-flex align-items-center text-body">
                                                     <div class="avatar avatar-xs me-2">
                                                         <span class="avatar-initial rounded-circle bg-label-primary" style="font-size: 0.6rem;">@(ticket.Technician.Username?.Substring(0, 1).ToUpper())</span>
                                                     </div>
                                                     <span class="fw-medium">@ticket.Technician.Username</span>
-                                                </div>
+                                                </a>
                                             }
                                             else
                                             {

@@ -22,7 +22,6 @@ namespace AspnetCoreStarter.Pages.Auth
         }
 
         [BindProperty]
-        [Required(ErrorMessage = "O email/utilizador é obrigatório")]
         public string Email { get; set; }
 
         [BindProperty]
@@ -38,10 +37,109 @@ namespace AspnetCoreStarter.Pages.Auth
         {
         }
 
+        public IActionResult OnGetExternalLogin(string provider)
+        {
+            try
+            {
+                var configKey = provider == "Google" ? "Authentication:Google:ClientId" : "Authentication:Microsoft:ClientId";
+                var configValue = ((IConfiguration)HttpContext.RequestServices.GetService(typeof(IConfiguration)))[configKey];
+
+                if (string.IsNullOrEmpty(configValue) || configValue.Contains("SEU_") || configValue.Contains("YOUR_"))
+                {
+                    ErrorMessage = $"Configuração necessária: Por favor, insira o Client ID do {provider} no arquivo appsettings.json para ativar esta funcionalidade.";
+                    return Page();
+                }
+
+                var redirectUrl = Url.Page("./Login", pageHandler: "ExternalLoginCallback");
+                var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+                return Challenge(properties, provider);
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Erro ao iniciar login externo ({provider}): {ex.Message}";
+                return Page();
+            }
+        }
+
+        public async Task<IActionResult> OnGetExternalLoginCallbackAsync()
+        {
+            var authenticateResult = await HttpContext.AuthenticateAsync("External");
+            if (!authenticateResult.Succeeded)
+            {
+                return RedirectToPage("./Login");
+            }
+
+            var email = authenticateResult.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+            {
+                ErrorMessage = "Não foi possível obter o email da conta externa.";
+                return Page();
+            }
+
+            // Ensure database is up to date
+            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN cover_photo_path VARCHAR(255) NULL;"); } catch { }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                ErrorMessage = $"O email '{email}' não está registado no sistema. Por favor, registe-se primeiro ou contacte o administrador.";
+                await HttpContext.SignOutAsync("External");
+                return Page();
+            }
+
+            // Reuse the login logic to identify role
+            var isAdmin = await _context.Administradores.AnyAsync(a => a.UserId == user.Id);
+            string role = "Ativo";
+            if (isAdmin) role = "Admin";
+            else if (await _context.Diretores.AnyAsync(d => d.UserId == user.Id)) role = "Diretor";
+            else if (await _context.Tecnicos.AnyAsync(t => t.UserId == user.Id)) role = "Tecnico";
+            else if (await _context.Coordenadores.AnyAsync(c => c.UserId == user.Id)) role = "Coordenador";
+            else if (await _context.Professores.AnyAsync(p => p.UserId == user.Id)) role = "Professor";
+            else if (user.EmpresaId.HasValue) role = "ClientePrivado";
+
+            if (role != "Admin" && !string.Equals(user.AccountStatus, "Ativo", StringComparison.OrdinalIgnoreCase))
+            {
+                ErrorMessage = $"A sua conta está com o estado '{user.AccountStatus}'. Contacte o administrador.";
+                await HttpContext.SignOutAsync("External");
+                return Page();
+            }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username ?? ""),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Role, role),
+                new Claim("ProfilePhoto", user.ProfilePhotoPath ?? "/img/avatars/1.png")
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Sign in to the main scheme and clean up external scheme
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+            await HttpContext.SignOutAsync("External");
+
+            // Session compatibility
+            HttpContext.Session.SetString("UserId", user.Id.ToString());
+            HttpContext.Session.SetString("Username", user.Username);
+
+            // Redirect logic
+            if (role == "Admin") return RedirectToPage("/Admin/Dashboard");
+            if (role == "Diretor") return RedirectToPage("/Clients/Directors/Dashboard");
+            if (role == "Tecnico") return RedirectToPage("/Clients/Technicians/Dashboard");
+            if (role == "Coordenador") return RedirectToPage("/Clients/Coordinators/Dashboard");
+            if (role == "Professor") return RedirectToPage("/Clients/Professors/Dashboard");
+            if (role == "ClientePrivado") return RedirectToPage("/Clients/Private/Dashboard");
+
+            return RedirectToPage("/frontpages/LandingPage");
+        }
+
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid)
+            if (string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
             {
+                ErrorMessage = "O email/utilizador e a palavra-passe são obrigatórios.";
                 return Page();
             }
 
@@ -166,6 +264,7 @@ namespace AspnetCoreStarter.Pages.Auth
                 } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN id_empresa INT NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE contratos ADD COLUMN nivel_urgencia VARCHAR(20) NULL;"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE utilizadores ADD COLUMN cover_photo_path VARCHAR(255) NULL;"); } catch { }
                 try {
                     await _context.Database.ExecuteSqlRawAsync(@"
                         CREATE TABLE IF NOT EXISTS pedidos_stock (
@@ -247,7 +346,8 @@ namespace AspnetCoreStarter.Pages.Auth
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.Username ?? ""),
                     new Claim(ClaimTypes.Email, user.Email ?? ""),
-                    new Claim(ClaimTypes.Role, role)
+                    new Claim(ClaimTypes.Role, role),
+                    new Claim("ProfilePhoto", user.ProfilePhotoPath ?? "/img/avatars/1.png")
                 };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

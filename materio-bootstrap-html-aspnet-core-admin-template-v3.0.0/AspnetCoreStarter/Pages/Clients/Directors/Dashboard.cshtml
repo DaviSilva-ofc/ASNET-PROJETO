@@ -152,18 +152,6 @@
         border-color: var(--dash-card-bg);
     }
 
-    /* Forced Full Width Layout */
-    .container-xxl, .container-fluid {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-    }
-    
-    .layout-page, .content-wrapper, .layout-container {
-        width: 100% !important;
-    }
-
     /* Custom Navigation Tabs */
     .nav-pills .nav-link {
         background: transparent !important;
@@ -474,12 +462,12 @@
                                         <td>
                                             @if (ticket.Technician != null)
                                             {
-                                                <div class="d-flex align-items-center">
+                                                <a asp-page="/Profile" asp-route-id="@ticket.Technician.Id" class="d-flex align-items-center text-decoration-none text-body">
                                                     <div class="avatar avatar-xs me-2">
                                                         <span class="avatar-initial rounded-circle bg-label-primary" style="font-size: 0.6rem;">@(ticket.Technician.Username?.Substring(0, 1).ToUpper())</span>
                                                     </div>
-                                                    <span class="fw-medium text-white">@ticket.Technician.Username</span>
-                                                </div>
+                                                    <span class="fw-medium text-white hover-primary">@ticket.Technician.Username</span>
+                                                </a>
                                             }
                                             else
                                             {
@@ -526,7 +514,6 @@
                 <div class="card-body p-0"><div id="clientMap" style="height: 400px; width: 100%; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;"></div></div>
             </div>
         </div>
-    </div>
 
     <!-- Modal Processar Pedido (Diretor) -->
     <div class="modal fade" id="modalFulfillRequest" tabindex="-1" aria-hidden="true">
@@ -610,10 +597,6 @@
             </div>
         </div>
     </div>
-
-        </div>
-    </div>
-</div>
 
 @section PageScripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -720,40 +703,46 @@
         }
     });
 </script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    function initMap() {
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+    });
+
+    async function initMap() {
         // Default center: Braga
-        var myLatLng = { lat: 41.5454, lng: -8.4265 };
+        var map = L.map('clientMap').setView([41.5454, -8.4265], 10);
 
-        var map = new google.maps.Map(document.getElementById('clientMap'), {
-            zoom: 10,
-            center: myLatLng
-        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-        // Parse locations from model
         var locationsRaw = '@Html.Raw(Model.ClientLocationsJson)';
         if (locationsRaw) {
             var locations = JSON.parse(locationsRaw.replace(/&quot;/g, '"'));
-            var geocoder = new google.maps.Geocoder();
-
-            locations.forEach(function(loc) {
+            
+            for (let i = 0; i < locations.length; i++) {
+                const loc = locations[i];
                 if (loc.address) {
-                    geocoder.geocode({ 'address': loc.address + ", Portugal" }, function(results, status) {
-                        if (status === 'OK') {
-                            new google.maps.Marker({
-                                map: map,
-                                position: results[0].geometry.location,
-                                title: loc.name
-                            });
-                        } else {
-                            console.warn('Geocode failed for ' + loc.address + ': ' + status);
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc.address + ", Portugal")}`);
+                        const data = await response.json();
+                        
+                        if (data && data.length > 0) {
+                            const result = data[0];
+                            L.marker([result.lat, result.lon])
+                             .addTo(map)
+                             .bindPopup(`<b>${loc.name}</b><br>${loc.address}`);
                         }
-                    });
+                    } catch (error) {
+                        console.error('Geocoding error:', error);
+                    }
+                    if (locations.length > 1) await new Promise(resolve => setTimeout(resolve, 1000));
                 }
-            });
+            }
         }
     }
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
 <partial name="Shared/_QrModal" />
 }

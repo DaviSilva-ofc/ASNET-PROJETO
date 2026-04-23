@@ -26,6 +26,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<TicketHistorico> TicketHistory { get; set; } = new();
         public List<Equipamento> AssociatedEquipment { get; set; } = new();
         public List<Equipamento> AvailableEquipment { get; set; } = new();
+        public List<User> AvailableTechnicians { get; set; } = new();
         public int CountStock { get; set; }
 
         // --- Stats ---
@@ -95,6 +96,10 @@ namespace AspnetCoreStarter.Pages.Admin
 
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
+            AvailableTechnicians = await _context.Users
+                .Join(_context.Tecnicos, u => u.Id, t => t.UserId, (u, t) => u)
+                .ToListAsync();
+
             // If a ticket is selected, load its details
             if (SelectedTicketId.HasValue)
             {
@@ -140,7 +145,7 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public async Task<IActionResult> OnPostAdvanceStatusAsync(int ticketId)
         {
-            var ticket = await _context.Tickets.FindAsync(ticketId);
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
             if (ticket == null) return NotFound();
 
             string oldStatus = ticket.Status;
@@ -175,11 +180,35 @@ namespace AspnetCoreStarter.Pages.Admin
                 else if (newStatus == "Concluído")
                 {
                     ticket.CompletedAt = DateTime.UtcNow;
+                    if (ticket.Equipamento != null)
+                    {
+                        ticket.Equipamento.Status = "A funcionar";
+                    }
                 }
 
                 await LogHistory(ticketId, $"Status alterado de {oldStatus} para {newStatus}", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();
             }
+
+            return RedirectToPage(new { SelectedTicketId = ticketId, FilterStatus, SearchQuery, FilterType, FilterPriority });
+        }
+
+        public async Task<IActionResult> OnPostAssignTechnicianAsync(int ticketId, int technicianId)
+        {
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null) return NotFound();
+
+            if (ticket.Status == "Aberto" || ticket.Status == "Pedido" || ticket.Status == "Pendente")
+            {
+                ticket.Status = "Aceite";
+                ticket.AcceptedAt = DateTime.UtcNow;
+            }
+            
+            ticket.TechnicianId = technicianId;
+
+            var techUser = await _context.Users.FindAsync(technicianId);
+            await LogHistory(ticketId, $"Ticket atribuído ao técnico {techUser?.Username}", TipoAcaoHistorico.Status);
+            await _context.SaveChangesAsync();
 
             return RedirectToPage(new { SelectedTicketId = ticketId, FilterStatus, SearchQuery, FilterType, FilterPriority });
         }

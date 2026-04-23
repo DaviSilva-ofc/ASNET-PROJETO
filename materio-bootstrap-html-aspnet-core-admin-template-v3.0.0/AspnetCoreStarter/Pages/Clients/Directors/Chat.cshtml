@@ -22,7 +22,14 @@
                            class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedTechId == contact.User.Id ? "active" : "")">
                             <div class="d-flex align-items-center">
                                 <div class="avatar me-2">
-                                    <span class="avatar-initial rounded-circle bg-label-primary">@contact.User.Username[0]</span>
+                                    @if (!string.IsNullOrEmpty(contact.User.ProfilePhotoPath))
+                                    {
+                                        <img src="@contact.User.ProfilePhotoPath" alt="Avatar" class="rounded-circle" style="object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar-initial rounded-circle bg-label-primary">@contact.User.Username[0]</span>
+                                    }
                                 </div>
                                 <div class="w-100">
                                     <h6 class="mb-0 small">@contact.User.Username</h6>
@@ -45,15 +52,22 @@
                     var currentContact = Model.Contacts.FirstOrDefault(t => t.User.Id == Model.SelectedTechId);
                     <!-- Header -->
                     <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
-                        <div class="d-flex align-items-center">
+                        <a asp-page="/Profile" asp-route-id="@currentContact?.User.Id" class="d-flex align-items-center text-body">
                             <div class="avatar me-2">
-                                <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.User.Username[0]</span>
+                                @if (!string.IsNullOrEmpty(currentContact?.User.ProfilePhotoPath))
+                                {
+                                    <img src="@currentContact.User.ProfilePhotoPath" alt="Avatar" class="rounded-circle" style="object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <span class="avatar-initial rounded-circle bg-label-primary">@(currentContact?.User.Username?[0] ?? 'U')</span>
+                                }
                             </div>
                             <div>
                                 <h6 class="mb-0">@currentContact?.User.Username</h6>
                                 <small class="text-muted">@currentContact?.Role</small>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     <!-- Mensagens -->

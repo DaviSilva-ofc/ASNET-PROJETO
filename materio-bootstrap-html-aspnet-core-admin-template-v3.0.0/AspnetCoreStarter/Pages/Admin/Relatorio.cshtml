@@ -217,7 +217,9 @@
                                     double effVal = item.Total > 0 ? Math.Round((double)item.Concluidos / item.Total * 100, 1) : 0;
                                     string badgeClass = effVal >= 80 ? "success" : effVal >= 50 ? "warning" : "danger";
                                     <tr>
-                                        <td class="fw-semibold">@item.Tecnico</td>
+                                        <td class="fw-semibold">
+                                            <a asp-page="/Profile" asp-route-id="@item.UserId" class="text-body">@item.Tecnico</a>
+                                        </td>
                                         <td class="text-center">@item.Total</td>
                                         <td class="text-center"><span class="badge bg-label-@badgeClass">@effVal%</span></td>
                                         <td class="text-end fw-bold text-csat">
@@ -285,7 +287,9 @@
                                 {
                                     <tr>
                                         <td><span class="badge bg-label-warning">@rankProf</span></td>
-                                        <td>@item.Professor</td>
+                                        <td>
+                                            <a asp-page="/Profile" asp-route-id="@item.UserId" class="text-body fw-semibold">@item.Professor</a>
+                                        </td>
                                         <td class="text-muted small">@item.Email</td>
                                         <td class="text-end fw-bold">@item.Total</td>
                                     </tr>
@@ -325,7 +329,7 @@
                                         <div>
                                             <span class="fw-semibold small">@(fb.Equipamento?.Name ?? "Equipamento")</span>
                                             <div class="text-muted" style="font-size: 0.75rem;">
-                                                Técnico: @(fb.Technician?.Username ?? "—")
+                                                Técnico: <a asp-page="/Profile" asp-route-id="@fb.Technician?.Id" class="text-muted fw-bold">@(fb.Technician?.Username ?? "—")</a>
                                             </div>
                                         </div>
                                         <span class="badge bg-label-@cardColor">@ratingLabel @rating★</span>

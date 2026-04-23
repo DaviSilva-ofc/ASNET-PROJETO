@@ -1,10 +1,14 @@
+@page
+@model AspnetCoreStarter.Pages.Auth.LoginModel
 @{
   Layout = "Layouts/_BlankLayout";
   ViewData["Title"] = "Login";
+  ViewData["isFront"] = true;
 }
 
 @section PageStyles {
   <link rel="stylesheet" href="~/vendor/css/pages/page-auth.dist.css">
+  <link rel="stylesheet" href="~/css/asnet-theme.css">
 }
 
 <div class="authentication-wrapper authentication-cover">
@@ -25,11 +29,10 @@
             <span class="app-brand-logo demo">
               <img src="~/img/branding/logo-asnet.png" alt="ASNET Logo" height="40" />
             </span>
-            <span class="app-brand-text demo text-heading fw-bold">@TempData.Peek("appName")</span>
           </a>
         </div>
         <!-- /Logo -->
-        <h4 class="mb-1">Bem-vindo à @TempData.Peek("appName")! 👋</h4>
+        <h4 class="mb-1">Bem-vindo @TempData.Peek("appName")! 👋</h4>
         <p class="mb-5">Por favor, inicie sessão na sua conta e comece a aventura</p>
 
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))
@@ -62,7 +65,7 @@
                 Lembrar-me
               </label>
             </div>
-            <a href="/Auth/ForgotPassword" class="float-end mb-1 mt-2">
+            <a href="/Auth/ForgotPassword" class="float-end mb-1 mt-2 text-primary">
               <span>Esqueceu-se da palavra-passe?</span>
             </a>
           </div>
@@ -73,7 +76,7 @@
 
         <p class="text-center">
           <span>Novo na nossa plataforma?</span>
-          <a href="/Auth/Register">
+          <a href="/Auth/Register" class="text-primary">
             <span>Criar uma conta</span>
           </a>
         </p>
@@ -83,11 +86,11 @@
         </div>
 
         <div class="d-flex justify-content-center gap-2">
-          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-google-plus">
-            <i class="tf-icons ri-google-fill ri-24px"></i>
+          <a asp-page="./Login" asp-page-handler="ExternalLogin" asp-route-provider="Google" class="btn btn-icon btn-lg rounded-circle btn-outline-secondary" title="Entrar com Google">
+            <img src="~/img/icons/brands/google.png" alt="Google" width="22">
           </a>
-          <a href="javascript:;" class="btn btn-icon btn-lg rounded-pill btn-text-secondary">
-            <i class="tf-icons ri-microsoft-fill ri-24px"></i>
+          <a asp-page="./Login" asp-page-handler="ExternalLogin" asp-route-provider="Microsoft" class="btn btn-icon btn-lg rounded-circle btn-outline-secondary" title="Entrar com Office 365">
+            <img src="~/img/branding/office365-logo.png" alt="Office 365" width="22">
           </a>
         </div>
       </div>

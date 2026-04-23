@@ -359,12 +359,12 @@
                                         <td>
                                             @if (ticket.Technician != null)
                                             {
-                                                <div class="d-flex align-items-center">
+                                                <a asp-page="/Profile" asp-route-id="@ticket.Technician.Id" class="d-flex align-items-center text-body">
                                                     <div class="avatar avatar-xs me-2">
                                                         <span class="avatar-initial rounded-circle bg-label-primary" style="font-size: 0.6rem;">@(ticket.Technician.Username?.Substring(0, 1).ToUpper())</span>
                                                     </div>
                                                     <span class="fw-medium">@ticket.Technician.Username</span>
-                                                </div>
+                                                </a>
                                             }
                                             else
                                             {
@@ -373,8 +373,9 @@
                                         </td>
                                         <td>@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
+                                            @if (ticket.Status == "Pendente" || ticket.Status == "Aguardando" || ticket.Status == "Pedido") {
                                                 <span class="badge bg-label-warning text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-time me-1"></i> A aguardar Técnico</span>
-                                            } else if (ticket.Status == "Em andamento" || ticket.Status == "Atribuído") {
+                                            } else if (ticket.Status == "Em andamento" || ticket.Status == "Atribuído" || ticket.Status == "Em Reparação") {
                                                 <span class="badge bg-label-warning text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-wrench me-1"></i> Em Reparação</span>
                                             } else {
                                                 <span class="badge bg-label-success text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-check-circle me-1"></i> Resolvido</span>

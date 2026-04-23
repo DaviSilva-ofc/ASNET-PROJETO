@@ -21,7 +21,14 @@
                            class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedContactId == contact.Id ? "active" : "")">
                             <div class="d-flex align-items-center">
                                 <div class="avatar me-2">
-                                    <span class="avatar-initial rounded-circle bg-label-primary">@contact.Username[0]</span>
+                                    @if (!string.IsNullOrEmpty(contact.ProfilePhotoPath))
+                                    {
+                                        <img src="@contact.ProfilePhotoPath" alt="Avatar" class="rounded-circle" style="object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar-initial rounded-circle bg-label-primary">@contact.Username[0]</span>
+                                    }
                                 </div>
                                 <div class="w-100">
                                     <h6 class="mb-0 small fw-bold">@contact.Username</h6>
@@ -41,11 +48,25 @@
                 @if (Model.SelectedContactId.HasValue)
                 {
                     var currentContact = Model.Contacts.FirstOrDefault(c => c.Id == Model.SelectedContactId);
-                    <div class="p-3 border-bottom d-flex align-items-center bg-white">
-                        <div class="avatar me-2">
-                            <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.Username[0]</span>
+                    <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
+                        <div class="d-flex align-items-center">
+                            <a asp-page="/Profile" asp-route-id="@Model.SelectedContactId" class="d-flex align-items-center text-decoration-none text-body">
+                                <div class="avatar me-2">
+                                    @if (!string.IsNullOrEmpty(currentContact?.ProfilePhotoPath))
+                                    {
+                                        <img src="@currentContact.ProfilePhotoPath" alt="Avatar" class="rounded-circle" style="object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <span class="avatar-initial rounded-circle bg-label-primary">@(currentContact?.Username?[0] ?? 'U')</span>
+                                    }
+                                </div>
+                                <h6 class="mb-0 hover-primary">@currentContact?.Username</h6>
+                            </a>
                         </div>
-                        <h6 class="mb-0">@currentContact?.Username</h6>
+                        <a asp-page="/Profile" asp-route-id="@Model.SelectedContactId" class="btn btn-sm btn-outline-primary rounded-pill">
+                            <i class="ri-user-line me-1"></i> Ver Perfil
+                        </a>
                     </div>
 
                     <div id="chatWindow" class="flex-grow-1 p-3 overflow-auto bg-white">
@@ -163,4 +184,5 @@
     [data-bs-theme="dark"] .border-bottom, [data-bs-theme="dark"] .border-end, [data-bs-theme="dark"] .border-top { border-color: rgba(255,255,255,0.1) !important; }
     .message-wrapper .delete-msg-btn { opacity: 0; transition: opacity 0.2s; text-decoration: none; border: none; font-size: 1.1rem; }
     .message-wrapper:hover .delete-msg-btn { opacity: 1; }
+    .hover-primary:hover { color: #f89223 !important; }
 </style>

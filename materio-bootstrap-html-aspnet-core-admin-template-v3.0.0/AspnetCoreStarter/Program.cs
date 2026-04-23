@@ -28,13 +28,42 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
     .AddCookie(options =>
     {
         options.LoginPath = "/Auth/Login";
         options.AccessDeniedPath = "/Auth/Login";
-        options.ExpireTimeSpan = TimeSpan.FromDays(30); // Duração máxima se "Lembrar-me" for usado
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
         options.SlidingExpiration = true;
+    })
+    .AddCookie("External") // Esquema temporário para logins externos
+    .AddGoogle(options =>
+    {
+        options.SignInScheme = "External";
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+        // Forçar a exibição do seletor de contas
+        options.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+            return Task.CompletedTask;
+        };
+    })
+    .AddMicrosoftAccount(options =>
+    {
+        options.SignInScheme = "External";
+        options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"] ?? "";
+        options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"] ?? "";
+        // Forçar a exibição do seletor de contas
+        options.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            context.Response.Redirect(context.RedirectUri + "&prompt=select_account");
+            return Task.CompletedTask;
+        };
     });
 
 // Razor Pages

@@ -29,6 +29,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             public string Username { get; set; }
             public string RoleLabel { get; set; }
             public bool IsAdmin { get; set; }
+            public string ProfilePhotoPath { get; set; }
         }
 
         public async Task<IActionResult> OnGetAsync(int? contactId)
@@ -44,7 +45,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var adminUsers = await _context.Users
                 .Join(_context.Administradores, u => u.Id, a => a.UserId, (u, a) => u)
                 .Where(u => u.Id != CurrentUserId)
-                .Select(u => new ContactViewModel { Id = u.Id, Username = u.Username, RoleLabel = "Administrador", IsAdmin = true })
+                .Select(u => new ContactViewModel { Id = u.Id, Username = u.Username, RoleLabel = "Administrador", IsAdmin = true, ProfilePhotoPath = u.ProfilePhotoPath })
                 .ToListAsync();
 
             var requesterUsers = await _context.Tickets
@@ -53,7 +54,8 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                     Id = t.RequestedBy!.Id, 
                     Username = t.RequestedBy.Username, 
                     RoleLabel = t.Level == "Empréstimo" ? "Cliente (Empréstimo)" : "Cliente (Reparação)",
-                    IsAdmin = false 
+                    IsAdmin = false,
+                    ProfilePhotoPath = t.RequestedBy.ProfilePhotoPath
                 })
                 .ToListAsync();
 

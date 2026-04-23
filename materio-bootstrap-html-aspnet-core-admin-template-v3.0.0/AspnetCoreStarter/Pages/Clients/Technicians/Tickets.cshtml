@@ -7,6 +7,7 @@
 
 @section PageStyles {
 <link rel="stylesheet" href="~/css/tickets-v2.css" asp-append-version="true" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     .tk-page { padding-top: 0; }
     .tk-filters { margin-top: 20px; }
@@ -71,7 +72,7 @@
         {
             @foreach (var t in Model.AvailableTickets)
             {
-                <div class="tk-row" onclick="openTicketPanel(@t.Id)" style="border-left: 4px solid var(--tk-primary);">
+                <div class="tk-row" onclick="openPanel(@t.Id)" style="border-left: 4px solid var(--tk-primary);">
                     <div class="tk-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.2rem;">
                         @{
                             var type = t.Equipamento?.Type ?? "";
@@ -103,8 +104,12 @@
                             <i class="ri-map-pin-line me-1"></i> @(t.School?.Name ?? "Sede") • @(t.Equipamento?.Room?.Name ?? "N/A")
                         </div>
                     </div>
-                    <div class="tk-right">
-                        <span class="badge-tk" style="color: var(--tk-muted); border-color: var(--tk-border);">Aguardando Técnico</span>
+                    <div class="tk-right" style="display: flex; gap: 10px; align-items: center;">
+                        <form method="post" asp-page-handler="Accept" asp-route-id="@t.Id">
+                            <button type="submit" class="tk-advance-btn" style="padding: 6px 14px; font-size: 12px; height: auto;" onclick="event.stopPropagation();">
+                                Aceitar Ticket
+                            </button>
+                        </form>
                         <i class="ri-arrow-right-s-line text-muted"></i>
                     </div>
                 </div>
@@ -114,7 +119,7 @@
         @* Mostrar os atribuídos *@
         @foreach (var t in Model.Tickets)
         {
-            <div class="tk-row" onclick="openTicketPanel(@t.Id)">
+            <div class="tk-row" onclick="openPanel(@t.Id)">
                 <div class="tk-icon" style="background: rgba(255, 171, 0, 0.05); color: var(--tk-muted); font-size: 1.2rem;">
                     @{
                         var type = t.Equipamento?.Type ?? "";
@@ -184,9 +189,9 @@
 </div>
 
 <!-- Panel Overlay & Slide-over Panel -->
-<div class="tk-overlay @(Model.SelectedTicketId.HasValue ? "open" : "")" onclick="closeTicketPanel()"></div>
+<div class="tk-overlay" id="tkOverlay" onclick="closePanel()"></div>
 
-<div class="tk-panel @(Model.SelectedTicketId.HasValue ? "open" : "")" id="ticketPanel">
+<div class="tk-panel" id="tkPanel">
     @if (Model.SelectedTicket != null)
     {
         var t = Model.SelectedTicket;
@@ -222,9 +227,9 @@
                         }
                         <span class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary); background: rgba(255, 171, 0, 0.1);">@t.Status</span>
                     </div>
-                    <h2 class="tk-ph-title">@(t.Equipamento?.Name ?? "Avaria Geral"): @(t.Description?.Length > 30 ? t.Description.Substring(0, 30) + "..." : t.Description)</h2>
+                    <h2 class="tk-ph-title">@(t.Equipamento?.Name ?? "Avaria Geral"): @(t.Description != null && t.Description.Length > 30 ? t.Description.Substring(0, 30) + "..." : t.Description)</h2>
                 </div>
-                <button class="tk-close" onclick="closeTicketPanel()">✕</button>
+                <button class="tk-close" onclick="closePanel()">✕</button>
             </div>
 
             <div class="tk-stepper">
@@ -273,8 +278,14 @@
                     }
                     else
                     {
-                        <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@t.Id">
-                            <button type="submit" class="tk-advance-btn">→ Avançar para "@nextLabel"</button>
+                        <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
+                            <button type="submit" class="tk-advance-btn">
+                                @if (si == 0) {
+                                    <text>Aceitar Ticket (Para mim)</text>
+                                } else {
+                                    <text>→ Avançar para "@nextLabel"</text>
+                                }
+                            </button>
                         </form>
                     }
                 </div>
@@ -283,7 +294,7 @@
 
         <div class="tk-tabs">
             <div class="tk-tab active" onclick="showTab(0)">📁 Detalhes</div>
-            <div class="tk-tab" onclick="showTab(1)">📦 Stock (@Model.AssociatedEquipment.Count)</div>
+            <div class="tk-tab" onclick="showTab(1)">📦 Stock (@Model.CountStock)</div>
             <div class="tk-tab" onclick="showTab(2)">🕒 Histórico</div>
         </div>
 
@@ -293,7 +304,18 @@
                 <div class="tk-info-grid">
                     <div class="tk-info-card"><div class="tk-info-label">Solicitante</div><div class="tk-info-val">@(t.RequestedBy?.Username ?? "—")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Técnico Responsável</div><div class="tk-info-val">@(t.Technician?.Username ?? "—")</div></div>
-                    <div class="tk-info-card"><div class="tk-info-label">Escola</div><div class="tk-info-val">@(t.School?.Name ?? "—")</div></div>
+                    <div class="tk-info-card">
+                        <div class="tk-info-label">Escola</div>
+                        <div class="tk-info-val d-flex align-items-center justify-content-between">
+                            <span>@(t.School?.Name ?? "—")</span>
+                            @if (t.School != null) {
+                                <a href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(t.School.Name + (string.IsNullOrEmpty(t.School.Address) ? "" : ", " + t.School.Address) + ", Portugal")" 
+                                   target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: 10px; padding: 2px 8px; border-radius: 4px;">
+                                    <i class="ri-map-pin-2-line me-1"></i> Ver no Mapa
+                                </a>
+                            }
+                        </div>
+                    </div>
                     <div class="tk-info-card"><div class="tk-info-label">Agrupamento</div><div class="tk-info-val">@(t.School?.Agrupamento?.Name ?? "—")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Criado em</div><div class="tk-info-val">@t.CreatedAt.ToString("dd/MM/yyyy, HH:mm")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Atualizado em</div><div class="tk-info-val">@DateTime.Now.ToString("dd/MM/yyyy, HH:mm")</div></div>
@@ -330,7 +352,7 @@
                             <div class="tk-eq-item">
                                 <span><strong>@eq.Name</strong> · <span style="color:#6b7280;font-size:12px">@eq.SerialNumber</span></span>
                                 @if(t.Status != "Concluído") {
-                                    <form method="post" asp-page-handler="RemoveEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id" style="display:inline">
+                                    <form method="post" asp-page-handler="RemoveEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id" asp-route-SelectedTicketId="@t.Id" style="display:inline">
                                         <button type="submit" class="btn-remove" style="background:transparent;border:none;color:var(--tk-red);font-size:12px;cursor:pointer">Remover</button>
                                     </form>
                                 }
@@ -361,7 +383,7 @@
                                     <div class="tk-avail-sub">S/N: @eq.SerialNumber</div>
                                 </div>
                                 @if(t.Status != "Concluído") {
-                                    <form method="post" asp-page-handler="AssociateEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id">
+                                    <form method="post" asp-page-handler="AssociateEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id" asp-route-SelectedTicketId="@t.Id">
                                         <button type="submit" class="btn-assoc">Associar</button>
                                     </form>
                                 } else {
@@ -401,7 +423,7 @@
 
         @if(t.Status != "Concluído") {
             <div class="tk-footer">
-                <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@t.Id" class="d-flex w-100 gap-2">
+                <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id" class="d-flex w-100 gap-2">
                     <input type="text" name="comment" class="tk-comment" placeholder="Adicionar nota técnica ou comentário..." required autocomplete="off">
                     <button type="submit" class="tk-send-btn">✈ Enviar</button>
                 </form>
@@ -415,55 +437,99 @@
 </div>
 
 @section PageScripts {
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    function openTicketPanel(id) {
-        const url = new URL(window.location);
+    const panelEl = document.getElementById('tkPanel');
+    const overlayEl = document.getElementById('tkOverlay');
+
+    function openPanel(id) {
+        const url = new URL(window.location.href);
         url.searchParams.set('SelectedTicketId', id);
         window.location.href = url.toString();
     }
-    function closeTicketPanel() {
-        const url = new URL(window.location);
+
+    function closePanel() {
+        if (panelEl) panelEl.classList.remove('open');
+        if (overlayEl) overlayEl.classList.remove('open');
+        const url = new URL(window.location.href);
         url.searchParams.delete('SelectedTicketId');
-        window.location.href = url.toString();
+        history.replaceState(null, '', url.toString());
     }
+
     function showTab(idx) {
         document.querySelectorAll('.tk-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
         document.querySelectorAll('.tk-tab-content').forEach((c, i) => c.classList.toggle('d-none', i !== idx));
     }
+
     function setFilter(status) {
-        const url = new URL(window.location);
+        const url = new URL(window.location.href);
         if (status === 'Todos') url.searchParams.delete('FilterStatus');
         else url.searchParams.set('FilterStatus', status);
         window.location.href = url.toString();
     }
+
     function setStockScope(scope) {
-        const url = new URL(window.location);
+        const url = new URL(window.location.href);
         url.searchParams.set('StockScope', scope);
         window.location.href = url.toString();
     }
 
-    // Map Init
-    function initMap() {
-        var myLatLng = { lat: 41.5454, lng: -8.4265 };
-        var map = new google.maps.Map(document.getElementById('clientMap'), {
-            zoom: 11, center: myLatLng,
-            styles: [{ elementType: 'geometry', stylers: [{ color: '#242f3e' }] }, { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] }]
-        });
+    function applyStockSearch() {
+        const val = document.getElementById('stockSearchInput').value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('StockSearch', val);
+        window.location.href = url.toString();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('SelectedTicketId')) {
+            if (panelEl) panelEl.classList.add('open');
+            if (overlayEl) overlayEl.classList.add('open');
+        }
+        if (urlParams.has('StockSearch') || urlParams.has('StockScope')) {
+            showTab(1);
+        }
+
+        initMap();
+        // Fix for broken tiles
+        setTimeout(() => { if(window.mapInstance) window.mapInstance.invalidateSize(); }, 500);
+    });
+
+    async function initMap() {
+        const mapDiv = document.getElementById('clientMap');
+        if (!mapDiv) return;
+        var map = L.map('clientMap').setView([41.5454, -8.4265], 11);
+        window.mapInstance = map;
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+
         var locationsRaw = '@Html.Raw(Model.ClientLocationsJson)';
         if (locationsRaw && locationsRaw !== 'null') {
-            var locations = JSON.parse(locationsRaw);
-            var geocoder = new google.maps.Geocoder();
-            locations.forEach(loc => {
-                if (loc.address) {
-                    geocoder.geocode({ 'address': loc.address + ", Portugal" }, function(results, status) {
-                        if (status === 'OK') {
-                            new google.maps.Marker({ map: map, position: results[0].geometry.location, title: loc.name, icon: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' });
+            try {
+                var locations = JSON.parse(locationsRaw);
+                for (let i = 0; i < locations.length; i++) {
+                    const loc = locations[i];
+                    if (loc.address) {
+                        try {
+                            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc.address + ", Portugal")}`);
+                            const data = await response.json();
+                            if (data && data.length > 0) {
+                                const result = data[0];
+                                L.marker([result.lat, result.lon])
+                                 .addTo(map)
+                                 .bindPopup(`<b>${loc.name}</b><br>${loc.address}`);
+                            }
+                        } catch (error) {
+                            console.error('Geocoding error:', error);
                         }
-                    });
+                        if (locations.length > 1) await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
                 }
-            });
+            } catch (e) { console.error("Map data error:", e); }
         }
     }
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"></script>
 }

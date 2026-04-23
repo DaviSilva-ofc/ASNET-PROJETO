@@ -167,7 +167,7 @@
                     {
                         <tr>
                             <td><span class="badge bg-label-secondary">#@d.User?.Id</span></td>
-                            <td><strong>@d.User?.Username</strong></td>
+                            <td><a asp-page="/Profile" asp-route-id="@d.User?.Id" class="text-body fw-bold">@d.User?.Username</a></td>
                             <td>@d.User?.Email</td>
                             <td>
                                 @if (d.Agrupamento != null)
@@ -225,7 +225,7 @@
                     {
                         <tr>
                             <td><span class="badge bg-label-secondary">#@t.User?.Id</span></td>
-                            <td><strong>@t.User?.Username</strong></td>
+                            <td><a asp-page="/Profile" asp-route-id="@t.User?.Id" class="text-body fw-bold">@t.User?.Username</a></td>
                             <td>@t.User?.Email</td>
                             <td>
                                 <div class="d-flex align-items-center gap-1">
@@ -269,7 +269,7 @@
                     {
                         <tr>
                             <td><span class="badge bg-label-secondary">#@c.User?.Id</span></td>
-                            <td><strong>@c.User?.Username</strong></td>
+                            <td><a asp-page="/Profile" asp-route-id="@c.User?.Id" class="text-body fw-bold">@c.User?.Username</a></td>
                             <td>@c.User?.Email</td>
                             <td>
                                 @if (c.School != null)
@@ -328,7 +328,7 @@
                     {
                         <tr>
                             <td><span class="badge bg-label-secondary">#@p.User?.Id</span></td>
-                            <td><strong>@p.User?.Username</strong></td>
+                            <td><a asp-page="/Profile" asp-route-id="@p.User?.Id" class="text-body fw-bold">@p.User?.Username</a></td>
                             <td>@p.User?.Email</td>
                             <td>
                                 @{ var assignedSala = Model.Salas.FirstOrDefault(s => s.ResponsibleProfessorId == p.UserId); }
@@ -391,7 +391,7 @@
                     {
                         <tr>
                             <td><span class="badge bg-label-secondary">#@u.Id</span></td>
-                            <td><strong>@u.Username</strong></td>
+                            <td><a asp-page="/Profile" asp-route-id="@u.Id" class="text-body fw-bold">@u.Username</a></td>
                             <td>@u.Email</td>
                             <td>
                                 @if (u.Empresa != null)

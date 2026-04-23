@@ -67,12 +67,6 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
-            // 0. Schema Maintenance (Ensure new date columns exist)
-            try {
-                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_aceitacao DATETIME NULL;");
-                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_conclusao DATETIME NULL;");
-            } catch { }
-
             // Counts
             // Refined filtering to include ONLY breakdown/repair tickets
             MyTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
@@ -111,15 +105,9 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 .Where(t => t.TechnicianId == userId && t.Status != "Concluído" && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .ToListAsync();
 
-            // Fetch Locais Atendimento (Schools or Empresas where the technician has assigned tickets)
-            var schoolIds = await _context.Tickets
-                .Where(t => t.TechnicianId == userId && t.SchoolId.HasValue && (t.Status == "Pendente" || t.Status == "Em Resolução") && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
-                .Select(t => t.SchoolId.Value)
-                .Distinct()
-                .ToListAsync();
-
+            // Fetch all schools with addresses for the map
             LocaisAtendimento = await _context.Schools
-                .Where(s => schoolIds.Contains(s.Id))
+                .Where(s => !string.IsNullOrEmpty(s.Address))
                 .ToListAsync();
 
             // Chat Senders
@@ -251,7 +239,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdStr, out int userId)) return RedirectToPage("/Auth/Login");
 
-            var ticket = await _context.Tickets.FindAsync(ticketId);
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
             if (ticket == null || (ticket.TechnicianId != userId && ticket.TechnicianId != null)) return NotFound();
 
             string oldStatus = ticket.Status;
@@ -270,7 +258,12 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                     ticket.TechnicianId = userId;
                     ticket.AcceptedAt = DateTime.UtcNow;
                 }
-                else if (newStatus == "Concluído") ticket.CompletedAt = DateTime.UtcNow;
+                else if (newStatus == "Concluído") {
+                    ticket.CompletedAt = DateTime.UtcNow;
+                    if (ticket.Equipamento != null) {
+                        ticket.Equipamento.Status = "A funcionar";
+                    }
+                }
 
                 await LogHistory(ticketId, $"Status alterado para {newStatus}", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();

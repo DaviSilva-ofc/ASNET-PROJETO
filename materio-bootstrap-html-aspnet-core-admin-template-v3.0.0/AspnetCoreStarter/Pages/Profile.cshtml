@@ -1,0 +1,195 @@
+@page
+@using System.Security.Claims
+@model AspnetCoreStarter.Pages.ProfileModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "O Meu Perfil";
+}
+
+@section PageStyles {
+<style>
+    .profile-card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 4px 24px rgba(30, 33, 48, 0.08);
+    }
+    .profile-header-bg {
+        height: 200px;
+        background: linear-gradient(135deg, #1e2130 0%, #f89223 100%);
+        background-size: cover;
+        background-position: center;
+        border-radius: 14px 14px 0 0;
+        position: relative;
+    }
+    .btn-edit-cover {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .btn-edit-cover:hover { background: rgba(255, 255, 255, 0.4); }
+
+    .profile-avatar-wrapper {
+        margin-top: -70px;
+        position: relative;
+        display: inline-block;
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        min-width: 120px;
+        min-height: 120px;
+        border: 5px solid #fff;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: block;
+    }
+    .dark-style .profile-avatar { border-color: #2b2c40; }
+    
+    .btn-upload-avatar {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #f89223;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 2px solid #fff;
+        transition: transform 0.2s;
+    }
+    .btn-upload-avatar:hover { transform: scale(1.1); color: #fff; }
+
+    .nav-pills .nav-link.active {
+        background-color: #f89223 !important;
+        box-shadow: 0 2px 10px rgba(248, 146, 35, 0.3);
+    }
+    .form-floating-outline :focus ~ label { color: #f89223 !important; }
+    .form-floating-outline :focus { border-color: #f89223 !important; }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Utilizador /</span> Perfil</h4>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card profile-card mb-6">
+                <div class="profile-header-bg" id="cover-preview" style="@(string.IsNullOrEmpty(Model.UserProfile.CoverPhotoPath) ? "" : $"background-image: url('{Model.UserProfile.CoverPhotoPath}');")">
+                    @if (Model.IsOwnProfile)
+                    {
+                        <label for="upload-cover" class="btn-edit-cover">
+                            <i class="ri-edit-line me-1"></i> Alterar Fundo
+                        </label>
+                    }
+                </div>
+                <div class="card-body pt-0">
+                    <div class="text-center mb-6">
+                        <div class="profile-avatar-wrapper">
+                            @{
+                                var avatarPath = string.IsNullOrEmpty(Model.UserProfile.ProfilePhotoPath) ? "/img/avatars/1.png" : Model.UserProfile.ProfilePhotoPath;
+                            }
+                            <img src="@Url.Content(avatarPath)" 
+                                 alt="Avatar" class="profile-avatar" id="avatar-preview"
+                                 onerror="this.src='/img/avatars/1.png'">
+                            @if (Model.IsOwnProfile)
+                            {
+                                <label for="upload-photo" class="btn-upload-avatar" title="Alterar Foto">
+                                    <span>📸</span>
+                                </label>
+                            }
+                        </div>
+                        <h4 class="mt-3 mb-1">@Model.UserProfile.Username</h4>
+                        <p class="text-muted mb-0">@Model.ProfileRole</p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        @if (Model.IsOwnProfile)
+                        {
+                            <input type="file" id="upload-photo" asp-for="ProfilePhoto" class="d-none" onchange="document.getElementById('avatar-preview').src = window.URL.createObjectURL(this.files[0])">
+                            <input type="file" id="upload-cover" asp-for="CoverPhoto" class="d-none" onchange="document.getElementById('cover-preview').style.backgroundImage = 'url(' + window.URL.createObjectURL(this.files[0]) + ')'">
+                        }
+                        
+                        <div class="row g-5">
+                            <div class="col-md-6">
+                                <div class="form-floating form-floating-outline">
+                                    <input type="text" class="form-control" id="username" asp-for="UserProfile.Username" placeholder="Nome do Utilizador" readonly="@(!Model.IsOwnProfile)">
+                                    <label for="username">Nome Completo</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating form-floating-outline">
+                                    <input type="email" class="form-control" id="email" asp-for="UserProfile.Email" placeholder="exemplo@asnet.pt" readonly="@(!Model.IsOwnProfile)">
+                                    <label for="email">Endereço de Email</label>
+                                </div>
+                            </div>
+                            
+                            @if (Model.IsOwnProfile)
+                            {
+                                <hr class="my-6">
+                                
+                                <h5 class="mb-4">Alterar Palavra-passe <small class="text-muted">(Deixe em branco se não quiser mudar)</small></h5>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-password-toggle">
+                                        <div class="input-group input-group-merge">
+                                            <div class="form-floating form-floating-outline">
+                                                <input type="password" id="newPassword" class="form-control" asp-for="NewPassword" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                                                <label for="newPassword">Nova Palavra-passe</label>
+                                            </div>
+                                            <span class="input-group-text cursor-pointer"><i class="ri-eye-off-line"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-password-toggle">
+                                        <div class="input-group input-group-merge">
+                                            <div class="form-floating form-floating-outline">
+                                                <input type="password" id="confirmPassword" class="form-control" asp-for="ConfirmPassword" placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                                                <label for="confirmPassword">Confirmar Palavra-passe</label>
+                                            </div>
+                                            <span class="input-group-text cursor-pointer"><i class="ri-eye-off-line"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-10">
+                                    <button type="submit" class="btn btn-primary me-3">Guardar Alterações</button>
+                                    <button type="reset" class="btn btn-outline-secondary">Cancelar</button>
+                                </div>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

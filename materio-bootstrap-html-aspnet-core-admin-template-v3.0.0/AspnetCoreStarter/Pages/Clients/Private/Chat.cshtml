@@ -108,6 +108,8 @@
         .chat-history-header i:hover { color: #ffab00; }
 
         .avatar img { object-fit: cover; width: 100%; height: 100%; }
+        .hover-warning { transition: color 0.2s; }
+        .hover-warning:hover { color: #ffab00 !important; cursor: pointer; }
         
         @@media (min-width: 1400px) {
             .app-chat .app-sidebar { flex-basis: 26rem !important; }
@@ -281,7 +283,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center">
                                 <i class="ri-menu-line ri-24px cursor-pointer d-lg-none me-3" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-contacts"></i>
-                                <div class="flex-shrink-0 avatar avatar-online">
+                                <a asp-page="/Profile" asp-route-id="@Model.SelectedContactId" class="flex-shrink-0 avatar avatar-online">
                                     @if (!string.IsNullOrEmpty(currentContact?.ProfilePhotoPath))
                                     {
                                         <img src="@currentContact.ProfilePhotoPath" alt="Avatar" class="rounded-circle" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -291,9 +293,11 @@
                                     {
                                         <span class="avatar-initial rounded-circle bg-label-primary">@currentContact?.Username[0]</span>
                                     }
-                                </div>
+                                </a>
                                 <div class="chat-contact-info flex-grow-1 ms-3">
-                                    <h6 class="m-0 text-white">@currentContact?.Username</h6>
+                                    <a asp-page="/Profile" asp-route-id="@Model.SelectedContactId" class="text-decoration-none">
+                                        <h6 class="m-0 text-white hover-warning">@currentContact?.Username</h6>
+                                    </a>
                                     <small class="user-status text-muted">Técnico de Suporte</small>
                                 </div>
                             </div>
@@ -301,7 +305,12 @@
                                 <i class="ri-phone-line ri-22px cursor-pointer"></i>
                                 <i class="ri-vidicon-line ri-22px cursor-pointer"></i>
                                 <i class="ri-search-line ri-22px cursor-pointer"></i>
-                                <i class="ri-more-2-fill ri-22px cursor-pointer"></i>
+                                <div class="dropdown">
+                                    <i class="ri-more-2-fill ri-22px cursor-pointer" data-bs-toggle="dropdown"></i>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                                        <li><a class="dropdown-item" asp-page="/Profile" asp-route-id="@Model.SelectedContactId"><i class="ri-user-line me-2"></i>Ver Perfil</a></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>

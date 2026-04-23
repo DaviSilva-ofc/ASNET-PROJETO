@@ -40,8 +40,15 @@
                 @foreach (var user in Model.AvailableContacts)
                 {
                     <a asp-page="./Chat" asp-route-userId="@user.Id" class="contact-item @(Model.SelectedUser?.Id == user.Id ? "active" : "")">
-                        <div class="avatar avatar-sm bg-label-primary rounded-circle d-flex align-items-center justify-content-center" style="width:35px;height:35px;">
-                            <span class="fw-bold fs-6">@(user.Username?.Substring(0, 1).ToUpper())</span>
+                        <div class="avatar avatar-sm rounded-circle d-flex align-items-center justify-content-center" style="width:35px;height:35px;">
+                            @if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+                            {
+                                <img src="@user.ProfilePhotoPath" alt="Avatar" class="rounded-circle" style="width:100%;height:100%;object-fit:cover;">
+                            }
+                            else
+                            {
+                                <span class="fw-bold fs-6 avatar-initial bg-label-primary rounded-circle w-100 h-100 d-flex align-items-center justify-content-center">@(user.Username?.Substring(0, 1).ToUpper())</span>
+                            }
                         </div>
                         <div class="flex-grow-1">
                             <div class="fw-semibold small">@user.Username</div>
@@ -56,12 +63,19 @@
         <div class="chat-main" style="display: flex; flex-direction: column;">
             @if (Model.SelectedUser != null)
             {
-                <div class="chat-user-header">
-                    <div class="avatar avatar-sm bg-label-primary rounded-circle d-flex align-items-center justify-content-center" style="width:30px;height:30px;">
-                        <span class="fw-bold">@(Model.SelectedUser.Username?.Substring(0, 1).ToUpper())</span>
+                <a asp-page="/Profile" asp-route-id="@Model.SelectedUser.Id" class="chat-user-header text-body">
+                    <div class="avatar avatar-sm rounded-circle d-flex align-items-center justify-content-center" style="width:30px;height:30px;">
+                        @if (!string.IsNullOrEmpty(Model.SelectedUser.ProfilePhotoPath))
+                        {
+                            <img src="@Model.SelectedUser.ProfilePhotoPath" alt="Avatar" class="rounded-circle" style="width:100%;height:100%;object-fit:cover;">
+                        }
+                        else
+                        {
+                            <span class="fw-bold avatar-initial bg-label-primary rounded-circle w-100 h-100 d-flex align-items-center justify-content-center">@(Model.SelectedUser.Username?.Substring(0, 1).ToUpper())</span>
+                        }
                     </div>
                     <span class="fw-bold">@Model.SelectedUser.Username</span>
-                </div>
+                </a>
                 
                 <div class="messages-area" id="msgArea" style="flex: 1; padding-bottom: 80px;">
                     @foreach (var msg in Model.ChatHistory)

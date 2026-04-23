@@ -40,6 +40,9 @@ namespace AspnetCoreStarter.Models
         [Column("profile_photo_path")]
         public string? ProfilePhotoPath { get; set; }
 
+        [Column("cover_photo_path")]
+        public string? CoverPhotoPath { get; set; }
+
         [Column("password_reset_token")]
         public string? PasswordResetToken { get; set; }
 

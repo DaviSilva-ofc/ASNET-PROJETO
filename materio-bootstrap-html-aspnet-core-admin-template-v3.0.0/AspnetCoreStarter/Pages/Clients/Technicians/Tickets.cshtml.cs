@@ -210,13 +210,17 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (string.IsNullOrEmpty(sessionUserId) || !int.TryParse(sessionUserId, out int userId))
                 return RedirectToPage("/Auth/Login");
 
-            var ticket = await _context.Tickets.FirstOrDefaultAsync(t => t.Id == id && t.TechnicianId == userId);
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == id && t.TechnicianId == userId);
             if (ticket != null)
             {
                 ticket.Status = newStatus;
                 if (newStatus == "Concluído")
                 {
                     ticket.CompletedAt = DateTime.UtcNow;
+                    if (ticket.Equipamento != null)
+                    {
+                        ticket.Equipamento.Status = "A funcionar";
+                    }
                 }
                 await LogHistory(id, $"Status atualizado para {newStatus}", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();

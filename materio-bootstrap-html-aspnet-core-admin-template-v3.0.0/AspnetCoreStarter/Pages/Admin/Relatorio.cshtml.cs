@@ -31,8 +31,8 @@ namespace AspnetCoreStarter.Pages.Admin
         // Expense = Tickets + Stock Quantity
         public List<(string Nome, int Chamadas, int Stock, int TotalScore)> EscolasComMaisDespesa { get; set; } = new();
         public List<(string Marca, int Total)> MarcasMaisFrageis { get; set; } = new();
-        public List<(string Professor, string Email, int Total)> ProfessoresMaisChamadores { get; set; } = new();
-        public List<(string Tecnico, int Total, int Concluidos, double Csat)> PerformanceTecnicos { get; set; } = new();
+        public List<(string Professor, string Email, int Total, int UserId)> ProfessoresMaisChamadores { get; set; } = new();
+        public List<(string Tecnico, int Total, int Concluidos, double Csat, int UserId)> PerformanceTecnicos { get; set; } = new();
         public List<Ticket> FeedbacksRecentes { get; set; } = new();
         
         public DateTime PeriodoInicio { get; set; }
@@ -222,8 +222,8 @@ namespace AspnetCoreStarter.Pages.Admin
             // Professors
             ProfessoresMaisChamadores = tickets
                 .Where(t => t.RequestedBy != null)
-                .GroupBy(t => new { t.RequestedBy!.Username, t.RequestedBy.Email })
-                .Select(g => (Professor: g.Key.Username ?? "N/A", Email: g.Key.Email ?? "", Total: g.Count()))
+                .GroupBy(t => new { t.RequestedBy!.Username, t.RequestedBy.Email, t.RequestedBy.Id })
+                .Select(g => (Professor: g.Key.Username ?? "N/A", Email: g.Key.Email ?? "", Total: g.Count(), UserId: g.Key.Id))
                 .OrderByDescending(x => x.Total)
                 .Take(5)
                 .ToList();
@@ -231,13 +231,13 @@ namespace AspnetCoreStarter.Pages.Admin
             // Performance with CSAT
             PerformanceTecnicos = tickets
                 .Where(t => t.Technician != null)
-                .GroupBy(t => t.Technician!.Username ?? "N/A")
+                .GroupBy(t => new { t.Technician!.Username, t.Technician.Id })
                 .Select(g => {
                     var total = g.Count();
                     var concluidos = g.Count(t => t.Status == "Concluído");
                     var ratings = g.Where(t => t.SatisfacaoRating.HasValue).Select(t => t.SatisfacaoRating!.Value).ToList();
                     var avgCsat = ratings.Any() ? Math.Round(ratings.Average(), 1) : 0.0;
-                    return (Tecnico: g.Key, Total: total, Concluidos: concluidos, Csat: avgCsat);
+                    return (Tecnico: g.Key.Username ?? "N/A", Total: total, Concluidos: concluidos, Csat: avgCsat, UserId: g.Key.Id);
                 })
                 .OrderByDescending(x => x.Total)
                 .Take(5)

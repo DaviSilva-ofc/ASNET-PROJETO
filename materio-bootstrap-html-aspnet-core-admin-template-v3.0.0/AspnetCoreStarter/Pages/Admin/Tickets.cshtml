@@ -236,10 +236,21 @@
             </div>
         </div>
         @if (!string.IsNullOrEmpty(nextLabel) && st.Status != "Concluído") {
-            <div class="tk-advance-row">
+            <div class="tk-advance-row" style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" asp-route-SelectedTicketId="@st.Id">
-                    <button type="submit" class="tk-advance-btn">→ Avançar para "@nextLabel"</button>
+                    <button type="submit" class="tk-advance-btn">→ Avançar para "@nextLabel" (Para mim)</button>
                 </form>
+                @if (si == 0) {
+                    <form method="post" asp-page-handler="AssignTechnician" asp-route-ticketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" asp-route-SelectedTicketId="@st.Id" style="display: flex; gap: 5px; align-items: center;">
+                        <select name="technicianId" class="tk-select" style="min-width: 150px; font-size: 13px; height: 36px; padding: 0 10px;" required>
+                            <option value="">Atribuir a técnico...</option>
+                            @foreach (var tech in Model.AvailableTechnicians) {
+                                <option value="@tech.Id">@tech.Username</option>
+                            }
+                        </select>
+                        <button type="submit" class="tk-advance-btn" style="background:#22c55e; height: 36px;">Atribuir</button>
+                    </form>
+                }
             </div>
         }
         <!-- Tabs -->
