@@ -295,7 +295,7 @@
                                         </button>
                                         <button type="button" class="btn btn-sm btn-icon text-danger p-0" 
                                                 onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
-                                                title="Excluir">
+                                                title="Eliminar">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </div>
@@ -641,7 +641,7 @@
                             <option value="A funcionar">A funcionar</option>
                             <option value="Armazenado">Armazenado (Disponível)</option>
                             <option value="Avariado">Avariado</option>
-                            <option value="Em reparo">Em reparo</option>
+                            <option value="Em reparação">Em reparação</option>
                         </select>
                     </div>
                 </div>
@@ -653,23 +653,23 @@
         </div>
     </div>
 
-    <!-- Modal Excluir -->
+    <!-- Modal Eliminar -->
     <div class="modal fade" id="modalDeleteStock" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-bottom">
-                    <h5 class="modal-title">Excluir Equipamentos</h5>
+                    <h5 class="modal-title">Eliminar Equipamentos</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="deleteStockForm" method="post" asp-page-handler="DeleteStock">
                     <div class="modal-body">
-                        <p>Deseja excluir unidades de <strong id="deleteItemName">...</strong>?</p>
+                        <p>Deseja eliminar unidades de <strong id="deleteItemName">...</strong>?</p>
                         <input type="hidden" name="name" id="deleteInputName" />
                         <input type="hidden" name="roomId" id="deleteInputRoomId" />
                         <input type="hidden" name="currentStatus" id="deleteInputCurrentStatus" />
 
                         <div class="mb-3">
-                            <label class="form-label">Quantidade a Excluir</label>
+                            <label class="form-label">Quantidade a Eliminar</label>
                             <div class="input-group">
                                 <input type="number" name="quantity" id="deleteInputQuantity" class="form-control" value="1" min="1" required />
                                 <span class="input-group-text">de <span id="deleteMaxQuantity">1</span> totais</span>
@@ -682,7 +682,7 @@
                     </div>
                     <div class="modal-footer border-top">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Excluir Permanentemente</button>
+                        <button type="submit" class="btn btn-danger">Eliminar Permanentemente</button>
                     </div>
                 </form>
             </div>

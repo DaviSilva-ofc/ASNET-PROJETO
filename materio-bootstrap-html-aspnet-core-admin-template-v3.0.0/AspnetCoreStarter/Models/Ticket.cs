@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -62,6 +63,9 @@ namespace AspnetCoreStarter.Models
         [Column("status")]
         [MaxLength(50)]
         public string? Status { get; set; } = "Pedido";
+
+        [Column("data_agendamento")]
+        public DateTime? ScheduledDate { get; set; }
 
         [Column("data_criacao")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

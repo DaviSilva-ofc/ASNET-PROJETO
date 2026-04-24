@@ -31,10 +31,14 @@ namespace AspnetCoreStarter.Pages.Auth
         [BindProperty]
         public bool RememberMe { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string? ReturnUrl { get; set; }
+
         public string ErrorMessage { get; set; }
 
-        public void OnGet()
+        public void OnGet(string? returnUrl = null)
         {
+            ReturnUrl = returnUrl;
         }
 
         public IActionResult OnGetExternalLogin(string provider)
@@ -250,7 +254,8 @@ namespace AspnetCoreStarter.Pages.Auth
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN id_equipamento INT NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN status VARCHAR(50) DEFAULT 'Pedido';"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE tickets ADD COLUMN data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP;"); } catch { }
-                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'Funcionando';"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN status VARCHAR(50) DEFAULT 'A funcionar';"); } catch { }
+                try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN data_ultima_manutencao DATETIME NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("UPDATE utilizadores SET status_conta = 'Pendente' WHERE status_conta IS NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_agrupamento INT NULL;"); } catch { }
                 try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE stock_empresa ADD COLUMN id_escola INT NULL;"); } catch { }
@@ -366,7 +371,12 @@ namespace AspnetCoreStarter.Pages.Auth
                 HttpContext.Session.SetString("UserId", user.Id.ToString());
                 HttpContext.Session.SetString("Username", user.Username);
 
-                // Redirecionar com base no cargo
+                // Redirecionar com base no cargo (OU returnUrl se existir)
+                if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                {
+                    return LocalRedirect(ReturnUrl);
+                }
+
                 if (role == "Admin")
                 {
                     return RedirectToPage("/Admin/Dashboard");

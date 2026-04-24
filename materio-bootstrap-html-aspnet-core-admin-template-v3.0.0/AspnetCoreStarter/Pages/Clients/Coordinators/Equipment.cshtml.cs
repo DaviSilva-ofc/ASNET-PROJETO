@@ -173,7 +173,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             {
                 _context.Equipamentos.Remove(equip);
                 await _context.SaveChangesAsync();
-                return RedirectToPage(new { success = "Equipamento excluído com sucesso!" });
+                return RedirectToPage(new { success = "Equipamento eliminado com sucesso!" });
             }
             return RedirectToPage();
         }

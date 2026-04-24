@@ -43,27 +43,58 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                         activity_date DATETIME NOT NULL,
                         color VARCHAR(50),
                         data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
-                    );");
+                    );
+                    
+                    SET @dbname = DATABASE();
+                    SET @tablename = 'tickets';
+                    SET @columnname = 'data_agendamento';
+                    SET @preparedStatement = (SELECT IF(
+                      (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+                       WHERE TABLE_SCHEMA = @dbname 
+                         AND TABLE_NAME = @tablename 
+                         AND COLUMN_NAME = @columnname) > 0,
+                      'SELECT 1',
+                      'ALTER TABLE tickets ADD COLUMN data_agendamento DATETIME NULL'
+                    ));
+                    PREPARE stmt FROM @preparedStatement;
+                    EXECUTE stmt;
+                    DEALLOCATE PREPARE stmt;
+                ");
             } catch { }
 
-            // Fetch ALL repair tickets for the calendar (including history)
+            // Fetch repair tickets and preventive maintenance (assigned or available)
             var allTickets = await _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Equipamento)
-                .Where(t => t.TechnicianId == userId && t.Level != "Empréstimo")
+                .Where(t => !t.IsDeleted && 
+                           (t.TechnicianId == userId || (t.TechnicianId == null && t.Type == "Manutenção Preventiva")) && 
+                           t.Level != "Empréstimo")
                 .ToListAsync();
 
             var calendarEvents = new List<object>();
             foreach (var t in allTickets)
             {
-                string baseTitle = $"#{t.Id} - {(t.Equipamento?.Name ?? "Equip.")}";
+                var isPreventive = t.Type == "Manutenção Preventiva";
+                var isUnassigned = t.TechnicianId == null;
                 
-                // 1. Entry Event (Created)
+                string baseTitle = isPreventive ? $"🛡️ Preventiva: {t.School?.Name}" : $"#{(t.Id)} - {(t.Equipamento?.Name ?? "Equip.")}";
+                
+                // Determine the display date for the primary event
+                var displayDate = (isPreventive && t.ScheduledDate.HasValue) ? t.ScheduledDate.Value : t.CreatedAt;
+
+                // 1. Entry Event (Created or Scheduled)
                 calendarEvents.Add(new {
-                   title = "📥 " + baseTitle,
-                   start = t.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
-                   className = "bg-label-warning",
-                   description = $"Equipamento: {t.Equipamento?.Name} na {t.School?.Name}. Criado em {t.CreatedAt:dd/MM HH:mm}."
+                   id = t.Id,
+                   title = (isUnassigned ? "🆓 " : "📥 ") + baseTitle,
+                   start = displayDate.ToString("yyyy-MM-ddTHH:mm:ss"),
+                   className = isUnassigned ? "bg-label-info" : (isPreventive ? "bg-label-warning" : "bg-label-primary"),
+                   description = isPreventive ? $"Manutenção Preventiva em {t.School?.Name}. Status: {t.Status}" : $"Equipamento: {t.Equipamento?.Name} na {t.School?.Name}. Criado em {t.CreatedAt:dd/MM HH:mm}.",
+                   extendedProps = new {
+                       ticketId = t.Id,
+                       isPreventive = isPreventive,
+                       isUnassigned = isUnassigned,
+                       status = t.Status
+                   }
                 });
 
                 // 2. Acceptance Event

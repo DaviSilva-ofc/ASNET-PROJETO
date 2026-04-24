@@ -109,7 +109,7 @@
                                 <td>
                                     @if (item.Status != null && (item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
                                         item.Status.Trim().Equals("Disponível", StringComparison.OrdinalIgnoreCase) || 
-                                        item.Status.Trim().Equals("Funcionando", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
                                         item.Status.Trim().Equals("Em uso", StringComparison.OrdinalIgnoreCase)))
                                     {
                                         <span class="badge bg-label-success">A funcionar</span>
@@ -119,9 +119,9 @@
                                     {
                                         <span class="badge bg-label-danger">Avariado</span>
                                     }
-                                    else if (item.Status != null && item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase))
+                                    else if (item.Status != null && item.Status.Trim().Equals("Em reparação", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        <span class="badge bg-label-warning">Em reparo</span>
+                                        <span class="badge bg-label-warning">Em reparação</span>
                                     }
                                     else if (item.Status != null && item.Status.Trim().Equals("Associado", StringComparison.OrdinalIgnoreCase))
                                     {
@@ -354,7 +354,7 @@
                             <label class="form-label fw-semibold small text-uppercase">Estado</label>
                             <select asp-for="FilterStatus" class="form-select">
                                 <option value="">Todos</option>
-                                <option value="Funcionando">A funcionar</option>
+                                <option value="A funcionar">A funcionar</option>
                                 <option value="Avariado">Avariado</option>
                                 <option value="Associado">Associado (Em Intervenção)</option>
                             </select>

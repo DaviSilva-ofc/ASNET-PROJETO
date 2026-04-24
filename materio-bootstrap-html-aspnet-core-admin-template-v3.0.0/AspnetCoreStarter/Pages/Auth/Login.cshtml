@@ -43,6 +43,7 @@
         }
 
         <form id="formAuthentication" class="mb-5" method="POST">
+          <input type="hidden" asp-for="ReturnUrl" />
           <div class="form-floating form-floating-outline mb-5">
             <input type="text" class="form-control" id="email" asp-for="Email" placeholder="Insira o seu email ou utilizador" autofocus>
             <label for="email">Email ou Utilizador</label>

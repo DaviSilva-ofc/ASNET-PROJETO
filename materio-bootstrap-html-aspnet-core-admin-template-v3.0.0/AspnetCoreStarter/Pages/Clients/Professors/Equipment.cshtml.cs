@@ -75,8 +75,8 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
                     query = query.Where(e => e.TicketId != null);
                 else if (FilterStatus == "Avariado")
                     query = query.Where(e => e.Status == "Avariado" || e.Status == "Indisponível");
-                else if (FilterStatus == "Funcionando")
-                    query = query.Where(e => e.Status == "A funcionar" || e.Status == "Funcionando" || e.Status == "Disponível" || string.IsNullOrEmpty(e.Status));
+                else if (FilterStatus == "A funcionar")
+                    query = query.Where(e => e.Status == "A funcionar" || e.Status == "Disponível" || string.IsNullOrEmpty(e.Status));
             }
 
             if (!string.IsNullOrEmpty(FilterName))

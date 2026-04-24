@@ -37,6 +37,26 @@ namespace AspnetCoreStarter.Pages.Admin
                 .ToListAsync();
 
             // Fetch ALL tickets (Repairs + Administrative Tasks)
+            // --- Schema Maintenance ---
+            try {
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    SET @dbname = DATABASE();
+                    SET @tablename = 'tickets';
+                    SET @columnname = 'data_agendamento';
+                    SET @preparedStatement = (SELECT IF(
+                      (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+                       WHERE TABLE_SCHEMA = @dbname 
+                         AND TABLE_NAME = @tablename 
+                         AND COLUMN_NAME = @columnname) > 0,
+                      'SELECT 1',
+                      'ALTER TABLE tickets ADD COLUMN data_agendamento DATETIME NULL'
+                    ));
+                    PREPARE stmt FROM @preparedStatement;
+                    EXECUTE stmt;
+                    DEALLOCATE PREPARE stmt;
+                ");
+            } catch { }
+
             var tickets = await _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Equipamento)
@@ -50,10 +70,11 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 var techName = t.Technician?.Username ?? "Não atribuído";
                 var isTask = t.Type == "Tarefa Administrativa";
+                var isPreventive = t.Type == "Manutenção Preventiva";
                 
                 var type = t.Equipamento?.Type ?? "";
                 var name = t.Equipamento?.Name ?? "";
-                var emoji = isTask ? "📋" : type switch {
+                var emoji = isTask ? "📋" : (isPreventive ? "🛡️" : type switch {
                     var s when s.Contains("Monitor") => "🖥️",
                     var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
                     var s when s.Contains("Impressora") => "🖨️",
@@ -66,20 +87,24 @@ namespace AspnetCoreStarter.Pages.Admin
                     var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
                     var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
                     _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
-                };
+                });
 
-                // 1. Entry Date (Created)
+                // Determine the display date: use ScheduledDate if it's a Preventive Maintenance, else CreatedAt
+                var displayDate = (isPreventive && t.ScheduledDate.HasValue) ? t.ScheduledDate.Value : t.CreatedAt;
+
+                // 1. Entry Date (Created or Scheduled)
                 calendarEvents.Add(new {
                     id = t.Id,
-                    title = isTask ? $"{emoji} Tarefa: {t.Description}" : $"{emoji} Pedido: {t.Equipamento?.Name ?? "Avaria"}",
-                    start = t.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
-                    description = isTask ? t.Description : $"Ticket #{t.Id}: {t.Description} em {t.School?.Name ?? "Sede"}",
-                    className = isTask ? "bg-label-info" : "bg-label-primary",
+                    title = isTask ? $"{emoji} Tarefa: {t.Description}" : (isPreventive ? $"{emoji} Preventiva: {t.School?.Name}" : $"{emoji} Pedido: {t.Equipamento?.Name ?? "Avaria"}"),
+                    start = displayDate.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    description = isTask ? t.Description : (isPreventive ? $"Manutenção Preventiva em {t.School?.Name}" : $"Ticket #{t.Id}: {t.Description} em {t.School?.Name ?? "Sede"}"),
+                    className = isTask ? "bg-label-info" : (isPreventive ? "bg-label-warning" : "bg-label-primary"),
                     extendedProps = new {
                         ticketId = t.Id,
                         technicianId = t.TechnicianId,
                         technicianName = techName,
-                        isRepair = !isTask,
+                        isRepair = !isTask && !isPreventive,
+                        isPreventive = isPreventive,
                         status = t.Status
                     }
                 });
@@ -89,7 +114,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 {
                     calendarEvents.Add(new {
                         id = t.Id + 1000000, // Offset for uniqueness
-                        title = $"✅ {emoji} Concluído: {(isTask ? "Tarefa" : t.Equipamento?.Name ?? "Avaria")}",
+                        title = $"✅ {emoji} Concluído: {(isTask ? "Tarefa" : (isPreventive ? $"Preventiva: {t.School?.Name}" : t.Equipamento?.Name ?? "Avaria"))}",
                         start = t.CompletedAt.Value.ToString("yyyy-MM-ddTHH:mm:ss"),
                         description = $"{(isTask ? "Tarefa" : "Ticket")} #{t.Id} finalizado por {techName}.",
                         className = "bg-label-success",

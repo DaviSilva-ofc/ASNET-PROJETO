@@ -63,20 +63,74 @@
             <span class="text-muted fw-light">Admin /</span> Relatório Analítico
         </h4>
         <div class="action-btns">
+            @{
+                var exportQuery = $"Trimestre={Model.Trimestre}&Ano={Model.Ano}&FilterClientId={Model.FilterClientId}&FilterAgrupamentoId={Model.FilterAgrupamentoId}&FilterSchoolId={Model.FilterSchoolId}&FilterTechnicianId={Model.FilterTechnicianId}";
+            }
             <!-- Download PDF -->
-            <a href="?handler=DownloadPdf&Trimestre=@Model.Trimestre&Ano=@Model.Ano" class="download-btn btn-pdf">
+            <a href="?handler=DownloadPdf&@exportQuery" class="download-btn btn-pdf">
                 <i class="ri-file-pdf-line"></i> Exportar PDF
             </a>
             <!-- Download Excel -->
-            <a href="?handler=DownloadExcel&Trimestre=@Model.Trimestre&Ano=@Model.Ano" class="download-btn btn-excel">
+            <a href="?handler=DownloadExcel&@exportQuery" class="download-btn btn-excel">
                 <i class="ri-file-excel-line"></i> Exportar Excel
             </a>
         </div>
     </div>
 
-    <!-- Period Selector -->
+    <!-- Period & Advanced Filters -->
     <div class="card mb-4 shadow-sm border-0">
         <div class="card-body">
+            <form method="get">
+                <!-- Keep existing time filters -->
+                <input type="hidden" name="Trimestre" value="@Model.Trimestre" />
+                <input type="hidden" name="Ano" value="@Model.Ano" />
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Cliente (Empresa)</label>
+                        <select name="FilterClientId" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">Todos os Clientes</option>
+                            @foreach(var emp in Model.Empresas) {
+                                <option value="@emp.Id" selected="@(Model.FilterClientId == emp.Id)">@emp.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Agrupamento</label>
+                        <select name="FilterAgrupamentoId" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">Todos</option>
+                            @foreach(var agr in Model.Agrupamentos) {
+                                <option value="@agr.Id" selected="@(Model.FilterAgrupamentoId == agr.Id)">@agr.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Escola</label>
+                        <select name="FilterSchoolId" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">Todas as Escolas</option>
+                            @foreach(var sch in Model.Escolas) {
+                                <option value="@sch.Id" selected="@(Model.FilterSchoolId == sch.Id)">@sch.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">Técnico</label>
+                        <select name="FilterTechnicianId" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">Todos os Técnicos</option>
+                            @foreach(var tec in Model.Tecnicos) {
+                                <option value="@tec.Id" selected="@(Model.FilterTechnicianId == tec.Id)">@tec.Username</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-sm btn-primary flex-grow-1"><i class="ri-filter-3-line"></i> Filtrar</button>
+                        <a asp-page="./Relatorio" class="btn btn-sm btn-outline-secondary" title="Limpar"><i class="ri-refresh-line"></i></a>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="my-3 opacity-25" />
+
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
                     <h5 class="mb-1">
@@ -90,16 +144,16 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <div class="btn-group" role="group">
-                        <a href="?Trimestre=0&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 0 ? "active" : "")">Últimos 90d</a>
-                        <a href="?Trimestre=1&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 1 ? "active" : "")">Q1</a>
-                        <a href="?Trimestre=2&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 2 ? "active" : "")">Q2</a>
-                        <a href="?Trimestre=3&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 3 ? "active" : "")">Q3</a>
-                        <a href="?Trimestre=4&Ano=@Model.Ano" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 4 ? "active" : "")">Q4</a>
+                        <a href="?Trimestre=0&Ano=@Model.Ano&FilterClientId=@Model.FilterClientId&FilterAgrupamentoId=@Model.FilterAgrupamentoId&FilterSchoolId=@Model.FilterSchoolId&FilterTechnicianId=@Model.FilterTechnicianId" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 0 ? "active" : "")">Últimos 90d</a>
+                        <a href="?Trimestre=1&Ano=@Model.Ano&FilterClientId=@Model.FilterClientId&FilterAgrupamentoId=@Model.FilterAgrupamentoId&FilterSchoolId=@Model.FilterSchoolId&FilterTechnicianId=@Model.FilterTechnicianId" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 1 ? "active" : "")">Q1</a>
+                        <a href="?Trimestre=2&Ano=@Model.Ano&FilterClientId=@Model.FilterClientId&FilterAgrupamentoId=@Model.FilterAgrupamentoId&FilterSchoolId=@Model.FilterSchoolId&FilterTechnicianId=@Model.FilterTechnicianId" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 2 ? "active" : "")">Q2</a>
+                        <a href="?Trimestre=3&Ano=@Model.Ano&FilterClientId=@Model.FilterClientId&FilterAgrupamentoId=@Model.FilterAgrupamentoId&FilterSchoolId=@Model.FilterSchoolId&FilterTechnicianId=@Model.FilterTechnicianId" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 3 ? "active" : "")">Q3</a>
+                        <a href="?Trimestre=4&Ano=@Model.Ano&FilterClientId=@Model.FilterClientId&FilterAgrupamentoId=@Model.FilterAgrupamentoId&FilterSchoolId=@Model.FilterSchoolId&FilterTechnicianId=@Model.FilterTechnicianId" class="btn btn-sm btn-outline-secondary quarter-btn @(Model.Trimestre == 4 ? "active" : "")">Q4</a>
                     </div>
                     <div class="btn-group" role="group">
-                        <a href="?Trimestre=@Model.Trimestre&Ano=@(Model.Ano - 1)" class="btn btn-sm btn-outline-secondary"><i class="ri-arrow-left-s-line"></i></a>
+                        <a href="?Trimestre=@Model.Trimestre&Ano=@(Model.Ano - 1)&FilterClientId=@Model.FilterClientId&FilterAgrupamentoId=@Model.FilterAgrupamentoId&FilterSchoolId=@Model.FilterSchoolId&FilterTechnicianId=@Model.FilterTechnicianId" class="btn btn-sm btn-outline-secondary"><i class="ri-arrow-left-s-line"></i></a>
                         <span class="btn btn-sm btn-outline-secondary disabled">@Model.Ano</span>
-                        <a href="?Trimestre=@Model.Trimestre&Ano=@(Model.Ano + 1)" class="btn btn-sm btn-outline-secondary"><i class="ri-arrow-right-s-line"></i></a>
+                        <a href="?Trimestre=@Model.Trimestre&Ano=@(Model.Ano + 1)&FilterClientId=@Model.FilterClientId&FilterAgrupamentoId=@Model.FilterAgrupamentoId&FilterSchoolId=@Model.FilterSchoolId&FilterTechnicianId=@Model.FilterTechnicianId" class="btn btn-sm btn-outline-secondary"><i class="ri-arrow-right-s-line"></i></a>
                     </div>
                 </div>
             </div>

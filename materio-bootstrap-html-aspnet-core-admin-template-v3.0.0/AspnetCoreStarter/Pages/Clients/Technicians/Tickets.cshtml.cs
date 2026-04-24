@@ -115,24 +115,59 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
             AvailableTickets = await availableQuery.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
-            // Prepare Map Data for active tickets (both assigned and available)
-            var mapLocations = new List<object>();
-            var allActiveTickets = Tickets.Concat(AvailableTickets).Where(t => t.Status != "Concluído");
+            // --- Map Data Collection (Refined) ---
+            var allActiveTickets = Tickets.Concat(AvailableTickets).Where(t => t.Status != "Concluído").ToList();
+            var locationsDict = new Dictionary<string, dynamic>();
 
             foreach (var t in allActiveTickets)
             {
-                if (t.School != null && !string.IsNullOrEmpty(t.School.Address))
+                string? locName = null;
+                string? locAddr = null;
+
+                if (t.School != null)
                 {
-                    mapLocations.Add(new { name = t.School.Name, address = t.School.Address, type = "Escola" });
+                    locName = t.School.Name;
+                    locAddr = string.IsNullOrEmpty(t.School.Address) ? t.School.Name : t.School.Address;
                 }
-                else if (t.Equipamento != null && t.Equipamento.Empresa != null && !string.IsNullOrEmpty(t.Equipamento.Empresa.Location))
+                else if (t.Equipamento?.Empresa != null)
                 {
-                    mapLocations.Add(new { name = t.Equipamento.Empresa.Name, address = t.Equipamento.Empresa.Location, type = "Empresa" });
+                    locName = t.Equipamento.Empresa.Name;
+                    locAddr = string.IsNullOrEmpty(t.Equipamento.Empresa.Location) ? t.Equipamento.Empresa.Name : t.Equipamento.Empresa.Location;
+                }
+
+                if (locName != null && locAddr != null)
+                {
+                    if (!locationsDict.ContainsKey(locName))
+                    {
+                        locationsDict[locName] = new {
+                            name = locName,
+                            address = locAddr,
+                            hasInProgress = false,
+                            hasCompleted = false,
+                            hasPending = false,
+                            ticketCount = 0
+                        };
+                    }
+
+                    var existing = locationsDict[locName];
+                    var st = t.Status?.ToLower() ?? "";
+                    
+                    bool isInProgress = st.Contains("reparação") || st.Contains("resolução") || st.Contains("andamento") || st.Contains("aceite") || st.Contains("progresso");
+                    bool isCompleted = st.Contains("concluído");
+                    bool isPending = st.Contains("pendente") || st.Contains("pedido") || st.Contains("aberto");
+
+                    locationsDict[locName] = new {
+                        name = locName,
+                        address = locAddr,
+                        hasInProgress = (bool)existing.hasInProgress || isInProgress,
+                        hasCompleted = (bool)existing.hasCompleted || isCompleted,
+                        hasPending = (bool)existing.hasPending || isPending,
+                        ticketCount = (int)existing.ticketCount + 1
+                    };
                 }
             }
-            // Distinct locations to avoid duplicate markers
-            var uniqueLocations = mapLocations.GroupBy(l => new { ((dynamic)l).name, ((dynamic)l).address }).Select(g => g.First()).ToList();
-            ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(uniqueLocations);
+
+            ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locationsDict.Values.ToList());
 
             // --- Load Selected Ticket for Panel ---
             if (SelectedTicketId.HasValue)
@@ -174,7 +209,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAcceptTicketAsync(int id)
+        public async Task<IActionResult> OnPostAcceptAsync(int id)
         {
             if (!User.Identity.IsAuthenticated || !User.IsInRole("Tecnico")) 
                 return RedirectToPage("/Auth/Login");
@@ -187,18 +222,18 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (ticket != null)
             {
                 ticket.TechnicianId = userId;
-                ticket.Status = "Em Reparação";
+                ticket.Status = "Em reparação";
                 ticket.AcceptedAt = DateTime.UtcNow;
                 await LogHistory(id, "Trabalho aceite pelo técnico", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = $"Aceitou o trabalho #{id}. O estado foi alterado para 'Em Reparação'.";
+                TempData["SuccessMessage"] = $"Aceitou o trabalho #{id}. O estado foi alterado para 'Em reparação'.";
             }
             else
             {
                 TempData["ErrorMessage"] = "Ticket não encontrado ou já foi atribuído.";
             }
 
-            return RedirectToPage();
+            return RedirectToPage(new { SelectedTicketId = id });
         }
 
         public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string newStatus)
@@ -231,7 +266,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 TempData["ErrorMessage"] = "Ticket não encontrado ou sem permissões.";
             }
 
-            return RedirectToPage(new { FilterStatus = FilterStatus, FilterArticle = FilterArticle, FilterType = FilterType });
+            return RedirectToPage(new { SelectedTicketId = id, FilterStatus = FilterStatus, FilterArticle = FilterArticle, FilterType = FilterType });
         }
 
         // --- Panel Actions (Technician Context) ---
@@ -249,7 +284,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             string newStatus = oldStatus switch
             {
                 "Aberto" or "Pedido" or "Pendente" => "Aceite",
-                "Aceite" => "Em Reparação",
+                "Aceite" => "Em reparação",
                 // "Em Reparação" will now be handled by specific Complete methods for better granularity
                 _ => oldStatus
             };

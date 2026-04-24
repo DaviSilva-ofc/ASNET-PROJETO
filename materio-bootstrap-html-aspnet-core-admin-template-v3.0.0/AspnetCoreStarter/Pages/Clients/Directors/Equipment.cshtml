@@ -146,7 +146,7 @@
                                 <td style="width: 1%; white-space: nowrap;">
                                     @if (item.Status != null && (item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
                                         item.Status.Trim().Equals("Disponível", StringComparison.OrdinalIgnoreCase) || 
-                                        item.Status.Trim().Equals("Funcionando", StringComparison.OrdinalIgnoreCase) || 
+                                        item.Status.Trim().Equals("A funcionar", StringComparison.OrdinalIgnoreCase) || 
                                         item.Status.Trim().Equals("Em uso", StringComparison.OrdinalIgnoreCase)))
                                     {
                                         <span class="badge bg-label-success">A funcionar</span>
@@ -156,10 +156,10 @@
                                     {
                                         <span class="badge bg-label-danger">Avariado</span>
                                     }
-                                    else if (item.Status != null && (item.Status.Trim().Equals("Em reparo", StringComparison.OrdinalIgnoreCase) || 
+                                    else if (item.Status != null && (item.Status.Trim().Equals("Em reparação", StringComparison.OrdinalIgnoreCase) || 
                                              item.Status.Trim().Equals("Em Reparação", StringComparison.OrdinalIgnoreCase)))
                                     {
-                                        <span class="badge bg-label-info">Em reparo</span>
+                                        <span class="badge bg-label-info">Em reparação</span>
                                     }
                                     else if (item.Status != null && item.Status.Trim().Equals("Associado", StringComparison.OrdinalIgnoreCase))
                                     {
@@ -178,7 +178,7 @@
                                                 🎫
                                             </a>
                                         }
-                                        @if (item.Status == "Em reparo")
+                                        @if (item.Status == "Em reparação")
                                         {
                                             <span class="text-muted small px-1" title="Em Manutenção">🛠️</span>
                                         }
@@ -532,7 +532,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        <button type="submit" class="btn btn-primary">Guardar Alterações</button>
                     </div>
                 </form>
             </div>
@@ -782,7 +782,7 @@
                                 <option value="">Todos os Estados</option>
                                 <option value="A funcionar">A funcionar</option>
                                 <option value="Avariado">Avariado</option>
-                                <option value="Em reparo">Em reparo</option>
+                                <option value="Em reparação">Em reparação</option>
                                 <option value="Associado">Associado (Em Intervenção)</option>
                                 <option value="Emprestado">Emprestado</option>
                                 <option value="Indisponível">Indisponível</option>
@@ -1129,7 +1129,7 @@
         
         const statusSelect = document.getElementById('editStatus');
         if (statusSelect) {
-            if (status === "Funcionando" || !status) status = "A funcionar";
+            if (status === "A funcionar" || !status) status = "A funcionar";
             statusSelect.value = status;
         }
 

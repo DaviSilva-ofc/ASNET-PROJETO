@@ -142,9 +142,9 @@
                                 ✏️
                             </button>
                             <form method="post" asp-page-handler="DeleteDept" asp-route-id="@dept.Id" 
-                                  onsubmit="return confirm('Excluir este departamento e tudo o que está dentro dele?');"
+                                  onsubmit="return confirm('Eliminar este departamento e tudo o que está dentro dele?');"
                                   style="display:inline;" onclick="event.stopPropagation();">
-                                <button type="submit" class="edit-header-btn" title="Excluir Departamento" style="background: rgba(255, 62, 29, 0.4); border-color: rgba(255, 255, 255, 0.5);">
+                                <button type="submit" class="edit-header-btn" title="Eliminar Departamento" style="background: rgba(255, 62, 29, 0.4); border-color: rgba(255, 255, 255, 0.5);">
                                     🗑️
                                 </button>
                             </form>
@@ -205,8 +205,8 @@
                                                                 ✏️
                                                             </button>
                                                             <form method="post" asp-page-handler="DeleteSetor" asp-route-id="@setor.Id" 
-                                                                  onsubmit="return confirm('Excluir este setor e as suas salas?');" style="display:inline;">
-                                                                <button type="submit" class="btn-delete-subtle" title="Excluir">🗑️</button>
+                                                                  onsubmit="return confirm('Eliminar este setor e as suas salas?');" style="display:inline;">
+                                                                <button type="submit" class="btn-delete-subtle" title="Eliminar">🗑️</button>
                                                             </form>
                                                         </div>
                                                     </div>
@@ -226,8 +226,8 @@
                                                                         ✏️
                                                                     </button>
                                                                     <form method="post" asp-page-handler="DeleteSala" asp-route-id="@sala.Id" 
-                                                                          onsubmit="return confirm('Excluir esta sala?');" style="display:inline;">
-                                                                        <button type="submit" class="btn-delete-subtle" title="Excluir">🗑️</button>
+                                                                          onsubmit="return confirm('Eliminar esta sala?');" style="display:inline;">
+                                                                        <button type="submit" class="btn-delete-subtle" title="Eliminar">🗑️</button>
                                                                     </form>
                                                                 </div>
                                                             </div>
@@ -325,7 +325,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
             </div>
         </form>
     </div>

@@ -367,7 +367,7 @@
                                                                                 <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" title="Código QR">
                                                                                     <i class="ri-qr-code-line"></i>
                                                                                 </button>
-                                                                                <button type="button" class="btn btn-sm btn-icon text-danger p-0 open-delete-modal border-0" data-bs-toggle="modal" data-bs-target="#modalDeleteStock" data-sample-id="@item.SampleId" data-name="@item.Name" data-type="@item.Type" data-location="Stock Empresa" data-quantity="@item.Quantity" title="Excluir">
+                                                                                <button type="button" class="btn btn-sm btn-icon text-danger p-0 open-delete-modal border-0" data-bs-toggle="modal" data-bs-target="#modalDeleteStock" data-sample-id="@item.SampleId" data-name="@item.Name" data-type="@item.Type" data-location="Stock Empresa" data-quantity="@item.Quantity" title="Eliminar">
                                                                                     <i class="ri-delete-bin-line"></i>
                                                                                 </button>
                                                                             </div>
@@ -974,19 +974,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Excluir do Stock</h5>
+                <h5 class="modal-title">Eliminar do Stock</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="deleteStockForm" method="post" asp-page-handler="DeleteStock">
                 <div class="modal-body">
-                    <p>Deseja excluir unidades de <strong id="deleteItemName">...</strong>?</p>
+                    <p>Deseja eliminar unidades de <strong id="deleteItemName">...</strong>?</p>
                     <input type="hidden" name="sampleId" id="deleteInputSampleId" />
                     <input type="hidden" name="name" id="deleteInputName" />
                     <input type="hidden" name="type" id="deleteInputType" />
                     <input type="hidden" name="location" id="deleteInputLocation" />
 
                     <div class="mb-3">
-                        <label class="form-label">Quantidade a Excluir</label>
+                        <label class="form-label">Quantidade a Eliminar</label>
                         <div class="input-group">
                             <input type="number" name="quantity" id="deleteInputQuantity" class="form-control" value="1" min="1" required />
                             <span class="input-group-text">de <span id="deleteMaxQuantity">1</span> totais</span>
@@ -999,7 +999,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Excluir Permanentemente</button>
+                    <button type="submit" class="btn btn-danger">Eliminar Permanentemente</button>
                 </div>
             </form>
         </div>

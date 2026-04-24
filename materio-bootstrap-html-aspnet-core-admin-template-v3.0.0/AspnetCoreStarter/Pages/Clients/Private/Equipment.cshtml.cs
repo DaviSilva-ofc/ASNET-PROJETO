@@ -251,7 +251,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
         public async Task<IActionResult> OnPostToggleStatusAsync(int id)
         {
             var item = await _context.Equipamentos.FindAsync(id);
-            if (item != null && item.Status != "Em reparo")
+            if (item != null && item.Status != "Em reparação")
             {
                 item.Status = (item.Status == "Avariado") ? "A funcionar" : "Avariado";
                 await _context.SaveChangesAsync();

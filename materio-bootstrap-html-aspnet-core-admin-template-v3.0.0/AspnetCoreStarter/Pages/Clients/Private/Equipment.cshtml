@@ -233,9 +233,9 @@
                                                 {
                                                     <span class="badge bg-label-danger">Avariado</span>
                                                 }
-                                                else if (item.Status == "Em reparo")
+                                                else if (item.Status == "Em reparação")
                                                 {
-                                                    <span class="badge bg-label-info">Em reparo</span>
+                                                    <span class="badge bg-label-info">Em reparação</span>
                                                 }
                                                 else if (item.Status == "Associado")
                                                 {
@@ -598,7 +598,7 @@
                         <select asp-for="NewEquipment.Status" id="editStatus" class="form-select" required>
                             <option value="A funcionar">A funcionar</option>
                             <option value="Avariado">Avariado</option>
-                            <option value="Em reparo">Em reparo</option>
+                            <option value="Em reparação">Em reparação</option>
                         </select>
                     </div>
 
@@ -630,7 +630,7 @@
             </div>
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <button type="submit" class="btn btn-primary">Guardar Alterações</button>
             </div>
         </form>
     </div>
@@ -684,7 +684,7 @@
                             <option value="">Todos</option>
                             <option value="A funcionar">A funcionar</option>
                             <option value="Avariado">Avariado</option>
-                            <option value="Em reparo">Em reparo</option>
+                            <option value="Em reparação">Em reparação</option>
                             <option value="Associado">Associado (Em Intervenção)</option>
                         </select>
                     </div>
@@ -1040,7 +1040,7 @@
         const statusSelect = document.getElementById('editStatus');
         if (statusSelect) {
             let cleanStatus = (status || 'A funcionar').trim();
-            if (cleanStatus === "Funcionando") cleanStatus = "A funcionar";
+            if (cleanStatus === "A funcionar") cleanStatus = "A funcionar";
             $(statusSelect).val(cleanStatus).trigger('change');
         }
         

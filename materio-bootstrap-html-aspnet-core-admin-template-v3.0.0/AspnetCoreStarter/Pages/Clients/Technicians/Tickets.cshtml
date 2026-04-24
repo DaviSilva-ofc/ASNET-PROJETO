@@ -29,8 +29,8 @@
             <div class="tk-stat-label">Disponíveis</div>
             <div class="tk-stat-num num-blue">@Model.AvailableTickets.Count</div>
         </div>
-        <div class="tk-stat @(Model.FilterStatus == "Em Reparação" ? "active-amber" : "active-grey")" onclick="setFilter('Em Reparação')">
-            <div class="tk-stat-label">Em Curso</div>
+        <div class="tk-stat @(Model.FilterStatus == "Em reparação" ? "active-amber" : "active-grey")" onclick="setFilter('Em reparação')">
+            <div class="tk-stat-label">Em curso</div>
             <div class="tk-stat-num num-amber">@Model.Tickets.Count(t => t.Status != "Concluído")</div>
         </div>
         <div class="tk-stat @(Model.FilterStatus == "Concluído" ? "active-green" : "active-grey")" onclick="setFilter('Concluído')">
@@ -161,7 +161,7 @@
                     @{
                         var stCol = t.Status switch {
                             "Concluído" => "var(--tk-green)",
-                            "Em Reparação" or "Em Resolução" => "var(--tk-primary)",
+                            "Em reparação" or "Em resolução" => "var(--tk-primary)",
                             _ => "var(--tk-muted)"
                         };
                     }
@@ -234,7 +234,7 @@
 
             <div class="tk-stepper">
                 @{
-                    var steps = new[] { "Aberto", "Aceite", "Em Reparação", "Concluído" };
+                    var steps = new[] { "Aberto", "Aceite", "Em reparação", "Concluído" };
                     int si = Array.IndexOf(steps, t.Status);
                     if (si == -1 && t.Status == "Pedido") si = 0;
                     if (si == -1 && t.Status == "Em Resolução") si = 2;
@@ -261,7 +261,7 @@
             @if (t.Status != "Concluído" && si < 3)
             {
                 <div class="tk-advance-row">
-                    @if (t.Status == "Em Reparação" || t.Status == "Em andamento" || t.Status == "Em Resolução")
+                    @if (t.Status == "Em reparação" || t.Status == "Em andamento" || t.Status == "Em resolução")
                     {
                         <div class="d-flex gap-2 w-100">
                             <form method="post" asp-page-handler="CompleteRepaired" asp-route-ticketId="@t.Id" class="flex-grow-1">
@@ -492,7 +492,6 @@
         }
 
         initMap();
-        // Fix for broken tiles
         setTimeout(() => { if(window.mapInstance) window.mapInstance.invalidateSize(); }, 500);
     });
 
@@ -506,29 +505,112 @@
             maxZoom: 19
         }).addTo(map);
 
+        // Define custom icons
+        var greenIcon = new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+
+        var yellowIcon = new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-yellow.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+
+        var blueIcon = new L.Icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+
+        const geoCacheKey = 'asnet_geocache';
+        let geoCache = {};
+        try {
+            geoCache = JSON.parse(localStorage.getItem(geoCacheKey) || '{}');
+        } catch (e) { console.error('Cache parse error', e); }
+
         var locationsRaw = '@Html.Raw(Model.ClientLocationsJson)';
         if (locationsRaw && locationsRaw !== 'null') {
             try {
-                var locations = JSON.parse(locationsRaw);
+                var locations = JSON.parse(locationsRaw.replace(/&quot;/g, '"'));
+                
+                // Add debug counter if header exists
+                const header = document.querySelector('.card-header h5');
+                if (header) { header.innerHTML += ` <small class="text-muted">(${locations.length} locais detetados)</small>`; }
+
                 for (let i = 0; i < locations.length; i++) {
                     const loc = locations[i];
                     if (loc.address) {
-                        try {
-                            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc.address + ", Portugal")}`);
-                            const data = await response.json();
-                            if (data && data.length > 0) {
-                                const result = data[0];
-                                L.marker([result.lat, result.lon])
-                                 .addTo(map)
-                                 .bindPopup(`<b>${loc.name}</b><br>${loc.address}`);
+                        const cacheEntry = geoCache[loc.address];
+                        if (cacheEntry && cacheEntry.lat && cacheEntry.lon) {
+                            addMarkerToMap(loc, cacheEntry.lat, cacheEntry.lon);
+                        } else {
+                            try {
+                                // Try 1: Full address with context
+                                let q1 = loc.address + ", Braga, Portugal";
+                                let response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q1)}`);
+                                let data = await response.json();
+                                
+                                // Try 2: If fail, try just the name with context
+                                if (!data || data.length === 0) {
+                                    let q2 = loc.name + ", Braga, Portugal";
+                                    response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q2)}`);
+                                    data = await response.json();
+                                }
+
+                                if (data && data.length > 0) {
+                                    const result = data[0];
+                                    geoCache[loc.address] = { lat: result.lat, lon: result.lon };
+                                    localStorage.setItem(geoCacheKey, JSON.stringify(geoCache));
+                                    addMarkerToMap(loc, result.lat, result.lon);
+                                } else {
+                                    console.warn('Could not find location:', loc.name);
+                                }
+                            } catch (error) {
+                                console.error('Geocoding error:', error);
                             }
-                        } catch (error) {
-                            console.error('Geocoding error:', error);
+                            if (locations.length > 1) await new Promise(resolve => setTimeout(resolve, 1000));
                         }
-                        if (locations.length > 1) await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }
             } catch (e) { console.error("Map data error:", e); }
+        }
+
+        function addMarkerToMap(loc, lat, lon) {
+            let markerIcon = blueIcon;
+            let statusLabel = "";
+            let debugInfo = ""; 
+            
+            const isInProgress = loc.hasInProgress || loc.hasInProgress === "True" || loc.hasInProgress === true;
+            const isCompleted = loc.hasCompleted || loc.hasCompleted === "True" || loc.hasCompleted === true;
+            const isPending = loc.hasPending || loc.hasPending === "True" || loc.hasPending === true;
+
+            if (isInProgress) {
+                markerIcon = yellowIcon;
+                statusLabel = "<br><span class='badge bg-label-warning mt-2'>Em Progresso</span>";
+            } else if (isCompleted) {
+                markerIcon = greenIcon;
+                statusLabel = "<br><span class='badge bg-label-success mt-2'>Concluído</span>";
+            } else if (isPending) {
+                markerIcon = blueIcon;
+                statusLabel = "<br><span class='badge bg-label-info mt-2'>Pendente</span>";
+            } else {
+                debugInfo = "<br><small style='color:gray'>(Sem estado detetado)</small>";
+            }
+
+            L.marker([lat, lon], {icon: markerIcon})
+             .addTo(map)
+             .bindPopup(`<b>${loc.name}</b><br>${loc.address}${statusLabel}${debugInfo}<br><small class="text-muted">Tickets: ${loc.ticketCount || 1}</small>`);
         }
     }
 </script>

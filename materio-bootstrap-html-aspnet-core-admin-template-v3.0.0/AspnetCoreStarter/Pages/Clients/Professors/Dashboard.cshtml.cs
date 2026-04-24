@@ -78,7 +78,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
 
             // Stats for second chart (Status distribution)
             HealthyCount = await _context.Equipamentos
-                .CountAsync(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value) && (e.Status == "A funcionar" || e.Status == "Funcionando"));
+                .CountAsync(e => e.RoomId.HasValue && salaIds.Contains(e.RoomId.Value) && (e.Status == "A funcionar"));
             DamagedCount = DamagedEquipmentCount;
 
             // Chat Notifications

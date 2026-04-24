@@ -297,7 +297,7 @@
                                         </button>
                                         <button type="button" class="btn btn-sm btn-icon text-danger p-0" 
                                                 onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
-                                                title="Excluir">
+                                                title="Eliminar">
                                             <i class="ri-delete-bin-line"></i>
                                         </button>
                                     </div>
@@ -483,13 +483,13 @@
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Estado</button>
+                    <button type="submit" class="btn btn-primary">Guardar Estado</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Excluir -->
+    <!-- Modal Eliminar -->
     <div class="modal fade" id="modalDeleteStock" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -499,7 +499,7 @@
                 </div>
                 <form id="deleteStockForm" method="post" asp-page-handler="DeleteStock">
                     <div class="modal-body">
-                        <p>Pretende desvincular ou excluir a entrada para <strong id="deleteItemName">...</strong>?</p>
+                        <p>Pretende desvincular ou eliminar a entrada para <strong id="deleteItemName">...</strong>?</p>
                         <input type="hidden" name="name" id="deleteInputName" />
                         <input type="hidden" name="roomId" id="deleteInputRoomId" />
                         <input type="hidden" name="currentStatus" id="deleteInputCurrentStatus" />
@@ -518,7 +518,7 @@
                     </div>
                     <div class="modal-footer border-top">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Excluir</button>
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
                     </div>
                 </form>
             </div>

@@ -58,6 +58,8 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<string> SchoolNames { get; set; } = new();
         public List<int> SchoolEquipmentCounts { get; set; } = new();
 
+        public bool IsMaintenanceScheduledThisYear { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
@@ -68,9 +70,35 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(userId) || userRole != "Admin")
                 return RedirectToPage("/Index");
 
+            // --- Database Schema Maintenance (Ensure new columns exist) ---
+            try {
+                // Check if column exists by querying information_schema
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    SET @dbname = DATABASE();
+                    SET @tablename = 'tickets';
+                    SET @columnname = 'data_agendamento';
+                    SET @preparedStatement = (SELECT IF(
+                      (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
+                       WHERE TABLE_SCHEMA = @dbname 
+                         AND TABLE_NAME = @tablename 
+                         AND COLUMN_NAME = @columnname) > 0,
+                      'SELECT 1',
+                      'ALTER TABLE tickets ADD COLUMN data_agendamento DATETIME NULL'
+                    ));
+                    PREPARE stmt FROM @preparedStatement;
+                    EXECUTE stmt;
+                    DEALLOCATE PREPARE stmt;
+                ");
+            } catch { /* Silent fail if already exists or other error */ }
+
             // Totals
             TotalUsers = await _context.Users.CountAsync();
             
+            // Maintenance Check for current year
+            int currentYear = DateTime.Now.Year;
+            var maintenanceSettings = await AspnetCoreStarter.Helpers.MaintenanceSettingsHelper.GetSettingsAsync(currentYear);
+            IsMaintenanceScheduledThisYear = maintenanceSettings.ScheduledDate.HasValue;
+
             // 1. Contratos a expirar (dentro de 30 dias)
             var oneMonthFromNow = DateTime.Now.AddDays(30);
             var today = DateTime.Now;
@@ -151,10 +179,16 @@ namespace AspnetCoreStarter.Pages.Admin
                 MonthlyConcluidosData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && t.Status == "Concluído"));
             }
 
-            // Client Locations for Map
+            // Client Locations for Map with Ticket Status
             var locations = await _context.Schools
                 .Where(s => !string.IsNullOrEmpty(s.Address))
-                .Select(s => new { name = s.Name, address = s.Address })
+                .Select(s => new { 
+                    name = s.Name, 
+                    address = s.Address,
+                    hasInProgress = _context.Tickets.Any(t => t.SchoolId == s.Id && (t.Status.ToLower() == "em reparação" || t.Status.ToLower() == "em resolução" || t.Status.ToLower() == "em andamento" || t.Status.ToLower() == "aceite" || t.Status.ToLower() == "em progresso")),
+                    hasCompleted = _context.Tickets.Any(t => t.SchoolId == s.Id && t.Status.ToLower() == "concluído"),
+                    hasPending = _context.Tickets.Any(t => t.SchoolId == s.Id && (t.Status.ToLower() == "pendente" || t.Status.ToLower() == "pedido"))
+                })
                 .ToListAsync();
             ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locations);
 

@@ -143,12 +143,27 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 BarChartData.Add(concludedTickets.Count(t => t.CreatedAt.Month == month));
             }
 
-            // Map Locations (Escolas associadas aos tickets pendentes deles)
-            var locations = LocaisAtendimento
-                .Where(s => !string.IsNullOrEmpty(s.Address))
-                .Select(s => new { name = s.Name, address = s.Address })
-                .ToList();
-            ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(locations);
+            // Map Locations with Ticket Status
+            var schoolsWithTickets = await _context.Schools
+                .Where(s => !s.IsDeleted)
+                .ToListAsync();
+            var mapLocations = schoolsWithTickets.Select(s => {
+                var schoolTickets = _context.Tickets.Where(t => t.SchoolId == s.Id).ToList();
+                return new { 
+                    name = s.Name, 
+                    address = string.IsNullOrEmpty(s.Address) ? s.Name : s.Address,
+                    hasInProgress = schoolTickets.Any(t => {
+                        var st = t.Status.ToLower();
+                        return st.Contains("reparação") || st.Contains("resolução") || st.Contains("andamento") || st.Contains("aceite") || st.Contains("progresso");
+                    }),
+                    hasCompleted = schoolTickets.Any(t => t.Status.ToLower().Contains("concluído")),
+                    hasPending = schoolTickets.Any(t => {
+                        var st = t.Status.ToLower();
+                        return st.Contains("pendente") || st.Contains("pedido") || st.Contains("aberto");
+                    })
+                };
+            }).ToList();
+            ClientLocationsJson = System.Text.Json.JsonSerializer.Serialize(mapLocations);
 
             // --- Load Selected Ticket for Panel ---
             if (SelectedTicketId.HasValue)

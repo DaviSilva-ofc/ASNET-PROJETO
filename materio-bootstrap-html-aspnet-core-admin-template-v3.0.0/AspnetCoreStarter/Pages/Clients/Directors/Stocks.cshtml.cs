@@ -165,7 +165,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 equipsTemp = equipsTemp.Where(e => NormalizeEquipmentName(e.Name) == FilterArticle).ToList();
             }
 
-            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparo" };
+            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparação" };
 
             if (!string.IsNullOrEmpty(FilterStatus))
             {
@@ -232,9 +232,9 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             {
                 var s when s.Contains("emprestado") => "Emprestado",
                 "disponível" or "disponivel" or "armazenado" => "Armazenado",
-                "a funcionar" or "funcionando" or "em uso" => "A funcionar",
+                "a funcionar" or "em uso" => "A funcionar",
                 "avariado" or "indisponível" or "indisponivel" or "recolhido" => "Avariado",
-                "em reparo" or "reparo" or "em manutenção" => "Em reparo",
+                "em reparação" or "reparação" or "em manutenção" => "Em reparação",
                 _ => "Armazenado"
             };
         }
@@ -329,7 +329,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             _context.Equipamentos.RemoveRange(itemsToDelete);
             await _context.SaveChangesAsync();
             
-            return RedirectToPage(new { success = "Equipamentos excluídos com sucesso!" });
+            return RedirectToPage(new { success = "Equipamentos eliminados com sucesso!" });
         }
         public async Task<IActionResult> OnPostFulfillRequestAsync(int requestId, string[] selectedIds)
         {

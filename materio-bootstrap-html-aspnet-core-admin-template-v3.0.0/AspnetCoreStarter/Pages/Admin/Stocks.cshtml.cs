@@ -486,7 +486,7 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             return (raw ?? "").ToLower() switch
             {
-                "disponível" or "disponivel" or "funcionando" => "Disponível",
+                "disponível" or "disponivel" or "a funcionar" => "Disponível",
                 "emprestado" => "Emprestado",
                 "em uso" => "Em uso",
                 "avariado" or "indisponível" or "indisponivel" or "recolhido" => "Indisponível",
@@ -624,7 +624,7 @@ namespace AspnetCoreStarter.Pages.Admin
             _context.StockEmpresa.RemoveRange(itemsToDelete);
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = $"Sucesso: {itemsToDelete.Count} item(ns) excluído(s).";
+            TempData["Success"] = $"Sucesso: {itemsToDelete.Count} item(ns) eliminado(s).";
             return RedirectToPage();
         }
 

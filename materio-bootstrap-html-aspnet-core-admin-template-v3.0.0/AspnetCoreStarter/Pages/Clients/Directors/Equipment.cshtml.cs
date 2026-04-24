@@ -150,15 +150,15 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 }
                 else if (FilterStatus == "A funcionar")
                 {
-                    query = query.Where(e => e.Status == "A funcionar" || e.Status == "Disponível" || e.Status == "Funcionando" || e.Status == "Em uso" || string.IsNullOrEmpty(e.Status));
+                    query = query.Where(e => e.Status == "A funcionar" || e.Status == "Disponível" || e.Status == "Em uso" || string.IsNullOrEmpty(e.Status));
                 }
                 else if (FilterStatus == "Avariado")
                 {
                     query = query.Where(e => e.Status == "Avariado" || e.Status == "Indisponível");
                 }
-                else if (FilterStatus == "Em reparo")
+                else if (FilterStatus == "Em reparação")
                 {
-                    query = query.Where(e => e.Status == "Em reparo");
+                    query = query.Where(e => e.Status == "Em reparação");
                 }
             }
 
@@ -331,13 +331,13 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var item = await _context.Equipamentos.FindAsync(id);
             if (item != null)
             {
-                // If the equipment is 'Em reparo', the Director cannot edit it.
-                if (item.Status == "Em reparo")
+                // If the equipment is 'Em reparação', the Director cannot edit it.
+                if (item.Status == "Em reparação")
                 {
                     return RedirectToPage();
                 }
 
-                if (item.Status == "A funcionar" || item.Status == "Disponível" || item.Status == "Funcionando" || string.IsNullOrEmpty(item.Status))
+                if (item.Status == "A funcionar" || item.Status == "Disponível" || string.IsNullOrEmpty(item.Status))
                 {
                     item.Status = "Avariado";
                 }
@@ -357,7 +357,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             {
                 _context.Equipamentos.Remove(item);
                 await _context.SaveChangesAsync();
-                return RedirectToPage(new { success = "Equipamento excluído com sucesso!" });
+                return RedirectToPage(new { success = "Equipamento eliminado com sucesso!" });
             }
             return RedirectToPage();
         }

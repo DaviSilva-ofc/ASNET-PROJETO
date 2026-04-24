@@ -389,7 +389,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             {
                 _context.Equipamentos.Remove(item);
                 await _context.SaveChangesAsync();
-                return RedirectToPage(new { success = "Equipamento excluído com sucesso!" });
+                return RedirectToPage(new { success = "Equipamento eliminado com sucesso!" });
             }
             return RedirectToPage();
         }
@@ -522,7 +522,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
             if (s.Contains("repara")) return "Em Reparação";
             if (s.Contains("avari")) return "Avariado";
-            if (s.Contains("funcion") || s.Contains("funcionando")) return "A funcionar";
+            if (s.Contains("funcion") || s.Contains("a funcionar")) return "A funcionar";
 
             return string.IsNullOrWhiteSpace(rawStatus) ? "A funcionar" : rawStatus.Trim();
         }

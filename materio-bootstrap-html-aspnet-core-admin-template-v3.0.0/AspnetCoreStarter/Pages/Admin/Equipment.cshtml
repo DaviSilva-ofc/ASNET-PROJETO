@@ -56,16 +56,46 @@
         </div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Inventário de Equipamentos</h5>
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
-                    🔍 Filtros
-                </button>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">Novo Equipamento</button>
+    <!-- Alerta de Manutenção Preventiva não agendada -->
+    @if (!Model.IsMaintenanceScheduledThisYear && Model.Tab == "preventive")
+    {
+        <div class="alert alert-warning alert-dismissible shadow-sm mb-4 d-flex align-items-center" role="alert" style="border-left: 4px solid #ffab00;">
+            <i class="bx bx-error-circle fs-3 me-3 text-warning"></i>
+            <div>
+                <strong>Aviso:</strong> A Manutenção Preventiva Anual para o ano de @DateTime.Now.Year ainda não foi agendada.
+                <button class="btn btn-sm btn-warning ms-2" data-bs-toggle="modal" data-bs-target="#modalScheduleMaintenance">Agendar Agora</button>
             </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    }
+
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link @(Model.Tab != "preventive" ? "active" : "")" role="tab" data-bs-toggle="tab" data-bs-target="#navs-inventory" aria-controls="navs-inventory" aria-selected="@(Model.Tab != "preventive" ? "true" : "false")">
+                    <i class="tf-icons ri-database-2-line me-1"></i> Inventário Geral
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link @(Model.Tab == "preventive" ? "active" : "")" role="tab" data-bs-toggle="tab" data-bs-target="#navs-preventive" aria-controls="navs-preventive" aria-selected="@(Model.Tab == "preventive" ? "true" : "false")">
+                    <i class="tf-icons ri-shield-check-line me-1"></i> Reparações Preventivas Anuais
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <!-- Tab: Inventário Geral -->
+            <div class="tab-pane fade @(Model.Tab != "preventive" ? "show active" : "")" id="navs-inventory" role="tabpanel">
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Inventário de Equipamentos</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+                                🔍 Filtros
+                            </button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquipamento">Novo Equipamento</button>
+                        </div>
+                    </div>
         @{
             var hasActiveFilters = !string.IsNullOrEmpty(Model.FilterName) || 
                                   !string.IsNullOrEmpty(Model.FilterType) || 
@@ -154,7 +184,7 @@
                                 } else if (item.Status == "Usado na Intervenção") {
                                     <span class="badge bg-label-info">📦 Usado na Intervenção</span>
                                 } else {
-                                    <span class="badge bg-label-success">@(item.Status == "Funcionando" || string.IsNullOrEmpty(item.Status) ? "✅ A funcionar" : "📦 " + item.Status)</span>
+                                    <span class="badge bg-label-success">@(item.Status == "A funcionar" || string.IsNullOrEmpty(item.Status) ? "✅ A funcionar" : "📦 " + item.Status)</span>
                                 }
                             </td>
                             <td style="white-space: nowrap; width: 1%;">
@@ -197,9 +227,457 @@
                         </tr>
                     }
                 </tbody>
-            </table>
+                </table>
+            </div> <!-- End table-responsive -->
+        </div> <!-- End card -->
+    </div> <!-- End Tab Pane Inventário Geral -->
+            
+            <!-- Tab: Reparações Preventivas Anuais -->
+            <div class="tab-pane fade @(Model.Tab == "preventive" ? "show active" : "")" id="navs-preventive" role="tabpanel">
+                <style>
+                    .preventive-item-card {
+                        background-color: rgba(67, 89, 113, 0.05);
+                        transition: all 0.2s ease;
+                    }
+                    .dark-style .preventive-item-card,
+                    [data-bs-theme="dark"] .preventive-item-card {
+                        background-color: rgba(255, 255, 255, 0.05);
+                        border-color: rgba(255, 255, 255, 0.1) !important;
+                    }
+                    .preventive-item-card:hover {
+                        background-color: rgba(67, 89, 113, 0.08);
+                    }
+                    .dark-style .preventive-item-card:hover,
+                    [data-bs-theme="dark"] .preventive-item-card:hover {
+                        background-color: rgba(255, 255, 255, 0.1);
+                    }
+                    .school-header-toggle .ri-arrow-down-s-line {
+                        transition: transform 0.3s ease;
+                    }
+                    .school-header-toggle.collapsed .ri-arrow-down-s-line {
+                        transform: rotate(-90deg);
+                    }
+                </style>
+                <div class="card shadow-sm border-0">
+                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center bg-transparent border-bottom gap-3">
+                        <div>
+                            <h5 class="mb-0 text-primary fw-bold"><i class="ri-git-merge-line me-2"></i> Reparações Preventivas Anuais</h5>
+                            <small class="text-muted">Filtre por localização ou artigo para auditar as categorias pendentes.</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            @{
+                                bool prevHasFilters = Model.FilterAgrupamentoId.HasValue || Model.FilterEscolaId.HasValue ||
+                                                     Model.FilterBlocoId.HasValue || Model.FilterRoomId.HasValue ||
+                                                     Model.FilterEmpresaId.HasValue || !string.IsNullOrEmpty(Model.FilterName);
+                            }
+                            @if (prevHasFilters)
+                            {
+                                <div class="d-flex flex-wrap gap-1 align-items-center">
+                                    @if (Model.ActiveFilterAgrupamento != null) { <span class="badge bg-label-primary">@Model.ActiveFilterAgrupamento.Name</span> }
+                                    @if (Model.ActiveFilterEscola != null)     { <span class="badge bg-label-warning">@Model.ActiveFilterEscola.Name</span> }
+                                    @if (Model.ActiveFilterBloco != null)      { <span class="badge bg-label-info">@Model.ActiveFilterBloco.Name</span> }
+                                    @if (Model.ActiveFilterRoom != null)       { <span class="badge bg-label-success">@Model.ActiveFilterRoom.Name</span> }
+                                    @if (Model.ActiveFilterEmpresa != null)    { <span class="badge bg-label-danger">@Model.ActiveFilterEmpresa.Name</span> }
+                                    @if (!string.IsNullOrEmpty(Model.FilterName)) { <span class="badge bg-label-secondary">@Model.FilterName</span> }
+                                </div>
+                            }
+                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalFiltrosPreventivas">
+                                <i class="ri-filter-3-line me-1"></i>Filtros
+                                @if (prevHasFilters) { <span class="badge bg-primary ms-1">!</span> }
+                            </button>
+                            @if (Model.IsMaintenanceScheduledThisYear)
+                            {
+                                <span class="badge bg-label-success px-3 py-2">
+                                    <i class="ri-calendar-check-line me-1"></i> @(Model.ScheduledMaintenanceDate?.ToString("dd/MM/yyyy"))
+                                </span>
+                                <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalScheduleMaintenance">Reagendar</button>
+                            }
+                        </div>
+                    </div>
+
+                    @if (prevHasFilters)
+                    {
+                        <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center mb-0 gap-2 rounded-0 border-0 border-bottom px-4 py-3" role="alert">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <i class="ri-filter-3-line me-1"></i>
+                                <span class="fw-semibold me-1">Filtros ativos:</span>
+                                @if (Model.ActiveFilterAgrupamento != null)
+                                {
+                                    <span class="badge bg-primary"><i class="ri-community-line me-1"></i>@Model.ActiveFilterAgrupamento.Name</span>
+                                }
+                                @if (Model.ActiveFilterEscola != null)
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="ri-building-4-line me-1"></i>@Model.ActiveFilterEscola.Name</span>
+                                }
+                                @if (Model.ActiveFilterBloco != null)
+                                {
+                                    <span class="badge bg-info text-dark"><i class="ri-building-line me-1"></i>@Model.ActiveFilterBloco.Name</span>
+                                }
+                                @if (Model.ActiveFilterRoom != null)
+                                {
+                                    <span class="badge bg-success"><i class="ri-door-open-line me-1"></i>@Model.ActiveFilterRoom.Name</span>
+                                }
+                                @if (Model.ActiveFilterEmpresa != null)
+                                {
+                                    <span class="badge bg-danger"><i class="ri-building-4-line me-1"></i>@Model.ActiveFilterEmpresa.Name</span>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.FilterName))
+                                {
+                                    <span class="badge bg-secondary"><i class="ri-archive-line me-1"></i>@Model.FilterName</span>
+                                }
+                            </div>
+                            <a href="?tab=preventive" class="btn btn-sm btn-outline-primary">
+                                <i class="ri-close-circle-line me-1"></i>Limpar Filtros
+                            </a>
+                        </div>
+                    }
+
+                    <div class="card-body p-4 bg-light-section">
+                        @{
+                            // Pre-compute sets of IDs that have filtered equipment for fast lookup
+                            var filteredRoomIds = Model.Equipments.Where(e => e.RoomId.HasValue).Select(e => e.RoomId.Value).ToHashSet();
+                            var filteredBlocoIds = Model.Rooms.Where(r => filteredRoomIds.Contains(r.Id) && r.BlockId.HasValue).Select(r => r.BlockId.Value).ToHashSet();
+                            var filteredEscolaIds = Model.AvailableBlocos.Where(b => filteredBlocoIds.Contains(b.Id)).Select(b => b.SchoolId).ToHashSet();
+                            var filteredAgrupIds = Model.AvailableEscolas.Where(e => filteredEscolaIds.Contains(e.Id)).Select(e => e.AgrupamentoId).ToHashSet();
+                        }
+                        <!-- AGRUPAMENTOS & ESCOLAS -->
+                        @foreach(var agrup in Model.AvailableAgrupamentos)
+                        {
+                            if (!filteredAgrupIds.Contains(agrup.Id)) continue;
+                            var agrupSchools = Model.AvailableEscolas.Where(s => s.AgrupamentoId == agrup.Id && filteredEscolaIds.Contains(s.Id)).ToList();
+                            if(!agrupSchools.Any()) continue;
+
+                            <div class="mb-5">
+                                <h4 class="fw-bold text-primary mb-4 border-bottom pb-2">
+                                    <i class="ri-community-line me-2"></i>Agrupamento: @agrup.Name
+                                </h4>
+                                
+                                @foreach(var esc in agrupSchools)
+                                {
+                                    var escBlocos = Model.AvailableBlocos.Where(b => b.SchoolId == esc.Id && filteredBlocoIds.Contains(b.Id)).ToList();
+                                    if(!escBlocos.Any()) continue;
+                                    
+                                    <div class="card mb-4 shadow-sm border-0 school-container" data-school-name="@esc.Name">
+                                        <div class="card-header bg-warning cursor-pointer school-header-toggle" data-bs-toggle="collapse" data-bs-target="#collapse-escola-@esc.Id" aria-expanded="true" style="background-color: #ff9800 !important; padding: 1rem 1.5rem;">
+                                            <h5 class="mb-0 text-white d-flex justify-content-between align-items-center">
+                                                <span><i class="ri-building-4-line me-2"></i>@esc.Name</span>
+                                                <i class="ri-arrow-down-s-line fs-4"></i>
+                                            </h5>
+                                        </div>
+                                        <div id="collapse-escola-@esc.Id" class="collapse show">
+                                            <div class="card-body p-4 bg-body">
+                                                <div class="row g-4">
+                                                @foreach(var blc in escBlocos)
+                                                {
+                                                    var blcSalas = Model.Rooms.Where(r => r.BlockId == blc.Id && filteredRoomIds.Contains(r.Id)).ToList();
+                                                    @foreach(var sala in blcSalas)
+                                                    {
+                                                        var equipNaSala = Model.Equipments.Where(e => e.RoomId == sala.Id).ToList();
+                                                        if (!equipNaSala.Any()) continue;
+                                                        var categorias = equipNaSala.GroupBy(e => e.Name ?? "Desconhecido").ToList();
+
+                                                        <!-- Sala Card -->
+                                                        <div class="col-md-6 col-lg-4 room-card" data-room-name="@sala.Name @blc.Name">
+                                                            <div class="card h-100 border shadow-none" style="background-color: var(--bs-paper-bg);">
+                                                                <div class="card-header border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                                                                    <h6 class="mb-0 text-info fw-bold"><i class="ri-door-open-line me-1"></i> @sala.Name</h6>
+                                                                    <span class="badge bg-label-secondary">@blc.Name</span>
+                                                                </div>
+                                                                <div class="card-body p-3">
+                                                                    <div class="d-flex flex-column gap-2">
+                                                                        @foreach(var cat in categorias)
+                                                                        {
+                                                                            var count = cat.Count();
+                                                                            var name = cat.Key;
+                                                                            var needsVerification = Model.ScheduledMaintenanceDate == null || cat.Any(e => !e.LastMaintenanceDate.HasValue || e.LastMaintenanceDate.Value.Year < Model.ScheduledMaintenanceDate.Value.Year);
+
+                                                                            <div class="d-flex justify-content-between align-items-center p-2 border rounded preventive-item-card preventive-item mb-2" data-item-name="@name">
+                                                                                <div>
+                                                                                    <span class="fw-semibold text-body d-block" style="font-size:0.9rem;">@name (@count)</span>
+                                                                                    @if(needsVerification) {
+                                                                                        <span class="badge bg-label-warning" style="font-size:0.65rem;">⚠️ Pendente</span>
+                                                                                    } else {
+                                                                                        <span class="badge bg-label-success" style="font-size:0.65rem;">✅ Verificado</span>
+                                                                                    }
+                                                                                </div>
+                                                                                @if (needsVerification) {
+                                                                                    <button class="btn btn-sm btn-primary py-1 px-2" onclick="openChecklist('@sala.Id', null, '@name', '@sala.Name', '@esc.Name')">Verificar</button>
+                                                                                } else {
+                                                                                    <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="openChecklist('@sala.Id', null, '@name', '@sala.Name', '@esc.Name')">Revisitar</button>
+                                                                                }
+                                                                            </div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <!-- EMPRESAS -->
+                        @if(Model.AvailableEmpresas.Any())
+                        {
+                            <div class="mb-5 school-container" data-school-name="Clientes Privados">
+                                <h4 class="fw-bold text-success mb-4 border-bottom pb-2">
+                                    <i class="ri-building-line me-2"></i>Clientes Privados (Empresas)
+                                </h4>
+                                <div class="row g-4">
+                                    @foreach(var emp in Model.AvailableEmpresas)
+                                    {
+                                        <div class="col-md-6 col-lg-4 room-card" data-room-name="@emp.Name">
+                                            <div class="card h-100 shadow-sm border-0">
+                                                <div class="card-header bg-success" style="background-color: #28a745 !important;">
+                                                    <h6 class="mb-0 text-white"><i class="ri-building-4-line me-1"></i> @emp.Name</h6>
+                                                </div>
+                                                <div class="card-body p-3 bg-body">
+                                                    @{
+                                                        var equipNaEmpresa = Model.Equipments.Where(e => e.EmpresaId == emp.Id).ToList();
+                                                        var categorias = equipNaEmpresa.GroupBy(e => e.Name ?? "Desconhecido").ToList();
+                                                    }
+                                                    @if (!categorias.Any())
+                                                    {
+                                                        <p class="text-muted small fst-italic mb-0 text-center py-3">Sem equipamentos registados.</p>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="d-flex flex-column gap-2">
+                                                            @foreach(var cat in categorias)
+                                                            {
+                                                                var count = cat.Count();
+                                                                var name = cat.Key;
+                                                                var needsVerification = Model.ScheduledMaintenanceDate == null || cat.Any(e => !e.LastMaintenanceDate.HasValue || e.LastMaintenanceDate.Value.Year < Model.ScheduledMaintenanceDate.Value.Year);
+
+                                                                <div class="d-flex justify-content-between align-items-center p-2 border rounded preventive-item-card preventive-item mb-2" data-item-name="@name">
+                                                                    <div>
+                                                                        <span class="fw-semibold text-body d-block" style="font-size:0.9rem;">@name (@count)</span>
+                                                                        @if(needsVerification) {
+                                                                            <span class="badge bg-label-warning" style="font-size:0.65rem;">⚠️ Pendente</span>
+                                                                        } else {
+                                                                            <span class="badge bg-label-success" style="font-size:0.65rem;">✅ Verificado</span>
+                                                                        }
+                                                                    </div>
+                                                                    @if (needsVerification) {
+                                                                        <button class="btn btn-sm btn-primary py-1 px-2" onclick="openChecklist(null, '@emp.Id', '@name', '@emp.Name', 'Empresa')">Verificar</button>
+                                                                    } else {
+                                                                        <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="openChecklist(null, '@emp.Id', '@name', '@emp.Name', 'Empresa')">Revisitar</button>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Script for collapsible school toggle icon update -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        document.querySelectorAll('.school-header-toggle').forEach(function (btn) {
+                            btn.addEventListener('click', function () {
+                                btn.classList.toggle('collapsed');
+                            });
+                        });
+                    });
+                </script>
+            </div> <!-- End Tab Pane Preventivas -->
+        </div> <!-- End Tab Content -->
+    </div> <!-- End Nav Align Top -->
+
+    <!-- Modals to append -->
+
+    @* Modal Schedule Maintenance *@
+    <div class="modal fade" id="modalScheduleMaintenance" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="ScheduleMaintenance">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title text-white"><i class="ri-calendar-event-line me-2"></i>Agendar Manutenção Preventiva</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-muted small mb-4">Agende uma ronda de manutenção preventiva. Isto criará tickets automáticos para os locais selecionados.</p>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Data Planeada</label>
+                            <input type="date" name="scheduledDate" class="form-control" required value="@(Model.ScheduledMaintenanceDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd"))" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Técnico Responsável (Opcional)</label>
+                            <select name="technicianId" class="form-select">
+                                <option value="">-- Deixar em aberto (Qualquer técnico pode aceitar) --</option>
+                                @foreach (var tech in Model.Technicians)
+                                {
+                                    <option value="@tech.Id">@tech.Username</option>
+                                }
+                            </select>
+                            <div class="form-text">Se não selecionar um técnico, o agendamento aparecerá como "Disponível" para todos.</div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">Locais / Escolas</label>
+                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto; background: rgba(67,89,113,0.02);">
+                                @foreach (var escola in Model.AvailableEscolas.OrderBy(e => e.Name))
+                                {
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="schoolIds" value="@escola.Id" id="sch_@escola.Id" checked>
+                                        <label class="form-check-label" for="sch_@escola.Id">
+                                            @escola.Name
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <div class="form-text">Selecione as escolas que devem ser incluídas nesta ronda.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning shadow-sm">
+                            <i class="ri-calendar-check-line me-1"></i>Confirmar Agendamento
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+
+    <!-- Slide-over: Verificação Preventiva -->
+    <div id="checklistSlideOver" style="
+        position: fixed; top: 0; right: -500px; width: 500px; height: 100vh;
+        background: var(--bs-body-bg, #fff); color: var(--bs-body-color); z-index: 2000;
+        box-shadow: -8px 0 40px rgba(0,0,0,0.4);
+        transition: right 0.4s cubic-bezier(.25,.8,.25,1);
+        display: flex; flex-direction: column; overflow: hidden;
+    ">
+        <form method="post" asp-page-handler="SubmitPreventiveChecklist" style="display:flex;flex-direction:column;height:100%;">
+            <input type="hidden" name="roomId" id="checkRoomId" />
+            <input type="hidden" name="empresaId" id="checkEmpresaId" />
+            <input type="hidden" name="artigo" id="checkArtigo" />
+
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #2b2c40 0%, #1a1b2a 100%); padding: 1.5rem 2rem; flex-shrink:0; border-left: 5px solid #696cff; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-primary small mb-1 uppercase fw-bold" style="letter-spacing: 1.5px; font-size: 0.7rem;"><i class="ri-shield-check-line me-1"></i>AUDITORIA PREVENTIVA</div>
+                        <h3 class="text-white fw-bold mb-1" id="lblCheckArtigo" style="font-size: 1.4rem;">—</h3>
+                        <div class="text-white opacity-75" id="lblCheckLocation" style="font-size:0.9rem;"><i class="ri-map-pin-line me-1 text-primary"></i>—</div>
+                    </div>
+                    <button type="button" onclick="closeChecklist()" class="btn btn-icon btn-close-white" style="background:rgba(255,255,255,0.1); border-radius:12px; width:42px; height:42px; transition: all 0.2s;">
+                        <i class="ri-close-line fs-3 text-white"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div style="flex:1; overflow-y:auto; padding:2rem; background: var(--bs-body-bg);">
+
+                <!-- Info Alert -->
+                <div class="alert d-flex align-items-start gap-3 py-3 mb-4" style="background: rgba(105, 108, 255, 0.08); border: 1px solid rgba(105, 108, 255, 0.2); color: var(--bs-primary); border-radius: 12px;">
+                    <i class="ri-information-fill fs-3 mt-1"></i>
+                    <span style="font-size: 0.88rem; line-height: 1.4;">Ao confirmar, a data de verificação de <strong>todos</strong> os equipamentos desta categoria no local será atualizada para o ciclo atual.</span>
+                </div>
+
+                <!-- Checklist Section -->
+                <div class="mb-5">
+                    <h6 class="fw-bold mb-3 d-flex align-items-center text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px; color: var(--bs-secondary);"><i class="ri-list-check-2 me-2 text-primary fs-5"></i>Checklist de Verificação</h6>
+                    <div class="d-flex flex-column gap-2">
+                        @foreach(var item in new[] {
+                            ("chk_estado",   "ri-computer-line",      "Estado físico (Danos/Riscos)"),
+                            ("chk_func",     "ri-settings-3-line",   "Funcionamento e Boot"),
+                            ("chk_cabos",    "ri-plug-line",         "Cablagem e Conexões"),
+                            ("chk_limpeza",  "ri-sparkling-line",    "Limpeza (Pó e Resíduos)"),
+                            ("chk_perif",    "ri-mouse-line",        "Periféricos Associados"),
+                            ("chk_software", "ri-apps-2-line",       "Software e Atualizações"),
+                            ("chk_etiqueta", "ri-price-tag-3-line",  "Etiqueta de Inventário")
+                        })
+                        {
+                            <label class="d-flex align-items-center gap-3 p-3 border rounded cursor-pointer preventive-check-item transition-all" style="background: var(--bs-card-bg); border-color: rgba(67,89,113,0.12) !important; border-radius: 10px;">
+                                <input type="checkbox" name="checklistItems" value="@item.Item1" class="form-check-input mt-0" style="width:1.3rem; height:1.3rem;" />
+                                <div class="d-flex align-items-center justify-content-center bg-label-primary rounded-circle" style="width:34px; height:34px; flex-shrink:0;">
+                                    <i class="@item.Item2 fs-5"></i>
+                                </div>
+                                <span style="font-size:0.92rem; font-weight: 500;">@item.Item3</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <hr class="my-5" style="opacity: 0.1; border-top: 2px dashed var(--bs-border-color);">
+
+                <!-- Anomaly Section -->
+                <div class="p-4 rounded-3 border mb-4" style="background: rgba(255, 171, 0, 0.04); border-color: rgba(255, 171, 0, 0.15) !important;">
+                    <h6 class="fw-bold mb-4 text-warning d-flex align-items-center text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;"><i class="ri-error-warning-line me-2 fs-5"></i>Reportar Avaria (Ticket)</h6>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-body">Artigo</label>
+                            <select name="AnomalyArticle" id="checkAnomalyArtigo" class="form-select" onchange="updateCheckSpecificTypes()">
+                                <option value="">Nenhuma avaria detetada</option>
+                                <option value="Computadores">Computadores</option>
+                                <option value="Monitores">Monitores</option>
+                                <option value="Impressoras">Impressoras</option>
+                                <option value="Networking">Networking</option>
+                                <option value="Servidores/Infra">Servidores/Infra</option>
+                                <option value="Componentes">Componentes</option>
+                                <option value="Periféricos">Periféricos</option>
+                                <option value="Projetores">Projetores</option>
+                                <option value="Quadros Interativos">Quadros Interativos</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12" id="divCheckAnomalyTipo" style="display:none;">
+                            <label class="form-label small fw-bold text-body">Tipo Específico</label>
+                            <select name="AnomalyType" id="checkAnomalyTipo" class="form-select">
+                                <option value="">Selecione o tipo específico...</option>
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-body">Descrição Detalhada</label>
+                            <textarea name="notes" id="checkNotes" class="form-control" rows="4"
+                                placeholder="Descreva o que foi encontrado..."
+                                style="font-size:0.9rem; background: var(--bs-body-bg); border-radius: 8px;"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 d-flex align-items-center gap-2 text-warning" style="font-size:0.8rem; font-weight: 500;">
+                        <i class="ri-ticket-2-line fs-5"></i>
+                        <span>Um Ticket será gerado automaticamente para a equipa técnica.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="padding:1.5rem 2rem; border-top:1px solid rgba(67,89,113,0.1); background: var(--bs-card-bg); flex-shrink:0;">
+                <div class="d-flex gap-3">
+                    <button type="button" onclick="closeChecklist()" class="btn btn-label-secondary btn-lg flex-grow-1">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1 shadow-sm">
+                        <i class="ri-check-double-line me-1"></i>Concluir Auditoria
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- Backdrop -->
+    <div id="checklistBackdrop" onclick="closeChecklist()" style="
+        display:none; position:fixed; inset:0; background:rgba(15, 20, 35, 0.7);
+        z-index:1999; backdrop-filter:blur(4px);
+    "></div>
 
 
     @* Modal Editar Equipamento *@
@@ -323,7 +801,7 @@
                                     <option value="Armazenado">Armazenado</option>
                                     <option value="Avariado">Avariado</option>
                                     <option value="Indisponível">Indisponível</option>
-                                    <option value="Em Reparação">Em Reparação</option>
+                                    <option value="Em reparação">Em reparação</option>
                                 </select>
                             </div>
                             <div class="col-md-12">
@@ -340,7 +818,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        <button type="submit" class="btn btn-primary">Guardar Alterações</button>
                     </div>
                 </form>
             </div>
@@ -549,6 +1027,104 @@
         </div>
     </div>
 
+    <!-- Modal Filtros Preventivas -->
+    <div class="modal fade" id="modalFiltrosPreventivas" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="get" class="modal-content" id="formFiltrosPreventivas">
+                <input type="hidden" name="tab" value="preventive" />
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold"><i class="ri-filter-3-line me-2 text-primary"></i>Filtrar Reparações Preventivas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Artigo -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Artigo</label>
+                            <select id="prevFilterArtigo" name="FilterName" class="form-select">
+                                <option value="">Todos os Artigos</option>
+                                @foreach(var n in Model.UniqueEquipmentNames)
+                                {
+                                    if (Model.FilterName == n) { <option value="@n" selected>@n</option> }
+                                    else { <option value="@n">@n</option> }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12"><hr class="my-1" /></div>
+                        <!-- Agrupamento -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Agrupamento</label>
+                            <select id="prevFilterAgrupamento" name="FilterAgrupamentoId" class="form-select" onchange="prevFilterEscolas()">
+                                <option value="">Todos os Agrupamentos</option>
+                                @foreach (var agr in Model.AvailableAgrupamentos)
+                                {
+                                    if (Model.FilterAgrupamentoId == agr.Id) { <option value="@agr.Id" selected>@agr.Name</option> }
+                                    else { <option value="@agr.Id">@agr.Name</option> }
+                                }
+                            </select>
+                        </div>
+                        <!-- Escola -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Escola</label>
+                            <select id="prevFilterEscola" name="FilterEscolaId" class="form-select" onchange="prevFilterBlocos()">
+                                <option value="">Todas as Escolas</option>
+                                @foreach (var esc in Model.AvailableEscolas)
+                                {
+                                    if (Model.FilterEscolaId == esc.Id) { <option value="@esc.Id" data-agr="@esc.AgrupamentoId" selected>@esc.Name</option> }
+                                    else { <option value="@esc.Id" data-agr="@esc.AgrupamentoId">@esc.Name</option> }
+                                }
+                            </select>
+                        </div>
+                        <!-- Empresa -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Empresa (Privado)</label>
+                            <select id="prevFilterEmpresa" name="FilterEmpresaId" class="form-select">
+                                <option value="">Todas as Empresas</option>
+                                @foreach (var emp in Model.AvailableEmpresas)
+                                {
+                                    if (Model.FilterEmpresaId == emp.Id) { <option value="@emp.Id" selected>@emp.Name</option> }
+                                    else { <option value="@emp.Id">@emp.Name</option> }
+                                }
+                            </select>
+                        </div>
+                        <!-- Bloco -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Bloco</label>
+                            <select id="prevFilterBloco" name="FilterBlocoId" class="form-select" onchange="prevFilterSalas()">
+                                <option value="">Todos os Blocos</option>
+                                @foreach (var blc in Model.AvailableBlocos)
+                                {
+                                    if (Model.FilterBlocoId == blc.Id) { <option value="@blc.Id" data-esc="@blc.SchoolId" selected>@blc.Name</option> }
+                                    else { <option value="@blc.Id" data-esc="@blc.SchoolId">@blc.Name</option> }
+                                }
+                            </select>
+                        </div>
+                        <!-- Sala -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Sala</label>
+                            <select id="prevFilterSala" name="FilterRoomId" class="form-select">
+                                <option value="">Todas as Salas</option>
+                                @foreach (var sala in Model.Rooms)
+                                {
+                                    if (Model.FilterRoomId == sala.Id) { <option value="@sala.Id" data-blc="@sala.BlockId" selected>@sala.Name</option> }
+                                    else { <option value="@sala.Id" data-blc="@sala.BlockId">@sala.Name</option> }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="?tab=preventive" class="btn btn-outline-secondary">
+                        <i class="ri-close-circle-line me-1"></i>Limpar Filtros
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ri-filter-3-line me-1"></i>Aplicar Filtros
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Filtros -->
     <div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -633,7 +1209,7 @@
                                 <option value="Em uso">Em uso</option>
                                 <option value="Indisponível">Indisponível</option>
                                 <option value="Avariado">Avariado</option>
-                                <option value="Em Reparação">Em Reparação</option>
+                                <option value="Em reparação">Em reparação</option>
                                 <option value="Associado">Associado (Em Intervenção)</option>
                                 <option value="Abatido">Abatido</option>
                             </select>
@@ -713,7 +1289,11 @@
 }
 
 @section PageScripts {
+
+
 <script>
+
+
     function toggleLocationType() {
         const isEmpresa = document.getElementById('locEmpresa').checked;
         const hdnLocType = document.getElementById('hdnLocationType');
@@ -1061,7 +1641,7 @@
         
         const statusSelect = document.getElementById('editStatus');
         if (statusSelect) {
-            if (status === "Funcionando" || !status) status = "A funcionar";
+            if (status === "A funcionar" || !status) status = "A funcionar";
             statusSelect.value = status;
         }
 
@@ -1143,13 +1723,185 @@
         const blcId = document.getElementById('filterBloco').value;
         const salaSelect = document.getElementById('filterSala');
         const options = salaSelect.querySelectorAll('option');
-
+        
         salaSelect.value = "";
         options.forEach(opt => {
             if (opt.value === "") return;
             opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
-}
+    }
+
+    // --- Preventive Filter Modal Cascade ---
+    function prevFilterEscolas() {
+        const agrId = document.getElementById('prevFilterAgrupamento').value;
+        const escSelect = document.getElementById('prevFilterEscola');
+        escSelect.value = "";
+        Array.from(escSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            opt.style.display = (!agrId || opt.getAttribute('data-agr') === agrId) ? '' : 'none';
+        });
+        prevFilterBlocos();
+    }
+
+    function prevFilterBlocos() {
+        const escId = document.getElementById('prevFilterEscola').value;
+        const blcSelect = document.getElementById('prevFilterBloco');
+        blcSelect.value = "";
+        Array.from(blcSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            opt.style.display = (!escId || opt.getAttribute('data-esc') === escId) ? '' : 'none';
+        });
+        prevFilterSalas();
+    }
+
+    function prevFilterSalas() {
+        const blcId = document.getElementById('prevFilterBloco').value;
+        const salaSelect = document.getElementById('prevFilterSala');
+        salaSelect.value = "";
+        Array.from(salaSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            opt.style.display = (!blcId || opt.getAttribute('data-blc') === blcId) ? '' : 'none';
+        });
+    }
+
+    // On modal open, restore visibility based on current selections
+    document.addEventListener('DOMContentLoaded', function () {
+        const prevModal = document.getElementById('modalFiltrosPreventivas');
+        if (prevModal) {
+            prevModal.addEventListener('show.bs.modal', function () {
+                // Cascade based on currently selected values (from query string pre-fill)
+                const agr = document.getElementById('prevFilterAgrupamento')?.value;
+                const esc = document.getElementById('prevFilterEscola')?.value;
+                const blc = document.getElementById('prevFilterBloco')?.value;
+
+                if (agr) {
+                    const escSel = document.getElementById('prevFilterEscola');
+                    Array.from(escSel.options).forEach(opt => {
+                        if (!opt.value) return;
+                        opt.style.display = (opt.getAttribute('data-agr') === agr) ? '' : 'none';
+                    });
+                }
+                if (esc) {
+                    const blcSel = document.getElementById('prevFilterBloco');
+                    Array.from(blcSel.options).forEach(opt => {
+                        if (!opt.value) return;
+                        opt.style.display = (opt.getAttribute('data-esc') === esc) ? '' : 'none';
+                    });
+                }
+                if (blc) {
+                    const salaSel = document.getElementById('prevFilterSala');
+                    Array.from(salaSel.options).forEach(opt => {
+                        if (!opt.value) return;
+                        opt.style.display = (opt.getAttribute('data-blc') === blc) ? '' : 'none';
+                    });
+                }
+            });
+        }
+    });
+
+    // Slide-over: Verificação Preventiva
+    function openChecklist(roomId, empId, artigo, locName, escName) {
+        document.getElementById('checkRoomId').value = roomId || '';
+        document.getElementById('checkEmpresaId').value = empId || '';
+        document.getElementById('checkArtigo').value = artigo;
+        document.getElementById('checkNotes').value = '';
+
+        // Copy options from editTipo to anomaly select if not already done
+        const anomalyTipo = document.getElementById('checkAnomalyTipo');
+        const editTipo = document.getElementById('editTipo');
+        if (anomalyTipo && editTipo && anomalyTipo.options.length <= 5) {
+            Array.from(editTipo.options).forEach(opt => {
+                if (!opt.value) return;
+                const newOpt = new Option(opt.text, opt.value);
+                newOpt.setAttribute('data-artigo', opt.getAttribute('data-artigo'));
+                anomalyTipo.add(newOpt);
+            });
+        }
+
+        // Anomaly fields pre-fill logic
+        const anomalyArt = document.getElementById('checkAnomalyArtigo');
+        const searchArt = (artigo || "").toLowerCase().trim();
+        
+        // Try to find the best matching option in the anomaly select
+        let matchedValue = "";
+        Array.from(anomalyArt.options).forEach(opt => {
+            const optVal = opt.value.toLowerCase();
+            // Match if exact, or if one starts with the other (to handle singular/plural like Computador vs Computadores)
+            if (optVal && (optVal.includes(searchArt) || searchArt.includes(optVal.replace(/es$/,'').replace(/s$/,'')))) {
+                matchedValue = opt.value;
+            }
+        });
+        anomalyArt.value = matchedValue;
+        
+        document.getElementById('lblCheckArtigo').innerText = artigo;
+        document.getElementById('lblCheckLocation').innerHTML = `<i class="ri-map-pin-line me-1 text-primary"></i>${locName} — ${escName}`;
+
+        // Reset checkboxes
+        document.querySelectorAll('#checklistSlideOver input[type=checkbox]').forEach(cb => cb.checked = false);
+
+        // Show slide-over + backdrop
+        const panel = document.getElementById('checklistSlideOver');
+        const backdrop = document.getElementById('checklistBackdrop');
+        backdrop.style.display = 'block';
+        // Force reflow then animate
+        requestAnimationFrame(() => { panel.style.right = '0px'; });
+        document.body.style.overflow = 'hidden';
+
+        // Initialize anomaly type filter
+        updateCheckSpecificTypes();
+    }
+
+    function updateCheckSpecificTypes() {
+        const artigo = document.getElementById('checkAnomalyArtigo').value;
+        const divTipo = document.getElementById('divCheckAnomalyTipo');
+        const tipoSelect = document.getElementById('checkAnomalyTipo');
+        
+        if (!artigo) {
+            divTipo.style.display = 'none';
+            tipoSelect.value = '';
+            return;
+        }
+
+        divTipo.style.display = 'block';
+        tipoSelect.value = "";
+        
+        let visibleCount = 0;
+        Array.from(tipoSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            const dataArt = opt.getAttribute('data-artigo');
+            const match = (dataArt === artigo);
+            opt.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+
+        // If no specific types match, hide the div
+        if (visibleCount === 0) divTipo.style.display = 'none';
+    }
+
+    function closeChecklist() {
+        const panel = document.getElementById('checklistSlideOver');
+        const backdrop = document.getElementById('checklistBackdrop');
+        panel.style.right = '-480px';
+        setTimeout(() => { backdrop.style.display = 'none'; }, 350);
+        document.body.style.overflow = '';
+    }
+
+    // Checklist item hover effect
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.preventive-check-item').forEach(function (label) {
+            var cb = label.querySelector('input[type=checkbox]');
+            if (!cb) return;
+            cb.addEventListener('change', function () {
+                if (this.checked) {
+                    label.style.background = 'rgba(105, 108, 255, 0.08)';
+                    label.style.borderColor = '#696cff';
+                } else {
+                    label.style.background = 'var(--bs-card-bg)';
+                    label.style.borderColor = 'rgba(67,89,113,0.1)';
+                }
+            });
+        });
+    });
 </script>
 
 <partial name="Shared/_QrModal" />

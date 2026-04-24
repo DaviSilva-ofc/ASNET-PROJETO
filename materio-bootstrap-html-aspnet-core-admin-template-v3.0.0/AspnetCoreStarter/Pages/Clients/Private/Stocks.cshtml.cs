@@ -120,7 +120,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
                 stockTemp = stockTemp.Where(s => NormalizeEquipmentName(s.EquipmentName) == FilterArticle).ToList();
             }
 
-            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparo", "Associado" };
+            UniqueStatuses = new List<string> { "A funcionar", "Armazenado", "Avariado", "Em reparação", "Associado" };
 
             var equipsMappedList = equipsTemp.Select(e => new PrivateStockItemViewModel
             {
@@ -321,7 +321,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
         {
             if (eq.TicketId != null) return "Associado";
             if (eq.Status == "Avariado") return "Avariado";
-            if (eq.Status == "Reparação" || eq.Status == "Em reparo") return "Em reparo";
+            if (eq.Status == "Reparação" || eq.Status == "Em reparação") return "Em reparação";
             if (eq.Status == "A funcionar") return "A funcionar";
             if (eq.Status == "Armazenado" || eq.Status == "Disponível") return "Armazenado";
             return "A funcionar"; 

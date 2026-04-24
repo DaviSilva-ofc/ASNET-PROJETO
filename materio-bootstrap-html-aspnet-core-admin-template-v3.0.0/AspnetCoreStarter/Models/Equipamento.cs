@@ -66,6 +66,9 @@ namespace AspnetCoreStarter.Models
         [Column("is_deleted")]
         public bool IsDeleted { get; set; } = false;
 
+        [Column("data_ultima_manutencao")]
+        public System.DateTime? LastMaintenanceDate { get; set; }
+
         public virtual ICollection<StatusEquipamento> StatusEquipamentos { get; set; } = new List<StatusEquipamento>();
     }
 }

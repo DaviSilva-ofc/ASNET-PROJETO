@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using AspnetCoreStarter.Data;
@@ -26,6 +27,12 @@ namespace AspnetCoreStarter.Pages.Admin
 
         public string? SuccessMessage { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string? Tab { get; set; }
+
+        public bool IsMaintenanceScheduledThisYear { get; set; }
+        public DateTime? ScheduledMaintenanceDate { get; set; }
+
         public Sala ActiveFilterRoom { get; set; }
         public Bloco ActiveFilterBloco { get; set; }
         public School ActiveFilterEscola { get; set; }
@@ -36,6 +43,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<School> AvailableEscolas { get; set; }
         public List<Bloco> AvailableBlocos { get; set; }
         public List<Empresa> AvailableEmpresas { get; set; }
+        public List<User> Technicians { get; set; } = new();
         public List<string> UniqueEquipmentNames { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
@@ -74,6 +82,7 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty]
         public string LocationType { get; set; } // "escola" or "empresa"
 
+
         public async Task<IActionResult> OnGetAsync(string? success)
         {
             if (!string.IsNullOrEmpty(success)) SuccessMessage = success;
@@ -83,12 +92,22 @@ namespace AspnetCoreStarter.Pages.Admin
             var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
             if (userRole != "Admin" && userRole != "Tecnico") return RedirectToPage("/Index");
 
-            // Cleanup: Ensure data is normalized (singularized)
-            // Note: The global cleanup in Admin/Stocks.cshtml.cs will also handle this,
-            // but we do it here for data entry consistency.
+            // Ensure data exists for selects
+            Rooms = await _context.Salas.ToListAsync();
+            AvailableAgrupamentos = await _context.Agrupamentos.ToListAsync();
+            AvailableEscolas = await _context.Schools.ToListAsync();
+            AvailableBlocos = await _context.Blocos.ToListAsync();
+            AvailableEmpresas = await _context.Empresas.ToListAsync();
+            
+            // Fetch Technicians
+            var techIds = await _context.Tecnicos.Select(t => t.UserId).ToListAsync();
+            Technicians = await _context.Users.Where(u => techIds.Contains(u.Id)).ToListAsync();
 
-            // Ensure EmpresaId column exists
-            try { await _context.Database.ExecuteSqlRawAsync("ALTER TABLE equipamentos ADD COLUMN id_empresa INT NULL;"); } catch { }
+            // Preventives Check for current year
+            int currentYear = DateTime.Now.Year;
+            var maintenanceSettings = await AspnetCoreStarter.Helpers.MaintenanceSettingsHelper.GetSettingsAsync(currentYear);
+            IsMaintenanceScheduledThisYear = maintenanceSettings.ScheduledDate.HasValue;
+            ScheduledMaintenanceDate = maintenanceSettings.ScheduledDate;
 
             var query = _context.Equipamentos
                 .Include(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School).ThenInclude(s => s.Agrupamento)
@@ -169,11 +188,7 @@ namespace AspnetCoreStarter.Pages.Admin
             }
 
             Equipments = await query.ToListAsync();
-            Rooms = await _context.Salas.ToListAsync();
-            AvailableAgrupamentos = await _context.Agrupamentos.ToListAsync();
-            AvailableEscolas = await _context.Schools.ToListAsync();
-            AvailableBlocos = await _context.Blocos.ToListAsync();
-            AvailableEmpresas = await _context.Empresas.ToListAsync();
+            
             UniqueEquipmentNames = await _context.Equipamentos
                 .Where(e => !string.IsNullOrEmpty(e.Name))
                 .Select(e => e.Name)
@@ -241,7 +256,7 @@ namespace AspnetCoreStarter.Pages.Admin
             var item = await _context.Equipamentos.FindAsync(id);
             if (item != null)
             {
-                if (item.Status == "A funcionar" || item.Status == "Funcionando" || item.Status == "Disponível" || string.IsNullOrEmpty(item.Status))
+                if (item.Status == "A funcionar" || item.Status == "Disponível" || string.IsNullOrEmpty(item.Status))
                 {
                     item.Status = "Avariado";
                 }
@@ -251,7 +266,113 @@ namespace AspnetCoreStarter.Pages.Admin
                 }
                 await _context.SaveChangesAsync();
             }
-            return RedirectToPage();
+            return RedirectToPage(new { Tab = Tab });
+        }
+
+        public async Task<IActionResult> OnPostScheduleMaintenanceAsync(DateTime scheduledDate, int? technicianId, List<int> schoolIds)
+        {
+            if (scheduledDate == default) return RedirectToPage(new { Tab = "preventive" });
+
+            int currentYear = DateTime.Now.Year;
+            await AspnetCoreStarter.Helpers.MaintenanceSettingsHelper.SaveSettingsAsync(currentYear, scheduledDate);
+
+            // Create Tickets for each selected school
+            if (schoolIds != null && schoolIds.Count > 0)
+            {
+                var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int.TryParse(userIdStr, out int adminId);
+
+                foreach (var schoolId in schoolIds)
+                {
+                    var school = await _context.Schools.FindAsync(schoolId);
+                    var ticket = new Ticket
+                    {
+                        Type = "Manutenção Preventiva",
+                        Level = "Média",
+                        Status = technicianId.HasValue ? "Aceite" : "Pedido",
+                        Description = $"Manutenção Preventiva Anual - {currentYear}",
+                        SchoolId = schoolId,
+                        AdminId = adminId,
+                        TechnicianId = technicianId,
+                        CreatedAt = DateTime.UtcNow,
+                        ScheduledDate = scheduledDate,
+                        AcceptedAt = technicianId.HasValue ? DateTime.UtcNow : null
+                    };
+                    _context.Tickets.Add(ticket);
+
+                    if (technicianId.HasValue)
+                    {
+                        var tech = await _context.Users.FindAsync(technicianId);
+                        _context.TicketHistorico.Add(new TicketHistorico
+                        {
+                            TicketId = ticket.Id,
+                            Acao = $"Atribuído para Manutenção Preventiva por Admin. Técnico: {tech?.Username}",
+                            TipoAcao = TipoAcaoHistorico.Status,
+                            Autor = User.Identity?.Name ?? "Admin",
+                            Data = DateTime.UtcNow
+                        });
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage(new { Tab = "preventive", success = $"Manutenção agendada e tickets criados para {schoolIds?.Count ?? 0} escolas!" });
+        }
+
+        public async Task<IActionResult> OnPostSubmitPreventiveChecklistAsync(int? roomId, int? empresaId, string artigo, string? notes)
+        {
+            if (string.IsNullOrEmpty(artigo)) return RedirectToPage(new { Tab = "preventive" });
+
+            var query = _context.Equipamentos.AsQueryable();
+            if (roomId.HasValue) query = query.Where(e => e.RoomId == roomId.Value);
+            else if (empresaId.HasValue) query = query.Where(e => e.EmpresaId == empresaId.Value);
+            else return RedirectToPage(new { Tab = "preventive" });
+
+            var equipments = await query.Where(e => e.Name == artigo).ToListAsync();
+            var now = DateTime.Now;
+
+            foreach (var equip in equipments)
+            {
+                equip.LastMaintenanceDate = now;
+            }
+
+            if (!string.IsNullOrWhiteSpace(notes))
+            {
+                var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                int? currentUserId = int.TryParse(userIdStr, out int uid) ? uid : null;
+
+                int? schoolId = null;
+                string locationName = "";
+                if (roomId.HasValue)
+                {
+                    var room = await _context.Salas.Include(r => r.Block).ThenInclude(b => b.School).FirstOrDefaultAsync(r => r.Id == roomId.Value);
+                    if (room != null)
+                    {
+                        schoolId = room.Block?.SchoolId;
+                        locationName = $"{room.Name} ({room.Block?.Name})";
+                    }
+                }
+                else if (empresaId.HasValue)
+                {
+                    var emp = await _context.Empresas.FindAsync(empresaId.Value);
+                    if (emp != null) locationName = emp.Name;
+                }
+
+                var ticket = new Ticket
+                {
+                    Type = "Manutenção Preventiva",
+                    Level = "Média",
+                    Status = "Pedido",
+                    Description = $"[Checklist: {artigo} em {locationName}] Observações: {notes}",
+                    SchoolId = schoolId,
+                    RequestedByUserId = currentUserId,
+                    CreatedAt = now
+                };
+                _context.Tickets.Add(ticket);
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { Tab = "preventive", success = $"Checklist de {artigo} concluída com sucesso!" });
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int id)
@@ -261,7 +382,7 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 _context.Equipamentos.Remove(item);
                 await _context.SaveChangesAsync();
-                return RedirectToPage(new { success = "Equipamento excluído com sucesso!" });
+                return RedirectToPage(new { success = "Equipamento eliminado com sucesso!" });
             }
             return RedirectToPage();
         }

@@ -45,14 +45,46 @@ namespace AspnetCoreStarter.Pages.Admin
         [BindProperty(SupportsGet = true)]
         public int Ano { get; set; } = DateTime.Now.Year;
 
+        [BindProperty(SupportsGet = true)]
+        public int? FilterClientId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterAgrupamentoId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterSchoolId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public int? FilterTechnicianId { get; set; }
+
+        public List<Empresa> Empresas { get; set; } = new();
+        public List<Agrupamento> Agrupamentos { get; set; } = new();
+        public List<School> Escolas { get; set; } = new();
+        public List<User> Tecnicos { get; set; } = new();
+
         public async Task<IActionResult> OnGetAsync()
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
             if (role != "Admin") return RedirectToPage("/Index");
 
+            await LoadFiltersAsync();
             await LoadDataAsync();
             return Page();
+        }
+
+        private async Task LoadFiltersAsync()
+        {
+            Empresas = await _context.Empresas.ToListAsync();
+            Agrupamentos = await _context.Agrupamentos.ToListAsync();
+            Escolas = await _context.Schools.ToListAsync();
+            
+            // Fetch users that are in the 'Tecnicos' table
+            Tecnicos = await _context.Tecnicos
+                .Include(t => t.User)
+                .Select(t => t.User)
+                .Where(u => u != null && !u.IsDeleted)
+                .ToListAsync();
         }
 
         public async Task<IActionResult> OnGetDownloadPdfAsync()
@@ -63,7 +95,7 @@ namespace AspnetCoreStarter.Pages.Admin
             await LoadDataAsync();
 
             var pdf = GeneratePdf();
-            var filename = $"Relatorio_{TrimestralLabel.Replace(" ", "_").Replace("º", "o")}_{Ano}.pdf";
+            var filename = $"Relatorio_{TrimestralLabel.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd}.pdf";
             return File(pdf, "application/pdf", filename);
         }
 
@@ -136,7 +168,7 @@ namespace AspnetCoreStarter.Pages.Admin
             workbook.SaveAs(stream);
             var content = stream.ToArray();
 
-            var filename = $"Relatorio_{TrimestralLabel.Replace(" ", "_").Replace("º", "o")}_{Ano}.xlsx";
+            var filename = $"Relatorio_{TrimestralLabel.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd}.xlsx";
             return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
         }
 
@@ -161,21 +193,43 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             CalculatePeriod();
 
-            // Fetch Tickets
-            var tickets = await _context.Tickets
+            // Fetch Tickets with filters
+            var ticketsQuery = _context.Tickets
                 .Include(t => t.School)
-                .Include(t => t.Equipamento)
+                .Include(t => t.Equipamento).ThenInclude(e => e.Empresa)
                 .Include(t => t.RequestedBy)
                 .Include(t => t.Technician)
                 .Where(t => t.CreatedAt >= PeriodoInicio && t.CreatedAt <= PeriodoFim
-                         && t.Level != "Empréstimo" && t.Level != "Alteração de Estado")
-                .ToListAsync();
+                         && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")))
+                .AsQueryable();
 
-            // Fetch Stock Requests
-            var stockRequests = await _context.PedidosStock
+            if (FilterClientId.HasValue)
+                ticketsQuery = ticketsQuery.Where(t => t.Equipamento != null && t.Equipamento.EmpresaId == FilterClientId.Value);
+            
+            if (FilterAgrupamentoId.HasValue)
+                ticketsQuery = ticketsQuery.Where(t => t.School != null && t.School.AgrupamentoId == FilterAgrupamentoId.Value);
+
+            if (FilterSchoolId.HasValue)
+                ticketsQuery = ticketsQuery.Where(t => t.SchoolId == FilterSchoolId.Value);
+
+            if (FilterTechnicianId.HasValue)
+                ticketsQuery = ticketsQuery.Where(t => t.TechnicianId == FilterTechnicianId.Value);
+
+            var tickets = await ticketsQuery.ToListAsync();
+
+            // Fetch Stock Requests with filters
+            var stockQuery = _context.PedidosStock
                 .Include(p => p.School)
                 .Where(p => p.CreatedAt >= PeriodoInicio && p.CreatedAt <= PeriodoFim)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (FilterAgrupamentoId.HasValue)
+                stockQuery = stockQuery.Where(p => p.School != null && p.School.AgrupamentoId == FilterAgrupamentoId.Value);
+
+            if (FilterSchoolId.HasValue)
+                stockQuery = stockQuery.Where(p => p.SchoolId == FilterSchoolId.Value);
+
+            var stockRequests = await stockQuery.ToListAsync();
 
             TotalTickets = tickets.Count;
             TicketsConcluidos = tickets.Count(t => t.Status == "Concluído");

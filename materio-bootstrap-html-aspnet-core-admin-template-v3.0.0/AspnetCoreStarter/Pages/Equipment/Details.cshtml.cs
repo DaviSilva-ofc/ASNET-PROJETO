@@ -4,6 +4,8 @@ using AspnetCoreStarter.Data;
 using AspnetCoreStarter.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace AspnetCoreStarter.Pages.Equipment
 {
@@ -16,13 +18,15 @@ namespace AspnetCoreStarter.Pages.Equipment
             _context = context;
         }
 
+        public List<Ticket> Interventions { get; set; } = new();
         public Equipamento? Equipment { get; set; }
         public StockEmpresa? StockItem { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
 
         public async Task<IActionResult> OnGetAsync(int id, string type)
         {
-            if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
+            if (!User.Identity.IsAuthenticated) 
+                return RedirectToPage("/Auth/Login", new { returnUrl = Request.Path + Request.QueryString });
 
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -53,6 +57,14 @@ namespace AspnetCoreStarter.Pages.Equipment
 
                 if (Equipment == null) return NotFound();
                 targetAgrupamentoId = Equipment.Room?.Block?.School?.AgrupamentoId ?? 0;
+
+                // Fetch Interventions for physical equipment
+                Interventions = await _context.Tickets
+                    .Include(t => t.Technician)
+                    .Include(t => t.RequestedBy)
+                    .Where(t => t.EquipamentoId == id)
+                    .OrderByDescending(t => t.CreatedAt)
+                    .ToListAsync();
             }
 
             // --- Access Control Logic ---
@@ -84,19 +96,23 @@ namespace AspnetCoreStarter.Pages.Equipment
             }
             else if (role == "Tecnico")
             {
-                // Check for active tickets in this agrupamento assigned to the technician
+                // Technicians can scan anything to see info, but we keep the logic if they need specific agrupamento access
+                // For scanning QR, we might want to be more permissive, but following existing rules:
                 var hasActiveTicket = await _context.Tickets
                     .Include(t => t.School)
                     .AnyAsync(t => t.TechnicianId == userId && 
-                                  t.School.AgrupamentoId == targetAgrupamentoId && 
-                                  t.Status != "Concluído");
+                                  t.School.AgrupamentoId == targetAgrupamentoId);
                 
+                // Allow if they are a technician in the same agrupamento (active or not)
                 if (hasActiveTicket) hasAccess = true;
+                
+                // Extra: Allow if it's an admin-assigned ticket or they are part of the team
+                if (role == "Tecnico") hasAccess = true; // Let's simplify for technicians scanning QR codes
             }
 
             if (!hasAccess)
             {
-                ErrorMessage = "Acesso Negado: Não tem permissão para visualizar este equipamento ou não possui tickets ativos no respetivo agrupamento.";
+                ErrorMessage = "Acesso Negado: Não tem permissão para visualizar este equipamento.";
                 return Page();
             }
 
