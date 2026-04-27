@@ -41,6 +41,19 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         [BindProperty(SupportsGet = true)]
         public int? FilterEmpresaId { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public int? FilterBlocoId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? SearchQuery { get; set; }
+
+        // --- Data Lists for Filters ---
+        public List<Agrupamento> AvailableAgrupamentos { get; set; } = new();
+        public List<School> AvailableSchools { get; set; } = new();
+        public List<Bloco> AvailableBlocos { get; set; } = new();
+        public List<Empresa> AvailableEmpresas { get; set; } = new();
+        public List<string> UniqueEquipmentNames { get; set; } = new();
+
         // --- Panel Support ---
         public Ticket? SelectedTicket { get; set; }
         public List<TicketHistorico> TicketHistory { get; set; } = new();
@@ -63,6 +76,18 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             var sessionUserId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(sessionUserId) || !int.TryParse(sessionUserId, out int userId))
                 return RedirectToPage("/Auth/Login");
+
+            // Populate filter lists
+            AvailableAgrupamentos = await _context.Agrupamentos.OrderBy(a => a.Name).ToListAsync();
+            AvailableSchools = await _context.Schools.OrderBy(s => s.Name).ToListAsync();
+            AvailableBlocos = await _context.Blocos.OrderBy(b => b.Name).ToListAsync();
+            AvailableEmpresas = await _context.Empresas.OrderBy(e => e.Name).ToListAsync();
+            UniqueEquipmentNames = await _context.Equipamentos
+                .Where(e => !string.IsNullOrEmpty(e.Name))
+                .Select(e => e.Name)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToListAsync();
 
             // Refined filtering to include ONLY breakdown/repair tickets
             var query = _context.Tickets
@@ -100,23 +125,40 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (FilterSchoolId.HasValue)
             {
                 query = query.Where(t => t.SchoolId == FilterSchoolId.Value);
+                availableQuery = availableQuery.Where(t => t.SchoolId == FilterSchoolId.Value);
             }
 
             if (FilterAgrupamentoId.HasValue)
             {
                 query = query.Where(t => t.School != null && t.School.AgrupamentoId == FilterAgrupamentoId.Value);
+                availableQuery = availableQuery.Where(t => t.School != null && t.School.AgrupamentoId == FilterAgrupamentoId.Value);
+            }
+
+            if (FilterBlocoId.HasValue)
+            {
+                query = query.Where(t => t.Equipamento != null && t.Equipamento.Room != null && t.Equipamento.Room.BlockId == FilterBlocoId.Value);
+                availableQuery = availableQuery.Where(t => t.Equipamento != null && t.Equipamento.Room != null && t.Equipamento.Room.BlockId == FilterBlocoId.Value);
             }
 
             if (FilterEmpresaId.HasValue)
             {
                 query = query.Where(t => t.Equipamento != null && t.Equipamento.EmpresaId == FilterEmpresaId.Value);
+                availableQuery = availableQuery.Where(t => t.Equipamento != null && t.Equipamento.EmpresaId == FilterEmpresaId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(SearchQuery))
+            {
+                var lowerSearch = SearchQuery.ToLower();
+                query = query.Where(t => (t.Description != null && t.Description.ToLower().Contains(lowerSearch)) || t.Id.ToString().Contains(SearchQuery));
+                availableQuery = availableQuery.Where(t => (t.Description != null && t.Description.ToLower().Contains(lowerSearch)) || t.Id.ToString().Contains(SearchQuery));
             }
 
             Tickets = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
             AvailableTickets = await availableQuery.OrderByDescending(t => t.CreatedAt).ToListAsync();
 
             // --- Map Data Collection (Refined) ---
-            var allActiveTickets = Tickets.Concat(AvailableTickets).Where(t => t.Status != "Concluído").ToList();
+            // Only show tickets assigned to the technician that are not yet completed
+            var allActiveTickets = Tickets.Where(t => t.Status != "Concluído").ToList();
             var locationsDict = new Dictionary<string, dynamic>();
 
             foreach (var t in allActiveTickets)
@@ -176,6 +218,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                     .Include(t => t.School).ThenInclude(s => s.Agrupamento)
                     .Include(t => t.RequestedBy)
                     .Include(t => t.Technician)
+                    .Include(t => t.Equipamento)
                     .Include(t => t.UtilizedEquipments).ThenInclude(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
                     .FirstOrDefaultAsync(t => t.Id == SelectedTicketId.Value);
 
@@ -222,11 +265,11 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             if (ticket != null)
             {
                 ticket.TechnicianId = userId;
-                ticket.Status = "Em reparação";
+                ticket.Status = "Aceite";
                 ticket.AcceptedAt = DateTime.UtcNow;
                 await LogHistory(id, "Trabalho aceite pelo técnico", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = $"Aceitou o trabalho #{id}. O estado foi alterado para 'Em reparação'.";
+                TempData["SuccessMessage"] = $"Aceitou o trabalho #{id}. O estado foi alterado para 'Aceite'.";
             }
             else
             {
@@ -283,9 +326,9 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             string oldStatus = ticket.Status;
             string newStatus = oldStatus switch
             {
-                "Aberto" or "Pedido" or "Pendente" => "Aceite",
+                "Pendente" or "Aberto" or "Pedido" => "Aceite",
                 "Aceite" => "Em reparação",
-                // "Em Reparação" will now be handled by specific Complete methods for better granularity
+                "Em reparação" or "Em Resolução" or "Em Progresso" or "Em andamento" => "Concluído",
                 _ => oldStatus
             };
 
@@ -379,6 +422,60 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 await LogHistory(ticketId, comment, TipoAcaoHistorico.Comentario);
                 await _context.SaveChangesAsync();
             }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostSubmitPreventiveAsync(int ticketId, string[] checklistItems, string notes, string anomalyArticle, string anomalyType, string anomalyDescription)
+        {
+            var ticket = await _context.Tickets
+                .Include(t => t.School)
+                .Include(t => t.Equipamento)
+                .FirstOrDefaultAsync(t => t.Id == ticketId);
+
+            if (ticket == null) return NotFound();
+
+            var sessionUserId = HttpContext.Session.GetString("UserId");
+            int? currentUserId = int.TryParse(sessionUserId, out int uid) ? uid : null;
+
+            // 1. Save checklist as history but DO NOT complete the ticket
+            // The ticket will be completed via the normal flow (Aceite -> Em reparação -> Concluído)
+            
+            string checklistSummary = (checklistItems != null && checklistItems.Any()) 
+                ? "Checklist guardada: " + string.Join(", ", checklistItems) 
+                : "Checklist de manutenção preventiva guardada.";
+            
+            await LogHistory(ticketId, checklistSummary, TipoAcaoHistorico.Status);
+            if (!string.IsNullOrEmpty(notes))
+            {
+                await LogHistory(ticketId, $"Notas da Checklist: {notes}", TipoAcaoHistorico.Comentario);
+            }
+
+            // 2. Create new ticket if anomaly reported
+            if (!string.IsNullOrEmpty(anomalyArticle))
+            {
+                var newTicket = new Ticket
+                {
+                    Type = "Incidente",
+                    Level = "Média",
+                    Status = "Pendente",
+                    Description = $"[Avaria detetada em Preventiva] Artigo: {anomalyArticle} | Tipo: {anomalyType} | Descrição: {anomalyDescription}",
+                    SchoolId = ticket.SchoolId,
+                    RequestedByUserId = currentUserId,
+                    CreatedAt = DateTime.UtcNow,
+                    Priority = "Alta"
+                };
+                _context.Tickets.Add(newTicket);
+                await _context.SaveChangesAsync();
+                await LogHistory(ticketId, $"[NOVO TICKET] Criada a ocorrência TK-{newTicket.Id:D3} para este local.", TipoAcaoHistorico.Status);
+                TempData["SuccessMessage"] = $"Novo ticket TK-{newTicket.Id:D3} reportado com sucesso!";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = "Checklist e notas guardadas com sucesso!";
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToPage(new { SelectedTicketId = ticketId });
             return RedirectToPage(new { SelectedTicketId = ticketId });
         }
 

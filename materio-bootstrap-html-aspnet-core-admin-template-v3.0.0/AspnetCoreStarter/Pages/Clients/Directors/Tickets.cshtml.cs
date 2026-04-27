@@ -206,8 +206,8 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 }
             }
 
-            // Standardizing status to "Pedido"
-            NewTicket.Status = "Pedido";
+            // Standardizing status to "Pendente"
+            NewTicket.Status = "Pendente";
             NewTicket.CreatedAt = System.DateTime.UtcNow;
             
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

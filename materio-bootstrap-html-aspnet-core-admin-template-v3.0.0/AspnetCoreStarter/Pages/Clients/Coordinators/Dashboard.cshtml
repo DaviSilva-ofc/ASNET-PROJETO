@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Coordinators.CoordinatorDashboardModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Dashboard Coordenador";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Dashboard Coordenador";
 }
 
 @section PageStyles {
@@ -57,7 +57,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.4rem;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
     .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--dash-title); }
     .stat-label  { font-size: .8rem; color: var(--dash-subtitle); margin: 0; }
@@ -77,8 +77,8 @@
         font-weight: 500;
     }
     .tree-tabs .nav-link.active {
-        background: var(--asnet-blue);
-        color: #fff;
+        background: #64748b; /* A nice distinct gray instead of black */
+        color: #fff !important; /* Ensure text is readable */
     }
 
     .tree-list { list-style: none; padding-left: 0; }
@@ -98,7 +98,7 @@
         border-radius: 8px;
         font-size: .7rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--bs-heading-color);
         margin-right: .4rem;
     }
     .tree-badge-school { background: var(--asnet-green); }
@@ -299,7 +299,7 @@
                             </div>
                         }
                     </div>
-                    <a href="/Clients/Coordinators/Chat" class="btn w-100" style="background:#71dd37;color:#fff;font-weight:600;">
+                    <a href="/Clients/Coordinators/Chat" class="btn w-100" style="background:#71dd37;color: var(--bs-heading-color);font-weight:600;">
                         <i class='bx bx-reply me-1'></i> Responder
                     </a>
                 </div>
@@ -320,7 +320,7 @@
                         <p class="pending-big-number">Suporte</p>
                         <p class="pending-subtitle">Existem @Model.DamagedEquipmentCount equipamentos avariados na sua escola.</p>
                     </div>
-                    <a href="/Clients/Coordinators/Tickets" class="btn w-100" style="background:#ff4d4d;color:#fff;font-weight:600;">
+                    <a href="/Clients/Coordinators/Tickets" class="btn w-100" style="background:#ff4d4d;color: var(--bs-heading-color);font-weight:600;">
                         <i class='bx bx-plus-circle me-1'></i> Novo Pedido
                     </a>
                 </div>
@@ -349,14 +349,14 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="stat-icon bg-warning" style="width: 32px; height: 32px; font-size: 1rem; border-radius: 6px;">
                                                 @{
-                                                    var atype = item.Name ?? "";
+                                                    var atype = item.Name ??"";
                                                     var aemoji = atype.ToLower() switch {
-                                                        var s when s.Contains("monitor") => "🖥️",
-                                                        var s when s.Contains("computador") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                                        var s when s.Contains("impressora") => "🖨️",
-                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                                        var s when s.Contains("teclado") => "⌨️",
-                                                        _ => "📦"
+                                                        var s when s.Contains("monitor") =>"🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                                        var s when s.Contains("impressora") =>"🖨️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                                        var s when s.Contains("teclado") =>"⌨️",
+                                                        _ =>"📦"
                                                     };
                                                 }
                                                 @aemoji
@@ -438,25 +438,25 @@
                                         <td>
                                             <div class="d-flex flex-column">
                                                 @{
-                                                    var ttype = ticket.Equipamento?.Type ?? "";
-                                                    var tname = ticket.Equipamento?.Name ?? "";
+                                                    var ttype = ticket.Equipamento?.Type ??"";
+                                                    var tname = ticket.Equipamento?.Name ??"";
                                                     var temoji = ttype.ToLower() switch {
-                                                        var s when s.Contains("monitor") => "🖥️",
-                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                                        var s when s.Contains("impressora") => "🖨️",
-                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
-                                                        var s when s.Contains("projetor") => "📽️",
-                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                                        var s when s.Contains("teclado") => "⌨️",
-                                                        var s when s.Contains("servidor") => "🗄️",
-                                                        var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                                        var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
-                                                        _ => tname.Contains("Monitor") ? "🖥️" : (tname.Contains("Computador") ? "💻" : (tname.Contains("Impressora") ? "🖨️" : "🔧"))
+                                                        var s when s.Contains("monitor") =>"🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                                        var s when s.Contains("impressora") =>"🖨️",
+                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") =>"🌐",
+                                                        var s when s.Contains("projetor") =>"📽️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                                        var s when s.Contains("teclado") =>"⌨️",
+                                                        var s when s.Contains("servidor") =>"🗄️",
+                                                        var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                                        var s when s.Contains("quadro") || s.Contains("interativo") =>"📺",
+                                                        _ => tname.Contains("Monitor") ?"🖥️" : (tname.Contains("Computador") ?"💻" : (tname.Contains("Impressora") ?"🖨️" :"🔧"))
                                                     };
                                                 }
                                                 <span class="fw-bold">@temoji @ticket.Equipamento?.Name</span>
                                                 <small class="text-muted small">
-                                                    @(ticket.Equipamento?.Brand ?? "Genérico") @(ticket.Equipamento?.Model ?? "")
+                                                    @(ticket.Equipamento?.Brand ??"Genérico") @(ticket.Equipamento?.Model ??"")
                                                     @if (!string.IsNullOrEmpty(ticket.Equipamento?.SerialNumber))
                                                     {
                                                         <span class="ms-1">(S/N: @ticket.Equipamento.SerialNumber)</span>
@@ -483,19 +483,16 @@
                                         <td class="text-muted">@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
                                             @{
-                                                var statusLabel = ticket.Status switch {
-                                                    "Pendente" or "Pedido" => "badge bg-label-warning",
-                                                    "Em Reparação" or "EmResolução" or "Em andamento" => "badge bg-label-warning",
-                                                    "Concluído" => "badge bg-label-success",
-                                                    _ => "badge bg-label-secondary"
+                                                var statusLabel = ticket.Status switch {"Pendente" or"Pedido" =>"badge bg-label-warning","Em Reparação" or"EmResolução" or"Em andamento" =>"badge bg-label-warning","Concluído" =>"badge bg-label-success",
+                                                    _ =>"badge bg-label-secondary"
                                                 };
-                                                var statusDisplayName = (ticket.Status == "Pedido" || ticket.Status == "Pendente") ? "A aguardar" : ticket.Status;
+                                                var statusDisplayName = (ticket.Status =="Pedido" || ticket.Status =="Pendente") ?"A aguardar" : ticket.Status;
                                             }
                                             <span class="@statusLabel text-uppercase" style="font-size: 0.65rem;">@statusDisplayName</span>
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
-                                                    onclick="showQRCode('@ticket.Equipamento?.Id', 'equip', '@(ticket.Equipamento?.Name?.Replace("'", "\\'"))', '@(ticket.Equipamento?.SerialNumber ?? "S/N N/A")')">
+                                                    onclick="showQRCode('@ticket.Equipamento?.Id', 'equip', '@(ticket.Equipamento?.Name?.Replace("'","\\'"))', '@(ticket.Equipamento?.SerialNumber ??"S/N N/A")')">
                                                 <i class="ri-qr-code-line"></i>
                                             </button>
                                         </td>
@@ -548,16 +545,16 @@
                                         <tr>
                                             <td>
                                                 @{
-                                                    var mrtype = r.ItemType ?? "";
-                                                    var mrname = r.ItemName ?? "";
+                                                    var mrtype = r.ItemType ??"";
+                                                    var mrname = r.ItemName ??"";
                                                     var mremoji = mrtype.ToLower() switch {
-                                                        var s when s.Contains("monitor") => "🖥️",
-                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                                        var s when s.Contains("impressora") => "🖨️",
-                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                                        var s when s.Contains("teclado") => "⌨️",
-                                                        var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                                        _ => mrname.Contains("Monitor") ? "🖥️" : (mrname.Contains("Computador") ? "💻" : "📦")
+                                                        var s when s.Contains("monitor") =>"🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                                        var s when s.Contains("impressora") =>"🖨️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                                        var s when s.Contains("teclado") =>"⌨️",
+                                                        var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                                        _ => mrname.Contains("Monitor") ?"🖥️" : (mrname.Contains("Computador") ?"💻" :"📦")
                                                     };
                                                 }
                                                 <span class="fw-bold">@mremoji @r.ItemName</span>
@@ -568,16 +565,16 @@
                                             <td>
                                                 @switch (r.Status)
                                                 {
-                                                    case "Pendente_Diretor":
+                                                    case"Pendente_Diretor":
                                                         <span class="badge bg-label-warning text-uppercase">Pendente (Diretor)</span>
                                                         break;
-                                                    case "Pendente_Admin":
+                                                    case"Pendente_Admin":
                                                         <span class="badge bg-label-info text-uppercase">Pendente (Admin)</span>
                                                         break;
-                                                    case "Atendido":
+                                                    case"Atendido":
                                                         <span class="badge bg-label-success text-uppercase">Atendido</span>
                                                         break;
-                                                    case "Recusado":
+                                                    case"Recusado":
                                                         <span class="badge bg-label-danger text-uppercase">Recusado</span>
                                                         break;
                                                     default:
@@ -585,7 +582,7 @@
                                                         break;
                                                 }
                                             </td>
-                                            <td><small>@(string.IsNullOrEmpty(r.DirectorNotes) ? "-" : r.DirectorNotes)</small></td>
+                                            <td><small>@(string.IsNullOrEmpty(r.DirectorNotes) ?"-" : r.DirectorNotes)</small></td>
                                         </tr>
                                     }
                                 }
@@ -603,7 +600,7 @@
             <div class="modal-content border-0 shadow">
                 <form method="post" asp-page-handler="RequestStock">
                     <div class="modal-header bg-primary py-3">
-                        <h5 class="modal-title text-white fw-bold"><i class='bx bx-package me-2'></i>Solicitar Novo Equipamento</h5>
+                        <h5 class="modal-title   fw-bold" style="color: var(--bs-heading-color) !important;"><i class='bx bx-package me-2'></i>Solicitar Novo Equipamento</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
@@ -705,3 +702,6 @@
 </script>
 <partial name="Shared/_QrModal" />
 }
+
+
+

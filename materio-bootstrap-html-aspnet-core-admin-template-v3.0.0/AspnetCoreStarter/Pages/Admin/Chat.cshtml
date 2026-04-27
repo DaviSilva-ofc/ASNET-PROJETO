@@ -17,7 +17,7 @@
         /* Ajustar para caber perfeitamente sem scrolls na janela principal */
         .app-chat { 
             height: calc(100vh - 12rem) !important; 
-            background-color: #2b2c40; 
+            background-color: var(--tk-card-solid) !important; 
             margin: 0 !important; 
             width: 100% !important;
             border-radius: 0.5rem !important;
@@ -36,7 +36,7 @@
                 height: 100% !important;
                 transform: none !important;
                 z-index: 1 !important;
-                background-color: #2b2c40;
+                background-color: var(--tk-card-solid) !important;
             }
         }
 
@@ -44,16 +44,18 @@
         .template-customizer-open-btn { display: none !important; }
 
         /* Sidebar Styling */
-        .chat-sidebar-left-user { padding: 1.5rem; background-color: #2b2c40; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .chat-search-input { background-color: #363754 !important; border: none !important; color: #fff !important; border-radius: 20px !important; }
+        .chat-sidebar-left-user { padding: 1.5rem; background-color: var(--tk-card-solid) !important; border-bottom: 1px solid var(--bs-border-color); }
+        .chat-search-input { background-color: var(--bs-secondary-bg) !important; border: 1px solid var(--bs-border-color) !important; color: var(--bs-body-color) !important; border-radius: 20px !important; }
+        .chat-search-input::placeholder { color: var(--bs-secondary-color) !important; }
+        .input-group-text { background-color: var(--bs-secondary-bg) !important; border: 1px solid var(--bs-border-color) !important; }
         .chat-contact-list-item { padding: 0.75rem 1.5rem !important; margin: 0.25rem 0.75rem; border-radius: 0.5rem; transition: all 0.2s; }
-        .chat-contact-list-item:hover:not(.active) { background-color: rgba(255,255,255,0.05); }
+        .chat-contact-list-item:hover:not(.active) { background-color: var(--bs-secondary-bg); }
         
         .chat-contact-list-item.active {
             background: linear-gradient(72.47deg, #ffab00 22.16%, #ffc107 76.47%) !important;
             box-shadow: 0px 4px 12px rgba(255, 171, 0, 0.3) !important;
         }
-        .chat-contact-list-item.active h6, .chat-contact-list-item.active p, .chat-contact-list-item.active small { color: #fff !important; }
+        .chat-contact-list-item.active h6, .chat-contact-list-item.active p, .chat-contact-list-item.active small { color: #1a1a2e !important; }
 
         /* Message Bubble Styling - TOTALMENTE COMPACTO */
         .chat-message-wrapper {
@@ -80,31 +82,34 @@
         .chat-message-text p { margin: 0 !important; display: inline; }
         
         .chat-message:not(.chat-message-right) .chat-message-text {
-            background-color: #363754 !important;
-            color: #dbdade !important;
+            background-color: var(--bs-secondary-bg) !important;
+            color: var(--bs-body-color) !important;
+            border: 1px solid var(--bs-border-color);
             border-top-left-radius: 2px !important;
         }
         
         .chat-message-right .chat-message-text {
             background-color: #ffab00 !important;
-            color: #fff !important;
+            color: #1a1a2e !important;
             border-top-right-radius: 2px !important;
         }
 
         .chat-history-footer {
             padding: 1.5rem 2.5rem !important;
-            background-color: #2b2c40 !important;
-            border-top: 1px solid rgba(255,255,255,0.05);
+            background-color: var(--tk-card-solid) !important;
+            border-top: 1px solid var(--bs-border-color);
         }
         .form-send-message {
-            background-color: #363754;
+            background-color: var(--bs-secondary-bg);
+            border: 1px solid var(--bs-border-color);
             border-radius: 12px;
             padding: 8px 15px;
         }
-        .message-input { background: transparent !important; border: none !important; color: #fff !important; box-shadow: none !important; font-size: 1.1rem !important; }
+        .message-input { background: transparent !important; border: none !important; color: var(--bs-body-color) !important; box-shadow: none !important; font-size: 1.1rem !important; }
+        .message-input::placeholder { color: var(--bs-secondary-color) !important; }
         
-        .chat-history-header { background-color: #2b2c40; padding: 1.2rem 1.8rem !important; }
-        .chat-history-header i { color: #dbdade; transition: color 0.2s; }
+        .chat-history-header { background-color: var(--tk-card-solid) !important; padding: 1.2rem 1.8rem !important; border-bottom: 1px solid var(--bs-border-color); }
+        .chat-history-header i { color: var(--bs-secondary-color); transition: color 0.2s; }
         .chat-history-header i:hover { color: #ffab00; }
 
         .avatar img { object-fit: cover; width: 100%; height: 100%; }
@@ -227,7 +232,7 @@
                         }
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-0 text-white">Administrador</h6>
+                        <h6 class="mb-0" style="color: var(--bs-heading-color);">Administrador</h6>
                         <small class="text-muted">Online</small>
                     </div>
                     <i class="ri-close-line ri-24px cursor-pointer d-lg-none" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-contacts"></i>
@@ -261,7 +266,7 @@
                                 </div>
                                 <div class="chat-contact-info flex-grow-1 ms-3 overflow-hidden">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <h6 class="chat-contact-name text-truncate m-0 text-white">@contact.User.Username</h6>
+                                        <h6 class="chat-contact-name text-truncate m-0" style="color: var(--bs-heading-color);">@contact.User.Username</h6>
                                     </div>
                                     <p class="chat-contact-status text-truncate mb-0 text-muted small">@contact.Role</p>
                                 </div>
@@ -296,7 +301,7 @@
                                 </a>
                                 <div class="chat-contact-info flex-grow-1 ms-3">
                                     <a asp-page="/Profile" asp-route-id="@Model.SelectedContactId" class="text-decoration-none">
-                                        <h6 class="m-0 text-white hover-warning">@currentContact?.User.Username</h6>
+                                        <h6 class="m-0 hover-warning" style="color: var(--bs-heading-color);">@currentContact?.User.Username</h6>
                                     </a>
                                     <small class="user-status text-muted">@currentContact?.Role</small>
                                 </div>
@@ -388,7 +393,7 @@
                 {
                     <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center bg-body h-100">
                         <div class="mb-4 text-warning opacity-25" style="font-size: 8rem;"><i class="ri-chat-smile-2-line"></i></div>
-                        <h3 class="fw-bold text-white">Suporte Técnico ASNET</h3>
+                        <h3 class="fw-bold" style="color: var(--bs-heading-color);">Suporte Técnico ASNET</h3>
                         <p class="text-muted" style="max-width: 400px; text-align: center; font-size: 1.1rem;">Selecione um utilizador à esquerda para responder a mensagens de suporte ou iniciar uma nova conversa.</p>
                         <button class="btn btn-warning mt-4 px-5 py-2 rounded-pill d-lg-none shadow" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-contacts">Ver Contactos</button>
                     </div>
@@ -397,3 +402,5 @@
         </div>
     </div>
 </div>
+
+

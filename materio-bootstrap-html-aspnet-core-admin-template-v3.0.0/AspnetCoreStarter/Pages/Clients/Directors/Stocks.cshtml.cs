@@ -253,7 +253,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             var ticket = new Ticket
             {
                 Description = $"PEDIDO DE EMPRÉSTIMO DE STOCK:\nItem: {itemName}\nTipo: {itemType}\nQuantidade: {quantity}\nAgrupamento: {director.Agrupamento?.Name}\nNotas: {notes}\n\n[DATA:{{\"ItemName\":\"{itemName}\",\"ItemType\":\"{itemType}\",\"Quantity\":{quantity},\"AgrupamentoId\":{director.AgrupamentoId}}}]",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 Level = "Empréstimo"
             };

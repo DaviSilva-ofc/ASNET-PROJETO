@@ -172,7 +172,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
 
             NovoTicket.AdminId = int.Parse(userIdStr);
             NovoTicket.RequestedByUserId = int.Parse(userIdStr);
-            NovoTicket.Status = "Pedido";
+            NovoTicket.Status = "Pendente";
             NovoTicket.CreatedAt = DateTime.Now;
 
             _context.Tickets.Add(NovoTicket);

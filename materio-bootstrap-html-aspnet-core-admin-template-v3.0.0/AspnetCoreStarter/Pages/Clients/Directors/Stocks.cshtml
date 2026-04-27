@@ -1,15 +1,15 @@
 @page
 @model AspnetCoreStarter.Pages.Clients.Directors.DirectorStocksModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Stocks";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Stocks";
 }
 
 @section PageStyles {
 <style>
     .dark-style .card,
     [data-bs-theme="dark"] .card {
-        background-color: #2b2c40 !important;
+        background-color: var(--tk-card-solid) !important;
         box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
     }
 
@@ -221,7 +221,7 @@
                                     if (!string.IsNullOrEmpty(Model.FilterType)) filtersList.Add($"Tipo: {Model.FilterType}");
                                     if (!string.IsNullOrEmpty(Model.FilterStatus)) filtersList.Add($"Estado: {Model.FilterStatus}");
                                     if (Model.FilterEscolaId.HasValue || Model.FilterSalaId.HasValue) filtersList.Add("Localização específica");
-                                    @Html.Raw(string.Join(", ", filtersList))
+                                    @Html.Raw(string.Join(",", filtersList))
                                 }
                             </span>
                         </div>
@@ -260,20 +260,20 @@
                                     <tr>
                                         <td>
                                             @{
-                                                var itype = item.Category ?? "";
-                                                var iname = item.Name ?? "";
+                                                var itype = item.Category ??"";
+                                                var iname = item.Name ??"";
                                                 var iemoji = itype.ToLower() switch {
-                                                    var s when s.Contains("monitor") => "🖥️",
-                                                    var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                                    var s when s.Contains("impressora") => "🖨️",
-                                                    var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
-                                                    var s when s.Contains("projetor") => "📽️",
-                                                    var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                                    var s when s.Contains("teclado") => "⌨️",
-                                                    var s when s.Contains("servidor") => "🗄️",
-                                                    var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                                    var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
-                                                    _ => iname.Contains("Monitor") ? "🖥️" : (iname.Contains("Computador") ? "💻" : (iname.Contains("Impressora") ? "🖨️" : "📦"))
+                                                    var s when s.Contains("monitor") =>"🖥️",
+                                                    var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                                    var s when s.Contains("impressora") =>"🖨️",
+                                                    var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") =>"🌐",
+                                                    var s when s.Contains("projetor") =>"📽️",
+                                                    var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                                    var s when s.Contains("teclado") =>"⌨️",
+                                                    var s when s.Contains("servidor") =>"🗄️",
+                                                    var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                                    var s when s.Contains("quadro") || s.Contains("interativo") =>"📺",
+                                                    _ => iname.Contains("Monitor") ?"🖥️" : (iname.Contains("Computador") ?"💻" : (iname.Contains("Impressora") ?"🖨️" :"📦"))
                                                 };
                                             }
                                             <strong>@iemoji @item.Name</strong>
@@ -310,20 +310,20 @@
                                         </td>
                                         <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
                                             <div class="d-flex align-items-center gap-1 justify-content-center">
-                                                <button type="button" class="btn btn-sm btn-icon text-info p-0" 
-                                                        onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" 
+                                                <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;"
+                                                        onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'","\\'")', '@item.Location.Replace("'","\\'")')" 
                                                         title="Código QR">
-                                                    <i class="ri-qr-code-line"></i>
+                                                    📱
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-icon text-primary p-0" 
-                                                        onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                                <button type="button" class="btn btn-sm btn-icon text-primary p-0 lh-1" style="font-size: 1.1rem;"
+                                                        onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ??"")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ??"")', @item.Quantity)"
                                                         title="Editar Estado">
-                                                    <i class="ri-edit-line"></i>
+                                                    ✏️
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-icon text-danger p-0" 
-                                                        onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                                <button type="button" class="btn btn-sm btn-icon text-danger p-0 lh-1" style="font-size: 1.1rem;"
+                                                        onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ??"")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ??"")', @item.Quantity)"
                                                         title="Eliminar">
-                                                    <i class="ri-delete-bin-line"></i>
+                                                    🗑️
                                                 </button>
                                             </div>
                                         </td>
@@ -359,24 +359,24 @@
                                         <div>
                                             <h5 class="mb-1 fw-bold">
                                                 @{
-                                                    var rtype = req.ItemType ?? "";
-                                                    var rname = req.ItemName ?? "";
+                                                    var rtype = req.ItemType ??"";
+                                                    var rname = req.ItemName ??"";
                                                     var remoji = rtype.ToLower() switch {
-                                                        var s when s.Contains("monitor") => "🖥️",
-                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                                        var s when s.Contains("impressora") => "🖨️",
-                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
-                                                        var s when s.Contains("projetor") => "📽️",
-                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                                        var s when s.Contains("teclado") => "⌨️",
-                                                        var s when s.Contains("servidor") => "🗄️",
-                                                        var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                                        var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
-                                                        _ => rname.Contains("Monitor") ? "🖥️" : (rname.Contains("Computador") ? "💻" : (rname.Contains("Impressora") ? "🖨️" : "📦"))
+                                                        var s when s.Contains("monitor") =>"🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                                        var s when s.Contains("impressora") =>"🖨️",
+                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") =>"🌐",
+                                                        var s when s.Contains("projetor") =>"📽️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                                        var s when s.Contains("teclado") =>"⌨️",
+                                                        var s when s.Contains("servidor") =>"🗄️",
+                                                        var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                                        var s when s.Contains("quadro") || s.Contains("interativo") =>"📺",
+                                                        _ => rname.Contains("Monitor") ?"🖥️" : (rname.Contains("Computador") ?"💻" : (rname.Contains("Impressora") ?"🖨️" :"📦"))
                                                     };
                                                 }
                                                 @remoji @req.ItemName
-                                                @if (req.Status == "Pendente_Admin")
+                                                @if (req.Status =="Pendente_Admin")
                                                 {
                                                     <span class="badge bg-label-info ms-2"><i class="ri-arrow-up-line me-1"></i>A aguardar Admin</span>
                                                 }
@@ -397,7 +397,7 @@
                                         </div>
                                     }
 
-                                    @if (req.Status == "Pendente_Admin")
+                                    @if (req.Status =="Pendente_Admin")
                                     {
                                         <div class="alert alert-info d-flex align-items-center mb-0">
                                             <i class="ri-information-line me-2 fs-5"></i>
@@ -426,26 +426,26 @@
                                                         {
                                                             bool isPreChecked = preSelected.Contains(stock);
                                                             <tr>
-                                                                <td><input type="checkbox" name="selectedIds" value="@stock.IdWithPrefix" @(isPreChecked ? "checked" : "") /></td>
+                                                                <td><input type="checkbox" name="selectedIds" value="@stock.IdWithPrefix" @(isPreChecked ?"checked" :"") /></td>
                                                                 <td>
                                                                     @{
-                                                                        var stype = stock.Type ?? "";
-                                                                        var sname = stock.Name ?? "";
+                                                                        var stype = stock.Type ??"";
+                                                                        var sname = stock.Name ??"";
                                                                         var semoji = stype.ToLower() switch {
-                                                                            var str when str.Contains("monitor") => "🖥️",
-                                                                            var str when str.Contains("portátil") || str.Contains("laptop") => "💻",
-                                                                            var str when str.Contains("ups") || str.Contains("bateria") => "🔋",
-                                                                            var str when str.Contains("quadro") || str.Contains("interativo") => "📺",
-                                                                            var str when str.Contains("impressora") => "🖨️",
-                                                                            var str when str.Contains("rato") || str.Contains("mouse") => "🖱️",
-                                                                            var str when str.Contains("teclado") => "⌨️",
-                                                                            _ => "📦"
+                                                                            var str when str.Contains("monitor") =>"🖥️",
+                                                                            var str when str.Contains("portátil") || str.Contains("laptop") =>"💻",
+                                                                            var str when str.Contains("ups") || str.Contains("bateria") =>"🔋",
+                                                                            var str when str.Contains("quadro") || str.Contains("interativo") =>"📺",
+                                                                            var str when str.Contains("impressora") =>"🖨️",
+                                                                            var str when str.Contains("rato") || str.Contains("mouse") =>"🖱️",
+                                                                            var str when str.Contains("teclado") =>"⌨️",
+                                                                            _ =>"📦"
                                                                         };
                                                                     }
                                                                     @semoji @stock.Name <small class="text-muted d-block" style="font-size: 0.7rem;">@stock.Type</small>
                                                                 </td>
                                                                 <td>
-                                                                    <span class="badge bg-label-@(stock.Source == "Stock Central" ? "info" : "primary") small" style="font-size: 0.65rem;">
+                                                                    <span class="badge bg-label-@(stock.Source =="Stock Central" ?"info" :"primary") small" style="font-size: 0.65rem;">
                                                                         @stock.Source
                                                                     </span>
                                                                 </td>
@@ -589,7 +589,7 @@
                                 <option value="">Todas as Salas</option>
                                 @foreach (var sala in Model.AvailableRooms)
                                 {
-                                    <option value="@sala.Id" data-esc="@sala.Block?.SchoolId">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" : "")</option>
+                                    <option value="@sala.Id" data-esc="@sala.Block?.SchoolId">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" :"")</option>
                                 }
                             </select>
                         </div>
@@ -795,17 +795,17 @@
         var roomSelect = document.getElementById('filtSala');
         var options = roomSelect.options;
 
-        roomSelect.value = "";
+        roomSelect.value ="";
         
         for (var i = 0; i < options.length; i++) {
             var opt = options[i];
-            if (opt.value === "") continue;
+            if (opt.value ==="") continue;
             
             var escData = opt.getAttribute('data-esc');
-            if (escId === "" || escData === escId) {
-                opt.style.display = "";
+            if (escId ==="" || escData === escId) {
+                opt.style.display ="";
             } else {
-                opt.style.display = "none";
+                opt.style.display ="none";
             }
         }
     }
@@ -813,7 +813,7 @@
     function openLoanModal(name, type) {
         document.getElementById('loanItemName').value = name;
         document.getElementById('loanItemType').value = type;
-        document.getElementById('txtItemDisplay').innerText = name + " - " + type;
+        document.getElementById('txtItemDisplay').innerText = name +" -" + type;
         
         var modal = new bootstrap.Modal(document.getElementById('modalEmprestimo'));
         modal.show();
@@ -858,12 +858,12 @@
         const tipoSelect = document.getElementById('filterTipo');
         const options = tipoSelect.querySelectorAll('option');
         
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         
         options.forEach(opt => {
-            if (opt.value === "") return;
-            const optArts = (opt.getAttribute('data-art') || "").split('|');
-            if (artName === "" || optArts.includes(artName)) {
+            if (opt.value ==="") return;
+            const optArts = (opt.getAttribute('data-art') ||"").split('|');
+            if (artName ==="" || optArts.includes(artName)) {
                 opt.style.display = 'block';
             } else {
                 opt.style.display = 'none';
@@ -876,12 +876,12 @@
         const tipoSelect = document.getElementById('newReqTipo');
         const options = tipoSelect.querySelectorAll('option');
         
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         
         options.forEach(opt => {
-            if (opt.value === "") return;
-            const optArts = (opt.getAttribute('data-art') || "").split('|');
-            if (artName === "" || optArts.includes(artName)) {
+            if (opt.value ==="") return;
+            const optArts = (opt.getAttribute('data-art') ||"").split('|');
+            if (artName ==="" || optArts.includes(artName)) {
                 opt.style.display = 'block';
             } else {
                 opt.style.display = 'none';
@@ -902,3 +902,5 @@
 </script>
 <partial name="Shared/_QrModal" />
 }
+
+

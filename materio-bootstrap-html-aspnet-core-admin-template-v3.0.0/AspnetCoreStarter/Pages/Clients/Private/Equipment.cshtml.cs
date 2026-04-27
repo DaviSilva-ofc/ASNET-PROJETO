@@ -237,7 +237,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
 
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             NewTicket.RequestedByUserId = int.Parse(userIdStr!);
-            NewTicket.Status = "Pedido";
+            NewTicket.Status = "Pendente";
             NewTicket.CreatedAt = DateTime.UtcNow;
             string userNotes = NewTicket.Description ?? "";
             NewTicket.Description = $"[EMPRESA: {equip.Empresa?.Name ?? "N/A"}] {equip.Name} ({equip.SerialNumber}) - {userNotes}";
@@ -327,7 +327,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             {
                 Description = $"PEDIDO DE STOCK (CLIENTE PRIVADO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nEmpresa: {user.Empresa?.Name ?? "N/A"}\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 RequestedByUserId = userId
             };

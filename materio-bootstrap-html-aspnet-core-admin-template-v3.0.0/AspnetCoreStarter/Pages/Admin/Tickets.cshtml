@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Admin.TicketsModel
 @{
     Layout = "Layouts/_ContentNavbarLayout";
@@ -10,8 +10,8 @@
         _ => "#ffab00"
     };
     string StatusColor(string? s) => s switch {
-        "Aceite" => "#ffab00", "Em Progresso" or "Em Reparação" or "Em andamento" => "#f59e0b",
-        "Concluído" => "#22c55e", "Recusado" => "#ef4444", _ => "#6b7280"
+        "Aceite" => "#3b82f6", "Em reparação" or "Em Progresso" or "Em Reparação" or "Em andamento" or "Em Resolução" => "#f59e0b",
+        "Concluído" => "#22c55e", "Pendente" or "Pedido" or "Aberto" => "#6b7280", "Recusado" => "#ef4444", _ => "#6b7280"
     };
     string PrioColor(string? p) => p switch {
         "Média" => "#f59e0b", "Alta" => "#ef4444", "Crítica" => "#dc2626", _ => "#6b7280"
@@ -44,10 +44,10 @@
         TipoAcaoHistorico.Equipamento => "#f59e0b", _ => "#8b5cf6"
     };
     int StepIndex(string? s) => s switch {
-        "Aceite" => 1, "Em Progresso" or "Em Reparação" or "Em andamento" => 2, "Concluído" => 3, _ => 0
+        "Aceite" => 1, "Em reparação" or "Em Progresso" or "Em Reparação" or "Em andamento" or "Em Resolução" => 2, "Concluído" => 3, _ => 0
     };
-    string NextStatusLabel(int si) => si switch { 0 => "Aceite", 1 => "Em Progresso", 2 => "Concluído", _ => "" };
-    string[] Steps = { "Aberto", "Aceite", "Em Progresso", "Concluído" };
+    string NextStatusLabel(int si) => si switch { 0 => "Aceite", 1 => "Em reparação", 2 => "Concluído", _ => "" };
+    string[] Steps = { "Pendente", "Aceite", "Em reparação", "Concluído" };
     string CleanTitle(string? d) {
         if (string.IsNullOrEmpty(d)) return "(sem título)";
         
@@ -127,17 +127,17 @@
 
     <!-- Stats -->
     <div class="tk-stats">
-        <div class="tk-stat @(Model.FilterStatus=="Aberto"?"active-grey":"")" onclick="toggleFilter('Aberto')">
-            <div class="tk-stat-label">Aberto</div>
-            <div class="tk-stat-num num-grey">@Model.CountAberto</div>
+        <div class="tk-stat @(Model.FilterStatus=="Pendente"?"active-grey":"")" onclick="toggleFilter('Pendente')">
+            <div class="tk-stat-label">Pendente</div>
+            <div class="tk-stat-num num-grey">@Model.CountPendente</div>
         </div>
         <div class="tk-stat @(Model.FilterStatus=="Aceite"?"active-blue":"")" onclick="toggleFilter('Aceite')">
             <div class="tk-stat-label">Aceite</div>
             <div class="tk-stat-num num-blue">@Model.CountAceite</div>
         </div>
-        <div class="tk-stat @(Model.FilterStatus=="Em Progresso"?"active-amber":"")" onclick="toggleFilter('Em Progresso')">
-            <div class="tk-stat-label">Em Progresso</div>
-            <div class="tk-stat-num num-amber">@Model.CountEmProgresso</div>
+        <div class="tk-stat @(Model.FilterStatus=="Em reparação"?"active-amber":"")" onclick="toggleFilter('Em reparação')">
+            <div class="tk-stat-label">Em Reparação</div>
+            <div class="tk-stat-num num-amber">@Model.CountEmReparacao</div>
         </div>
         <div class="tk-stat @(Model.FilterStatus=="Concluído"?"active-green":"")" onclick="toggleFilter('Concluído')">
             <div class="tk-stat-label">Concluído</div>
@@ -205,11 +205,13 @@
     @if (st != null) {
         var tc = TypeColor(st.Type ?? st.Level);
         var sc = StatusColor(st.Status);
+        var t = Model.SelectedTicket;
+        var mainEq = t.Equipamento ?? t.UtilizedEquipments?.FirstOrDefault() ?? Model.AssociatedEquipment.FirstOrDefault();
         var nextLabel = si < 3 ? NextStatusLabel(si) : "";
         <!-- Header -->
         <div class="tk-ph">
             <div class="tk-ph-top">
-                <div class="tk-ph-icon" style="background:@(tc)22;color:@tc">@EqIcon(st.Equipamento?.Name, st.Equipamento?.Type)</div>
+                <div class="tk-ph-icon" style="background:@(tc)22;color:@tc">@EqIcon(mainEq?.Name, mainEq?.Type)</div>
                 <div class="tk-ph-info">
                     <div class="tk-ph-badges">
                         <span class="tk-id">TK-@st.Id.ToString("D3")</span>
@@ -237,19 +239,28 @@
         </div>
         @if (!string.IsNullOrEmpty(nextLabel) && st.Status != "Concluído") {
             <div class="tk-advance-row" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" asp-route-SelectedTicketId="@st.Id">
-                    <button type="submit" class="tk-advance-btn">→ Avançar para "@nextLabel" (Para mim)</button>
-                </form>
-                @if (si == 0) {
-                    <form method="post" asp-page-handler="AssignTechnician" asp-route-ticketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" asp-route-SelectedTicketId="@st.Id" style="display: flex; gap: 5px; align-items: center;">
-                        <select name="technicianId" class="tk-select" style="min-width: 150px; font-size: 13px; height: 36px; padding: 0 10px;" required>
-                            <option value="">Atribuir a técnico...</option>
-                            @foreach (var tech in Model.AvailableTechnicians) {
-                                <option value="@tech.Id">@tech.Username</option>
-                            }
-                        </select>
-                        <button type="submit" class="tk-advance-btn" style="background:#22c55e; height: 36px;">Atribuir</button>
+                @if (st.TechnicianId == null || st.Status == "Pendente" || st.Status == "Aberto" || st.Status == "Pedido")
+                {
+                    <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" asp-route-SelectedTicketId="@st.Id">
+                        <button type="submit" class="tk-advance-btn">→ Avançar para "@nextLabel" (Para mim)</button>
                     </form>
+                    @if (si == 0) {
+                        <form method="post" asp-page-handler="AssignTechnician" asp-route-ticketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" asp-route-SelectedTicketId="@st.Id" style="display: flex; gap: 5px; align-items: center;">
+                            <select name="technicianId" class="tk-select" style="min-width: 150px; font-size: 13px; height: 36px; padding: 0 10px;" required>
+                                <option value="">Atribuir a técnico...</option>
+                                @foreach (var tech in Model.AvailableTechnicians) {
+                                    <option value="@tech.Id">@tech.Username</option>
+                                }
+                            </select>
+                            <button type="submit" class="tk-advance-btn" style="background:#22c55e; height: 36px;">Atribuir</button>
+                        </form>
+                    }
+                }
+                else
+                {
+                    <div style="background: rgba(0, 123, 255, 0.1); border: 1px solid rgba(0, 123, 255, 0.2); padding: 8px 15px; border-radius: 8px; width: 100%;">
+                        <span class="text-info small"><i class="ri-information-line me-1"></i> Este ticket está a ser tratado pelo técnico <strong>@st.Technician?.Username</strong>. Modificações bloqueadas para o Admin.</span>
+                    </div>
                 }
             </div>
         }
@@ -270,6 +281,17 @@
                     <div class="tk-info-card"><div class="tk-info-label">Agrupamento</div><div class="tk-info-val">@(st.School?.Agrupamento?.Name ?? "—")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Criado em</div><div class="tk-info-val">@st.CreatedAt.ToString("dd/MM/yyyy, HH:mm")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Atualizado em</div><div class="tk-info-val">@(st.AcceptedAt?.ToString("dd/MM/yyyy, HH:mm") ?? "—")</div></div>
+                    
+                    @if (mainEq != null) {
+                        <div class="tk-info-card">
+                            <div class="tk-info-label">Nº de Série</div>
+                            <div class="tk-info-val text-primary fw-bold">@(mainEq.SerialNumber ?? "N/A")</div>
+                        </div>
+                        <div class="tk-info-card" style="grid-row: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; padding: 10px; border-radius: 8px;">
+                            <div class="tk-info-label" style="color: #000; margin-bottom: 5px;">QR CODE</div>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=@(mainEq.SerialNumber ?? st.Id.ToString())" alt="QR Code" style="width: 80px; height: 80px;" />
+                        </div>
+                    }
                 </div>
                 <div class="tk-desc-card">
                     <div class="tk-info-label">Descrição</div>
@@ -316,7 +338,7 @@
                                     <div class="tk-avail-sub">@eq.SerialNumber · @eq.Room?.Block?.School?.Name</div>
                                 </div>
                                 @Html.Raw(BadgeHtml("Associado", "#22c55e"))
-                                @if (st.Status != "Concluído") {
+                                @if (st.Status != "Concluído" && (st.TechnicianId == null || st.Status == "Pendente" || st.Status == "Aberto" || st.Status == "Pedido")) {
                                     <form method="post" asp-page-handler="RemoveEquipment" asp-route-ticketId="@st.Id" asp-route-equipmentId="@eq.Id" asp-route-SelectedTicketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus">
                                         <button type="submit" class="btn-remove">🗑 Remover</button>
                                     </form>
@@ -355,7 +377,7 @@
                                     <div class="tk-avail-sub">@eq.SerialNumber · @eq.Room?.Block?.School?.Name</div>
                                 </div>
                                 @Html.Raw(BadgeHtml("Armazenado", "#22c55e"))
-                                @if (st.Status != "Concluído") {
+                                @if (st.Status != "Concluído" && (st.TechnicianId == null || st.Status == "Pendente" || st.Status == "Aberto" || st.Status == "Pedido")) {
                                     <form method="post" asp-page-handler="AssociateEquipment" asp-route-ticketId="@st.Id" asp-route-equipmentId="@eq.Id" asp-route-SelectedTicketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus">
                                         <button type="submit" class="btn-assoc">🔗 Associar</button>
                                     </form>
@@ -388,12 +410,18 @@
         </div>
         <!-- Footer -->
         @if (st.Status != "Concluído") {
-            <div class="tk-footer">
-                <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@st.Id" asp-route-SelectedTicketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" style="display:flex;gap:10px;width:100%">
-                    <input class="tk-comment" name="comment" placeholder="Adicionar comentário ou nota técnica..." required />
-                    <button type="submit" class="tk-send-btn">✈ Enviar</button>
-                </form>
-            </div>
+            @if (st.TechnicianId == null || st.Status == "Pendente" || st.Status == "Aberto" || st.Status == "Pedido") {
+                <div class="tk-footer">
+                    <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@st.Id" asp-route-SelectedTicketId="@st.Id" asp-route-FilterStatus="@Model.FilterStatus" style="display:flex;gap:10px;width:100%">
+                        <input class="tk-comment" name="comment" placeholder="Adicionar comentário ou nota técnica..." required />
+                        <button type="submit" class="tk-send-btn">✈ Enviar</button>
+                    </form>
+                </div>
+            } else {
+                <div class="tk-footer" style="justify-content:center;color:var(--tk-primary);font-size:13px;background: rgba(0, 123, 255, 0.05);">
+                    <i class="ri-lock-line me-1"></i> Apenas leitura — O técnico está a intervir.
+                </div>
+            }
         } else {
             <div class="tk-footer" style="justify-content:center;color:#6b7280;font-size:13px">🔒 Ticket concluído — apenas leitura</div>
         }
@@ -462,3 +490,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 }
+

@@ -1,8 +1,12 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Technicians.TicketsModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Gestão de Trabalhos - Técnico";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Gestão de Trabalhos - Técnico";
+}
+
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/select2/select2.dist.css" />
 }
 
 @section PageStyles {
@@ -11,6 +15,10 @@
 <style>
     .tk-page { padding-top: 0; }
     .tk-filters { margin-top: 20px; }
+    .preventive-check-item:hover { background: rgba(105, 108, 255, 0.05) !important; border-color: rgba(105, 108, 255, 0.4) !important; transform: translateX(5px); }
+    .bg-label-primary { background-color: rgba(105, 108, 255, 0.1) !important; color: #696cff !important; }
+    .cursor-pointer { cursor: pointer; }
+    .transition-all { transition: all 0.2s ease-in-out; }
 </style>
 }
 
@@ -18,74 +26,98 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-white">Os Meus Trabalhos</h1>
+            <h1 class="h3 mb-1 fw-bold" style="color: var(--bs-heading-color);">Os Meus Trabalhos</h1>
             <p class="text-muted mb-0">@Model.Tickets.Count tickets atribuídos • @Model.AvailableTickets.Count novos disponíveis</p>
         </div>
     </div>
 
     <!-- Stats -->
+    <!-- Stats -->
     <div class="tk-stats">
-        <div class="tk-stat @(Model.FilterStatus == "Aberto" ? "active-blue" : "active-grey")" onclick="setFilter('Aberto')">
-            <div class="tk-stat-label">Disponíveis</div>
-            <div class="tk-stat-num num-blue">@Model.AvailableTickets.Count</div>
+        <div class="tk-stat @(Model.FilterStatus=="Pendente"?"active-grey":"")" onclick="toggleFilter('Pendente')">
+            <div class="tk-stat-label">Pendente</div>
+            <div class="tk-stat-num num-grey">@Model.AvailableTickets.Count</div>
         </div>
-        <div class="tk-stat @(Model.FilterStatus == "Em reparação" ? "active-amber" : "active-grey")" onclick="setFilter('Em reparação')">
-            <div class="tk-stat-label">Em curso</div>
-            <div class="tk-stat-num num-amber">@Model.Tickets.Count(t => t.Status != "Concluído")</div>
+        <div class="tk-stat @(Model.FilterStatus=="Aceite"?"active-blue":"")" onclick="toggleFilter('Aceite')">
+            <div class="tk-stat-label">Aceite</div>
+            <div class="tk-stat-num num-blue">@Model.Tickets.Count(t => t.Status =="Aceite")</div>
         </div>
-        <div class="tk-stat @(Model.FilterStatus == "Concluído" ? "active-green" : "active-grey")" onclick="setFilter('Concluído')">
-            <div class="tk-stat-label">Concluídos</div>
-            <div class="tk-stat-num num-green">@Model.Tickets.Count(t => t.Status == "Concluído")</div>
+        <div class="tk-stat @(Model.FilterStatus=="Em reparação"?"active-amber":"")" onclick="toggleFilter('Em reparação')">
+            <div class="tk-stat-label">Em Reparação</div>
+            <div class="tk-stat-num num-amber">@Model.Tickets.Count(t => t.Status =="Em reparação")</div>
         </div>
-        <div class="tk-stat @(string.IsNullOrEmpty(Model.FilterStatus) || Model.FilterStatus == "Todos" ? "active-blue" : "active-grey")" onclick="setFilter('Todos')">
-            <div class="tk-stat-label">Total Atribuídos</div>
-            <div class="tk-stat-num text-white">@Model.Tickets.Count</div>
+        <div class="tk-stat @(Model.FilterStatus=="Concluído"?"active-green":"")" onclick="toggleFilter('Concluído')">
+            <div class="tk-stat-label">Concluído</div>
+            <div class="tk-stat-num num-green">@Model.Tickets.Count(t => t.Status =="Concluído")</div>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="tk-filters">
-        <input type="text" class="tk-search" placeholder="Pesquisar trabalhos por ID, escola ou equipamento..." id="tkSearch">
+    <form method="get" class="tk-filters">
+        <input type="hidden" name="FilterStatus" id="filterStatusHidden" value="@Model.FilterStatus" />
+        <input type="text" name="SearchQuery" class="tk-search" placeholder="Pesquisar por ID ou descrição..." value="@Model.SearchQuery" id="tkSearch">
         
-        <select class="tk-select" id="filterArtigo" onchange="applyFilters()">
-            <option value="">Todos os tipos</option>
-            <option value="Computadores">Computadores</option>
-            <option value="Monitores">Monitores</option>
-            <option value="Impressoras">Impressoras</option>
-            <option value="Networking">Networking</option>
-        </select>
+        <button type="button" class="tk-send-btn" style="padding: 10px 24px; background: #ffab00; color: #000; font-weight: bold; border: none;" data-bs-toggle="modal" data-bs-target="#modalFiltros">
+            <i class='bx bx-filter-alt me-1'></i> Filtros
+        </button>
+    </form>
+    
+    @{
+        var activeFilters = new List<string>();
+        if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus !="Todos os Estados") activeFilters.Add($"Estado: {Model.FilterStatus}");
+        if (!string.IsNullOrEmpty(Model.FilterType)) activeFilters.Add($"Tipo: {Model.FilterType}");
+        if (!string.IsNullOrEmpty(Model.FilterArticle)) activeFilters.Add($"Artigo: {Model.FilterArticle}");
+        if (Model.FilterSchoolId.HasValue) activeFilters.Add("Escola selecionada");
+        if (Model.FilterAgrupamentoId.HasValue) activeFilters.Add("Agrupamento selecionado");
+        if (Model.FilterEmpresaId.HasValue) activeFilters.Add("Empresa selecionada");
+        if (Model.FilterBlocoId.HasValue) activeFilters.Add("Bloco selecionado");
+        if (!string.IsNullOrEmpty(Model.SearchQuery)) activeFilters.Add($"Pesquisa: \"{Model.SearchQuery}\"");
+    }
 
-        <button class="tk-send-btn" style="padding: 10px 20px;" onclick="applyFilters()">Filtrar</button>
-    </div>
+    @if (activeFilters.Any())
+    {
+        <div class="d-flex align-items-center gap-3 p-3 mb-4 rounded-3" style="background: rgba(0, 123, 255, 0.1); border: 1px solid rgba(0, 123, 255, 0.2);">
+            <div class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
+                <i class="ri-filter-fill text-primary" style="font-size: 1.2rem;"></i>
+                <div class="text-muted small text-truncate">
+                    <span class="text-primary fw-bold me-1">Filtros ativos:</span>
+                    @string.Join(" •", activeFilters)
+                </div>
+            </div>
+            <a href="/Clients/Technicians/Tickets" class="btn btn-sm btn-outline-primary text-nowrap" style="border-radius: 20px; font-size: 0.75rem; padding: 4px 12px;">
+                <i class="ri-close-line me-1"></i> Limpar Filtros
+            </a>
+        </div>
+    }
 
     <!-- Ticket List -->
     <div class="tk-list">
         @if (!Model.Tickets.Any() && !Model.AvailableTickets.Any())
         {
-            <div class="tk-row" style="justify-content:center; cursor:default; background: rgba(255,255,255,0.02);">
-                <p class="text-white-50 mb-0 py-4">Nenhum trabalho encontrado com os critérios selecionados.</p>
+            <div class="tk-row" style="justify-content:center; cursor:default;">
+                <p class="text-muted mb-0 py-4">Nenhum trabalho encontrado com os critérios selecionados.</p>
             </div>
         }
 
-        @* Se o filtro for "Aberto" ou "Todos", mostrar os disponíveis primeiro *@
-        @if (string.IsNullOrEmpty(Model.FilterStatus) || Model.FilterStatus == "Aberto" || Model.FilterStatus == "Todos")
+        @* Se o filtro for"Pendente" ou"Todos", mostrar os disponíveis primeiro *@
+        @if (string.IsNullOrEmpty(Model.FilterStatus) || Model.FilterStatus =="Pendente" || Model.FilterStatus =="Todos")
         {
             @foreach (var t in Model.AvailableTickets)
             {
                 <div class="tk-row" onclick="openPanel(@t.Id)" style="border-left: 4px solid var(--tk-primary);">
                     <div class="tk-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.2rem;">
                         @{
-                            var type = t.Equipamento?.Type ?? "";
-                            var name = t.Equipamento?.Name ?? "";
+                            var type = t.Equipamento?.Type ??"";
+                            var name = t.Equipamento?.Name ??"";
                             var emoji = type switch {
-                                var s when s.Contains("Monitor") => "🖥️",
-                                var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") => "💻",
-                                var s when s.Contains("Impressora") => "🖨️",
-                                var s when s.Contains("Rede") || s.Contains("Network") => "🌐",
-                                var s when s.Contains("Projetor") => "📽️",
-                                var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
-                                var s when s.Contains("Teclado") => "⌨️",
-                                _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : "🔧")
+                                var s when s.Contains("Monitor") =>"🖥️",
+                                var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") =>"💻",
+                                var s when s.Contains("Impressora") =>"🖨️",
+                                var s when s.Contains("Rede") || s.Contains("Network") =>"🌐",
+                                var s when s.Contains("Projetor") =>"📽️",
+                                var s when s.Contains("Rato") || s.Contains("Mouse") =>"🖱️",
+                                var s when s.Contains("Teclado") =>"⌨️",
+                                _ => name.Contains("Monitor") ?"🖥️" : (name.Contains("Computador") ?"💻" :"🔧")
                             };
                         }
                         @emoji
@@ -95,13 +127,13 @@
                             <span class="tk-id">#@t.Id</span>
                             <span class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary); background: rgba(255, 171, 0, 0.1);">NOVO DISPONÍVEL</span>
                             @if (!string.IsNullOrEmpty(t.Level)) {
-                                var c = t.Level.Contains("Alt") || t.Level.Contains("Crít") ? "var(--tk-red)" : "var(--tk-amber)";
+                                var c = t.Level.Contains("Alt") || t.Level.Contains("Crít") ?"var(--tk-red)" :"var(--tk-amber)";
                                 <span class="badge-tk" style="color: @c; border-color: @c; background: @(c)11;">@t.Level</span>
                             }
                         </div>
-                        <div class="tk-title">@(t.Equipamento?.Name ?? "Avaria Geral")</div>
+                        <div class="tk-title">@(t.Equipamento?.Name ??"Avaria Geral")</div>
                         <div class="tk-sub">
-                            <i class="ri-map-pin-line me-1"></i> @(t.School?.Name ?? "Sede") • @(t.Equipamento?.Room?.Name ?? "N/A")
+                            <i class="ri-map-pin-line me-1"></i> @(t.School?.Name ??"Sede") • @(t.Equipamento?.Room?.Name ??"N/A")
                         </div>
                     </div>
                     <div class="tk-right" style="display: flex; gap: 10px; align-items: center;">
@@ -122,21 +154,21 @@
             <div class="tk-row" onclick="openPanel(@t.Id)">
                 <div class="tk-icon" style="background: rgba(255, 171, 0, 0.05); color: var(--tk-muted); font-size: 1.2rem;">
                     @{
-                        var type = t.Equipamento?.Type ?? "";
-                        var name = t.Equipamento?.Name ?? "";
+                        var type = t.Equipamento?.Type ??"";
+                        var name = t.Equipamento?.Name ??"";
                         var emoji = type switch {
-                            var s when s.Contains("Monitor") => "🖥️",
-                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
-                            var s when s.Contains("Impressora") => "🖨️",
-                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
-                            var s when s.Contains("Projetor") => "📽️",
-                            var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
-                            var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
-                            var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
-                            var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
-                            var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
-                            var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
-                            _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                            var s when s.Contains("Monitor") =>"🖥️",
+                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") =>"💻",
+                            var s when s.Contains("Impressora") =>"🖨️",
+                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") =>"🌐",
+                            var s when s.Contains("Projetor") =>"📽️",
+                            var s when s.Contains("Rato") || s.Contains("Mouse") =>"🖱️",
+                            var s when s.Contains("Teclado") || s.Contains("Keyboard") =>"⌨️",
+                            var s when s.Contains("Servidor") || s.Contains("Server") =>"🗄️",
+                            var s when s.Contains("UPS") || s.Contains("Bateria") =>"🔋",
+                            var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") =>"🔊",
+                            var s when s.Contains("Câmara") || s.Contains("Camera") =>"📷",
+                            _ => name.Contains("Monitor") ?"🖥️" : (name.Contains("Computador") ?"💻" : (name.Contains("Impressora") ?"🖨️" :"🔧"))
                         };
                     }
                     @emoji
@@ -145,24 +177,22 @@
                     <div class="tk-meta">
                         <span class="tk-id">#@t.Id</span>
                         <span class="badge-tk" style="background: rgba(255,255,255,0.05); color: var(--tk-muted); border-color: var(--tk-border);">
-                            @(t.Equipamento?.Type ?? "Geral")
+                            @(t.Equipamento?.Type ??"Geral")
                         </span>
                         @if (!string.IsNullOrEmpty(t.Level)) {
-                            var c = t.Level.Contains("Alt") || t.Level.Contains("Crít") ? "var(--tk-red)" : "var(--tk-amber)";
+                            var c = t.Level.Contains("Alt") || t.Level.Contains("Crít") ?"var(--tk-red)" :"var(--tk-amber)";
                             <span class="badge-tk" style="color: @c; border-color: @c; background: @(c)11;">@t.Level</span>
                         }
                     </div>
-                    <div class="tk-title">@(t.Equipamento?.Name ?? "Avaria Geral")</div>
+                    <div class="tk-title">@(t.Equipamento?.Name ??"Avaria Geral")</div>
                     <div class="tk-sub">
-                        <i class="ri-map-pin-line me-1"></i> @(t.School?.Name ?? "Sede") • @(t.Equipamento?.Room?.Name ?? "N/A")
+                        <i class="ri-map-pin-line me-1"></i> @(t.School?.Name ??"Sede") • @(t.Equipamento?.Room?.Name ??"N/A")
                     </div>
                 </div>
                 <div class="tk-right">
                     @{
-                        var stCol = t.Status switch {
-                            "Concluído" => "var(--tk-green)",
-                            "Em reparação" or "Em resolução" => "var(--tk-primary)",
-                            _ => "var(--tk-muted)"
+                        var stCol = t.Status switch {"Concluído" =>"var(--tk-green)","Em reparação" or"Em resolução" =>"var(--tk-primary)",
+                            _ =>"var(--tk-muted)"
                         };
                     }
                     <span class="badge-tk" style="color: @stCol; border-color: @stCol; background: @(stCol)11;">@t.Status</span>
@@ -176,9 +206,9 @@
     <div class="row mt-5 mb-4">
         <div class="col-12">
             <div class="card bg-transparent border-0 shadow-none">
-                <div class="card-header px-0 d-flex align-items-center gap-2 text-white pb-3">
+                <div class="card-header px-0 d-flex align-items-center gap-2 pb-3">
                     <i class="ri-map-pin-line" style="color: var(--tk-primary); font-size: 1.2rem;"></i>
-                    <h5 class="mb-0 text-white fw-bold">Mapa de Intervenções</h5>
+                    <h5 class="mb-0 fw-bold" style="color: var(--bs-heading-color);">Mapa de Intervenções</h5>
                 </div>
                 <div class="card-body p-0 rounded-4 overflow-hidden border border-secondary border-opacity-10">
                     <div id="clientMap" style="height: 400px; width: 100%;"></div>
@@ -188,6 +218,113 @@
     </div>
 </div>
 
+<!-- Modal Filtros Avançados -->
+<div class="modal fade" id="modalFiltros" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="get" class="modal-content" style="background:#0d1520;border:1px solid #1e3a4a;color:#e2e8f0">
+            <div class="modal-header" style="border-color:#1e3a4a">
+                <h5 class="modal-title">Filtros Avançados</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <!-- Informação Principal -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Pesquisa Geral</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background:#1a232e; border:1px solid #1e3a4a; color:#6b7280;"><i class="ri-search-line"></i></span>
+                            <input type="text" name="SearchQuery" class="form-control" style="background:#1a232e; border:1px solid #1e3a4a; color: var(--bs-heading-color);" value="@Model.SearchQuery" placeholder="ID do ticket, descrição...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Estado do Ticket</label>
+                        <select name="FilterStatus" class="form-select select2-modal">
+                            <option value="">Todos os Estados</option>
+                            <option value="Pendente" selected="@(Model.FilterStatus =="Pendente")">Pendente</option>
+                            <option value="Aceite" selected="@(Model.FilterStatus =="Aceite")">Aceite</option>
+                            <option value="Em reparação" selected="@(Model.FilterStatus =="Em reparação")">Em reparação</option>
+                            <option value="Concluído" selected="@(Model.FilterStatus =="Concluído")">Concluído</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Tipo de Equipamento</label>
+                        <select name="FilterType" class="form-select select2-modal">
+                            <option value="">Todos os Tipos</option>
+                            <option value="Computador" selected="@(Model.FilterType =="Computador")">Computador</option>
+                            <option value="Monitor" selected="@(Model.FilterType =="Monitor")">Monitor</option>
+                            <option value="Impressora" selected="@(Model.FilterType =="Impressora")">Impressora</option>
+                            <option value="Rede" selected="@(Model.FilterType =="Rede")">Rede</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Artigo Específico</label>
+                        <select name="FilterArticle" class="form-select select2-modal">
+                            <option value="">Todos os Artigos</option>
+                            @foreach (var art in Model.UniqueEquipmentNames) {
+                                <option value="@art" selected="@(Model.FilterArticle == art)">@art</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12"><hr style="border-color:#1e3a4a; opacity: 0.5;"></div>
+                    <div class="col-12 mb-1"><small class="text-uppercase fw-bold text-primary">📍 Localização</small></div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Agrupamento</label>
+                        <select id="prevFilterAgrupamento" name="FilterAgrupamentoId" class="form-select select2-modal" onchange="prevFilterEscolas()">
+                            <option value="">Todos</option>
+                            @foreach (var agr in Model.AvailableAgrupamentos) {
+                                <option value="@agr.Id" selected="@(Model.FilterAgrupamentoId == agr.Id)">@agr.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Escola</label>
+                        <select id="prevFilterEscola" name="FilterSchoolId" class="form-select select2-modal" onchange="prevFilterBlocos()">
+                            <option value="">Todas</option>
+                            @foreach (var esc in Model.AvailableSchools) {
+                                <option value="@esc.Id" data-agr="@esc.AgrupamentoId" selected="@(Model.FilterSchoolId == esc.Id)">@esc.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Bloco</label>
+                        <select id="prevFilterBloco" name="FilterBlocoId" class="form-select select2-modal">
+                            <option value="">Todos</option>
+                            @foreach (var blc in Model.AvailableBlocos) {
+                                <option value="@blc.Id" data-esc="@blc.SchoolId" selected="@(Model.FilterBlocoId == blc.Id)">@blc.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Empresa (Privado)</label>
+                        <select name="FilterEmpresaId" class="form-select select2-modal">
+                            <option value="">Todas</option>
+                            @foreach (var emp in Model.AvailableEmpresas) {
+                                <option value="@emp.Id" selected="@(Model.FilterEmpresaId == emp.Id)">@emp.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer p-4" style="border-color:#1e3a4a">
+                <a href="/Clients/Technicians/Tickets" class="btn btn-outline-secondary px-4">Limpar Filtros</a>
+                <button type="submit" class="btn btn-warning px-4 fw-bold" style="background:#ffab00; border:none; color:#000;">Aplicar Filtros</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section VendorScripts {
+    <script src="~/vendor/libs/select2/select2.dist.js"></script>
+}
+
 <!-- Panel Overlay & Slide-over Panel -->
 <div class="tk-overlay" id="tkOverlay" onclick="closePanel()"></div>
 
@@ -195,26 +332,27 @@
     @if (Model.SelectedTicket != null)
     {
         var t = Model.SelectedTicket;
+        var mainEq = t.Equipamento ?? t.UtilizedEquipments?.FirstOrDefault() ?? Model.AssociatedEquipment.FirstOrDefault();
         
         <div class="tk-ph">
             <div class="tk-ph-top">
                 <div class="tk-ph-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
                     @{
-                        var type = t.Equipamento?.Type ?? "";
-                        var name = t.Equipamento?.Name ?? "";
+                        var type = mainEq?.Type ??"";
+                        var name = mainEq?.Name ??"";
                         var emoji = type switch {
-                            var s when s.Contains("Monitor") => "🖥️",
-                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
-                            var s when s.Contains("Impressora") => "🖨️",
-                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
-                            var s when s.Contains("Projetor") => "📽️",
-                            var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
-                            var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
-                            var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
-                            var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
-                            var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
-                            var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
-                            _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                            var s when s.Contains("Monitor") =>"🖥️",
+                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") =>"💻",
+                            var s when s.Contains("Impressora") =>"🖨️",
+                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") =>"🌐",
+                            var s when s.Contains("Projetor") =>"📽️",
+                            var s when s.Contains("Rato") || s.Contains("Mouse") =>"🖱️",
+                            var s when s.Contains("Teclado") || s.Contains("Keyboard") =>"⌨️",
+                            var s when s.Contains("Servidor") || s.Contains("Server") =>"🗄️",
+                            var s when s.Contains("UPS") || s.Contains("Bateria") =>"🔋",
+                            var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") =>"🔊",
+                            var s when s.Contains("Câmara") || s.Contains("Camera") =>"📷",
+                            _ => name.Contains("Monitor") ?"🖥️" : (name.Contains("Computador") ?"💻" : (name.Contains("Impressora") ?"🖨️" :"🔧"))
                         };
                     }
                     @emoji
@@ -227,41 +365,38 @@
                         }
                         <span class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary); background: rgba(255, 171, 0, 0.1);">@t.Status</span>
                     </div>
-                    <h2 class="tk-ph-title">@(t.Equipamento?.Name ?? "Avaria Geral"): @(t.Description != null && t.Description.Length > 30 ? t.Description.Substring(0, 30) + "..." : t.Description)</h2>
+                    <h2 class="tk-ph-title">@(mainEq?.Name ??"Avaria Geral"): @(t.Description != null && t.Description.Length > 30 ? t.Description.Substring(0, 30) +"..." : t.Description)</h2>
                 </div>
                 <button class="tk-close" onclick="closePanel()">✕</button>
             </div>
 
             <div class="tk-stepper">
                 @{
-                    var steps = new[] { "Aberto", "Aceite", "Em reparação", "Concluído" };
+                    var steps = new[] {"Pendente","Aceite","Em reparação","Concluído" };
                     int si = Array.IndexOf(steps, t.Status);
-                    if (si == -1 && t.Status == "Pedido") si = 0;
-                    if (si == -1 && t.Status == "Em Resolução") si = 2;
-                    if (si == -1 && t.Status == "Pendente") si = 0;
                     
-                    var nextLabel = si < 3 ? (si == 0 ? "Aceite" : si == 1 ? "Em Reparação" : "Concluído") : "";
+                    var nextLabel = si < 3 ? (si == 0 ?"Aceite" : si == 1 ?"Em reparação" :"Concluído") :"";
                 }
                 @for (int i = 0; i < steps.Length; i++)
                 {
-                    bool done = i < si || t.Status == "Concluído";
-                    bool active = i == si && t.Status != "Concluído";
+                    bool done = i < si || t.Status =="Concluído";
+                    bool active = i == si && t.Status !="Concluído";
                     <div class="tk-step">
                         @if (i < steps.Length - 1) {
-                            <div class="tk-step-line @(i < si || t.Status == "Concluído" ? "done" : "")"></div>
+                            <div class="tk-step-line @(i < si || t.Status =="Concluído" ?"done" :"")"></div>
                         }
-                        <div class="tk-step-dot @(done ? "done" : "") @(active ? "active" : "")">
-                            @(done ? "✓" : (i + 1).ToString())
+                        <div class="tk-step-dot @(done ?"done" :"") @(active ?"active" :"")">
+                            @(done ?"✓" : (i + 1).ToString())
                         </div>
-                        <div class="tk-step-label @(active ? "active" : "")">@steps[i]</div>
+                        <div class="tk-step-label @(active ?"active" :"")">@steps[i]</div>
                     </div>
                 }
             </div>
 
-            @if (t.Status != "Concluído" && si < 3)
+            @if (t.Status !="Concluído" && si < 3)
             {
                 <div class="tk-advance-row">
-                    @if (t.Status == "Em reparação" || t.Status == "Em andamento" || t.Status == "Em resolução")
+                    @if (t.Status =="Em reparação" || t.Status =="Em andamento" || t.Status =="Em resolução")
                     {
                         <div class="d-flex gap-2 w-100">
                             <form method="post" asp-page-handler="CompleteRepaired" asp-route-ticketId="@t.Id" class="flex-grow-1">
@@ -283,7 +418,7 @@
                                 @if (si == 0) {
                                     <text>Aceitar Ticket (Para mim)</text>
                                 } else {
-                                    <text>→ Avançar para "@nextLabel"</text>
+                                    <text>→ Avançar para"@nextLabel"</text>
                                 }
                             </button>
                         </form>
@@ -302,29 +437,124 @@
             <!-- Tab: Detalhes -->
             <div class="tk-tab-content" id="tab-0">
                 <div class="tk-info-grid">
-                    <div class="tk-info-card"><div class="tk-info-label">Solicitante</div><div class="tk-info-val">@(t.RequestedBy?.Username ?? "—")</div></div>
-                    <div class="tk-info-card"><div class="tk-info-label">Técnico Responsável</div><div class="tk-info-val">@(t.Technician?.Username ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Solicitante</div><div class="tk-info-val">@(t.RequestedBy?.Username ??"—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Técnico Responsável</div><div class="tk-info-val">@(t.Technician?.Username ??"—")</div></div>
                     <div class="tk-info-card">
                         <div class="tk-info-label">Escola</div>
                         <div class="tk-info-val d-flex align-items-center justify-content-between">
-                            <span>@(t.School?.Name ?? "—")</span>
+                            <span>@(t.School?.Name ??"—")</span>
                             @if (t.School != null) {
-                                <a href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(t.School.Name + (string.IsNullOrEmpty(t.School.Address) ? "" : ", " + t.School.Address) + ", Portugal")" 
+                                <a href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(t.School.Name + (string.IsNullOrEmpty(t.School.Address) ?"" :"," + t.School.Address) +", Portugal")" 
                                    target="_blank" class="btn btn-sm btn-outline-primary" style="font-size: 10px; padding: 2px 8px; border-radius: 4px;">
                                     <i class="ri-map-pin-2-line me-1"></i> Ver no Mapa
                                 </a>
                             }
                         </div>
                     </div>
-                    <div class="tk-info-card"><div class="tk-info-label">Agrupamento</div><div class="tk-info-val">@(t.School?.Agrupamento?.Name ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Agrupamento</div><div class="tk-info-val">@(t.School?.Agrupamento?.Name ??"—")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Criado em</div><div class="tk-info-val">@t.CreatedAt.ToString("dd/MM/yyyy, HH:mm")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Atualizado em</div><div class="tk-info-val">@DateTime.Now.ToString("dd/MM/yyyy, HH:mm")</div></div>
+
+                    @if (mainEq != null) {
+                        <div class="tk-info-card">
+                            <div class="tk-info-label">Nº de Série</div>
+                            <div class="tk-info-val text-primary fw-bold">@(mainEq.SerialNumber ??"N/A")</div>
+                        </div>
+                        <div class="tk-info-card" style="grid-row: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; padding: 10px; border-radius: 8px;">
+                            <div class="tk-info-label" style="color: #000; margin-bottom: 5px;">QR CODE</div>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=@(mainEq.SerialNumber ?? t.Id.ToString())" alt="QR Code" style="width: 80px; height: 80px;" />
+                        </div>
+                    }
                 </div>
                 
                 <div class="tk-desc-card">
                     <div class="tk-info-label">Descrição</div>
                     <div style="margin-top:6px;font-size:14px;line-height:1.6">@t.Description</div>
                 </div>
+
+                @if (t.Type =="Manutenção Preventiva")
+                {
+                    <div class="mt-4 p-4 rounded-3 border" style="background: rgba(105, 108, 255, 0.04); border-color: rgba(105, 108, 255, 0.15) !important;">
+                        <form method="post" asp-page-handler="SubmitPreventive" asp-route-ticketId="@t.Id">
+                            <h6 class="fw-bold mb-3 d-flex align-items-center text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px; color: #696cff;"><i class="ri-list-check-2 me-2 fs-5"></i>Checklist de Verificação</h6>
+                            
+                            <div class="d-flex flex-column gap-2 mb-4">
+                                @foreach(var item in new[] {
+                                    ("chk_estado","ri-computer-line","Estado físico (Danos/Riscos)"),
+                                    ("chk_func","ri-settings-3-line","Funcionamento e Boot"),
+                                    ("chk_cabos","ri-plug-line","Cablagem e Conexões"),
+                                    ("chk_limpeza","ri-sparkling-line","Limpeza (Pó e Resíduos)"),
+                                    ("chk_perif","ri-mouse-line","Periféricos Associados"),
+                                    ("chk_software","ri-apps-2-line","Software e Atualizações"),
+                                    ("chk_etiqueta","ri-price-tag-3-line","Etiqueta de Inventário")
+                                })
+                                {
+                                    <label class="d-flex align-items-center gap-3 p-3 border rounded cursor-pointer preventive-check-item transition-all" style="background: var(--bs-card-bg); border-color: var(--bs-border-color) !important; border-radius: 10px;">
+                                        <input type="checkbox" name="checklistItems" value="@item.Item3" class="form-check-input mt-0" style="width:1.3rem; height:1.3rem;" />
+                                        <div class="d-flex align-items-center justify-content-center bg-label-primary rounded-circle" style="width:34px; height:34px; flex-shrink:0;">
+                                            <i class="@item.Item2 fs-5"></i>
+                                        </div>
+                                        <span style="font-size:0.92rem; font-weight: 500; color: var(--bs-heading-color);">@item.Item3</span>
+                                    </label>
+                                }
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted">Notas da Intervenção</label>
+                                <textarea name="notes" class="form-control" rows="3" placeholder="Descreva observações gerais..."></textarea>
+                            </div>
+
+                            <hr class="my-4" style="opacity: 0.1;">
+
+                            <!-- Anomaly Section -->
+                            <div class="p-3 rounded-3 border" style="background: rgba(255, 171, 0, 0.05); border-color: rgba(255, 171, 0, 0.2) !important;">
+                                <h6 class="fw-bold mb-3 text-warning d-flex align-items-center text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;"><i class="ri-error-warning-line me-2 fs-5"></i>Reportar Nova Avaria</h6>
+                                <p class="small text-muted mb-3">Se encontrar um problema que exija uma reparação separada, reporte aqui para gerar um novo ticket.</p>
+                                
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold text-muted">Artigo com Problema</label>
+                                        <select name="anomalyArticle" id="checkAnomalyArtigo" class="form-select" onchange="updateCheckSpecificTypes()">
+                                            <option value="">Nenhuma avaria detetada</option>
+                                            <option value="Computadores">Computadores</option>
+                                            <option value="Monitores">Monitores</option>
+                                            <option value="Impressoras">Impressoras</option>
+                                            <option value="Networking">Networking</option>
+                                            <option value="Servidores/Infra">Servidores/Infra</option>
+                                            <option value="Projetores">Projetores</option>
+                                            <option value="Outros">Outros</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12" id="divCheckAnomalyTipo" style="display:none;">
+                                        <label class="form-label small fw-bold text-muted">Tipo Específico</label>
+                                        <select name="anomalyType" id="checkAnomalyTipo" class="form-select">
+                                            <option value="">Selecione o tipo específico...</option>
+                                            <option value="Desktop" data-artigo="Computadores">Desktop</option>
+                                            <option value="Portátil" data-artigo="Computadores">Portátil</option>
+                                            <option value="AIO" data-artigo="Computadores">AIO</option>
+                                            <option value="TFT" data-artigo="Monitores">TFT</option>
+                                            <option value="Laser" data-artigo="Impressoras">Laser</option>
+                                            <option value="Jato Tinta" data-artigo="Impressoras">Jato Tinta</option>
+                                            <option value="Switch" data-artigo="Networking">Switch</option>
+                                            <option value="Router" data-artigo="Networking">Router</option>
+                                            <option value="AP" data-artigo="Networking">AP</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold text-muted">Descrição da Avaria</label>
+                                        <textarea name="anomalyDescription" class="form-control" rows="2" placeholder="O que está avariado?"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mt-4 py-3" style="font-weight: 600; font-size: 1rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(105, 108, 255, 0.3);">
+                                <i class="ri-send-plane-fill me-2"></i> Submeter Ticket
+                            </button>
+                        </form>
+                    </div>
+                }
 
                 @{ var comments = Model.TicketHistory.Where(h => h.TipoAcao == TipoAcaoHistorico.Comentario).ToList(); }
                 <div style="margin-top:20px;margin-bottom:20px">
@@ -334,8 +564,8 @@
                     } else {
                         <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
                             @foreach(var c in comments) {
-                                <div style="background:#1a232e;border-left:3px solid var(--tk-primary);padding:10px 14px;border-radius:0 8px 8px 0">
-                                    <div style="font-size:13px;line-height:1.5">@c.Acao</div>
+                                <div style="background: var(--bs-body-bg); border-left:3px solid var(--tk-primary); padding:10px 14px; border-radius:0 8px 8px 0; border: 1px solid var(--bs-border-color); border-left-width: 3px;">
+                                    <div style="font-size:13px;line-height:1.5; color: var(--bs-body-color);">@c.Acao</div>
                                     <div style="font-size:11px;color:var(--tk-muted);margin-top:4px">@c.Autor · @c.Data.ToString("dd/MM HH:mm")</div>
                                 </div>
                             }
@@ -351,7 +581,7 @@
                         {
                             <div class="tk-eq-item">
                                 <span><strong>@eq.Name</strong> · <span style="color:#6b7280;font-size:12px">@eq.SerialNumber</span></span>
-                                @if(t.Status != "Concluído") {
+                                @if(t.Status !="Concluído") {
                                     <form method="post" asp-page-handler="RemoveEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id" asp-route-SelectedTicketId="@t.Id" style="display:inline">
                                         <button type="submit" class="btn-remove" style="background:transparent;border:none;color:var(--tk-red);font-size:12px;cursor:pointer">Remover</button>
                                     </form>
@@ -370,8 +600,8 @@
                         <div class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary);">@Model.CountStock itens</div>
                     </div>
                     <div class="tk-scope-row">
-                        <button class="tk-scope-btn @(Model.StockScope == "Escola" ? "active" : "")" onclick="setStockScope('Escola')">Escola</button>
-                        <button class="tk-scope-btn @(Model.StockScope == "Global" ? "active" : "")" onclick="setStockScope('Global')">Global</button>
+                        <button class="tk-scope-btn @(Model.StockScope =="Escola" ?"active" :"")" onclick="setStockScope('Escola')">Escola</button>
+                        <button class="tk-scope-btn @(Model.StockScope =="Global" ?"active" :"")" onclick="setStockScope('Global')">Global</button>
                     </div>
                     <div class="tk-stock-list">
                         @foreach (var eq in Model.AvailableEquipment)
@@ -382,7 +612,7 @@
                                     <div class="tk-avail-name">@eq.Name</div>
                                     <div class="tk-avail-sub">S/N: @eq.SerialNumber</div>
                                 </div>
-                                @if(t.Status != "Concluído") {
+                                @if(t.Status !="Concluído") {
                                     <form method="post" asp-page-handler="AssociateEquipment" asp-route-ticketId="@t.Id" asp-route-equipmentId="@eq.Id" asp-route-SelectedTicketId="@t.Id">
                                         <button type="submit" class="btn-assoc">Associar</button>
                                     </form>
@@ -403,10 +633,10 @@
                         <div class="tk-hist-item">
                             @{
                                 var dotCol = h.TipoAcao switch {
-                                    TipoAcaoHistorico.Status => "var(--tk-primary)",
-                                    TipoAcaoHistorico.Comentario => "var(--tk-purple)",
-                                    TipoAcaoHistorico.Equipamento => "var(--tk-green)",
-                                    _ => "var(--tk-muted)"
+                                    TipoAcaoHistorico.Status =>"var(--tk-primary)",
+                                    TipoAcaoHistorico.Comentario =>"var(--tk-purple)",
+                                    TipoAcaoHistorico.Equipamento =>"var(--tk-green)",
+                                    _ =>"var(--tk-muted)"
                                 };
                             }
                             <div class="tk-hist-dot" style="color: @dotCol; border-color: @dotCol;"><i class="ri-record-circle-line"></i></div>
@@ -421,7 +651,7 @@
             </div>
         </div>
 
-        @if(t.Status != "Concluído") {
+        @if(t.Status !="Concluído") {
             <div class="tk-footer">
                 <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id" class="d-flex w-100 gap-2">
                     <input type="text" name="comment" class="tk-comment" placeholder="Adicionar nota técnica ou comentário..." required autocomplete="off">
@@ -456,16 +686,72 @@
         history.replaceState(null, '', url.toString());
     }
 
+    function updateCheckSpecificTypes() {
+        const artigo = document.getElementById('checkAnomalyArtigo').value;
+        const divTipo = document.getElementById('divCheckAnomalyTipo');
+        const tipoSelect = document.getElementById('checkAnomalyTipo');
+        const submitBtn = document.querySelector('button[type="submit"].btn-primary.w-100.mt-4');
+        
+        if (!artigo) {
+            divTipo.style.display = 'none';
+            tipoSelect.value = '';
+            return;
+        }
+
+        divTipo.style.display = 'block';
+        tipoSelect.value ="";
+        
+        let visibleCount = 0;
+        Array.from(tipoSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            const dataArt = opt.getAttribute('data-artigo');
+            const match = (dataArt === artigo);
+            opt.style.display = match ? '' : 'none';
+            if (match) visibleCount++;
+        });
+
+        if (visibleCount === 0) divTipo.style.display = 'none';
+    }
+
     function showTab(idx) {
         document.querySelectorAll('.tk-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
         document.querySelectorAll('.tk-tab-content').forEach((c, i) => c.classList.toggle('d-none', i !== idx));
     }
 
-    function setFilter(status) {
-        const url = new URL(window.location.href);
-        if (status === 'Todos') url.searchParams.delete('FilterStatus');
-        else url.searchParams.set('FilterStatus', status);
-        window.location.href = url.toString();
+    function toggleFilter(status) {
+        const current = document.getElementById('filterStatusHidden').value;
+        document.getElementById('filterStatusHidden').value = (current === status) ? '' : status;
+        document.querySelector('.tk-filters').submit();
+    }
+
+    // Cascading Filters for Modal
+    function prevFilterEscolas() {
+        const agrId = document.getElementById('prevFilterAgrupamento').value;
+        const escSelect = document.getElementById('prevFilterEscola');
+        
+        Array.from(escSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            const match = (!agrId || opt.getAttribute('data-agr') === agrId);
+            opt.style.display = match ? '' : 'none';
+            if (!match && escSelect.value === opt.value) escSelect.value ="";
+        });
+        
+        if ($(escSelect).data('select2')) $(escSelect).trigger('change.select2');
+        prevFilterBlocos();
+    }
+
+    function prevFilterBlocos() {
+        const escId = document.getElementById('prevFilterEscola').value;
+        const blcSelect = document.getElementById('prevFilterBloco');
+        
+        Array.from(blcSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            const match = (!escId || opt.getAttribute('data-esc') === escId);
+            opt.style.display = match ? '' : 'none';
+            if (!match && blcSelect.value === opt.value) blcSelect.value ="";
+        });
+
+        if ($(blcSelect).data('select2')) $(blcSelect).trigger('change.select2');
     }
 
     function setStockScope(scope) {
@@ -482,6 +768,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2
+        $('.select2-modal').each(function() {
+            var $this = $(this);
+            $this.select2({
+                dropdownParent: $this.closest('.modal-content')
+            });
+        });
+
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('SelectedTicketId')) {
             if (panelEl) panelEl.classList.add('open');
@@ -493,6 +787,11 @@
 
         initMap();
         setTimeout(() => { if(window.mapInstance) window.mapInstance.invalidateSize(); }, 500);
+
+        // Initialize cascading states
+        if (document.getElementById('prevFilterAgrupamento')) {
+            prevFilterEscolas();
+        }
     });
 
     async function initMap() {
@@ -557,13 +856,13 @@
                         } else {
                             try {
                                 // Try 1: Full address with context
-                                let q1 = loc.address + ", Braga, Portugal";
+                                let q1 = loc.address +", Braga, Portugal";
                                 let response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q1)}`);
                                 let data = await response.json();
                                 
                                 // Try 2: If fail, try just the name with context
                                 if (!data || data.length === 0) {
-                                    let q2 = loc.name + ", Braga, Portugal";
+                                    let q2 = loc.name +", Braga, Portugal";
                                     response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q2)}`);
                                     data = await response.json();
                                 }
@@ -588,24 +887,24 @@
 
         function addMarkerToMap(loc, lat, lon) {
             let markerIcon = blueIcon;
-            let statusLabel = "";
-            let debugInfo = ""; 
+            let statusLabel ="";
+            let debugInfo =""; 
             
-            const isInProgress = loc.hasInProgress || loc.hasInProgress === "True" || loc.hasInProgress === true;
-            const isCompleted = loc.hasCompleted || loc.hasCompleted === "True" || loc.hasCompleted === true;
-            const isPending = loc.hasPending || loc.hasPending === "True" || loc.hasPending === true;
+            const isInProgress = loc.hasInProgress || loc.hasInProgress ==="True" || loc.hasInProgress === true;
+            const isCompleted = loc.hasCompleted || loc.hasCompleted ==="True" || loc.hasCompleted === true;
+            const isPending = loc.hasPending || loc.hasPending ==="True" || loc.hasPending === true;
 
             if (isInProgress) {
                 markerIcon = yellowIcon;
-                statusLabel = "<br><span class='badge bg-label-warning mt-2'>Em Progresso</span>";
+                statusLabel ="<br><span class='badge bg-label-warning mt-2'>Em Progresso</span>";
             } else if (isCompleted) {
                 markerIcon = greenIcon;
-                statusLabel = "<br><span class='badge bg-label-success mt-2'>Concluído</span>";
+                statusLabel ="<br><span class='badge bg-label-success mt-2'>Concluído</span>";
             } else if (isPending) {
                 markerIcon = blueIcon;
-                statusLabel = "<br><span class='badge bg-label-info mt-2'>Pendente</span>";
+                statusLabel ="<br><span class='badge bg-label-info mt-2'>Pendente</span>";
             } else {
-                debugInfo = "<br><small style='color:gray'>(Sem estado detetado)</small>";
+                debugInfo ="<br><small style='color:gray'>(Sem estado detetado)</small>";
             }
 
             L.marker([lat, lon], {icon: markerIcon})
@@ -615,3 +914,6 @@
     }
 </script>
 }
+
+
+

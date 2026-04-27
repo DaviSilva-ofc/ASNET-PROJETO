@@ -1,15 +1,15 @@
 @page
 @model AspnetCoreStarter.Pages.Clients.Coordinators.CoordinatorStocksModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Stocks";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Stocks";
 }
 
 @section PageStyles {
 <style>
     .dark-style .card,
     [data-bs-theme="dark"] .card {
-        background-color: #2b2c40 !important;
+        background-color: var(--tk-card-solid) !important;
         box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
     }
 
@@ -194,7 +194,7 @@
                             if (!string.IsNullOrEmpty(Model.FilterType)) filters.Add($"Tipo: {Model.FilterType}");
                             if (!string.IsNullOrEmpty(Model.FilterStatus)) filters.Add($"Estado: {Model.FilterStatus}");
                             if (Model.FilterEscolaId.HasValue || Model.FilterSalaId.HasValue) filters.Add("Localização específica");
-                            @Html.Raw(string.Join(", ", filters))
+                            @Html.Raw(string.Join(",", filters))
                         }
                     </span>
                 </div>
@@ -233,20 +233,20 @@
                             <tr>
                                 <td>
                                     @{
-                                        var itype = item.Category ?? "";
-                                        var iname = item.Name ?? "";
+                                        var itype = item.Category ??"";
+                                        var iname = item.Name ??"";
                                         var iemoji = itype.ToLower() switch {
-                                            var s when s.Contains("monitor") => "🖥️",
-                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                            var s when s.Contains("impressora") => "🖨️",
-                                            var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
-                                            var s when s.Contains("projetor") => "📽️",
-                                            var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                            var s when s.Contains("teclado") => "⌨️",
-                                            var s when s.Contains("servidor") => "🗄️",
-                                            var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                            var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
-                                            _ => iname.Contains("Monitor") ? "🖥️" : (iname.Contains("Computador") ? "💻" : (iname.Contains("Impressora") ? "🖨️" : "📦"))
+                                            var s when s.Contains("monitor") =>"🖥️",
+                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                            var s when s.Contains("impressora") =>"🖨️",
+                                            var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") =>"🌐",
+                                            var s when s.Contains("projetor") =>"📽️",
+                                            var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                            var s when s.Contains("teclado") =>"⌨️",
+                                            var s when s.Contains("servidor") =>"🗄️",
+                                            var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                            var s when s.Contains("quadro") || s.Contains("interativo") =>"📺",
+                                            _ => iname.Contains("Monitor") ?"🖥️" : (iname.Contains("Computador") ?"💻" : (iname.Contains("Impressora") ?"🖨️" :"📦"))
                                         };
                                     }
                                     <strong>@iemoji @item.Name</strong>
@@ -283,20 +283,20 @@
                                 </td>
                                 <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
                                     <div class="d-flex align-items-center gap-1 justify-content-center">
-                                        <button type="button" class="btn btn-sm btn-icon text-info p-0" 
-                                                onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" 
+                                        <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;"
+                                                onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'","\\'")', '@item.Location.Replace("'","\\'")')" 
                                                 title="Código QR">
-                                            <i class="ri-qr-code-line"></i>
+                                            📱
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-icon text-primary p-0" 
-                                                onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                        <button type="button" class="btn btn-sm btn-icon text-primary p-0 lh-1" style="font-size: 1.1rem;"
+                                                onclick="openEditStatusModal('@Uri.EscapeDataString(item.Name ??"")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ??"")', @item.Quantity)"
                                                 title="Editar Estado">
-                                            <i class="ri-edit-line"></i>
+                                            ✏️
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-icon text-danger p-0" 
-                                                onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ?? "")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ?? "")', @item.Quantity)"
+                                        <button type="button" class="btn btn-sm btn-icon text-danger p-0 lh-1" style="font-size: 1.1rem;"
+                                                onclick="openDeleteStockModal('@Uri.EscapeDataString(item.Name ??"")', '@item.RoomId', '@Uri.EscapeDataString(item.Status ??"")', @item.Quantity)"
                                                 title="Eliminar">
-                                            <i class="ri-delete-bin-line"></i>
+                                            🗑️
                                         </button>
                                     </div>
                                 </td>
@@ -338,15 +338,15 @@
                             <tr>
                                 <td>
                                     @{
-                                        var btype = stock.Type ?? "";
-                                        var bname = stock.Name ?? "";
+                                        var btype = stock.Type ??"";
+                                        var bname = stock.Name ??"";
                                         var bemoji = btype.ToLower() switch {
-                                            var s when s.Contains("monitor") => "🖥️",
-                                            var s when s.Contains("portátil") || s.Contains("laptop") => "💻",
-                                            var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                            var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
-                                            var s when s.Contains("impressora") => "🖨️",
-                                            _ => "📦"
+                                            var s when s.Contains("monitor") =>"🖥️",
+                                            var s when s.Contains("portátil") || s.Contains("laptop") =>"💻",
+                                            var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                            var s when s.Contains("quadro") || s.Contains("interativo") =>"📺",
+                                            var s when s.Contains("impressora") =>"🖨️",
+                                            _ =>"📦"
                                         };
                                     }
                                     <strong>@bemoji @stock.Name</strong>
@@ -411,35 +411,35 @@
                                 <td class="text-muted small">@req.Id</td>
                                 <td>
                                     @{
-                                        var rtype = req.ItemType ?? "";
-                                        var rname = req.ItemName ?? "";
+                                        var rtype = req.ItemType ??"";
+                                        var rname = req.ItemName ??"";
                                         var remoji = rtype.ToLower() switch {
-                                            var s when s.Contains("monitor") => "🖥️",
-                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                            var s when s.Contains("impressora") => "🖨️",
-                                            var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                            var s when s.Contains("teclado") => "⌨️",
-                                            _ => rname.Contains("Monitor") ? "🖥️" : (rname.Contains("Computador") ? "💻" : "📦")
+                                            var s when s.Contains("monitor") =>"🖥️",
+                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                            var s when s.Contains("impressora") =>"🖨️",
+                                            var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                            var s when s.Contains("teclado") =>"⌨️",
+                                            _ => rname.Contains("Monitor") ?"🖥️" : (rname.Contains("Computador") ?"💻" :"📦")
                                         };
                                     }
                                     <strong>@remoji @req.ItemName</strong>
                                 </td>
                                 <td><span class="badge bg-label-secondary">@req.ItemType</span></td>
                                 <td>@req.Quantity</td>
-                                <td class="text-muted small">@(req.Notes?.Length > 50 ? req.Notes.Substring(0, 50) + "..." : req.Notes)</td>
+                                <td class="text-muted small">@(req.Notes?.Length > 50 ? req.Notes.Substring(0, 50) +"..." : req.Notes)</td>
                                 <td>
                                     @switch (req.Status)
                                     {
-                                        case "Pendente_Diretor":
+                                        case"Pendente_Diretor":
                                             <span class="badge bg-label-warning"><i class="ri-time-line me-1"></i>Aguarda Diretor</span>
                                             break;
-                                        case "Pendente_Admin":
+                                        case"Pendente_Admin":
                                             <span class="badge bg-label-info"><i class="ri-arrow-up-line me-1"></i>Escalado ao Admin</span>
                                             break;
-                                        case "Atendido":
+                                        case"Atendido":
                                             <span class="badge bg-label-success"><i class="ri-checkbox-circle-line me-1"></i>Atendido</span>
                                             break;
-                                        case "Recusado":
+                                        case"Recusado":
                                             <span class="badge bg-label-danger"><i class="ri-close-circle-line me-1"></i>Recusado</span>
                                             break;
                                         default:
@@ -526,7 +526,7 @@
                                 <option value="">Todas as Salas</option>
                                 @foreach (var sala in Model.AvailableRooms)
                                 {
-                                    <option value="@sala.Id" data-esc="@sala.Block?.SchoolId">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" : "")</option>
+                                    <option value="@sala.Id" data-esc="@sala.Block?.SchoolId">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" :"")</option>
                                 }
                             </select>
                         </div>
@@ -697,17 +697,17 @@
         var roomSelect = document.getElementById('filtSala');
         var options = roomSelect.options;
 
-        roomSelect.value = "";
+        roomSelect.value ="";
         
         for (var i = 0; i < options.length; i++) {
             var opt = options[i];
-            if (opt.value === "") continue;
+            if (opt.value ==="") continue;
             
             var escData = opt.getAttribute('data-esc');
-            if (escId === "" || escData === escId) {
-                opt.style.display = "";
+            if (escId ==="" || escData === escId) {
+                opt.style.display ="";
             } else {
-                opt.style.display = "none";
+                opt.style.display ="none";
             }
         }
     }
@@ -751,12 +751,12 @@
         const tipoSelect = document.getElementById('filterTipo');
         const options = tipoSelect.querySelectorAll('option');
         
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         
         options.forEach(opt => {
-            if (opt.value === "") return;
-            const optArts = (opt.getAttribute('data-art') || "").split('|');
-            if (artName === "" || optArts.includes(artName)) {
+            if (opt.value ==="") return;
+            const optArts = (opt.getAttribute('data-art') ||"").split('|');
+            if (artName ==="" || optArts.includes(artName)) {
                 opt.style.display = 'block';
             } else {
                 opt.style.display = 'none';
@@ -769,12 +769,12 @@
         const tipoSelect = document.getElementById('newReqTipo');
         const options = tipoSelect.querySelectorAll('option');
         
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         
         options.forEach(opt => {
-            if (opt.value === "") return;
-            const optArts = (opt.getAttribute('data-art') || "").split('|');
-            if (artName === "" || optArts.includes(artName)) {
+            if (opt.value ==="") return;
+            const optArts = (opt.getAttribute('data-art') ||"").split('|');
+            if (artName ==="" || optArts.includes(artName)) {
                 opt.style.display = 'block';
             } else {
                 opt.style.display = 'none';
@@ -789,3 +789,5 @@
 </script>
 <partial name="Shared/_QrModal" />
 }
+
+

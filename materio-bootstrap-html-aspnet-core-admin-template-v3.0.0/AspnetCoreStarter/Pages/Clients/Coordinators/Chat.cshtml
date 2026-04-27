@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Coordinators.CoordinatorChatModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Chat Coordenador";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Chat Coordenador";
 }
 
 @section PageStyles {
@@ -12,11 +12,11 @@
     .chat-main { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; background: var(--bs-card-bg); }
     .contact-item { padding: 12px 15px; border-bottom: 1px solid var(--bs-border-color); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; color: var(--bs-body-color); text-decoration: none; }
     .contact-item:hover { background: rgba(0,0,0,0.05); }
-    html.dark-style .contact-item:hover { background: rgba(255,255,255,0.05); }
+    html.dark-style .contact-item:hover { background: var(--bs-border-color-translucent); }
     .contact-item.active { background: rgba(105,108,255,0.1); border-left: 4px solid #696cff; }
     .messages-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; height: 100%; }
     .message-bubble { max-width: 70%; padding: 10px 15px; border-radius: 15px; font-size: 0.9rem; position: relative; }
-    .msg-sent { align-self: flex-end; background: #696cff; color: #fff; border-bottom-right-radius: 2px; }
+    .msg-sent { align-self: flex-end; background: #696cff; color: var(--bs-heading-color); border-bottom-right-radius: 2px; }
     .msg-received { align-self: flex-start; background: #f1f0f0; color: #333; border-bottom-left-radius: 2px; }
     html.dark-style .msg-received { background: var(--bs-body-bg); color: var(--bs-body-color); }
     .chat-input-area { padding: 15px; border-top: 1px solid var(--bs-border-color); background: var(--bs-card-bg); position: absolute; bottom: 0; width: 100%; }
@@ -28,7 +28,7 @@
     <div class="chat-container">
         <!-- Contacts -->
         <div class="contacts-list">
-            <div class="p-3 border-bottom font-weight-bold bg-primary text-white">
+            <div class="p-3 border-bottom font-weight-bold bg-primary" style="color: var(--bs-heading-color) !important;">
                 <i class="bx bx-message-square-dots me-2"></i> Contactos
             </div>
             @if (Model.AvailableContacts == null || !Model.AvailableContacts.Any())
@@ -39,7 +39,7 @@
             {
                 @foreach (var user in Model.AvailableContacts)
                 {
-                    <a asp-page="./Chat" asp-route-userId="@user.Id" class="contact-item @(Model.SelectedUser?.Id == user.Id ? "active" : "")">
+                    <a asp-page="./Chat" asp-route-userId="@user.Id" class="contact-item @(Model.SelectedUser?.Id == user.Id ?"active" :"")">
                         <div class="avatar avatar-sm rounded-circle d-flex align-items-center justify-content-center" style="width:35px;height:35px;">
                             @if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
                             {
@@ -80,7 +80,7 @@
                 <div class="messages-area" id="msgArea" style="flex: 1; padding-bottom: 80px;">
                     @foreach (var msg in Model.ChatHistory)
                     {
-                        <div class="message-bubble @(msg.SenderId == Model.CurrentUserId ? "msg-sent" : "msg-received")">
+                        <div class="message-bubble @(msg.SenderId == Model.CurrentUserId ?"msg-sent" :"msg-received")">
                             @msg.Content
                             <div class="text-end" style="font-size: 0.65rem; opacity: 0.7; margin-top: 4px;">
                                 @msg.CreatedAt.ToString("HH:mm")
@@ -114,3 +114,6 @@
     if (area) area.scrollTop = area.scrollHeight;
 </script>
 }
+
+
+

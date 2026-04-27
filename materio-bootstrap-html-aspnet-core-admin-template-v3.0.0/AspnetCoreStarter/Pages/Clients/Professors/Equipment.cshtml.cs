@@ -102,7 +102,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
 
             // Fetch pending requests from this user
             MyStockRequests = await _context.Tickets
-                .Where(t => t.RequestedByUserId == userId && t.Level == "Empréstimo" && t.Status == "Pedido")
+                .Where(t => t.RequestedByUserId == userId && t.Level == "Empréstimo" && (t.Status == "Pendente" || t.Status == "Pedido"))
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 
@@ -173,7 +173,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             {
                 Description = $"PEDIDO DE EQUIPAMENTO (PROFESSOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nLocalização Sugerida: {room?.Name} ({room?.Block?.School?.Name})\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 RequestedByUserId = userId,
                 SchoolId = room?.Block?.SchoolId

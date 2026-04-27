@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Professors.ProfessorTicketsModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Tickets";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Tickets";
 }
 
 <link rel="stylesheet" href="~/css/tickets-v2.css" />
@@ -15,7 +15,7 @@
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Professor /</span> Tickets</h4>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm" style="background: var(--tk-card-solid);">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Gestão de Tickets</h5>
             <div class="d-flex gap-2">
@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        @if (Model.SalaId.HasValue || (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados"))
+        @if (Model.SalaId.HasValue || (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus !="Todos os Estados"))
         {
             <div class="card-body py-2">
                 <div class="alert alert-info d-flex justify-content-between align-items-center mb-0 shadow-sm border-0 active-filters-bar" role="alert">
@@ -38,16 +38,10 @@
                             Filtros ativos: 
                             @if (Model.SalaId.HasValue) { 
                                 var sala = Model.MyRooms.FirstOrDefault(r => r.Id == Model.SalaId.Value);
-                                <span class="badge filter-badge me-1">Sala: @(sala?.Name ?? "N/A")</span> 
+                                <span class="badge filter-badge me-1">Sala: @(sala?.Name ??"N/A")</span> 
                             }
-                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus != "Todos os Estados") { 
-                                var displayStatus = Model.FilterStatus switch {
-                                    "Em andamento" => "Em Reparação",
-                                    "Concluído" => "Resolvido",
-                                    "Pedido" => "A aguardar",
-                                    _ => Model.FilterStatus
-                                };
-                                <span class="badge filter-badge me-1">Estado: @displayStatus</span> 
+                            @if (!string.IsNullOrEmpty(Model.FilterStatus) && Model.FilterStatus !="Todos os Estados") { 
+                                <span class="badge filter-badge me-1">Estado: @Model.FilterStatus</span> 
                             }
                         </span>
                     </div>
@@ -74,39 +68,36 @@
                         <div class="tk-left">
                             <div class="tk-icon">
                                 @{
-                                    var type = t.Equipamento?.Type ?? "";
-                                    var name = t.Equipamento?.Name ?? "";
+                                    var type = t.Equipamento?.Type ??"";
+                                    var name = t.Equipamento?.Name ??"";
                                     var emoji = type switch {
-                                        var s when s.Contains("Monitor") => "🖥️",
-                                        var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
-                                        var s when s.Contains("Impressora") => "🖨️",
-                                        var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
-                                        var s when s.Contains("Projetor") => "📽️",
-                                        var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
-                                        var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
-                                        var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
-                                        var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
-                                        var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
-                                        var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
-                                        _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                                        var s when s.Contains("Monitor") =>"🖥️",
+                                        var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") =>"💻",
+                                        var s when s.Contains("Impressora") =>"🖨️",
+                                        var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") =>"🌐",
+                                        var s when s.Contains("Projetor") =>"📽️",
+                                        var s when s.Contains("Rato") || s.Contains("Mouse") =>"🖱️",
+                                        var s when s.Contains("Teclado") || s.Contains("Keyboard") =>"⌨️",
+                                        var s when s.Contains("Servidor") || s.Contains("Server") =>"🗄️",
+                                        var s when s.Contains("UPS") || s.Contains("Bateria") =>"🔋",
+                                        var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") =>"🔊",
+                                        var s when s.Contains("Câmara") || s.Contains("Camera") =>"📷",
+                                        _ => name.Contains("Monitor") ?"🖥️" : (name.Contains("Computador") ?"💻" : (name.Contains("Impressora") ?"🖨️" :"🔧"))
                                     };
                                 }
                                 @emoji
                             </div>
                             <div class="tk-details">
-                                <div class="tk-title">@(t.Equipamento?.Name ?? "Avaria Geral")</div>
+                                <div class="tk-title">@(t.Equipamento?.Name ??"Avaria Geral")</div>
                                 <div class="tk-sub">
-                                    <i class="ri-map-pin-line me-1"></i> @(t.Equipamento?.Room?.Name ?? "N/A") • @t.CreatedAt.ToString("dd/MM HH:mm")
+                                    <i class="ri-map-pin-line me-1"></i> @(t.Equipamento?.Room?.Name ??"N/A") • @t.CreatedAt.ToString("dd/MM HH:mm")
                                 </div>
                             </div>
                         </div>
                         <div class="tk-right">
                             @{
-                                var stCol = t.Status switch {
-                                    "Concluído" => "var(--tk-green)",
-                                    "Em Reparação" or "Em Resolução" => "var(--tk-primary)",
-                                    "Pedido" or "Pendente" => "var(--tk-amber)",
-                                    _ => "var(--tk-muted)"
+                                var stCol = t.Status switch {"Concluído" =>"var(--tk-green)","Em reparação" or"Em Reparação" or"Em Resolução" =>"var(--tk-primary)","Aceite" =>"var(--tk-blue)","Pendente" or"Pedido" or"Aberto" =>"var(--tk-amber)",
+                                    _ =>"var(--tk-muted)"
                                 };
                             }
                             <span class="badge-tk" style="color: @stCol; border-color: @stCol; background: @(stCol)11;">@t.Status</span>
@@ -120,32 +111,33 @@
 </div>
 
 <!-- Panel Overlay & Slide-over Panel -->
-<div class="tk-overlay @(Model.SelectedTicketId.HasValue ? "open" : "")" onclick="closeTicketPanel()"></div>
+<div class="tk-overlay @(Model.SelectedTicketId.HasValue ?"open" :"")" onclick="closeTicketPanel()"></div>
 
-<div class="tk-panel @(Model.SelectedTicketId.HasValue ? "open" : "")" id="ticketPanel">
+<div class="tk-panel @(Model.SelectedTicketId.HasValue ?"open" :"")" id="ticketPanel">
     @if (Model.SelectedTicket != null)
     {
         var t = Model.SelectedTicket;
+        var mainEq = t.Equipamento ?? t.UtilizedEquipments?.FirstOrDefault() ?? Model.AssociatedEquipment.FirstOrDefault();
         
         <div class="tk-ph">
             <div class="tk-ph-top">
                 <div class="tk-ph-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
                     @{
-                        var type = t.Equipamento?.Type ?? "";
-                        var name = t.Equipamento?.Name ?? "";
+                        var type = mainEq?.Type ??"";
+                        var name = mainEq?.Name ??"";
                         var emoji = type switch {
-                            var s when s.Contains("Monitor") => "🖥️",
-                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
-                            var s when s.Contains("Impressora") => "🖨️",
-                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") => "🌐",
-                            var s when s.Contains("Projetor") => "📽️",
-                            var s when s.Contains("Rato") || s.Contains("Mouse") => "🖱️",
-                            var s when s.Contains("Teclado") || s.Contains("Keyboard") => "⌨️",
-                            var s when s.Contains("Servidor") || s.Contains("Server") => "🗄️",
-                            var s when s.Contains("UPS") || s.Contains("Bateria") => "🔋",
-                            var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
-                            var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
-                            _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
+                            var s when s.Contains("Monitor") =>"🖥️",
+                            var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") =>"💻",
+                            var s when s.Contains("Impressora") =>"🖨️",
+                            var s when s.Contains("Rede") || s.Contains("Network") || s.Contains("Switch") || s.Contains("Router") =>"🌐",
+                            var s when s.Contains("Projetor") =>"📽️",
+                            var s when s.Contains("Rato") || s.Contains("Mouse") =>"🖱️",
+                            var s when s.Contains("Teclado") || s.Contains("Keyboard") =>"⌨️",
+                            var s when s.Contains("Servidor") || s.Contains("Server") =>"🗄️",
+                            var s when s.Contains("UPS") || s.Contains("Bateria") =>"🔋",
+                            var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") =>"🔊",
+                            var s when s.Contains("Câmara") || s.Contains("Camera") =>"📷",
+                            _ => name.Contains("Monitor") ?"🖥️" : (name.Contains("Computador") ?"💻" : (name.Contains("Impressora") ?"🖨️" :"🔧"))
                         };
                     }
                     @emoji
@@ -155,36 +147,37 @@
                         <span class="badge-tk" style="color: var(--tk-muted); border-color: var(--tk-border);">TK-@t.Id.ToString("D3")</span>
                         <span class="badge-tk" style="color: var(--tk-primary); border-color: var(--tk-primary); background: rgba(255, 171, 0, 0.1);">@t.Status</span>
                     </div>
-                    <h2 class="tk-ph-title">@(t.Equipamento?.Name ?? "Avaria Geral"): @(t.Description?.Length > 30 ? t.Description.Substring(0, 30) + "..." : t.Description)</h2>
+                    <h2 class="tk-ph-title">@(mainEq?.Name ??"Avaria Geral"): @(t.Description?.Length > 30 ? t.Description.Substring(0, 30) +"..." : t.Description)</h2>
                 </div>
                 <button class="tk-close" onclick="closeTicketPanel()">✕</button>
             </div>
 
             <div class="tk-stepper">
                 @{
-                    var steps = new[] { "Aberto", "Aceite", "Em Reparação", "Concluído" };
+                    var steps = new[] {"Pendente","Aceite","Em reparação","Concluído" };
                     int si = Array.IndexOf(steps, t.Status);
-                    if (si == -1 && t.Status == "Pedido") si = 0;
-                    if (si == -1 && t.Status == "Em Resolução") si = 2;
-                    if (si == -1 && t.Status == "Pendente") si = 0;
+                    if (si == -1) {
+                        if (t.Status =="Pedido" || t.Status =="Aberto") si = 0;
+                        else if (t.Status.Contains("repara") || t.Status.Contains("Resolução")) si = 2;
+                    }
                 }
                 @for (int i = 0; i < steps.Length; i++)
                 {
-                    bool done = i < si || t.Status == "Concluído";
-                    bool active = i == si && t.Status != "Concluído";
+                    bool done = i < si || t.Status =="Concluído";
+                    bool active = i == si && t.Status !="Concluído";
                     <div class="tk-step">
                         @if (i < steps.Length - 1) {
-                            <div class="tk-step-line @(i < si || t.Status == "Concluído" ? "done" : "")"></div>
+                            <div class="tk-step-line @(i < si || t.Status =="Concluído" ?"done" :"")"></div>
                         }
-                        <div class="tk-step-dot @(done ? "done" : "") @(active ? "active" : "")">
-                            @(done ? "✓" : (i + 1).ToString())
+                        <div class="tk-step-dot @(done ?"done" :"") @(active ?"active" :"")">
+                            @(done ?"✓" : (i + 1).ToString())
                         </div>
-                        <div class="tk-step-label @(active ? "active" : "")">@steps[i]</div>
+                        <div class="tk-step-label @(active ?"active" :"")">@steps[i]</div>
                     </div>
                 }
             </div>
             
-            @if(t.Status == "Concluído" && t.SatisfacaoRating == null) {
+            @if(t.Status =="Concluído" && t.SatisfacaoRating == null) {
                 <div class="tk-advance-row">
                     <button type="button" class="tk-advance-btn" onclick="openEvalModal(@t.Id, '@t.Equipamento?.Name')">⭐ Avaliar Serviço</button>
                 </div>
@@ -199,10 +192,21 @@
         <div class="tk-body">
             <div class="tk-tab-content" id="tab-0">
                 <div class="tk-info-grid">
-                    <div class="tk-info-card"><div class="tk-info-label">Solicitante</div><div class="tk-info-val">@(t.RequestedBy?.Username ?? "—")</div></div>
-                    <div class="tk-info-card"><div class="tk-info-label">Técnico</div><div class="tk-info-val">@(t.Technician?.Username ?? "A aguardar...")</div></div>
-                    <div class="tk-info-card"><div class="tk-info-label">Escola</div><div class="tk-info-val">@(t.School?.Name ?? "—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Solicitante</div><div class="tk-info-val">@(t.RequestedBy?.Username ??"—")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Técnico</div><div class="tk-info-val">@(t.Technician?.Username ??"A aguardar...")</div></div>
+                    <div class="tk-info-card"><div class="tk-info-label">Escola</div><div class="tk-info-val">@(t.School?.Name ??"—")</div></div>
                     <div class="tk-info-card"><div class="tk-info-label">Criado em</div><div class="tk-info-val">@t.CreatedAt.ToString("dd/MM/yyyy, HH:mm")</div></div>
+                    
+                    @if (mainEq != null) {
+                        <div class="tk-info-card">
+                            <div class="tk-info-label">Nº de Série</div>
+                            <div class="tk-info-val text-primary fw-bold">@(mainEq.SerialNumber ??"N/A")</div>
+                        </div>
+                        <div class="tk-info-card" style="grid-row: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; padding: 10px; border-radius: 8px;">
+                            <div class="tk-info-label" style="color: #000; margin-bottom: 5px;">QR CODE</div>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=@(mainEq.SerialNumber ?? t.Id.ToString())" alt="QR Code" style="width: 80px; height: 80px;" />
+                        </div>
+                    }
                 </div>
                 
                 <div class="tk-desc-card">
@@ -230,7 +234,7 @@
                         <div style="color:var(--tk-muted);font-size:13px;padding:20px;text-align:center">Sem histórico registado.</div>
                     } else {
                         @foreach(var h in Model.TicketHistory) {
-                            <div style="background:#1a232e;border-left:3px solid @(h.TipoAcao == TipoAcaoHistorico.Comentario ? "var(--tk-primary)" : "var(--tk-muted)");padding:12px;border-radius:0 8px 8px 0">
+                            <div style="background:#1a232e;border-left:3px solid @(h.TipoAcao == TipoAcaoHistorico.Comentario ?"var(--tk-primary)" :"var(--tk-muted)");padding:12px;border-radius:0 8px 8px 0">
                                 <div style="font-size:13px;line-height:1.5">@h.Acao</div>
                                 <div style="font-size:11px;color:var(--tk-muted);margin-top:4px">@h.Autor · @h.Data.ToString("dd/MM HH:mm")</div>
                             </div>
@@ -240,7 +244,7 @@
             </div>
         </div>
 
-        @if(t.Status != "Concluído") {
+        @if(t.Status !="Concluído") {
             <div class="tk-footer">
                 <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@t.Id" class="d-flex w-100 gap-2">
                     <input type="text" name="comment" class="tk-comment" placeholder="Enviar mensagem ao técnico..." required autocomplete="off">
@@ -269,7 +273,7 @@
                         {
                             var hasActive = Model.EqIdsWithActiveTickets.Contains(eq.Id);
                             var isBroken = eq.Status != null && (eq.Status.Contains("repara") || eq.Status.Contains("manutenção") || eq.Status.Contains("Avariado"));
-                            var indicator = (hasActive || isBroken) ? "⚠️" : "✅";
+                            var indicator = (hasActive || isBroken) ?"⚠️" :"✅";
                             
                             <option value="@eq.Id" data-type="@eq.Type">
                                 @indicator @eq.Name - @eq.SerialNumber (@eq.Room?.Name)
@@ -332,9 +336,10 @@
                         <label class="form-label fw-semibold small text-uppercase mb-1">Estado do Ticket</label>
                         <select asp-for="FilterStatus" class="form-select">
                             <option value="Todos os Estados">Todos os Estados</option>
-                            <option value="Pedido">A aguardar Técnico</option>
-                            <option value="Em andamento">Em Reparação</option>
-                            <option value="Concluído">Resolvido</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Aceite">Aceite</option>
+                            <option value="Em reparação">Em reparação</option>
+                            <option value="Concluído">Concluído</option>
                         </select>
                     </div>
                 </div>
@@ -365,7 +370,7 @@
     }
     function openEvalModal(id, name) {
         document.getElementById('evalTicketId').value = id;
-        document.getElementById('evalEquipName').innerText = name || "Equipamento";
+        document.getElementById('evalEquipName').innerText = name ||"Equipamento";
         setRating(5); // Default to 5
         var modal = new bootstrap.Modal(document.getElementById('modalAvaliacao'));
         modal.show();
@@ -406,7 +411,7 @@
         if (!selectEq || !selectPri) return;
         
         const selectedOption = selectEq.options[selectEq.selectedIndex];
-        const type = selectedOption ? (selectedOption.getAttribute('data-type') || "") : "";
+        const type = selectedOption ? (selectedOption.getAttribute('data-type') ||"") :"";
         const typeLower = type.toLowerCase().trim();
 
         // 1. Reset: Enable and show all options first
@@ -414,7 +419,7 @@
             selectPri.options[i].disabled = false;
             selectPri.options[i].hidden = false;
         }
-        if (hint) hint.innerText = "";
+        if (hint) hint.innerText ="";
 
         if (!typeLower) return;
 
@@ -489,7 +494,7 @@
 
         modalElement.addEventListener('hidden.bs.modal', function () {
             const hint = document.getElementById('priorityHint');
-            if (hint) hint.innerText = "";
+            if (hint) hint.innerText ="";
             const selectPri = document.getElementById('selectPriority');
             if (selectPri) {
                 for (let i = 0; i < selectPri.options.length; i++) {
@@ -505,7 +510,7 @@
             }
             const selectEq = document.getElementById('selectEquipamento');
             if (selectEq) {
-                selectEq.value = "";
+                selectEq.value ="";
                 if (typeof jQuery !== 'undefined' && $(selectEq).hasClass("select2-hidden-accessible")) {
                     $(selectEq).trigger('change');
                 }
@@ -516,3 +521,5 @@
 
 <partial name="Shared/_QrModal" />
 }
+
+

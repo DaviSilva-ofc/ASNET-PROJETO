@@ -236,7 +236,7 @@ namespace AspnetCoreStarter.Pages.Clients.Coordinators
             {
                 Description = $"PEDIDO DE STOCK (COORDENADOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 RequestedByUserId = userId,
                 SchoolId = coord?.SchoolId

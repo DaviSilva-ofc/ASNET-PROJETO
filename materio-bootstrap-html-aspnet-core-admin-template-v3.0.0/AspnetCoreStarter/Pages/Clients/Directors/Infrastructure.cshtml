@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Directors.DirectorInfrastructureModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Infraestrutura";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Infraestrutura";
 }
 
 @section VendorStyles {
@@ -12,7 +12,7 @@
 @section PageStyles {
 <style>
     .dark-style .card-header h5,
-    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+    [data-bs-theme="dark"] .card-header h5 { color: var(--bs-heading-color) !important; }
     
     .dark-style .list-group-item,
     [data-bs-theme="dark"] .list-group-item {
@@ -26,7 +26,7 @@
 
     .dark-style .card,
     [data-bs-theme="dark"] .card {
-        background-color: #2b2c40;
+        background-color: var(--tk-card-solid) !important;
         box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
     }
 
@@ -78,7 +78,7 @@
     [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         transform: rotate(90deg);
         background-color: var(--bs-primary);
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .agrupamento-node { color: var(--bs-primary); }
@@ -185,14 +185,14 @@
         {
             <div class="col-12 mb-4">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center cursor-pointer" 
+                    <div class="card-header bg-primary  d-flex justify-content-between align-items-center cursor-pointer" style="color: var(--bs-heading-color) !important;" 
                          data-bs-toggle="collapse" data-bs-target="#client-@client.Agrupamento.Id">
                         <div class="d-flex align-items-center">
-                            <h5 class="mb-0 text-white me-3">
+                            <h5 class="mb-0  me-3" style="color: var(--bs-heading-color) !important;">
                                 <strong>@client.Agrupamento.Name</strong>
                             </h5>
                         </div>
-                        <i class="icon-base ri-arrow-down-s-line text-white fs-4"></i>
+                        <i class="icon-base ri-arrow-down-s-line  fs-4" style="color: var(--bs-heading-color) !important;"></i>
                     </div>
                     <div id="client-@client.Agrupamento.Id" class="collapse show">
                         <div class="card-body pt-4">
@@ -335,15 +335,15 @@
                                                                                                             var pluralLabel = label;
                                                                                                             if (label.EndsWith("r") || label.EndsWith("z") || label.EndsWith("n"))
                                                                                                             {
-                                                                                                                pluralLabel += "es";
+                                                                                                                pluralLabel +="es";
                                                                                                             }
                                                                                                             else if (label.EndsWith("l"))
                                                                                                             {
-                                                                                                                pluralLabel = label.Substring(0, label.Length - 1) + "is";
+                                                                                                                pluralLabel = label.Substring(0, label.Length - 1) +"is";
                                                                                                             }
                                                                                                             else if (!label.EndsWith("s"))
                                                                                                             {
-                                                                                                                pluralLabel += "s";
+                                                                                                                pluralLabel +="s";
                                                                                                             }
                                                                                                             label = $"{pluralLabel} ({g.Count})";
                                                                                                         }
@@ -505,3 +505,6 @@
     });
 </script>
 }
+
+
+

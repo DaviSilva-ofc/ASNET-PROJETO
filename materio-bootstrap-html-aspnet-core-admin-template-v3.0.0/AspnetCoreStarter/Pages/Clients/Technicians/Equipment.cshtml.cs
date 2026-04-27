@@ -445,7 +445,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             {
                 Description = $"PEDIDO DE STOCK (TÉCNICO):\nArtigo: {itemName}\nTipo: {itemType}\nQtd: {quantity}\nNotas: {notes}\n\n[DATA:{jsonData}]",
                 Level = "Empréstimo",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 TechnicianId = userId
             };
@@ -505,7 +505,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             {
                 Description = $"PEDIDO DE EQUIPAMENTO (TÉCNICO):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}",
                 Level = "Empréstimo",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 TechnicianId = userId
             };

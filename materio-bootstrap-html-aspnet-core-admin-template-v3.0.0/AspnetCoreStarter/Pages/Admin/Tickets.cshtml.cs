@@ -30,9 +30,9 @@ namespace AspnetCoreStarter.Pages.Admin
         public int CountStock { get; set; }
 
         // --- Stats ---
-        public int CountAberto { get; set; }
+        public int CountPendente { get; set; }
         public int CountAceite { get; set; }
-        public int CountEmProgresso { get; set; }
+        public int CountEmReparacao { get; set; }
         public int CountConcluido { get; set; }
 
         // --- Filters ---
@@ -66,9 +66,9 @@ namespace AspnetCoreStarter.Pages.Admin
                 .AsQueryable();
 
             // Calculate Stats (Unfiltered)
-            CountAberto = await _context.Tickets.CountAsync(t => t.Status == "Aberto" || t.Status == "Pedido" || t.Status == "Pendente");
+            CountPendente = await _context.Tickets.CountAsync(t => t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido");
             CountAceite = await _context.Tickets.CountAsync(t => t.Status == "Aceite");
-            CountEmProgresso = await _context.Tickets.CountAsync(t => t.Status == "Em Progresso" || t.Status == "Em Reparação" || t.Status == "Em andamento");
+            CountEmReparacao = await _context.Tickets.CountAsync(t => t.Status == "Em reparação" || t.Status == "Em Progresso" || t.Status == "Em Reparação" || t.Status == "Em andamento");
             CountConcluido = await _context.Tickets.CountAsync(t => t.Status == "Concluído");
 
             // Apply Filters
@@ -107,6 +107,7 @@ namespace AspnetCoreStarter.Pages.Admin
                     .Include(t => t.School).ThenInclude(s => s.Agrupamento)
                     .Include(t => t.RequestedBy)
                     .Include(t => t.Technician)
+                    .Include(t => t.Equipamento)
                     .Include(t => t.UtilizedEquipments)
                     .FirstOrDefaultAsync(t => t.Id == SelectedTicketId.Value);
 
@@ -147,13 +148,18 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
             if (ticket == null) return NotFound();
+            if (ticket.TechnicianId != null && ticket.Status != "Pendente" && ticket.Status != "Aberto")
+            {
+                TempData["ErrorMessage"] = "Este ticket já foi aceite por um técnico e não pode ser alterado pelo Administrador.";
+                return RedirectToPage(new { SelectedTicketId = ticketId });
+            }
 
             string oldStatus = ticket.Status;
             string newStatus = oldStatus switch
             {
-                "Aberto" or "Pedido" or "Pendente" => "Aceite",
-                "Aceite" => "Em Progresso",
-                "Em Progresso" or "Em Reparação" or "Em andamento" => "Concluído",
+                "Pendente" or "Aberto" or "Pedido" => "Aceite",
+                "Aceite" => "Em reparação",
+                "Em reparação" or "Em Progresso" or "Em Reparação" or "Em andamento" => "Concluído",
                 _ => oldStatus
             };
 
@@ -198,6 +204,12 @@ namespace AspnetCoreStarter.Pages.Admin
             var ticket = await _context.Tickets.FindAsync(ticketId);
             if (ticket == null) return NotFound();
 
+            if (ticket.TechnicianId != null && ticket.Status != "Pendente" && ticket.Status != "Aberto")
+            {
+                TempData["ErrorMessage"] = "Este ticket já foi aceite por um técnico e não pode ser reatribuído.";
+                return RedirectToPage(new { SelectedTicketId = ticketId, FilterStatus, SearchQuery, FilterType, FilterPriority });
+            }
+
             if (ticket.Status == "Aberto" || ticket.Status == "Pedido" || ticket.Status == "Pendente")
             {
                 ticket.Status = "Aceite";
@@ -220,6 +232,11 @@ namespace AspnetCoreStarter.Pages.Admin
 
             if (ticket != null && equipment != null && equipment.Status == "Armazenado")
             {
+                if (ticket.TechnicianId != null && ticket.Status != "Pendente" && ticket.Status != "Aberto")
+                {
+                    TempData["ErrorMessage"] = "Não é possível associar equipamentos a um ticket já aceite por um técnico.";
+                    return RedirectToPage(new { SelectedTicketId = ticketId });
+                }
                 equipment.TicketId = ticketId;
                 equipment.Status = "Em uso/Alocado";
                 
@@ -234,8 +251,14 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             var equipment = await _context.Equipamentos.FindAsync(equipmentId);
 
+            var ticket = await _context.Tickets.FindAsync(ticketId);
             if (equipment != null && equipment.TicketId == ticketId)
             {
+                if (ticket != null && ticket.TechnicianId != null && ticket.Status != "Pendente" && ticket.Status != "Aberto")
+                {
+                    TempData["ErrorMessage"] = "Não é possível remover equipamentos de um ticket já aceite por um técnico.";
+                    return RedirectToPage(new { SelectedTicketId = ticketId });
+                }
                 equipment.TicketId = null;
                 equipment.Status = "Armazenado";
 

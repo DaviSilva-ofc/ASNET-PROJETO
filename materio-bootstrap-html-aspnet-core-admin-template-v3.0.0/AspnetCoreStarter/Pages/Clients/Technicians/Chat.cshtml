@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Technicians.TechnicianChatModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Centro de Mensagens";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Centro de Mensagens";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -18,7 +18,7 @@
                     @foreach (var contact in Model.Contacts)
                     {
                         <a asp-page="./Chat" asp-route-contactId="@contact.Id"
-                           class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedContactId == contact.Id ? "active" : "")">
+                           class="list-group-item list-group-item-action border-0 py-3 @(Model.SelectedContactId == contact.Id ?"active" :"")">
                             <div class="d-flex align-items-center">
                                 <div class="avatar me-2">
                                     @if (!string.IsNullOrEmpty(contact.ProfilePhotoPath))
@@ -74,10 +74,10 @@
                             @foreach (var msg in Model.Messages)
                             {
                                 bool isMe = msg.SenderId == Model.CurrentUserId;
-                                <div class="message-wrapper d-flex @(isMe ? "justify-content-end" : "justify-content-start") align-items-center w-100 mb-3" data-msg-id="@msg.Id">
-                                    <div class="@(isMe ? "text-white bg-primary" : "bg-light") p-2 rounded-3 shadow-sm msg-bubble" style="max-width: 70%;">
+                                <div class="message-wrapper d-flex @(isMe ?"justify-content-end" :"justify-content-start") align-items-center w-100 mb-3" data-msg-id="@msg.Id">
+                                    <div class="@(isMe ?"text-white bg-primary" :"bg-light") p-2 rounded-3 shadow-sm msg-bubble" style="max-width: 70%;">
                                         <p class="mb-0 small">@msg.Content</p>
-                                        <small class="@(isMe ? "text-white-50" : "text-muted") x-small">@msg.CreatedAt.ToString("HH:mm")</small>
+                                        <small class="@(isMe ?"text-white-50" :"text-muted") x-small">@msg.CreatedAt.ToString("HH:mm")</small>
                                     </div>
                                     @if (isMe)
                                     {
@@ -130,9 +130,9 @@
             wrapper.className = `message-wrapper d-flex ${isFromMe ? 'justify-content-end' : 'justify-content-start'} align-items-center w-100 mb-3`;
             wrapper.setAttribute('data-msg-id', msg.id);
             wrapper.innerHTML = `
-                <div class="${isFromMe ? 'text-white bg-primary' : 'bg-light'} p-2 rounded-3 shadow-sm msg-bubble" style="max-width: 70%;">
+                <div class="${isFromMe ? ' bg-primary' : 'bg-light'} p-2 rounded-3 shadow-sm msg-bubble" style="color: var(--bs-heading-color) !important;" style="max-width: 70%;">
                     <p class="mb-0 small">${msg.content}</p>
-                    <small class="${isFromMe ? 'text-white-50' : 'text-muted'} x-small">${msg.createdAt}</small>
+                    <small class="${isFromMe ? '-50' : 'text-muted'} x-small" style="color: var(--bs-heading-color) !important;">${msg.createdAt}</small>
                 </div>
                 ${isFromMe ? `<button class="btn btn-link btn-sm p-0 ms-2 delete-msg-btn" onclick="deleteMsg(${msg.id})" title="Apagar">🗑️</button>` : ''}
             `;
@@ -178,11 +178,14 @@
 <style>
     .x-small { font-size: 0.75rem; }
     .avatar-initial { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .dark-style .bg-white, [data-bs-theme="dark"] .bg-white { background-color: #2b2c40 !important; }
-    .dark-style .bg-light, [data-bs-theme="dark"] .bg-light { background-color: rgba(255,255,255,0.05) !important; }
+    .dark-style .bg-white, [data-bs-theme="dark"] .bg-white { background-color: var(--tk-card-solid) !important; }
+    .dark-style .bg-light, [data-bs-theme="dark"] .bg-light { background-color: var(--bs-border-color-translucent) !important; }
     .dark-style .border-bottom, .dark-style .border-end, .dark-style .border-top,
     [data-bs-theme="dark"] .border-bottom, [data-bs-theme="dark"] .border-end, [data-bs-theme="dark"] .border-top { border-color: rgba(255,255,255,0.1) !important; }
     .message-wrapper .delete-msg-btn { opacity: 0; transition: opacity 0.2s; text-decoration: none; border: none; font-size: 1.1rem; }
     .message-wrapper:hover .delete-msg-btn { opacity: 1; }
     .hover-primary:hover { color: #f89223 !important; }
 </style>
+
+
+

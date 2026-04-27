@@ -12,7 +12,141 @@
     --bs-primary-text-emphasis: #633a0e;
     --bs-primary-bg-subtle: #fff4e5;
     --bs-primary-border-subtle: #ffdfb3;
+
+    /* A darker white for the light mode background */
+    --bs-body-bg: #f1f5f9; 
+    --bs-body-bg-rgb: 241, 245, 249;
+    
+    /* Global card solid color (used to replace hardcoded #2b2c40) */
+    --tk-card-solid: #cbd5e1; /* Distinct gray for light mode */
 }
+
+/* Global Light Mode Overrides for Hardcoded Dashboard Elements */
+[data-bs-theme=light] h1.text-white,
+[data-bs-theme=light] h2.text-white,
+[data-bs-theme=light] h3.text-white,
+[data-bs-theme=light] h4.text-white,
+[data-bs-theme=light] h5.text-white,
+[data-bs-theme=light] h6.text-white,
+[data-bs-theme=light] p.text-white,
+[data-bs-theme=light] div.text-white,
+[data-bs-theme=light] span.text-white,
+[data-bs-theme=light] a.text-white,
+[data-bs-theme=light] i.text-white,
+[data-bs-theme=light] .text-white {
+    color: #334155 !important;
+}
+
+[data-bs-theme=light] .text-white-50 {
+    color: #64748b !important;
+}
+
+/* Protect buttons and badges from the override */
+[data-bs-theme=light] .btn .text-white,
+[data-bs-theme=light] .btn.text-white,
+[data-bs-theme=light] .badge .text-white,
+[data-bs-theme=light] .bg-primary .text-white,
+[data-bs-theme=light] .bg-success .text-white,
+[data-bs-theme=light] .bg-danger .text-white,
+[data-bs-theme=light] .bg-warning .text-white,
+[data-bs-theme=light] .bg-info .text-white,
+[data-bs-theme=light] .bg-dark .text-white {
+    color: #ffffff !important;
+}
+
+/* ===== FIX: Icon buttons in tables are invisible in light mode ===== */
+/* The Materio template vendor CSS sets icons to white. Override strongly. */
+
+/* Default btn-icon in light mode: give subtle bg and dark icon */
+[data-bs-theme=light] .btn-icon,
+[data-bs-theme=light] .btn.btn-icon {
+    background-color: rgba(0,0,0,0.05) !important;
+    border: 1px solid rgba(0,0,0,0.10) !important;
+    color: #475569 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+[data-bs-theme=light] .btn-icon i,
+[data-bs-theme=light] .btn.btn-icon i,
+[data-bs-theme=light] .btn.btn-icon [class^="ri-"],
+[data-bs-theme=light] .btn.btn-icon [class^="ri-"]::before {
+    color: inherit !important;
+    font-family: 'remixicon' !important;
+    font-size: 1.25rem !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+}
+
+/* Semantic color overrides for colored icon buttons */
+[data-bs-theme=light] .btn.btn-icon.text-primary,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-primary {
+    color: #f89223 !important;
+    background-color: rgba(248,146,35,0.10) !important;
+    border-color: rgba(248,146,35,0.25) !important;
+}
+[data-bs-theme=light] .btn.btn-icon.text-primary i,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-primary i { color: #f89223 !important; }
+
+[data-bs-theme=light] .btn.btn-icon.text-info,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-info {
+    color: #0891b2 !important;
+    background-color: rgba(8,145,178,0.10) !important;
+    border-color: rgba(8,145,178,0.25) !important;
+}
+[data-bs-theme=light] .btn.btn-icon.text-info i,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-info i { color: #0891b2 !important; }
+
+[data-bs-theme=light] .btn.btn-icon.text-danger,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-danger {
+    color: #ef4444 !important;
+    background-color: rgba(239,68,68,0.10) !important;
+    border-color: rgba(239,68,68,0.25) !important;
+}
+[data-bs-theme=light] .btn.btn-icon.text-danger i,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-danger i { color: #ef4444 !important; }
+
+[data-bs-theme=light] .btn.btn-icon.text-success,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-success {
+    color: #16a34a !important;
+    background-color: rgba(22,163,74,0.10) !important;
+    border-color: rgba(22,163,74,0.25) !important;
+}
+[data-bs-theme=light] .btn.btn-icon.text-success i,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-success i { color: #16a34a !important; }
+
+[data-bs-theme=light] .btn.btn-icon.text-warning,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-warning {
+    color: #d97706 !important;
+    background-color: rgba(217,119,6,0.10) !important;
+    border-color: rgba(217,119,6,0.25) !important;
+}
+[data-bs-theme=light] .btn.btn-icon.text-warning i,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-warning i { color: #d97706 !important; }
+
+[data-bs-theme=light] .btn.btn-icon.text-secondary,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-secondary {
+    color: #475569 !important;
+    background-color: rgba(71,85,105,0.10) !important;
+    border-color: rgba(71,85,105,0.20) !important;
+}
+[data-bs-theme=light] .btn.btn-icon.text-secondary i,
+[data-bs-theme=light] .btn.btn-sm.btn-icon.text-secondary i { color: #475569 !important; }
+
+
+[data-bs-theme=light] .stat-number.text-white { color: #1e293b !important; }
+[data-bs-theme=light] .stat-label.text-white-50 { color: #64748b !important; }
+
+/* Dashboard Card/Row backgrounds that might be hardcoded to transparent white or dark */
+[data-bs-theme=light] div[style*="background: rgba(13, 21, 32, 0.4)"],
+[data-bs-theme=light] div[style*="background: rgba(13, 21, 32, 0.3)"],
+[data-bs-theme=light] div[style*="background: rgba(255,255,255,0.02)"] {
+    background: var(--tk-card-solid) !important;
+    border-color: rgba(0,0,0,0.1) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
 
 [data-bs-theme=dark] {
     --bs-primary: #f89223;
@@ -26,19 +160,22 @@
     --bs-primary-bg-subtle: #52433f;
     --bs-primary-border-subtle: #ffdfb3;
 
-    /* Dark mode mais suave (cinza escuro em vez de preto puro) */
-    --bs-body-bg: #121826;
-    --bs-body-bg-rgb: 18, 24, 38;
-    --bs-paper-bg: #111827;
-    --bs-card-bg: #111827;
-    --bs-menu-bg: #111827;
+    /* Dark mode cinza (mais suave que o preto puro) */
+    --bs-body-bg: #222430;
+    --bs-body-bg-rgb: 34, 36, 48;
+    --bs-paper-bg: #2b2c40;
+    --bs-card-bg: #2b2c40;
+    --bs-menu-bg: #2b2c40;
     --bs-shadow-bg: #0b1120;
     --bs-tooltip-bg: #1f2937;
     --bs-tooltip-color: #ffffff;
     --bs-dark-text-emphasis: #f9fafb;
     --bs-light-bg-subtle: #1f2933;
-    --bs-border-color: #1f2937;
+    --bs-border-color: #32324d;
     --bs-tertiary-bg: #0b1120;
+    
+    /* Global card solid color */
+    --tk-card-solid: #2b2c40; 
 }
 
 [data-bs-theme=dark] body,
@@ -157,8 +294,11 @@ nav.layout-navbar.navbar-active::before {
 
 /* Premium Desktop Styles */
 .bg-black {
-    /* Usar o mesmo fundo do app em vez de preto puro */
-    background-color: var(--bs-body-bg) !important;
+    background-color: #f8f9fa !important;
+}
+
+[data-bs-theme="dark"] .bg-black {
+    background-color: #2b2c40 !important;
 }
 
 .stats-circle-icon {

@@ -168,7 +168,7 @@ namespace AspnetCoreStarter.Pages.Clients.Private
             }
 
             NewTicket.AdminId = user!.Id;
-            NewTicket.Status = "Pedido";
+            NewTicket.Status = "Pendente";
             NewTicket.CreatedAt = DateTime.UtcNow;
             
             _context.Tickets.Add(NewTicket);

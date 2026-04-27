@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Admin.InfrastructureModel
 @{
     Layout = "Layouts/_ContentNavbarLayout";
@@ -12,7 +12,7 @@
 @section PageStyles {
 <style>
     .dark-style .card-header h5,
-    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+    [data-bs-theme="dark"] .card-header h5 { color: var(--bs-heading-color) !important; }
 
     .dark-style .list-group-item,
     [data-bs-theme="dark"] .list-group-item {
@@ -26,7 +26,7 @@
 
     .dark-style .card,
     [data-bs-theme="dark"] .card {
-        background-color: #2b2c40;
+        background-color: var(--tk-card-solid) !important;
         box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
     }
 
@@ -82,7 +82,7 @@
     [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         transform: rotate(90deg);
         background-color: var(--bs-primary);
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .dark-style [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
@@ -91,7 +91,7 @@
     }
     .dark-style [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         background-color: #696cff;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .agrupamento-node { color: var(--bs-primary); }
@@ -1555,3 +1555,5 @@
     }
 </script>
 }
+
+

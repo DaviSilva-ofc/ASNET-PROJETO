@@ -70,9 +70,9 @@ namespace AspnetCoreStarter.Pages.Admin
             if (string.IsNullOrEmpty(userId) || userRole != "Admin")
                 return RedirectToPage("/Index");
 
-            // --- Database Schema Maintenance (Ensure new columns exist) ---
+            // --- Database Schema Maintenance & Data Migration ---
             try {
-                // Check if column exists by querying information_schema
+                // 1. Schema Maintenance
                 await _context.Database.ExecuteSqlRawAsync(@"
                     SET @dbname = DATABASE();
                     SET @tablename = 'tickets';
@@ -89,7 +89,13 @@ namespace AspnetCoreStarter.Pages.Admin
                     EXECUTE stmt;
                     DEALLOCATE PREPARE stmt;
                 ");
-            } catch { /* Silent fail if already exists or other error */ }
+
+                // 2. Data Migration: Standardize existing statuses
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    UPDATE tickets SET status = 'Pendente' WHERE status IN ('Aberto', 'Pedido');
+                    UPDATE tickets SET status = 'Em reparação' WHERE status IN ('Em Progresso', 'Em Reparação', 'Em andamento', 'Em Resolução', 'Em resolução');
+                ");
+            } catch { }
 
             // Totals
             TotalUsers = await _context.Users.CountAsync();
@@ -106,9 +112,8 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Where(c => c.ExpiryDate != null && c.ExpiryDate >= today && c.ExpiryDate <= oneMonthFromNow)
                 .CountAsync(); 
 
-            // 2. Tickets pendentes
             PendingTicketsCount = await _context.Tickets
-                .Where(t => t.Status == "Pendente" || (t.Level == "Empréstimo" && t.Status == "Pedido"))
+                .Where(t => t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido")
                 .CountAsync();
 
             // 4. Chat Notifications
@@ -155,8 +160,8 @@ namespace AspnetCoreStarter.Pages.Admin
             }
 
             // Ticket Status Chart Data
-            TicketsPendenteCount = await _context.Tickets.CountAsync(t => t.Status == "Pendente");
-            TicketsEmResolucaoCount = await _context.Tickets.CountAsync(t => t.Status == "Em Resolução");
+            TicketsPendenteCount = await _context.Tickets.CountAsync(t => t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido");
+            TicketsEmResolucaoCount = await _context.Tickets.CountAsync(t => t.Status == "Em reparação" || t.Status == "Em Resolução" || t.Status == "Em Progresso" || t.Status == "Aceite");
             TicketsConcluidoCount = await _context.Tickets.CountAsync(t => t.Status == "Concluído");
 
             // Monthly Trend Data (Last 6 Months)
@@ -174,8 +179,8 @@ namespace AspnetCoreStarter.Pages.Admin
                 var startOfMonth = new DateTime(monthDate.Year, monthDate.Month, 1);
                 var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1);
 
-                MonthlyPendentesData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && t.Status == "Pendente"));
-                MonthlyEmResolucaoData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && t.Status == "Em Resolução"));
+                MonthlyPendentesData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && (t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido")));
+                MonthlyEmResolucaoData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && (t.Status == "Em reparação" || t.Status == "Em Resolução" || t.Status == "Em Progresso" || t.Status == "Aceite")));
                 MonthlyConcluidosData.Add(await _context.Tickets.CountAsync(t => t.CreatedAt >= startOfMonth && t.CreatedAt <= endOfMonth && t.Status == "Concluído"));
             }
 
@@ -227,11 +232,10 @@ namespace AspnetCoreStarter.Pages.Admin
                 .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
                 .ToListAsync();
 
-            // Load all pending stock requests (Level = "Empréstimo") from both Technicians and Clients
             TechnicianStockRequests = await _context.Tickets
                 .Include(t => t.Technician)
                 .Include(t => t.RequestedBy)
-                .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
+                .Where(t => t.Level == "Empréstimo" && (t.Status == "Pendente" || t.Status == "Pedido"))
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
 

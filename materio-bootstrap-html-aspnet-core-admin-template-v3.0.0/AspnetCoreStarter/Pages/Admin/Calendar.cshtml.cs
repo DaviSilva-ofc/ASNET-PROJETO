@@ -95,7 +95,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 // 1. Entry Date (Created or Scheduled)
                 calendarEvents.Add(new {
                     id = t.Id,
-                    title = isTask ? $"{emoji} Tarefa: {t.Description}" : (isPreventive ? $"{emoji} Preventiva: {t.School?.Name}" : $"{emoji} Pedido: {t.Equipamento?.Name ?? "Avaria"}"),
+                    title = isTask ? $"{emoji} Tarefa: {t.Description}" : (isPreventive ? $"{emoji} Preventiva: {t.School?.Name}" : $"{emoji} Pendente: {t.Equipamento?.Name ?? "Avaria"}"),
                     start = displayDate.ToString("yyyy-MM-ddTHH:mm:ss"),
                     description = isTask ? t.Description : (isPreventive ? $"Manutenção Preventiva em {t.School?.Name}" : $"Ticket #{t.Id}: {t.Description} em {t.School?.Name ?? "Sede"}"),
                     className = isTask ? "bg-label-info" : (isPreventive ? "bg-label-warning" : "bg-label-primary"),
@@ -134,7 +134,7 @@ namespace AspnetCoreStarter.Pages.Admin
 
             ticket.TechnicianId = technicianId;
             // If it was just a "Pedido", move it to "Aceite" automatically if assigned by admin
-            if (ticket.Status == "Pedido" || ticket.Status == "Pendente")
+            if (ticket.Status == "Pedido" || ticket.Status == "Pendente" || ticket.Status == "Aberto")
             {
                 ticket.Status = "Aceite";
                 ticket.AcceptedAt = DateTime.UtcNow;
@@ -165,7 +165,7 @@ namespace AspnetCoreStarter.Pages.Admin
             {
                 Description = description,
                 Type = "Tarefa Administrativa",
-                Status = technicianId.HasValue ? "Aceite" : "Pedido",
+                Status = technicianId.HasValue ? "Aceite" : "Pendente",
                 CreatedAt = date,
                 AcceptedAt = technicianId.HasValue ? date : null,
                 TechnicianId = technicianId,

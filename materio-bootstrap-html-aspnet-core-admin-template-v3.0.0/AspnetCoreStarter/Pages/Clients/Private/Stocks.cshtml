@@ -1,15 +1,15 @@
 @page
 @model AspnetCoreStarter.Pages.Clients.Private.PrivateStocksModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Gestão de Stock";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Gestão de Stock";
 }
 
 @section PageStyles {
 <style>
     .dark-style .card,
     [data-bs-theme="dark"] .card {
-        background-color: #2b2c40 !important;
+        background-color: var(--tk-card-solid) !important;
         box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
     }
 
@@ -61,7 +61,7 @@
                         </div>
                         <h6 class="mb-0">Acessos da Empresa</h6>
                     </div>
-                    <h4 class="ms-1 mb-1">@(Model.Empresa?.Name ?? "Empresa")</h4>
+                    <h4 class="ms-1 mb-1">@(Model.Empresa?.Name ??"Empresa")</h4>
                     <p class="text-muted small mb-0">Ativo</p>
                 </div>
             </div>
@@ -134,7 +134,7 @@
                             if (!string.IsNullOrEmpty(Model.FilterType)) filtersList.Add($"Tipo: {Model.FilterType}");
                             if (!string.IsNullOrEmpty(Model.FilterStatus)) filtersList.Add($"Estado: {Model.FilterStatus}");
                             if (Model.FilterSalaId.HasValue) filtersList.Add("Localização específica");
-                            @Html.Raw(string.Join(", ", filtersList))
+                            @Html.Raw(string.Join(",", filtersList))
                         }
                     </span>
                 </div>
@@ -176,20 +176,20 @@
                             <tr>
                                 <td>
                                     @{
-                                        var itype = item.Category ?? "";
-                                        var iname = item.Name ?? "";
+                                        var itype = item.Category ??"";
+                                        var iname = item.Name ??"";
                                         var iemoji = itype.ToLower() switch {
-                                            var s when s.Contains("monitor") => "🖥️",
-                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                            var s when s.Contains("impressora") => "🖨️",
-                                            var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
-                                            var s when s.Contains("projetor") => "📽️",
-                                            var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                            var s when s.Contains("teclado") => "⌨️",
-                                            var s when s.Contains("servidor") => "🗄️",
-                                            var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                            var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
-                                            _ => iname.Contains("Monitor") ? "🖥️" : (iname.Contains("Computador") ? "💻" : (iname.Contains("Impressora") ? "🖨️" : "📦"))
+                                            var s when s.Contains("monitor") =>"🖥️",
+                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                            var s when s.Contains("impressora") =>"🖨️",
+                                            var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") =>"🌐",
+                                            var s when s.Contains("projetor") =>"📽️",
+                                            var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                            var s when s.Contains("teclado") =>"⌨️",
+                                            var s when s.Contains("servidor") =>"🗄️",
+                                            var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                            var s when s.Contains("quadro") || s.Contains("interativo") =>"📺",
+                                            _ => iname.Contains("Monitor") ?"🖥️" : (iname.Contains("Computador") ?"💻" : (iname.Contains("Impressora") ?"🖨️" :"📦"))
                                         };
                                     }
                                     <span class="fw-bold text-heading">@iemoji @item.Name</span>
@@ -231,10 +231,10 @@
                                     }
                                 </td>
                                 <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
-                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" 
-                                            onclick="showQRCode('@item.IdWithPrefix', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" 
+                                    <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;" 
+                                            onclick="showQRCode('@item.IdWithPrefix', 'stock', '@item.Name.Replace("'","\\'")', '@item.Location.Replace("'","\\'")')" 
                                             title="Código QR">
-                                        <i class="ri-qr-code-line"></i>
+                                        📱
                                     </button>
                                 </td>
                             </tr>
@@ -277,13 +277,13 @@
                             <tr>
                                 <td>
                                     @{
-                                        var btype = item.Category ?? "";
-                                        var bname = item.Name ?? "";
+                                        var btype = item.Category ??"";
+                                        var bname = item.Name ??"";
                                         var bemoji = btype.ToLower() switch {
-                                            var s when s.Contains("monitor") => "🖥️",
-                                            var s when s.Contains("portátil") || s.Contains("laptop") => "💻",
-                                            var s when s.Contains("impressora") => "🖨️",
-                                            _ => bname.Contains("Monitor") ? "🖥️" : (bname.Contains("Computador") ? "💻" : "📦")
+                                            var s when s.Contains("monitor") =>"🖥️",
+                                            var s when s.Contains("portátil") || s.Contains("laptop") =>"💻",
+                                            var s when s.Contains("impressora") =>"🖨️",
+                                            _ => bname.Contains("Monitor") ?"🖥️" : (bname.Contains("Computador") ?"💻" :"📦")
                                         };
                                     }
                                     <span class="fw-bold text-heading">@bemoji @item.Name</span>
@@ -294,15 +294,15 @@
                                 <td><span class="badge bg-label-primary">@item.Status</span></td>
                                 <td class="text-center px-3" style="width: 1px; white-space: nowrap;">
                                     <div class="d-flex align-items-center gap-2 justify-content-center">
-                                        <button type="button" class="btn btn-sm btn-icon btn-outline-info" 
-                                                onclick="showQRCode('@item.IdWithPrefix', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" 
+                                        <button type="button" class="btn btn-sm btn-icon btn-outline-info lh-1" style="font-size: 1.1rem;"
+                                                onclick="showQRCode('@item.IdWithPrefix', 'stock', '@item.Name.Replace("'","\\'")', '@item.Location.Replace("'","\\'")')" 
                                                 title="Código QR">
-                                            <i class="ri-qr-code-line"></i>
+                                            📱
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-icon btn-outline-warning"
-                                                onclick="openReturnLoanModal('@Uri.EscapeDataString(item.Name ?? "")', @item.Id, @item.Quantity)"
+                                        <button type="button" class="btn btn-sm btn-icon btn-outline-warning lh-1" style="font-size: 1.1rem;"
+                                                onclick="openReturnLoanModal('@Uri.EscapeDataString(item.Name ??"")', @item.Id, @item.Quantity)"
                                                 title="Devolver Empréstimo">
-                                            <i class="ri-arrow-go-back-line"></i>
+                                            ↩️
                                         </button>
                                     </div>
                                 </td>
@@ -346,29 +346,29 @@
                                 <td>@req.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                 <td>
                                     @{
-                                        var rtype = req.ItemType ?? "";
-                                        var rname = req.ItemName ?? "";
+                                        var rtype = req.ItemType ??"";
+                                        var rname = req.ItemName ??"";
                                         var remoji = rtype.ToLower() switch {
-                                            var s when s.Contains("monitor") => "🖥️",
-                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                            var s when s.Contains("impressora") => "🖨️",
-                                            _ => rname.Contains("Monitor") ? "🖥️" : (rname.Contains("Computador") ? "💻" : "📦")
+                                            var s when s.Contains("monitor") =>"🖥️",
+                                            var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                            var s when s.Contains("impressora") =>"🖨️",
+                                            _ => rname.Contains("Monitor") ?"🖥️" : (rname.Contains("Computador") ?"💻" :"📦")
                                         };
                                     }
                                     <span class="fw-bold text-heading">@remoji @req.ItemName</span> <small class="text-muted">(@req.ItemType)</small>
                                 </td>
                                 <td>@req.Quantity</td>
-                                <td><small class="fst-italic text-muted">@(string.IsNullOrWhiteSpace(req.Notes) ? "Sem notas adicionais" : req.Notes)</small></td>
+                                <td><small class="fst-italic text-muted">@(string.IsNullOrWhiteSpace(req.Notes) ?"Sem notas adicionais" : req.Notes)</small></td>
                                 <td>
-                                    @if (req.Status == "Pendente_Admin")
+                                    @if (req.Status =="Pendente_Admin")
                                     {
                                         <span class="badge bg-label-warning">Pendente Admin</span>
                                     }
-                                    else if (req.Status == "Atendido")
+                                    else if (req.Status =="Atendido")
                                     {
                                         <span class="badge bg-label-success">Atendido</span>
                                     }
-                                    else if (req.Status == "Recusado")
+                                    else if (req.Status =="Recusado")
                                     {
                                         <span class="badge bg-label-danger">Recusado</span>
                                     }
@@ -554,23 +554,23 @@
         const tipoSelect = document.getElementById('filterTipo');
         const options = tipoSelect.querySelectorAll('option');
 
-        tipoSelect.value = "";
+        tipoSelect.value ="";
 
         options.forEach(opt => {
-            if (opt.value === "") return;
+            if (opt.value ==="") return;
 
             const artData = opt.getAttribute('data-art');
-            if (artName === "" || artData === artName) {
-                opt.style.display = "";
+            if (artName ==="" || artData === artName) {
+                opt.style.display ="";
             } else {
-                opt.style.display = "none";
+                opt.style.display ="none";
             }
         });
     }
 
     // Inicializar no carregamento caso haja valor no artigo
     document.addEventListener("DOMContentLoaded", function() {
-        if (document.getElementById('filterArtigo').value !== "") {
+        if (document.getElementById('filterArtigo').value !=="") {
             filterTypesByArtigo();
             // Repor o valor do tipo que foi recebido do backend
             var selTipo = '@Model.FilterType';
@@ -583,16 +583,16 @@
         const tipoSelect = document.getElementById('newReqTipo');
         const options = tipoSelect.querySelectorAll('option');
 
-        tipoSelect.value = "";
+        tipoSelect.value ="";
 
         options.forEach(opt => {
-            if (opt.value === "") return;
+            if (opt.value ==="") return;
 
             const artData = opt.getAttribute('data-reqart');
-            if (artName === "" || artData === artName) {
-                opt.style.display = "";
+            if (artName ==="" || artData === artName) {
+                opt.style.display ="";
             } else {
-                opt.style.display = "none";
+                opt.style.display ="none";
             }
         });
     }
@@ -610,3 +610,5 @@
 </script>
 <partial name="Shared/_QrModal" />
 }
+
+

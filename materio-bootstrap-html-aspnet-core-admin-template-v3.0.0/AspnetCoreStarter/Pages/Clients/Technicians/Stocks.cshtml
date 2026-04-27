@@ -1,16 +1,12 @@
 @page
 @model AspnetCoreStarter.Pages.Clients.Technicians.StocksModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Explorador de Stocks";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Explorador de Stocks";
 }
 
 @section PageStyles {
     <style>
-        .card-bg { background-color: #2b2c40 !important; }
-        .table-dark-custom th { color: rgba(255,255,255,0.5) !important; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid rgba(255,255,255,0.1); }
-        .table-dark-custom td { color: #fff !important; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
-
         /* Tree Styles */
         .infra-tree .tree-node {
             position: relative;
@@ -43,7 +39,7 @@
         [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
             transform: rotate(90deg);
             background-color: #696cff;
-            color: #fff;
+            color: var(--bs-heading-color);
         }
 
         .agrupamento-node { color: #696cff; }
@@ -70,7 +66,7 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
     <h4 class="fw-bold py-3 mb-4">
-        <span class="text-white-50 fw-light">Técnico /</span> Explorador de Stocks
+        <span class="text-muted fw-light">Técnico /</span> Explorador de Stocks
     </h4>
 
     <div class="alert alert-info border-0 mb-4 bg-label-info d-flex align-items-center">
@@ -81,14 +77,14 @@
     </div>
 
     <!-- Technician's Personal Stock -->
-    <div class="card shadow-sm border-0 mb-4 card-bg">
-        <div class="card-header border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 text-white"><i class="ri-user-settings-line me-2 text-warning"></i> Meu Stock Pessoal</h5>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" style="color: var(--bs-heading-color);"><i class="ri-user-settings-line me-2 text-warning"></i> Meu Stock Pessoal</h5>
             <span class="badge bg-label-warning">@Model.MyStock.Count() itens</span>
         </div>
         <div class="table-responsive">
-            <table class="table table-hover table-dark-custom mb-0">
-                <thead>
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
                     <tr>
                         <th>Artigo / Peça</th>
                         <th>Categoria / Tipo</th>
@@ -100,7 +96,7 @@
                     @if (!Model.MyStock.Any())
                     {
                         <tr>
-                            <td colspan="4" class="text-center py-5 text-white-50 italic">Não possuis stock diretamente atribuído à tua conta.</td>
+                            <td colspan="4" class="text-center py-5 text-muted fst-italic">Não possuis stock diretamente atribuído à tua conta.</td>
                         </tr>
                     }
                     @foreach (var item in Model.MyStock)
@@ -111,12 +107,12 @@
                                     <div class="avatar avatar-sm me-2">
                                         <span class="avatar-initial rounded bg-label-secondary"><i class="ri-price-tag-3-line"></i></span>
                                     </div>
-                                    <strong class="text-white">@item.EquipmentName</strong>
+                                    <strong style="color: var(--bs-body-color);">@item.EquipmentName</strong>
                                 </div>
                             </td>
-                            <td><span class="text-white-50 small">@item.Description</span></td>
+                            <td><span class="text-muted small">@item.Description</span></td>
                             <td>
-                                @if (item.Status == "Usado na Intervenção")
+                                @if (item.Status =="Usado na Intervenção")
                                 {
                                     <span class="badge bg-label-info">Usado na Intervenção</span>
                                 }
@@ -127,13 +123,13 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', 'Meu Stock')" title="Código QR">
-                                        <i class="ri-qr-code-line"></i>
+                                    <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'","\\'")', 'Meu Stock')" title="Código QR">
+                                        📱
                                     </button>
-                                    @if(item.IsAvailable || item.Status == "Disponível" || item.Status == "A funcionar")
+                                    @if(item.IsAvailable || item.Status =="Disponível" || item.Status =="A funcionar")
                                     {
-                                        <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
-                                            <i class="ri-links-line"></i>
+                                        <button type="button" class="btn btn-sm btn-icon text-success p-0 lh-1" style="font-size: 1.1rem;" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
+                                            🔗
                                         </button>
                                     }
                                 </div>
@@ -148,16 +144,16 @@
     <div class="row g-4">
         <!-- School Stocks (Linked via Active Tickets) -->
         <div class="col-xl-6">
-            <div class="card shadow-sm border-0 h-100 card-bg">
-                <div class="card-header border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-white"><i class="ri-school-line me-2 text-info"></i> Stock das Escolas</h5>
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0" style="color: var(--bs-heading-color);"><i class="ri-school-line me-2 text-info"></i> Stock das Escolas</h5>
                     <span class="badge bg-label-secondary" title="Acesso devido a tickets em aberto">Acesso Temporário</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="infra-tree p-3">
                         @if (!Model.AccessibleSchools.Any())
                         {
-                            <div class="text-center py-5 text-white-50 italic">
+                            <div class="text-center py-5 text-muted fst-italic">
                                 Sem detalhe de escola acessível.
                             </div>
                         }
@@ -169,25 +165,25 @@
                                 <div class="tree-node school-node">
                                     <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-sch-@school.Id">
                                         <i class="ri-arrow-right-s-line me-1"></i>
-                                        <i class="ri-school-line me-1 text-info"></i> <strong class="text-white">@school.Name</strong>
+                                        <i class="ri-school-line me-1 text-info"></i> <strong style="color: var(--bs-body-color);">@school.Name</strong>
                                     </div>
                                     <div id="tree-sch-@school.Id" class="collapse">
                                         
                                         @foreach(var item in schBase)
                                         {
                                             <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1 d-flex justify-content-between align-items-center">
-                                                <span class="d-block text-white">
+                                                <span class="d-block" style="color: var(--bs-body-color);">
                                                     @item.EquipmentName 
                                                     <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Geral / @item.Type</span>
-                                                    @if(item.Status == "Usado na Intervenção") {
+                                                    @if(item.Status =="Usado na Intervenção") {
                                                         <span class="badge bg-label-secondary ms-2" style="font-size:0.6rem;">(Usado #@item.TicketId)</span>
                                                     }
                                                 </span>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', '@school.Name.Replace("'", "\\'")')" title="Código QR">
-                                                        <i class="ri-qr-code-line"></i>
+                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'","\\'")', '@school.Name.Replace("'","\\'")')" title="Código QR">
+                                                        📱
                                                     </button>
-                                                    @if(item.Status == "Armazenado")
+                                                    @if(item.Status =="Armazenado")
                                                     {
                                                         <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
                                                             🔗
@@ -204,7 +200,7 @@
                                             <div class="tree-node bloc-node ms-4 mt-2">
                                                 <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@blockId">
                                                     <i class="ri-arrow-right-s-line me-1"></i>
-                                                    <i class="ri-building-4-line me-1 text-success"></i> <strong class="text-white">@bloco.Name</strong>
+                                                    <i class="ri-building-4-line me-1 text-success"></i> <strong style="color: var(--bs-body-color);">@bloco.Name</strong>
                                                 </div>
                                                 <div id="tree-@blockId" class="collapse">
                                                     @{ var salasBloco = Model.AccessibleSalas.Where(s => s.BlockId == bloco.Id).ToList(); }
@@ -214,26 +210,26 @@
                                                         <div class="tree-node room-node ms-4 mt-1">
                                                             <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@roomId">
                                                                 <i class="ri-arrow-right-s-line me-1"></i>
-                                                                <i class="ri-door-open-line me-1 text-warning"></i> <span class="text-white">@sala.Name</span>
+                                                                <i class="ri-door-open-line me-1 text-warning"></i> <span style="color: var(--bs-body-color);">@sala.Name</span>
                                                             </div>
                                                             <div id="tree-@roomId" class="collapse">
                                                                 @if (!sala.Equipments.Any())
                                                                 {
-                                                                    <div class="ms-4 mt-1 small text-white-50 italic">Sem equipamentos</div>
+                                                                    <div class="ms-4 mt-1 small text-muted fst-italic">Sem equipamentos</div>
                                                                 }
                                                                 @foreach(var equip in sala.Equipments)
                                                                 {
                                                                     <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1 d-flex justify-content-between align-items-center">
-                                                                        <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
-                                                                            <span class="badge bg-label-@(equip.Status == "Armazenado" ? "warning" : (equip.Status == "Disponível" || equip.Status == "A funcionar" ? "success" : "danger")) ms-1" style="font-size:0.6rem;">
-                                                                                @(equip.Status == "Armazenado" ? "📦 Armazenado" : equip.Status)
+                                                                        <span class="d-block" style="color: var(--bs-body-color);">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
+                                                                            <span class="badge bg-label-@(equip.Status =="Armazenado" ?"warning" : (equip.Status =="Disponível" || equip.Status =="A funcionar" ?"success" :"danger")) ms-1" style="font-size:0.6rem;">
+                                                                                @(equip.Status =="Armazenado" ?"📦 Armazenado" : equip.Status)
                                                                             </span>
                                                                         </span>
                                                                         <div class="d-flex align-items-center gap-2">
-                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'", "\\'")', '@sala.Name.Replace("'", "\\'")')" title="Código QR">
-                                                                                <i class="ri-qr-code-line"></i>
+                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'","\\'")', '@sala.Name.Replace("'","\\'")')" title="Código QR">
+                                                                                📱
                                                                             </button>
-                                                                            @if(equip.Status == "Armazenado")
+                                                                            @if(equip.Status =="Armazenado")
                                                                             {
                                                                                 <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@equip.Id, '@equip.Name', 'Equipamento')" title="Associar a Trabalho Ativo">
                                                                                     🔗
@@ -259,16 +255,16 @@
 
         <!-- Agrupamento Stocks (Linked via Active Tickets) -->
         <div class="col-xl-6">
-            <div class="card shadow-sm border-0 h-100 card-bg">
-                <div class="card-header border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-white"><i class="ri-government-line me-2 text-primary"></i> Stock dos Agrupamentos</h5>
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0" style="color: var(--bs-heading-color);"><i class="ri-government-line me-2 text-primary"></i> Stock dos Agrupamentos</h5>
                     <span class="badge bg-label-secondary" title="Acesso devido a tickets em aberto">Acesso Temporário</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="infra-tree p-3">
                         @if (!Model.AccessibleAgrupamentos.Any())
                         {
-                            <div class="text-center py-5 text-white-50 italic">
+                            <div class="text-center py-5 text-muted fst-italic">
                                 Sem stock de agrupamento acessível.
                             </div>
                         }
@@ -280,25 +276,25 @@
                                 <div class="tree-node agrupamento-node">
                                     <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-agrp-@agrp.Id">
                                         <i class="ri-arrow-right-s-line me-1"></i>
-                                        <i class="ri-government-line me-1 text-primary"></i> <strong class="text-white">@agrp.Name</strong>
+                                        <i class="ri-government-line me-1 text-primary"></i> <strong style="color: var(--bs-body-color);">@agrp.Name</strong>
                                     </div>
                                     <div id="tree-agrp-@agrp.Id" class="collapse">
 
                                         @foreach(var item in agBase)
                                         {
                                             <div class="tree-node equip-node ms-4 mt-1 border-bottom border-secondary border-opacity-25 pb-2 pt-1 d-flex justify-content-between align-items-center">
-                                                <span class="d-block text-white">
+                                                <span class="d-block" style="color: var(--bs-body-color);">
                                                     @item.EquipmentName 
                                                     <span class="badge bg-label-info ms-2" style="font-size:0.6rem;">Stock Central / @item.Type</span>
-                                                    @if(item.Status == "Usado na Intervenção") {
+                                                    @if(item.Status =="Usado na Intervenção") {
                                                         <span class="badge bg-label-secondary ms-2" style="font-size:0.6rem;">(Usado #@item.TicketId)</span>
                                                     }
                                                 </span>
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'", "\\'")', '@agrp.Name.Replace("'", "\\'")')" title="Código QR">
-                                                        <i class="ri-qr-code-line"></i>
+                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.Id', 'stock', '@item.EquipmentName.Replace("'","\\'")', '@agrp.Name.Replace("'","\\'")')" title="Código QR">
+                                                        📱
                                                     </button>
-                                                    @if(item.Status == "Armazenado")
+                                                    @if(item.Status =="Armazenado")
                                                     {
                                                         <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@item.Id, '@item.EquipmentName', 'Stock')" title="Associar a Trabalho Ativo">
                                                             🔗
@@ -314,7 +310,7 @@
                                             <div class="tree-node school-node ms-4 mt-2">
                                                 <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-agrp-sch-@school.Id">
                                                     <i class="ri-arrow-right-s-line me-1"></i>
-                                                    <i class="ri-school-line me-1 text-info"></i> <strong class="text-white">@school.Name</strong>
+                                                    <i class="ri-school-line me-1 text-info"></i> <strong style="color: var(--bs-body-color);">@school.Name</strong>
                                                 </div>
                                                 <div id="tree-agrp-sch-@school.Id" class="collapse">
                                                     @{ var blocosEscola = Model.AccessibleBlocos.Where(b => b.SchoolId == school.Id).ToList(); }
@@ -324,7 +320,7 @@
                                                         <div class="tree-node bloc-node ms-4 mt-2">
                                                             <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@blockId">
                                                                 <i class="ri-arrow-right-s-line me-1"></i>
-                                                                <i class="ri-building-4-line me-1 text-success"></i> <span class="text-white">@bloco.Name</span>
+                                                                <i class="ri-building-4-line me-1 text-success"></i> <span style="color: var(--bs-body-color);">@bloco.Name</span>
                                                             </div>
                                                             <div id="tree-@blockId" class="collapse">
                                                                 @{ var salasBloco = Model.AccessibleSalas.Where(s => s.BlockId == bloco.Id).ToList(); }
@@ -334,26 +330,26 @@
                                                                     <div class="tree-node room-node ms-4 mt-1">
                                                                         <div class="d-flex align-items-center cursor-pointer p-1 rounded collapsed" data-bs-toggle="collapse" data-bs-target="#tree-@roomId">
                                                                             <i class="ri-arrow-right-s-line me-1"></i>
-                                                                            <i class="ri-door-open-line me-1 text-warning"></i> <span class="text-white">@sala.Name</span>
+                                                                            <i class="ri-door-open-line me-1 text-warning"></i> <span style="color: var(--bs-body-color);">@sala.Name</span>
                                                                         </div>
                                                                         <div id="tree-@roomId" class="collapse">
                                                                             @if (!sala.Equipments.Any())
                                                                             {
-                                                                                <div class="ms-4 mt-1 small text-white-50 italic">Sem equipamentos</div>
+                                                                                <div class="ms-4 mt-1 small text-muted fst-italic">Sem equipamentos</div>
                                                                             }
                                                                             @foreach(var equip in sala.Equipments)
                                                                             {
                                                                                 <div class="tree-node equip-node ms-4 mt-1 border-bottom border-light border-opacity-10 pb-2 pt-1 d-flex justify-content-between align-items-center">
-                                                                                    <span class="d-block text-white">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
-                                                                                    <span class="badge bg-label-@(equip.Status == "Armazenado" ? "warning" : (equip.Status == "Disponível" || equip.Status == "A funcionar" ? "success" : "danger")) ms-1" style="font-size:0.6rem;">
-                                                                                        @(equip.Status == "Armazenado" ? "📦 Armazenado" : equip.Status)
+                                                                                    <span class="d-block" style="color: var(--bs-body-color);">@equip.Name <span class="badge bg-label-primary ms-2" style="font-size:0.6rem;">@equip.Type</span>
+                                                                                    <span class="badge bg-label-@(equip.Status =="Armazenado" ?"warning" : (equip.Status =="Disponível" || equip.Status =="A funcionar" ?"success" :"danger")) ms-1" style="font-size:0.6rem;">
+                                                                                        @(equip.Status =="Armazenado" ?"📦 Armazenado" : equip.Status)
                                                                                     </span>
                                                                                     </span>
                                                                                 <div class="d-flex align-items-center gap-2">
-                                                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'", "\\'")', '@sala.Name.Replace("'", "\\'")')" title="Código QR">
-                                                                                        <i class="ri-qr-code-line"></i>
+                                                                                    <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@equip.Id', 'equip', '@equip.Name.Replace("'","\\'")', '@sala.Name.Replace("'","\\'")')" title="Código QR">
+                                                                                        📱
                                                                                     </button>
-                                                                                    @if(equip.Status == "Armazenado")
+                                                                                    @if(equip.Status =="Armazenado")
                                                                                     {
                                                                                         <button type="button" class="btn btn-sm btn-icon text-success p-0" onclick="openAssignModal(@equip.Id, '@equip.Name', 'Equipamento')" title="Associar a Trabalho Ativo">
                                                                                             🔗
@@ -385,31 +381,31 @@
 <!-- Modal Atribuir Stock -->
 <div class="modal fade" id="assignStockModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form method="post" asp-page-handler="AssignStock" class="modal-content card-bg border-light border-opacity-10">
-            <div class="modal-header border-bottom border-light border-opacity-10">
-                <h5 class="modal-title text-white">Associar Stock a Trabalho</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <form method="post" asp-page-handler="AssignStock" class="modal-content" style="background: var(--bs-body-bg);">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title" style="color: var(--bs-heading-color);">Associar Stock a Trabalho</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="modalStockId" name="stockId" value="" />
                 <input type="hidden" id="modalItemType" name="itemType" value="" />
                 
-                <p class="text-white-50">Estás prestes a aplicar <strong id="modalStockName" class="text-white"></strong> numa intervenção ativa.</p>
+                <p class="text-muted">Estás prestes a aplicar <strong id="modalStockName" style="color: var(--bs-body-color);"></strong> numa intervenção ativa.</p>
                 
                 <div class="mb-3">
-                    <label class="form-label text-white-50">Trabalho Associado</label>
-                    <select class="form-select bg-transparent text-white border-secondary" name="ticketId" required>
+                    <label class="form-label text-muted">Trabalho Associado</label>
+                    <select class="form-select bg-transparent border-secondary" style="color: var(--bs-body-color);" name="ticketId" required>
                         <option value="" disabled selected>Selecionar o trabalho...</option>
                         @foreach(var ticket in Model.ActiveTickets)
                         {
                             <option value="@ticket.Id">
-                                #@ticket.Id - @(ticket.Equipamento?.Name ?? "Outro") (@(ticket.School?.Name ?? "Indefinida"))
+                                #@ticket.Id - @(ticket.Equipamento?.Name ??"Outro") (@(ticket.School?.Name ??"Indefinida"))
                             </option>
                         }
                     </select>
                 </div>
             </div>
-            <div class="modal-footer border-top border-light border-opacity-10">
+            <div class="modal-footer border-top border-secondary">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-success"><i class="ri-links-line me-1"></i> Associar Artigo</button>
             </div>
@@ -444,3 +440,5 @@
 
 <partial name="Shared/_QrModal" />
 }
+
+

@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Technicians.CalendarModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Calendário de Atividades - Técnico";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Calendário de Atividades - Técnico";
 }
 
 @section PageStyles {
@@ -11,10 +11,20 @@
     :root {
         --fc-border-color: rgba(255, 255, 255, 0.05);
         --fc-daygrid-event-dot-width: 8px;
+        --fc-text-title: #fff;
+        --fc-text-strong: rgba(255, 255, 255, 0.8);
+        --fc-text-muted: rgba(255, 255, 255, 0.5);
+    }
+    
+    [data-bs-theme="light"] {
+        --fc-border-color: rgba(0, 0, 0, 0.1);
+        --fc-text-title: #334155;
+        --fc-text-strong: #475569;
+        --fc-text-muted: #94a3b8;
     }
 
     .dark-style .card {
-        background-color: #2b2c40 !important;
+        background-color: var(--tk-card-solid) !important;
     }
 
     #calendar {
@@ -25,7 +35,7 @@
     /* FullCalendar Custom Premium Styling */
     .fc { font-family: 'Public Sans', sans-serif; }
     .fc-header-toolbar { margin-bottom: 2rem !important; flex-wrap: wrap; gap: 10px; }
-    .fc-toolbar-title { font-size: 1.5rem !important; font-weight: 700 !important; color: #fff !important; }
+    .fc-toolbar-title { font-size: 1.5rem !important; font-weight: 700 !important; color: var(--fc-text-title) !important; }
     
     .fc-button-primary { 
         background-color: #f89223 !important; 
@@ -52,10 +62,30 @@
     }
 
     .fc-theme-standard td, .fc-theme-standard th { border-color: var(--fc-border-color) !important; }
-    .fc-col-header-cell-cushion { color: rgba(255, 255, 255, 0.8) !important; font-weight: 600; padding: 10px 0; }
-    .fc-daygrid-day-number { color: rgba(255, 255, 255, 0.5) !important; padding: 10px !important; }
+    .fc-col-header-cell-cushion { color: var(--fc-text-strong) !important; font-weight: 600; padding: 10px 0; }
+    .fc-daygrid-day-number { color: var(--fc-text-muted) !important; padding: 10px !important; }
     
     .fc-day-today { background: rgba(248, 146, 35, 0.08) !important; }
+
+    /* Popover fix for many events */
+    .fc-popover {
+        border: 1px solid var(--fc-border-color) !important;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15) !important;
+        background-color: var(--bs-body-bg) !important;
+        border-radius: 8px !important;
+        z-index: 1050 !important;
+    }
+    .fc-popover-header {
+        background-color: var(--bs-tertiary-bg) !important;
+        color: var(--bs-heading-color) !important;
+        border-radius: 8px 8px 0 0 !important;
+        padding: 8px 12px !important;
+    }
+    .fc-popover-body {
+        max-height: 300px !important;
+        overflow-y: auto !important;
+        padding: 8px !important;
+    }
 
     /* Custom Orange Event Classes */
     .bg-label-primary { background-color: rgba(248, 146, 35, 0.16) !important; color: #f89223 !important; }
@@ -67,7 +97,7 @@
     .form-control-transparent {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
+        color: var(--bs-heading-color) !important;
     }
     .form-control-transparent:focus {
         background-color: rgba(255, 255, 255, 0.1) !important;
@@ -75,7 +105,7 @@
         box-shadow: none !important;
     }
 
-    .fc-list-event-title { color: #fff !important; }
+    .fc-list-event-title { color: var(--fc-text-title) !important; }
     .fc-list-day-text, .fc-list-day-side-text { color: #f89223 !important; font-weight: 600; }
 </style>
 }
@@ -98,13 +128,13 @@
 <!-- Modal de Detalhes (Simples) -->
 <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-white" style="background: #2b2c40;">
+        <div class="modal-content" style="background: var(--bs-body-bg);">
             <div class="modal-header border-bottom border-secondary">
-                <h5 class="modal-title" id="eventTitle">Detalhes do Evento</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="eventTitle" style="color: var(--bs-heading-color);">Detalhes do Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p id="eventDescription" class="mb-4"></p>
+                <p id="eventDescription" class="mb-4" style="color: var(--bs-body-color);"></p>
                 <div id="eventActions" class="d-none">
                     <a href="#" id="viewDashboardBtn" class="btn btn-warning w-100">
                         <i class="ri-dashboard-line me-1"></i>Ver no Dashboard
@@ -121,24 +151,24 @@
 <!-- Modal Adicionar Atividade -->
 <div class="modal fade" id="addActivityModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-white" style="background: #2b2c40;">
+        <div class="modal-content" style="background: var(--bs-body-bg);">
             <form method="post" asp-page-handler="AddActivity">
                 <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title">Agendar Atividade / Nota</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" style="color: var(--bs-heading-color);">Agendar Atividade / Nota</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Título / Local</label>
-                        <input type="text" name="title" class="form-control form-control-transparent" placeholder="Ex: Visita à Escola de Braga" required />
+                        <label class="form-label" style="color: var(--bs-body-color);">Título / Local</label>
+                        <input type="text" name="title" class="form-control" placeholder="Ex: Visita à Escola de Braga" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Descrição (Opcional)</label>
-                        <textarea name="description" class="form-control form-control-transparent" rows="3" placeholder="Detalhes da intervenção ou nota..."></textarea>
+                        <label class="form-label" style="color: var(--bs-body-color);">Descrição (Opcional)</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Detalhes da intervenção ou nota..."></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Data</label>
-                        <input type="date" name="date" id="activityDateInput" class="form-control form-control-transparent" required />
+                        <label class="form-label" style="color: var(--bs-body-color);">Data</label>
+                        <input type="date" name="date" id="activityDateInput" class="form-control" required />
                     </div>
                 </div>
                 <div class="modal-footer border-top border-secondary">
@@ -173,7 +203,7 @@
                 list: 'Lista'
             },
             locale: 'pt-pt',
-            events: @Html.Raw(Model.CalendarEventsJson ?? "[]"),
+            events: @Html.Raw(Model.CalendarEventsJson ??"[]"),
             select: function(info) {
                 // Ao selecionar um dia, abre o modal de adição
                 document.getElementById('activityDateInput').value = info.startStr;
@@ -181,7 +211,7 @@
             },
             eventClick: function(info) {
                 document.getElementById('eventTitle').innerText = info.event.title;
-                document.getElementById('eventDescription').innerText = info.event.extendedProps.description || "Sem descrição adicional.";
+                document.getElementById('eventDescription').innerText = info.event.extendedProps.description ||"Sem descrição adicional.";
                 
                 const ticketId = info.event.extendedProps.ticketId;
                 const actionsDiv = document.getElementById('eventActions');
@@ -205,3 +235,6 @@
     });
 </script>
 }
+
+
+

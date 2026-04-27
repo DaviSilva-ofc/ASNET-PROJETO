@@ -1,10 +1,10 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Professors.DashboardModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Dashboard Professor";
-    ViewData["container"] = "container-fluid";
-    ViewData["containerNav"] = "container-fluid";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Dashboard Professor";
+    ViewData["container"] ="container-fluid";
+    ViewData["containerNav"] ="container-fluid";
 }
 
 @section VendorStyles {
@@ -67,7 +67,7 @@
         border-radius: 12px;
         display: flex; align-items: center; justify-content: center;
         font-size: 1.4rem;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
     .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; color: var(--dash-title); }
     .stat-label  { font-size: .8rem; color: var(--dash-subtitle); margin: 0; text-transform: uppercase; }
@@ -81,7 +81,7 @@
     }
     .nav-pills .nav-link.active {
         background: var(--asnet-orange) !important;
-        color: #fff !important;
+        color: var(--bs-heading-color) !important;
     }
 
     .asnet-table th {
@@ -329,25 +329,25 @@
                                         <td>
                                             <div class="d-flex flex-column">
                                                 @{
-                                                    var ttype = ticket.Equipamento?.Type ?? "";
-                                                    var tname = ticket.Equipamento?.Name ?? "";
+                                                    var ttype = ticket.Equipamento?.Type ??"";
+                                                    var tname = ticket.Equipamento?.Name ??"";
                                                     var temoji = ttype.ToLower() switch {
-                                                        var s when s.Contains("monitor") => "🖥️",
-                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") => "💻",
-                                                        var s when s.Contains("impressora") => "🖨️",
-                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") => "🌐",
-                                                        var s when s.Contains("projetor") => "📽️",
-                                                        var s when s.Contains("rato") || s.Contains("mouse") => "🖱️",
-                                                        var s when s.Contains("teclado") => "⌨️",
-                                                        var s when s.Contains("servidor") => "🗄️",
-                                                        var s when s.Contains("ups") || s.Contains("bateria") => "🔋",
-                                                        var s when s.Contains("quadro") || s.Contains("interativo") => "📺",
-                                                        _ => tname.Contains("Monitor") ? "🖥️" : (tname.Contains("Computador") ? "💻" : (tname.Contains("Impressora") ? "🖨️" : "🔧"))
+                                                        var s when s.Contains("monitor") =>"🖥️",
+                                                        var s when s.Contains("computador") || s.Contains("desktop") || s.Contains("portátil") || s.Contains("pc") =>"💻",
+                                                        var s when s.Contains("impressora") =>"🖨️",
+                                                        var s when s.Contains("rede") || s.Contains("network") || s.Contains("switch") || s.Contains("router") =>"🌐",
+                                                        var s when s.Contains("projetor") =>"📽️",
+                                                        var s when s.Contains("rato") || s.Contains("mouse") =>"🖱️",
+                                                        var s when s.Contains("teclado") =>"⌨️",
+                                                        var s when s.Contains("servidor") =>"🗄️",
+                                                        var s when s.Contains("ups") || s.Contains("bateria") =>"🔋",
+                                                        var s when s.Contains("quadro") || s.Contains("interativo") =>"📺",
+                                                        _ => tname.Contains("Monitor") ?"🖥️" : (tname.Contains("Computador") ?"💻" : (tname.Contains("Impressora") ?"🖨️" :"🔧"))
                                                     };
                                                 }
                                                 <span class="fw-bold">@temoji @ticket.Equipamento?.Name</span>
                                                 <small class="text-muted small">
-                                                    @(ticket.Equipamento?.Brand ?? "Genérico") @(ticket.Equipamento?.Model ?? "")
+                                                    @(ticket.Equipamento?.Brand ??"Genérico") @(ticket.Equipamento?.Model ??"")
                                                     @if (!string.IsNullOrEmpty(ticket.Equipamento?.SerialNumber))
                                                     {
                                                         <span class="ms-1">(S/N: @ticket.Equipamento.SerialNumber)</span>
@@ -373,9 +373,9 @@
                                         </td>
                                         <td>@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
-                                            @if (ticket.Status == "Pendente" || ticket.Status == "Aguardando" || ticket.Status == "Pedido") {
+                                            @if (ticket.Status =="Pendente" || ticket.Status =="Aguardando" || ticket.Status =="Pedido") {
                                                 <span class="badge bg-label-warning text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-time me-1"></i> A aguardar Técnico</span>
-                                            } else if (ticket.Status == "Em andamento" || ticket.Status == "Atribuído" || ticket.Status == "Em Reparação") {
+                                            } else if (ticket.Status =="Em andamento" || ticket.Status =="Atribuído" || ticket.Status =="Em Reparação") {
                                                 <span class="badge bg-label-warning text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-wrench me-1"></i> Em Reparação</span>
                                             } else {
                                                 <span class="badge bg-label-success text-uppercase" style="font-size: 0.65rem;"><i class="bx bx-check-circle me-1"></i> Resolvido</span>
@@ -383,7 +383,7 @@
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
-                                                    onclick="showQRCode('@ticket.Equipamento?.Id', 'equip', '@(ticket.Equipamento?.Name?.Replace("'", "\\'"))', '@(ticket.Equipamento?.SerialNumber ?? "S/N N/A")')">
+                                                    onclick="showQRCode('@ticket.Equipamento?.Id', 'equip', '@(ticket.Equipamento?.Name?.Replace("'","\\'"))', '@(ticket.Equipamento?.SerialNumber ??"S/N N/A")')">
                                                 <i class="ri-qr-code-line"></i>
                                             </button>
                                         </td>
@@ -509,3 +509,5 @@
 </script>
 <partial name="Shared/_QrModal" />
 }
+
+

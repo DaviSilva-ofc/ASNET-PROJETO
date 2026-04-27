@@ -8,7 +8,7 @@
 @section PageStyles {
 <style>
     .dark-style .card-header h5,
-    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+    [data-bs-theme="dark"] .card-header h5 { color: var(--bs-heading-color) !important; }
 
     .dark-style .list-group-item,
     [data-bs-theme="dark"] .list-group-item {
@@ -22,7 +22,7 @@
 
     .dark-style .card,
     [data-bs-theme="dark"] .card {
-        background-color: #2b2c40;
+        background-color: var(--tk-card-solid) !important;
         box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
     }
 
@@ -78,7 +78,7 @@
     [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         transform: rotate(90deg);
         background-color: var(--bs-primary);
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .dark-style [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
@@ -87,7 +87,7 @@
     }
     .dark-style [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         background-color: #696cff;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .agrupamento-node { color: var(--bs-primary); }
@@ -169,7 +169,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.25rem;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     /* Print Styles */
@@ -222,7 +222,7 @@
     .dark-style [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line,
     [data-bs-theme="dark"] [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         background-color: #696cff;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     /* Node colors */
@@ -308,7 +308,7 @@
                          data-bs-toggle="collapse" data-bs-target="#stock-empresa-body" aria-expanded="true">
                         <div class="d-flex align-items-center">
                             <h5 class="mb-0 text-white me-3"><strong>Stock Empresa</strong></h5>
-                            <span class="badge bg-label-light text-white-50 small">Central + com técnico</span>
+                            <span class="badge bg-secondary text-white small">Central + com técnico</span>
                         </div>
                         <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation();">
                              <h4 class="mb-0 text-white fw-bold me-2">@Model.CountStockEmpresa</h4>
@@ -364,11 +364,11 @@
                                                                                         <i class="ri-share-forward-line"></i>
                                                                                     </button>
                                                                                 }
-                                                                                <button type="button" class="btn btn-sm btn-icon text-info p-0" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" title="Código QR">
-                                                                                    <i class="ri-qr-code-line"></i>
+                                                                                <button type="button" class="btn btn-sm btn-icon text-info p-0 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" title="Código QR">
+                                                                                    📱
                                                                                 </button>
-                                                                                <button type="button" class="btn btn-sm btn-icon text-danger p-0 open-delete-modal border-0" data-bs-toggle="modal" data-bs-target="#modalDeleteStock" data-sample-id="@item.SampleId" data-name="@item.Name" data-type="@item.Type" data-location="Stock Empresa" data-quantity="@item.Quantity" title="Eliminar">
-                                                                                    <i class="ri-delete-bin-line"></i>
+                                                                                <button type="button" class="btn btn-sm btn-icon text-danger p-0 open-delete-modal border-0 lh-1" style="font-size: 1.1rem;" data-bs-toggle="modal" data-bs-target="#modalDeleteStock" data-sample-id="@item.SampleId" data-name="@item.Name" data-type="@item.Type" data-location="Stock Empresa" data-quantity="@item.Quantity" title="Eliminar">
+                                                                                    🗑️
                                                                                 </button>
                                                                             </div>
                                                                         </div>
@@ -408,8 +408,8 @@
                                                                         <div class="d-flex align-items-center p-1 rounded">
                                                                             <i class="ri-hard-drive-2-line me-1"></i> @item.Name
                                                                             <span class="badge bg-label-info ms-auto">@item.Quantity</span>
-                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 border-0 ms-2" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" title="Código QR">
-                                                                                <i class="ri-qr-code-line"></i>
+                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 border-0 ms-2 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@item.Location.Replace("'", "\\'")')" title="Código QR">
+                                                                                📱
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -469,8 +469,8 @@
                                                                             <span class="text-secondary small">(@item.Type)</span>
                                                                             <span class="fw-semibold ms-1">@item.Name</span>
                                                                             <span class="badge bg-label-info ms-auto">@item.Quantity</span>
-                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 border-0 ms-2" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', 'Agrupamento')" title="Código QR">
-                                                                                <i class="ri-qr-code-line"></i>
+                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 border-0 ms-2 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', 'Agrupamento')" title="Código QR">
+                                                                                📱
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -508,8 +508,8 @@
                                                                                     <div class="d-flex align-items-center p-1 rounded">
                                                                                         <i class="ri-computer-line me-1"></i> @item.Name
                                                                                         <span class="badge bg-label-primary ms-auto">@item.Quantity</span>
-                                                                                        <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@esc.EscolaName.Replace("'", "\\'")')" title="Código QR">
-                                                                                            <i class="ri-qr-code-line"></i>
+                                                                                        <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@esc.EscolaName.Replace("'", "\\'")')" title="Código QR">
+                                                                                            📱
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
@@ -523,8 +523,8 @@
                                                                                     <div class="d-flex align-items-center p-1 rounded">
                                                                                         <i class="ri-hard-drive-2-line me-1"></i> @item.Name
                                                                                         <span class="badge bg-label-info ms-auto">@item.Quantity</span>
-                                                                                        <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@esc.EscolaName.Replace("'", "\\'")')" title="Código QR">
-                                                                                            <i class="ri-qr-code-line"></i>
+                                                                                        <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@esc.EscolaName.Replace("'", "\\'")')" title="Código QR">
+                                                                                            📱
                                                                                         </button>
                                                                                     </div>
                                                                                 </div>
@@ -581,8 +581,8 @@
                                                                         <div class="d-flex align-items-center p-1 rounded">
                                                                             <i class="ri-computer-line me-2"></i> @item.Name
                                                                             <span class="badge bg-label-primary ms-auto">@item.Quantity</span>
-                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@emp.EmpresaName.Replace("'", "\\'")')" title="Código QR">
-                                                                                <i class="ri-qr-code-line"></i>
+                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@emp.EmpresaName.Replace("'", "\\'")')" title="Código QR">
+                                                                                📱
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -597,8 +597,8 @@
                                                                             <span class="text-secondary small me-1">(@item.Type)</span>
                                                                             <span class="fw-semibold">@item.Name</span>
                                                                             <span class="badge bg-label-info ms-auto">@item.Quantity</span>
-                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@emp.EmpresaName.Replace("'", "\\'")')" title="Código QR">
-                                                                                <i class="ri-qr-code-line"></i>
+                                                                            <button type="button" class="btn btn-sm btn-icon text-info p-0 ms-2 lh-1" style="font-size: 1.1rem;" onclick="showQRCode('@item.SampleId', 'stock', '@item.Name.Replace("'", "\\'")', '@emp.EmpresaName.Replace("'", "\\'")')" title="Código QR">
+                                                                                📱
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -1190,3 +1190,6 @@
 
 <partial name="Shared/_QrModal" />
 }
+
+
+

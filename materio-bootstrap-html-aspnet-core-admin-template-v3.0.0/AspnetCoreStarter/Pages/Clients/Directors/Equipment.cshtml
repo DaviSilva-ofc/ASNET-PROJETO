@@ -1,8 +1,8 @@
 @page
 @model AspnetCoreStarter.Pages.Clients.Directors.DirectorEquipmentModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Equipamentos";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Equipamentos";
 }
 
 @section PageStyles {
@@ -69,7 +69,7 @@
             var hasSpecificLocationFilter = Model.ActiveFilterRoom != null || Model.ActiveFilterBloco != null || Model.ActiveFilterEscola != null;
             var hasAnyFilter = !string.IsNullOrEmpty(Model.FilterName) || !string.IsNullOrEmpty(Model.FilterType) || !string.IsNullOrEmpty(Model.FilterStatus) || hasSpecificLocationFilter;
             
-            var activeFilterText = "";
+            var activeFilterText ="";
             if (Model.ActiveFilterRoom != null) activeFilterText = $"Sala: {Model.ActiveFilterRoom.Name}";
             else if (Model.ActiveFilterBloco != null) activeFilterText = $"Bloco: {Model.ActiveFilterBloco.Name}";
             else if (Model.ActiveFilterEscola != null) activeFilterText = $"Escola: {Model.ActiveFilterEscola.Name}";
@@ -82,10 +82,10 @@
                         <i class="ri-information-line me-1"></i>
                         Filtros ativos: 
                         <strong>
-                            @(!string.IsNullOrEmpty(Model.FilterName) ? $"Artigo: {Model.FilterName}, " : "")
-                            @(!string.IsNullOrEmpty(Model.FilterType) ? $"Tipo: {Model.FilterType}, " : "")
-                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}, " : "")
-                            @(!string.IsNullOrEmpty(activeFilterText) ? activeFilterText : "")
+                            @(!string.IsNullOrEmpty(Model.FilterName) ? $"Artigo: {Model.FilterName}," :"")
+                            @(!string.IsNullOrEmpty(Model.FilterType) ? $"Tipo: {Model.FilterType}," :"")
+                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}," :"")
+                            @(!string.IsNullOrEmpty(activeFilterText) ? activeFilterText :"")
                         </strong>
                     </span>
                     <a asp-page="./Equipment" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
@@ -118,9 +118,9 @@
                             <tr>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <strong class="text-dark">@item.Name</strong>
+                                        <strong style="color: var(--bs-heading-color);">@item.Name</strong>
                                         <small class="text-muted" style="font-size: 0.75rem;">
-                                            @(item.Brand ?? "Genérico") @(item.Model ?? "")
+                                            @(item.Brand ??"Genérico") @(item.Model ??"")
                                         </small>
                                     </div>
                                 </td>
@@ -167,7 +167,7 @@
                                     }
                                     else
                                     {
-                                        <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
+                                        <span class="badge bg-label-secondary">@(item.Status ??"Indefinido")</span>
                                     }
                                 </td>
                                 <td style="width: 1%; white-space: nowrap;">
@@ -178,14 +178,14 @@
                                                 🎫
                                             </a>
                                         }
-                                        @if (item.Status == "Em reparação")
+                                        @if (item.Status =="Em reparação")
                                         {
                                             <span class="text-muted small px-1" title="Em Manutenção">🛠️</span>
                                         }
                                         else
                                         {
                                             <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
-                                                @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
+                                                @if (item.Status =="Avariado" || item.Status =="Indisponível" || item.Status =="Danificado")
                                                 {
                                                     <button type="submit" class="border-0 bg-transparent p-1 lh-1" title="Marcar como A funcionar">✅</button>
                                                 }
@@ -197,7 +197,7 @@
                                         }
                                         
                                         <button type="button" class="border-0 bg-transparent p-1 lh-1" 
-                                                onclick="showQRCode('@item.Id', 'equip', '@(item.Name?.Replace("'", "\\'"))', '@(item.Room?.Name?.Replace("'", "\\'"))')" 
+                                                onclick="showQRCode('@item.Id', 'equip', '@(item.Name?.Replace("'","\\'"))', '@(item.Room?.Name?.Replace("'","\\'"))')" 
                                                 title="Código QR">
                                             📱
                                         </button>
@@ -258,12 +258,12 @@
                                                     <div class="avatar avatar-xs me-2">
                                                         <span class="avatar-initial rounded-circle bg-label-primary"><i class="ri-user-line"></i></span>
                                                     </div>
-                                                    <span class="small fw-semibold">@(ticket.RequestedBy?.Username ?? "Desconhecido")</span>
+                                                    <span class="small fw-semibold">@(ticket.RequestedBy?.Username ??"Desconhecido")</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-column">
-                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE STOCK (DIRETOR):", "").Replace("PEDIDO DE EQUIPAMENTO (TÉCNICO):", "").Replace("PEDIDO DE EQUIPAMENTO (PROFESSOR):", "").Trim()</span>
+                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE STOCK (DIRETOR):","").Replace("PEDIDO DE EQUIPAMENTO (TÉCNICO):","").Replace("PEDIDO DE EQUIPAMENTO (PROFESSOR):","").Trim()</span>
                                                     <small class="text-muted">@ticket.School?.Name</small>
                                                 </div>
                                             </td>
@@ -330,7 +330,7 @@
     @* Modal Requisitar Equipamento *@
     <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: transparent !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #fff;">
+            <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: transparent !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: var(--bs-heading-color);">
                 <div class="modal-header border-bottom">
                     <h5 class="modal-title"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -504,7 +504,7 @@
                                     <option value="">Nenhuma / Empresa</option>
                                     @foreach (var sala in Model.Rooms)
                                     {
-                                        <option value="@sala.Id">@sala.Name (@(sala.Block?.Name ?? "N/A"))</option>
+                                        <option value="@sala.Id">@sala.Name (@(sala.Block?.Name ??"N/A"))</option>
                                     }
                                 </select>
                             </div>
@@ -778,7 +778,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Estado</label>
-                            <select asp-for="FilterStatus" class="form-select bg-dark text-white border-light border-opacity-10">
+                            <select asp-for="FilterStatus" class="form-select">
                                 <option value="">Todos os Estados</option>
                                 <option value="A funcionar">A funcionar</option>
                                 <option value="Avariado">Avariado</option>
@@ -953,7 +953,7 @@
 
     // Filter select options by search input
     function filterSelect(input, selectId) {
-        var filter = (input ? input.value : "").toLowerCase().trim();
+        var filter = (input ? input.value :"").toLowerCase().trim();
         var select = document.getElementById(selectId);
         var options = select.querySelectorAll('option');
         
@@ -965,13 +965,13 @@
         }
 
         options.forEach(function(opt) {
-            if (opt.value === "") return;
+            if (opt.value ==="") return;
             var text = opt.textContent.toLowerCase();
             var matchesSearch = text.includes(filter);
             
             var matchesArtigo = true;
             if (currentArtigo) {
-                var targetArtigo = (opt.getAttribute('data-artigo') || "").toLowerCase().trim();
+                var targetArtigo = (opt.getAttribute('data-artigo') ||"").toLowerCase().trim();
                 matchesArtigo = (targetArtigo === currentArtigo);
             }
 
@@ -984,7 +984,7 @@
         const tipoSelect = document.getElementById(prefix + 'Tipo');
         const options = tipoSelect.querySelectorAll('option');
 
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         
         // Trigger filterSelect to update display based on BOTH artigo AND any current search
         const wrapper = tipoSelect.closest('.select-search-wrapper');
@@ -1004,7 +1004,7 @@
         // Filter specific types in the dropdown
         if (tipoSelect) {
             Array.from(tipoSelect.options).forEach(opt => {
-                if (opt.value === "") return;
+                if (opt.value ==="") return;
                 const dataArt = opt.getAttribute('data-artigo');
                 opt.style.display = (!artigo || !dataArt || dataArt === artigo) ? 'block' : 'none';
             });
@@ -1043,10 +1043,10 @@
         const escId = document.getElementById('regEscola').value;
         const blcSelect = document.getElementById('regBloco');
         const options = blcSelect.querySelectorAll('option');
-        blcSelect.value = "";
+        blcSelect.value ="";
         options.forEach(opt => {
-            if (opt.value === "") return;
-            opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
+            if (opt.value ==="") return;
+            opt.style.display = (escId ==="" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
         });
         regFilterSalas();
     }
@@ -1055,10 +1055,10 @@
         const blcId = document.getElementById('regBloco').value;
         const salaSelect = document.getElementById('regSala');
         const options = salaSelect.querySelectorAll('option');
-        salaSelect.value = "";
+        salaSelect.value ="";
         options.forEach(opt => {
-            if (opt.value === "") return;
-            opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
+            if (opt.value ==="") return;
+            opt.style.display = (blcId ==="" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
     }
 
@@ -1066,10 +1066,10 @@
         const escId = document.getElementById('filterEscola').value;
         const blcSelect = document.getElementById('filterBloco');
         const options = blcSelect.querySelectorAll('option');
-        blcSelect.value = "";
+        blcSelect.value ="";
         options.forEach(opt => {
-            if (opt.value === "") return;
-            opt.style.display = (escId === "" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
+            if (opt.value ==="") return;
+            opt.style.display = (escId ==="" || opt.getAttribute('data-esc') === escId) ? 'block' : 'none';
         });
         filterSalas();
     }
@@ -1120,16 +1120,16 @@
         if (matchedType) {
             tipoSelect.value = matchedType.value;
         } else {
-            tipoSelect.value = type || ""; 
+            tipoSelect.value = type ||""; 
         }
 
         document.getElementById('editSerial').value = serial;
-        document.getElementById('editSala').value = roomId || "";
-        document.getElementById('editEmpresa').value = empId || "";
+        document.getElementById('editSala').value = roomId ||"";
+        document.getElementById('editEmpresa').value = empId ||"";
         
         const statusSelect = document.getElementById('editStatus');
         if (statusSelect) {
-            if (status === "A funcionar" || !status) status = "A funcionar";
+            if (status ==="A funcionar" || !status) status ="A funcionar";
             statusSelect.value = status;
         }
 
@@ -1141,10 +1141,10 @@
         const blcId = document.getElementById('filterBloco').value;
         const salaSelect = document.getElementById('filterSala');
         const options = salaSelect.querySelectorAll('option');
-        salaSelect.value = "";
+        salaSelect.value ="";
         options.forEach(opt => {
-            if (opt.value === "") return;
-            opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
+            if (opt.value ==="") return;
+            opt.style.display = (blcId ==="" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
     }
 
@@ -1153,12 +1153,12 @@
         const tipoSelect = document.getElementById('filterTipo');
         const options = tipoSelect.querySelectorAll('option');
         
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         
         options.forEach(opt => {
-            if (opt.value === "") return;
-            const dataArt = (opt.getAttribute('data-art') || "").toLowerCase().trim();
-            if (artName === "" || dataArt === artName) {
+            if (opt.value ==="") return;
+            const dataArt = (opt.getAttribute('data-art') ||"").toLowerCase().trim();
+            if (artName ==="" || dataArt === artName) {
                 opt.style.display = '';
             } else {
                 opt.style.display = 'none';
@@ -1168,7 +1168,7 @@
 
     function toggleLocationType() {
         const hdnLocType = document.getElementById('hdnLocationType');
-        if (hdnLocType) hdnLocType.value = "escola";
+        if (hdnLocType) hdnLocType.value ="escola";
         const divEscola = document.getElementById('divLocEscola');
         if (divEscola) divEscola.style.display = 'block';
     }
@@ -1177,13 +1177,15 @@
         const artName = document.getElementById('reqEqArtigo').value;
         const tipoSelect = document.getElementById('reqEqTipo');
         const options = tipoSelect.querySelectorAll('option');
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         options.forEach(opt => {
-            if (opt.value === "") return;
-            const art = (opt.getAttribute('data-art') || "");
-            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
+            if (opt.value ==="") return;
+            const art = (opt.getAttribute('data-art') ||"");
+            opt.style.display = (artName ==="" || art === artName) ? '' : 'none';
         });
     }
 </script>
 <partial name="Shared/_QrModal" />
 }
+
+

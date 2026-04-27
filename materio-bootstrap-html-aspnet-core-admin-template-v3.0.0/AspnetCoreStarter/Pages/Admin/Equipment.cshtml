@@ -154,7 +154,7 @@
                         <tr>
                             <td>
                                 <div class="d-flex flex-column">
-                                    <strong class="text-dark">@item.Name</strong>
+                                    <strong style="color: var(--bs-heading-color);">@item.Name</strong>
                                     <small class="text-muted" style="font-size: 0.75rem;">
                                         @(item.Brand ?? "Genérico") @(item.Model ?? "")
                                     </small>
@@ -528,12 +528,18 @@
                         </div>
 
                         <div class="mb-0">
-                            <label class="form-label fw-bold">Locais / Escolas</label>
-                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto; background: rgba(67,89,113,0.02);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">Locais / Escolas</label>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="selectAllSchools()">Selecionar tudo</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-xs py-1 px-2" style="font-size: 0.75rem;" onclick="deselectAllSchools()">Desmarcar tudo</button>
+                                </div>
+                            </div>
+                            <div class="border rounded p-3" id="schoolChecklistContainer" style="max-height: 200px; overflow-y: auto; background: rgba(67,89,113,0.02);">
                                 @foreach (var escola in Model.AvailableEscolas.OrderBy(e => e.Name))
                                 {
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="schoolIds" value="@escola.Id" id="sch_@escola.Id" checked>
+                                        <input class="form-check-input school-checkbox" type="checkbox" name="schoolIds" value="@escola.Id" id="sch_@escola.Id" checked onchange="updateScheduleButtonState()">
                                         <label class="form-check-label" for="sch_@escola.Id">
                                             @escola.Name
                                         </label>
@@ -545,7 +551,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning shadow-sm">
+                        <button type="submit" id="btnConfirmSchedule" class="btn btn-warning shadow-sm">
                             <i class="ri-calendar-check-line me-1"></i>Confirmar Agendamento
                         </button>
                     </div>
@@ -568,15 +574,15 @@
             <input type="hidden" name="artigo" id="checkArtigo" />
 
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #2b2c40 0%, #1a1b2a 100%); padding: 1.5rem 2rem; flex-shrink:0; border-left: 5px solid #696cff; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <div style="background: #f1f5f9; padding: 1.5rem 2rem; flex-shrink:0; border-left: 5px solid #696cff; border-bottom: 1px solid rgba(67, 89, 113, 0.1);">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-primary small mb-1 uppercase fw-bold" style="letter-spacing: 1.5px; font-size: 0.7rem;"><i class="ri-shield-check-line me-1"></i>AUDITORIA PREVENTIVA</div>
-                        <h3 class="text-white fw-bold mb-1" id="lblCheckArtigo" style="font-size: 1.4rem;">—</h3>
-                        <div class="text-white opacity-75" id="lblCheckLocation" style="font-size:0.9rem;"><i class="ri-map-pin-line me-1 text-primary"></i>—</div>
+                        <h3 class="text-dark fw-bold mb-1" id="lblCheckArtigo" style="font-size: 1.4rem;">—</h3>
+                        <div class="text-muted" id="lblCheckLocation" style="font-size:0.9rem;"><i class="ri-map-pin-line me-1 text-primary"></i>—</div>
                     </div>
-                    <button type="button" onclick="closeChecklist()" class="btn btn-icon btn-close-white" style="background:rgba(255,255,255,0.1); border-radius:12px; width:42px; height:42px; transition: all 0.2s;">
-                        <i class="ri-close-line fs-3 text-white"></i>
+                    <button type="button" onclick="closeChecklist()" class="btn btn-icon btn-outline-secondary" style="border-radius:12px; width:42px; height:42px; transition: all 0.2s;">
+                        <i class="ri-close-line fs-3"></i>
                     </button>
                 </div>
             </div>
@@ -1902,8 +1908,40 @@
             });
         });
     });
+
+    // Functions for Schedule Maintenance Modal
+    function selectAllSchools() {
+        document.querySelectorAll('.school-checkbox').forEach(cb => cb.checked = true);
+        updateScheduleButtonState();
+    }
+
+    function deselectAllSchools() {
+        document.querySelectorAll('.school-checkbox').forEach(cb => cb.checked = false);
+        updateScheduleButtonState();
+    }
+
+    function updateScheduleButtonState() {
+        const btn = document.getElementById('btnConfirmSchedule');
+        const checkboxes = document.querySelectorAll('.school-checkbox');
+        const isAnyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        
+        if (btn) {
+            btn.disabled = !isAnyChecked;
+        }
+    }
+
+    // Initialize state when modal is shown
+    document.addEventListener('DOMContentLoaded', function() {
+        const scheduleModal = document.getElementById('modalScheduleMaintenance');
+        if (scheduleModal) {
+            scheduleModal.addEventListener('show.bs.modal', function() {
+                updateScheduleButtonState();
+            });
+        }
+    });
 </script>
 
 <partial name="Shared/_QrModal" />
 }
+
 

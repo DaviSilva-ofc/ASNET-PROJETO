@@ -306,7 +306,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             if (equipment == null) return RedirectToPage(new { success = "Erro: Equipamento não encontrado." });
 
             NewTicket.SchoolId = equipment.Room.Block.SchoolId;
-            NewTicket.Status = "Pedido";
+            NewTicket.Status = "Pendente";
             NewTicket.CreatedAt = DateTime.UtcNow;
             
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -439,7 +439,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             {
                 Description = $"PEDIDO DE STOCK (DIRETOR):\nArtigo: {itemName}\nTipo: {itemType ?? "N/A"}\nQuantidade: {quantity}\nMotivo: {notes}\nAgrupamento: {director?.Agrupamento?.Name}\n\n[DATA:{dataJson}]",
                 Level = "Empréstimo",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 RequestedByUserId = userId
             };

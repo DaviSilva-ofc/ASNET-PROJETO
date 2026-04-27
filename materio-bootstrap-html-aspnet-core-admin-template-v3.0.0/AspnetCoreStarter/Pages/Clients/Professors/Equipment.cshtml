@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Professors.EquipmentModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Equipamentos";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Equipamentos";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -41,7 +41,7 @@
                     </div>
 
         @{
-            var activeEQFilterText = "";
+            var activeEQFilterText ="";
             if (Model.SalaId.HasValue) {
                 var sala = Model.MyRooms.FirstOrDefault(r => r.Id == Model.SalaId.Value);
                 if (sala != null) activeEQFilterText = $"sala: {sala.Name}";
@@ -56,9 +56,9 @@
                         <i class="ri-information-line me-1"></i>
                         Filtros ativos: 
                         <strong>
-                            @(!string.IsNullOrEmpty(Model.FilterName) ? $"Artigo: {Model.FilterName}, " : "")
-                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}, " : "")
-                            @(!string.IsNullOrEmpty(activeEQFilterText) ? activeEQFilterText : "")
+                            @(!string.IsNullOrEmpty(Model.FilterName) ? $"Artigo: {Model.FilterName}," :"")
+                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}," :"")
+                            @(!string.IsNullOrEmpty(activeEQFilterText) ? activeEQFilterText :"")
                         </strong>
                     </span>
                     <a asp-page="./Equipment" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
@@ -129,7 +129,7 @@
                                     }
                                     else
                                     {
-                                        <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
+                                        <span class="badge bg-label-secondary">@(item.Status ??"Indefinido")</span>
                                     }
                                 </td>
                                 <td style="white-space: nowrap;">
@@ -149,7 +149,7 @@
                                                 </button>
                                             </form>
                                             <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
-                                                    onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ?? "S/N N/A")')">
+                                                    onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ??"S/N N/A")')">
                                                 <i class="ri-qr-code-line"></i>
                                             </button>
                                         }
@@ -197,7 +197,7 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex flex-column">
-                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE EQUIPAMENTO (PROFESSOR):", "").Trim()</span>
+                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE EQUIPAMENTO (PROFESSOR):","").Trim()</span>
                                                     <small class="text-muted">Aguardando disponibilidade no stock central</small>
                                                 </div>
                                             </td>
@@ -264,9 +264,9 @@
     <!-- Modal Requisitar Equipamento -->
     <div class="modal fade" id="modalRequisitarEq" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: transparent !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #fff;">
+            <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: transparent !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: var(--bs-heading-color);">
                 <div class="modal-header border-bottom border-light border-opacity-25">
-                    <h5 class="modal-title text-white"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
+                    <h5 class="modal-title" style="color: var(--bs-heading-color) !important;"><i class="ri-hand-coin-line me-2 text-warning"></i>Requisitar Equipamento</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -314,7 +314,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-white-50 small text-uppercase">Quantidade</label>
-                        <input type="number" name="quantity" class="form-control text-white border-secondary" style="background-color: transparent !important;" value="1" min="1" required />
+                        <input type="number" name="quantity" class="form-control  border-secondary" style="color: var(--bs-heading-color) !important;" style="background-color: transparent !important;" value="1" min="1" required />
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-white-50 small text-uppercase">Motivo do Pedido</label>
@@ -346,7 +346,7 @@
                                 <option value="">Todas as minhas salas</option>
                                 @foreach (var sala in Model.MyRooms)
                                 {
-                                    <option value="@sala.Id">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" : "")</option>
+                                    <option value="@sala.Id">@sala.Name @(sala.Block != null ? $"({sala.Block.Name})" :"")</option>
                                 }
                             </select>
                         </div>
@@ -380,19 +380,22 @@
         const artName = document.getElementById('reqEqArtigo').value;
         const tipoSelect = document.getElementById('reqEqTipo');
         const options = tipoSelect.querySelectorAll('option');
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         options.forEach(opt => {
-            if (opt.value === "") return;
-            const art = (opt.getAttribute('data-art') || "");
-            opt.style.display = (artName === "" || art === artName) ? '' : 'none';
+            if (opt.value ==="") return;
+            const art = (opt.getAttribute('data-art') ||"");
+            opt.style.display = (artName ==="" || art === artName) ? '' : 'none';
         });
     }
 </script>
 <style>
     [data-bs-theme="dark"] .dark-bg-adjust {
-        background-color: #2b2c40 !important;
+        background-color: var(--tk-card-solid) !important;
     }
 </style>
 }
 
 @await Html.PartialAsync("_QrModal")
+
+
+

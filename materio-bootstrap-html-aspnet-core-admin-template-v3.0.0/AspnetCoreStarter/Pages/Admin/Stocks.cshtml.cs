@@ -116,7 +116,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 .Include(t => t.School)
                 .Include(t => t.Admin)
                 .Include(t => t.RequestedBy) // Include Private Client
-                .Where(t => t.Level == "Empréstimo" && t.Status == "Pedido")
+                .Where(t => t.Level == "Empréstimo" && (t.Status == "Pendente" || t.Status == "Pedido"))
                 .OrderBy(t => t.CreatedAt)
                 .ToListAsync();
 
@@ -631,7 +631,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public async Task<IActionResult> OnPostApproveLoanRequestAsync(int ticketId)
         {
             var ticket = await _context.Tickets.FindAsync(ticketId);
-            if (ticket == null || ticket.Status != "Pedido") return RedirectToPage();
+            if (ticket == null || (ticket.Status != "Pedido" && ticket.Status != "Pendente")) return RedirectToPage();
 
             int dataStartIndex = ticket.Description?.IndexOf("[DATA:") ?? -1;
             if (dataStartIndex != -1)

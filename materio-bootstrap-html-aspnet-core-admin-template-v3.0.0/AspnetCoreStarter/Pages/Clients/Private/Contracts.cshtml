@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Private.PrivateContractsModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Meus Contratos";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Meus Contratos";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -72,8 +72,8 @@
                                     @if (c.ExpiryDate.HasValue)
                                     {
                                         var daysLeft = (c.ExpiryDate.Value - DateTime.Now).Days;
-                                        var badgeClass = daysLeft < 0 ? "bg-label-danger" : (daysLeft <= 30 ? "bg-label-warning" : "bg-label-info");
-                                        var label = daysLeft < 0 ? "Expirado" : (daysLeft == 0 ? "Expira hoje" : $"{daysLeft} dias");
+                                        var badgeClass = daysLeft < 0 ?"bg-label-danger" : (daysLeft <= 30 ?"bg-label-warning" :"bg-label-info");
+                                        var label = daysLeft < 0 ?"Expirado" : (daysLeft == 0 ?"Expira hoje" : $"{daysLeft} dias");
 
                                         <div class="d-flex flex-column">
                                             <span>@c.ExpiryDate.Value.ToString("dd/MM/yyyy")</span>
@@ -88,18 +88,12 @@
                                 <td>
                                     @{
                                         var urgClass = c.UrgencyLevel switch
-                                        {
-                                            "Alto" => "bg-label-danger",
-                                            "Médio" => "bg-label-warning",
-                                            "Baixo" => "bg-label-success",
-                                            _ => "bg-label-secondary"
+                                        {"Alto" =>"bg-label-danger","Médio" =>"bg-label-warning","Baixo" =>"bg-label-success",
+                                            _ =>"bg-label-secondary"
                                         };
                                         var urgTime = c.UrgencyLevel switch
-                                        {
-                                            "Alto" => "4h",
-                                            "Médio" => "24h",
-                                            "Baixo" => "48h",
-                                            _ => "--"
+                                        {"Alto" =>"4h","Médio" =>"24h","Baixo" =>"48h",
+                                            _ =>"--"
                                         };
                                     }
                                     <span class="badge @urgClass">@c.UrgencyLevel <small class="opacity-75">(@urgTime)</small></span>
@@ -107,13 +101,13 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="avatar avatar-xs me-2">
-                                            <span class="avatar-initial rounded-circle bg-label-primary">@(c.Admin?.User?.Username?.Substring(0, 1) ?? "A")</span>
+                                            <span class="avatar-initial rounded-circle bg-label-primary">@(c.Admin?.User?.Username?.Substring(0, 1) ??"A")</span>
                                         </div>
-                                        <span class="small">@(c.Admin?.User?.Username ?? "Administrador")</span>
+                                        <span class="small">@(c.Admin?.User?.Username ??"Administrador")</span>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge @(c.ContractStatus == "Ativo" ? "bg-label-success" : "bg-label-warning") shadow-sm">
+                                    <span class="badge @(c.ContractStatus =="Ativo" ?"bg-label-success" :"bg-label-warning") shadow-sm">
                                         @c.ContractStatus
                                     </span>
                                 </td>
@@ -157,5 +151,6 @@
             </form>
         </div>
     </div>
+
 
 

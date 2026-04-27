@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Technicians.TechnicianInfrastructureModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Explorador de Infraestrutura";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Explorador de Infraestrutura";
 }
 
 @section PageStyles {
@@ -55,7 +55,7 @@
     [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         transform: rotate(90deg);
         background-color: #696cff;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .school-node { color: #71dd37; }
@@ -87,7 +87,7 @@
     <div class="row align-items-center mb-4">
         <div class="col-12">
             <h4 class="fw-bold py-3 mb-0">
-                <span class="text-white-50 fw-light">Técnico /</span> Gestão da Infraestrutura
+                <span class="-50 fw-light" style="color: var(--bs-heading-color) !important;">Técnico /</span> Gestão da Infraestrutura
             </h4>
         </div>
     </div>
@@ -127,10 +127,10 @@
                                             <div class="col-md-4 mb-3">
                                                 <div class="p-4 h-100 bg-light-section">
                                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                                        <h6 class="mb-0 fw-bold text-white"><i class="ri-ticket-2-line me-2 text-primary"></i>Tickets</h6>
+                                                        <h6 class="mb-0 fw-bold" style="color: var(--bs-heading-color) !important;"><i class="ri-ticket-2-line me-2 text-primary"></i>Tickets</h6>
                                                     </div>
                                                     <h3 class="mb-1 text-primary fw-bold">@client.TicketCount</h3>
-                                                    <p class="text-white-50 small mb-3">Tickets ativos em todas as escolas</p>
+                                                    <p class="-50 small mb-3" style="color: var(--bs-heading-color) !important;">Tickets ativos em todas as escolas</p>
                                                     <a asp-page="/Clients/Technicians/Tickets" asp-route-FilterAgrupamentoId="@client.Agrupamento.Id" class="btn btn-sm btn-outline-primary w-100">Gerir Tickets</a>
                                                 </div>
                                             </div>
@@ -139,10 +139,10 @@
                                             <div class="col-md-4 mb-3">
                                                 <div class="p-4 h-100 bg-light-section">
                                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                                        <h6 class="mb-0 fw-bold text-white"><i class="ri-error-warning-line me-2 text-danger"></i>Avariados</h6>
+                                                        <h6 class="mb-0 fw-bold" style="color: var(--bs-heading-color) !important;"><i class="ri-error-warning-line me-2 text-danger"></i>Avariados</h6>
                                                     </div>
                                                     <h3 class="mb-1 text-danger fw-bold">@client.DamagedEquipCount</h3>
-                                                    <p class="text-white-50 small mb-3">Equipamentos com estado "Avariado"</p>
+                                                    <p class="-50 small mb-3" style="color: var(--bs-heading-color) !important;">Equipamentos com estado"Avariado"</p>
                                                     <a asp-page="/Clients/Technicians/Equipment" asp-route-FilterAgrupamentoId="@client.Agrupamento.Id" asp-route-FilterStatus="Avariado" class="btn btn-sm btn-outline-danger w-100">Ver Avariados</a>
                                                 </div>
                                             </div>
@@ -151,7 +151,7 @@
                                             <div class="col-md-4 mb-3">
                                                 <div class="p-4 h-100 bg-light-section">
                                                     <div class="d-flex justify-content-between align-items-center mb-3">
-                                                        <h6 class="mb-0 fw-bold text-white"><i class="ri-node-tree me-2 text-warning"></i>Agrupamento</h6>
+                                                        <h6 class="mb-0 fw-bold" style="color: var(--bs-heading-color) !important;"><i class="ri-node-tree me-2 text-warning"></i>Agrupamento</h6>
                                                     </div>
                                                     <div class="infra-tree mt-3">
                                                         <div class="tree-node director-node mb-2 d-flex align-items-center">
@@ -193,7 +193,7 @@
                                                                                             @if (room.Equipments != null && room.Equipments.Any())
                                                                                             {
                                                                                                 var groupedEquips = room.Equipments
-                                                                                                    .GroupBy(e => !string.IsNullOrEmpty(e.Type) ? e.Type : "Outros")
+                                                                                                    .GroupBy(e => !string.IsNullOrEmpty(e.Type) ? e.Type :"Outros")
                                                                                                     .Select(g => new { TypeName = g.Key, Count = g.Count() })
                                                                                                     .OrderBy(g => g.TypeName)
                                                                                                     .ToList();
@@ -212,7 +212,7 @@
                                                                                             }
                                                                                             else
                                                                                             {
-                                                                                                <div class="ms-4 mt-1 small text-white-50 italic">Sem equipamentos registados.</div>
+                                                                                                <div class="ms-4 mt-1 small -50 italic" style="color: var(--bs-heading-color) !important;">Sem equipamentos registados.</div>
                                                                                             }
                                                                                         </div>
                                                                                     </div>
@@ -242,31 +242,31 @@
                     {
                         <div class="col-12 mb-3">
                             <div class="card shadow-sm border-0">
-                                <div class="banner-header d-flex justify-content-between align-items-center" style="background: #2b2c40 !important; border-bottom: 3px solid #71dd37 !important;"
+                                <div class="banner-header d-flex justify-content-between align-items-center" style="background: var(--tk-card-solid) !important; border-bottom: 3px solid #71dd37 !important;"
                                      data-bs-toggle="collapse" data-bs-target="#emp-@empVm.Empresa.Id">
-                                    <h5 class="mb-0 text-white">@empVm.Empresa.Name</h5>
-                                    <i class="ri-arrow-down-s-line fs-4 text-white"></i>
+                                    <h5 class="mb-0" style="color: var(--bs-heading-color) !important;">@empVm.Empresa.Name</h5>
+                                    <i class="ri-arrow-down-s-line fs-4" style="color: var(--bs-heading-color) !important;"></i>
                                 </div>
                                 <div id="emp-@empVm.Empresa.Id" class="collapse show">
                                     <div class="card-body pt-4">
                                         <div class="row">
                                             <div class="col-md-4 mb-3">
                                                 <div class="p-4 h-100 bg-light-section">
-                                                    <h6 class="mb-3 fw-bold text-white"><i class="ri-ticket-2-line me-2 text-primary"></i>Tickets</h6>
+                                                    <h6 class="mb-3 fw-bold" style="color: var(--bs-heading-color) !important;"><i class="ri-ticket-2-line me-2 text-primary"></i>Tickets</h6>
                                                     <h3 class="mb-1 text-primary fw-bold">@empVm.TicketCount</h3>
                                                     <a asp-page="/Clients/Technicians/Tickets" asp-route-FilterEmpresaId="@empVm.Empresa.Id" class="btn btn-sm btn-outline-primary w-100 mt-2">Gerir Tickets</a>
                                                 </div>
                                             </div>
                                             <div class="col-md-4 mb-3">
                                                 <div class="p-4 h-100 bg-light-section">
-                                                    <h6 class="mb-3 fw-bold text-white"><i class="ri-error-warning-line me-2 text-danger"></i>Avariados</h6>
+                                                    <h6 class="mb-3 fw-bold" style="color: var(--bs-heading-color) !important;"><i class="ri-error-warning-line me-2 text-danger"></i>Avariados</h6>
                                                     <h3 class="mb-1 text-danger fw-bold">@empVm.DamagedEquipCount</h3>
                                                     <a asp-page="/Clients/Technicians/Equipment" asp-route-FilterEmpresaId="@empVm.Empresa.Id" asp-route-FilterStatus="Avariado" class="btn btn-sm btn-outline-danger w-100 mt-2">Ver Avariados</a>
                                                 </div>
                                             </div>
                                             <div class="col-md-4 mb-3">
                                                 <div class="p-4 h-100 bg-light-section">
-                                                    <h6 class="mb-3 fw-bold text-white"><i class="ri-node-tree me-2 text-warning"></i>Empresa</h6>
+                                                    <h6 class="mb-3 fw-bold" style="color: var(--bs-heading-color) !important;"><i class="ri-node-tree me-2 text-warning"></i>Empresa</h6>
                                                     <div class="infra-tree mt-2">
                                                         <div class="tree-node school-node">
                                                             <div class="d-flex align-items-center cursor-pointer p-1"
@@ -305,14 +305,14 @@
                                                                                                          data-bs-toggle="collapse" data-bs-target="#tree-equip-sala-emp-@sala.Id">
                                                                                                         <i class="ri-arrow-right-s-line"></i>
                                                                                                         <i class="ri-door-open-line me-1"></i> @sala.Name
-                                                                                                        <span class="ms-2 text-white-50 small">(@(sala.Equipments?.Count ?? 0))</span>
+                                                                                                        <span class="ms-2 -50 small" style="color: var(--bs-heading-color) !important;">(@(sala.Equipments?.Count ?? 0))</span>
                                                                                                     </div>
 
                                                                                                     <div id="tree-equip-sala-emp-@sala.Id" class="collapse">
                                                                                                         @if (sala.Equipments != null && sala.Equipments.Any())
                                                                                                         {
                                                                                                             var groupedByType = sala.Equipments
-                                                                                                                .GroupBy(e => !string.IsNullOrWhiteSpace(e.Type) ? e.Type : (!string.IsNullOrWhiteSpace(e.Name) ? e.Name : "Outros"))
+                                                                                                                .GroupBy(e => !string.IsNullOrWhiteSpace(e.Type) ? e.Type : (!string.IsNullOrWhiteSpace(e.Name) ? e.Name :"Outros"))
                                                                                                                 .Select(g => new { TypeName = g.Key, Count = g.Count() })
                                                                                                                 .OrderBy(g => g.TypeName)
                                                                                                                 .ToList();
@@ -332,7 +332,7 @@
                                                                                                         }
                                                                                                         else
                                                                                                         {
-                                                                                                            <div class="ms-4 mt-1 small text-white-50">Sem equipamentos nesta sala.</div>
+                                                                                                            <div class="ms-4 mt-1 small -50" style="color: var(--bs-heading-color) !important;">Sem equipamentos nesta sala.</div>
                                                                                                         }
                                                                                                     </div>
                                                                                                 </div>
@@ -346,16 +346,16 @@
                                                                 }
                                                                 else
                                                                 {
-                                                                    <div class="ms-4 mt-1 small text-white-50">Sem departamentos registados.</div>
+                                                                    <div class="ms-4 mt-1 small -50" style="color: var(--bs-heading-color) !important;">Sem departamentos registados.</div>
                                                                 }
 
                                                                 @if (empVm.Equipments.Any())
                                                                 {
                                                                     <div class="tree-node equip-node ms-4 mt-2">
-                                                                        <div class="small fw-semibold text-white-50 mb-1">Equipamentos sem sala</div>
+                                                                        <div class="small fw-semibold -50 mb-1" style="color: var(--bs-heading-color) !important;">Equipamentos sem sala</div>
                                                                         @{
                                                                             var groupedDirect = empVm.Equipments
-                                                                                .GroupBy(e => !string.IsNullOrWhiteSpace(e.Type) ? e.Type : (!string.IsNullOrWhiteSpace(e.Name) ? e.Name : "Outros"))
+                                                                                .GroupBy(e => !string.IsNullOrWhiteSpace(e.Type) ? e.Type : (!string.IsNullOrWhiteSpace(e.Name) ? e.Name :"Outros"))
                                                                                 .Select(g => new { TypeName = g.Key, Count = g.Count() })
                                                                                 .OrderBy(g => g.TypeName)
                                                                                 .ToList();
@@ -389,3 +389,6 @@
         </div>
     </div>
 </div>
+
+
+

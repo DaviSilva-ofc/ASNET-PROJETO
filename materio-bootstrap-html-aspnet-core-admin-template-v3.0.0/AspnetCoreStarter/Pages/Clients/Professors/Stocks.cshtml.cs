@@ -191,7 +191,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             var ticket = new Ticket
             {
                 Description = $"PEDIDO DE EMPRÉSTIMO DE STOCK:\nItem: {itemName}\nTipo: {itemType}\nQuantidade: {quantity}\nSala/Escola: {room?.Name} ({room?.Block?.School?.Name})\nNotas: {notes}\n\n[DATA:{{\"ItemName\":\"{itemName}\",\"ItemType\":\"{itemType}\",\"Quantity\":{quantity},\"SchoolId\":{(room?.Block?.SchoolId.ToString() ?? "null")},\"AgrupamentoId\":{(room?.Block?.School?.AgrupamentoId.ToString() ?? "null")}}}]",
-                Status = "Pedido",
+                Status = "Pendente",
                 CreatedAt = DateTime.UtcNow,
                 Level = "Empréstimo",
                 SchoolId = room?.Block?.SchoolId,

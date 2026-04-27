@@ -179,7 +179,7 @@ namespace AspnetCoreStarter.Pages.Clients.Professors
             }
 
             // Standardizing ticket status
-            NewTicket.Status = "Pedido";
+            NewTicket.Status = "Pendente";
             NewTicket.CreatedAt = System.DateTime.UtcNow;
             
             if (int.TryParse(userIdStr, out int userId)) NewTicket.RequestedByUserId = userId;

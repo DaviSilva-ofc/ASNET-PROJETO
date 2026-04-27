@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Private.InfrastructureModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Gestão de Infraestrutura";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Gestão de Infraestrutura";
 }
 
 @section VendorStyles {
@@ -13,7 +13,7 @@
 @section PageStyles {
 <style>
     .dark-style .card-header h5,
-    [data-bs-theme="dark"] .card-header h5 { color: #fff !important; }
+    [data-bs-theme="dark"] .card-header h5 { color: var(--bs-heading-color) !important; }
 
     /* Custom Header Color - Gold/Orange as requested */
     .bg-infra-header {
@@ -75,7 +75,7 @@
     [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
         transform: rotate(90deg);
         background-color: #696cff;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .btn-delete-subtle {
@@ -128,10 +128,10 @@
 
             <div class="col-12 mb-4">
                 <div class="card shadow-sm border-0">
-                    <div class="card-header bg-infra-header text-white d-flex justify-content-between align-items-center cursor-pointer" 
+                    <div class="card-header bg-infra-header  d-flex justify-content-between align-items-center cursor-pointer" style="color: var(--bs-heading-color) !important;" 
                          data-bs-toggle="collapse" data-bs-target="#dept-@dept.Id">
                         <div class="d-flex align-items-center">
-                            <h5 class="mb-0 text-white me-3">
+                            <h5 class="mb-0  me-3" style="color: var(--bs-heading-color) !important;">
                                 <strong>@dept.Name</strong>
                             </h5>
                         </div>
@@ -148,7 +148,7 @@
                                     🗑️
                                 </button>
                             </form>
-                            <i class="bx bx-chevron-down text-white fs-4 ms-2"></i>
+                            <i class="bx bx-chevron-down  fs-4 ms-2" style="color: var(--bs-heading-color) !important;"></i>
                         </div>
                     </div>
                     <div id="dept-@dept.Id" class="collapse show">
@@ -401,3 +401,5 @@
     });
 </script>
 }
+
+

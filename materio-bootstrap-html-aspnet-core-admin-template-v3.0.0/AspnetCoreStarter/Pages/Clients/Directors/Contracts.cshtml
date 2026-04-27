@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Directors.DirectorContractsModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Contratos";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Contratos";
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -10,7 +10,7 @@
 
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Lista de Contratos @(Model.MyAgrupamentoName != null ? $"- {Model.MyAgrupamentoName}" : "")</h5>
+            <h5 class="mb-0">Lista de Contratos @(Model.MyAgrupamentoName != null ? $"- {Model.MyAgrupamentoName}" :"")</h5>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFiltros">
                     <i class="ri-filter-3-line me-1"></i> Filtros
@@ -26,9 +26,9 @@
                         <i class="ri-information-line me-1"></i>
                         Filtros ativos: 
                         <strong>
-                            @(!string.IsNullOrEmpty(Model.FilterType) ? $"Tipo: {Model.FilterType}, " : "")
-                            @(!string.IsNullOrEmpty(Model.FilterPeriod) ? $"Período: {Model.FilterPeriod}, " : "")
-                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}, " : "")
+                            @(!string.IsNullOrEmpty(Model.FilterType) ? $"Tipo: {Model.FilterType}," :"")
+                            @(!string.IsNullOrEmpty(Model.FilterPeriod) ? $"Período: {Model.FilterPeriod}," :"")
+                            @(!string.IsNullOrEmpty(Model.FilterStatus) ? $"Estado: {Model.FilterStatus}," :"")
                         </strong>
                     </span>
                     <a asp-page="./Contracts" class="btn btn-sm btn-outline-secondary">Limpar Filtros</a>
@@ -52,11 +52,11 @@
                             <td><strong>@item.ContractType</strong></td>
                             <td>@item.Period</td>
                             <td>
-                                <span class="badge @(item.ContractStatus == "Ativo" ? "bg-label-success" : "bg-label-warning")">
+                                <span class="badge @(item.ContractStatus =="Ativo" ?"bg-label-success" :"bg-label-warning")">
                                     @item.ContractStatus
                                 </span>
                             </td>
-                            <td>@(item.Agrupamento?.Name ?? "N/A")</td>
+                            <td>@(item.Agrupamento?.Name ??"N/A")</td>
                         </tr>
                     }
                     @if (!Model.Contracts.Any())
@@ -94,9 +94,9 @@
                         <label class="form-label fw-semibold small">Estado</label>
                         <select name="FilterStatus" class="form-select">
                             <option value="">Todos</option>
-                            <option value="Ativo" selected="@(Model.FilterStatus == "Ativo" ? "selected" : null)">Ativo</option>
-                            <option value="Pendente" selected="@(Model.FilterStatus == "Pendente" ? "selected" : null)">Pendente</option>
-                            <option value="Finalizado" selected="@(Model.FilterStatus == "Finalizado" ? "selected" : null)">Finalizado</option>
+                            <option value="Ativo" selected="@(Model.FilterStatus =="Ativo" ?"selected" : null)">Ativo</option>
+                            <option value="Pendente" selected="@(Model.FilterStatus =="Pendente" ?"selected" : null)">Pendente</option>
+                            <option value="Finalizado" selected="@(Model.FilterStatus =="Finalizado" ?"selected" : null)">Finalizado</option>
                         </select>
                     </div>
                 </div>
@@ -108,3 +108,4 @@
         </form>
     </div>
 </div>
+

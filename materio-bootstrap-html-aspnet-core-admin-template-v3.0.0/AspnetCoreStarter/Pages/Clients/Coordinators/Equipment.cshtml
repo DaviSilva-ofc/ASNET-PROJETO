@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Coordinators.CoordinatorEquipmentModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Equipamentos";
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Equipamentos";
 }
 
 @section PageStyles {
@@ -67,7 +67,7 @@
                 </div>
 
         @{
-            var activeFilterText = "";
+            var activeFilterText ="";
             if (Model.ActiveFilterRoom != null) activeFilterText = $"sala: {Model.ActiveFilterRoom.Name}";
             else if (Model.ActiveFilterBloco != null) activeFilterText = $"bloco: {Model.ActiveFilterBloco.Name}";
             else if (!string.IsNullOrEmpty(Model.FilterName)) activeFilterText = $"artigo: {Model.FilterName}";
@@ -107,9 +107,9 @@
                                 <tr class="border-light border-opacity-10">
                                     <td>
                                         <div class="d-flex flex-column">
-                                            <strong class="text-white">@item.Name</strong>
-                                            <small class="text-white-50" style="font-size: 0.75rem;">
-                                                @(item.Brand ?? "Genérico") @(item.Model ?? "")
+                                            <strong class="" style="color: var(--bs-heading-color) !important;">@item.Name</strong>
+                                            <small class="-50" style="color: var(--bs-heading-color) !important;" style="font-size: 0.75rem;">
+                                                @(item.Brand ??"Genérico") @(item.Model ??"")
                                             </small>
                                         </div>
                                     </td>
@@ -151,7 +151,7 @@
                                         }
                                         else
                                         {
-                                            <span class="badge bg-label-secondary">@(item.Status ?? "Indefinido")</span>
+                                            <span class="badge bg-label-secondary">@(item.Status ??"Indefinido")</span>
                                         }
                                     </td>
                                     <td style="width: 1%; white-space: nowrap;">
@@ -164,7 +164,7 @@
                                             }
                                             
                                             <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
-                                                @if (item.Status == "Avariado" || item.Status == "Indisponível" || item.Status == "Danificado")
+                                                @if (item.Status =="Avariado" || item.Status =="Indisponível" || item.Status =="Danificado")
                                                 {
                                                     <button type="submit" class="btn btn-sm btn-icon text-success p-0" title="Marcar como A funcionar"><i class="ri-check-line"></i></button>
                                                 }
@@ -175,7 +175,7 @@
                                             </form>
 
                                             <button type="button" class="btn btn-sm btn-icon text-info p-0" title="Código QR" 
-                                                    onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ?? "S/N N/A")')">
+                                                    onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ??"S/N N/A")')">
                                                 <i class="ri-qr-code-line"></i>
                                             </button>
 
@@ -226,11 +226,11 @@
                                 <tr class="border-light border-opacity-10">
                                     <td>
                                         @{
-                                            var firstLine = req.Description?.Split('\n').FirstOrDefault() ?? "Pedido Stock";
-                                            var cleanDesc = firstLine.Replace("PEDIDO DE EQUIPAMENTO", "").Replace("PEDIDO DE STOCK", "").Trim(':').Trim();
+                                            var firstLine = req.Description?.Split('\n').FirstOrDefault() ??"Pedido Stock";
+                                            var cleanDesc = firstLine.Replace("PEDIDO DE EQUIPAMENTO","").Replace("PEDIDO DE STOCK","").Trim(':').Trim();
                                         }
                                         <div class="d-flex flex-column">
-                                            <span class="fw-bold text-white">#@req.Id - @cleanDesc</span>
+                                            <span class="fw-bold" style="color: var(--bs-heading-color) !important;">#@req.Id - @cleanDesc</span>
                                             <small class="text-info">Empréstimo</small>
                                         </div>
                                     </td>
@@ -244,11 +244,8 @@
                                     </td>
                                     <td>
                                         @{
-                                            var stClass = req.Status switch {
-                                                "Pedido" => "badge-soft-info",
-                                                "Pendente" => "badge-soft-warning",
-                                                "Atendido" or "Concluído" => "badge-soft-success",
-                                                _ => "bg-label-secondary"
+                                            var stClass = req.Status switch {"Pedido" =>"badge-soft-info","Pendente" =>"badge-soft-warning","Atendido" or"Concluído" =>"badge-soft-success",
+                                                _ =>"bg-label-secondary"
                                             };
                                         }
                                         <span class="badge @stClass">@req.Status</span>
@@ -312,13 +309,13 @@
     <div class="modal-dialog modal-dialog-centered">
         <form method="post" asp-page-handler="CreateStockRequest" class="modal-content border-0" style="background: rgba(43, 44, 64, 0.9) !important; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37);">
             <div class="modal-header border-bottom border-light border-opacity-10">
-                <h5 class="modal-title text-white"><i class="bx bx-hand me-2 text-warning"></i>Requisitar Equipamento</h5>
+                <h5 class="modal-title" style="color: var(--bs-heading-color) !important;"><i class="bx bx-hand me-2 text-warning"></i>Requisitar Equipamento</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label text-white-50 small text-uppercase">Artigo</label>
-                    <select name="itemName" id="reqEqArtigo" class="form-select bg-dark text-white border-light border-opacity-10" required onchange="filterReqEqTypes()">
+                    <select name="itemName" id="reqEqArtigo" class="form-select" required onchange="filterReqEqTypes()">
                         <option value="">Selecione o artigo...</option>
                         <option value="Computador">Computadores</option>
                         <option value="Monitor">Monitores</option>
@@ -333,7 +330,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-white-50 small text-uppercase">Tipo</label>
-                    <select name="itemType" id="reqEqTipo" class="form-select bg-dark text-white border-light border-opacity-10">
+                    <select name="itemType" id="reqEqTipo" class="form-select">
                         <option value="">Selecione o tipo...</option>
                         <option value="Desktop" data-artigo="Computadores">Desktop</option>
                         <option value="Portátil" data-artigo="Computadores">Portátil</option>
@@ -360,7 +357,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-white-50 small text-uppercase">Quantidade</label>
-                    <input type="number" name="quantity" class="form-control bg-dark text-white border-light border-opacity-10" value="1" min="1" required />
+                    <input type="number" name="quantity" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" value="1" min="1" required />
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-white-50 small text-uppercase">Motivo do Pedido</label>
@@ -381,15 +378,15 @@
         <form method="post" asp-page-handler="EditEquipment" class="modal-content border-0 shadow-lg" style="background: rgba(43, 44, 64, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1) !important;">
             <input type="hidden" asp-for="NewEquipment.Id" id="editId" />
             <div class="modal-header border-bottom border-light border-opacity-10">
-                <h5 class="modal-title text-white"><i class="bx bx-edit me-2 text-primary"></i>Editar Equipamento</h5>
+                <h5 class="modal-title" style="color: var(--bs-heading-color) !important;"><i class="bx bx-edit me-2 text-primary"></i>Editar Equipamento</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-white">
+            <div class="modal-body" style="color: var(--bs-heading-color) !important;">
                 <div class="row g-3">
                     <!-- Conteúdo omitido para brevidade, mantendo funcionalidade -->
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Artigo</label>
-                        <select asp-for="NewEquipment.Name" id="editArtigo" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                        <select asp-for="NewEquipment.Name" id="editArtigo" class="form-select" required>
                              <option value="">Selecione...</option>
                              <option value="Computadores">Computadores</option>
                              <option value="Monitores">Monitores</option>
@@ -402,23 +399,23 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Tipo</label>
-                        <input type="text" asp-for="NewEquipment.Type" class="form-control bg-dark text-white border-light border-opacity-10" placeholder="Ex: Laptop..." />
+                        <input type="text" asp-for="NewEquipment.Type" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" placeholder="Ex: Laptop..." />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Marca</label>
-                        <input type="text" asp-for="NewEquipment.Brand" class="form-control bg-dark text-white border-light border-opacity-10" />
+                        <input type="text" asp-for="NewEquipment.Brand" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Modelo</label>
-                        <input type="text" asp-for="NewEquipment.Model" class="form-control bg-dark text-white border-light border-opacity-10" />
+                        <input type="text" asp-for="NewEquipment.Model" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Nº Série</label>
-                        <input type="text" asp-for="NewEquipment.SerialNumber" id="editSerial" class="form-control bg-dark text-white border-light border-opacity-10" />
+                        <input type="text" asp-for="NewEquipment.SerialNumber" id="editSerial" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Sala</label>
-                        <select asp-for="NewEquipment.RoomId" id="editSala" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                        <select asp-for="NewEquipment.RoomId" id="editSala" class="form-select" required>
                             @foreach (var sala in Model.Rooms)
                             {
                                 <option value="@sala.Id">@sala.Name (@sala.Block?.Name)</option>
@@ -440,14 +437,14 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <form method="post" asp-page-handler="CreateEquipment" class="modal-content border-0 shadow-lg" style="background: rgba(43, 44, 64, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1) !important;">
             <div class="modal-header border-bottom border-light border-opacity-10">
-                <h5 class="modal-title text-white"><i class="bx bx-plus-circle me-2 text-success"></i>Registar Novo Equipamento</h5>
+                <h5 class="modal-title" style="color: var(--bs-heading-color) !important;"><i class="bx bx-plus-circle me-2 text-success"></i>Registar Novo Equipamento</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-white">
+            <div class="modal-body" style="color: var(--bs-heading-color) !important;">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Artigo</label>
-                        <select asp-for="NewEquipment.Name" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                        <select asp-for="NewEquipment.Name" class="form-select" required>
                             <option value="">Selecione...</option>
                             <option value="Computadores">Computadores</option>
                             <option value="Monitores">Monitores</option>
@@ -460,23 +457,23 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Tipo</label>
-                        <input type="text" asp-for="NewEquipment.Type" class="form-control bg-dark text-white border-light border-opacity-10" required placeholder="Ex: Portátil..." />
+                        <input type="text" asp-for="NewEquipment.Type" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" required placeholder="Ex: Portátil..." />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Marca</label>
-                        <input type="text" asp-for="NewEquipment.Brand" class="form-control bg-dark text-white border-light border-opacity-10" />
+                        <input type="text" asp-for="NewEquipment.Brand" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Modelo</label>
-                        <input type="text" asp-for="NewEquipment.Model" class="form-control bg-dark text-white border-light border-opacity-10" />
+                        <input type="text" asp-for="NewEquipment.Model" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" />
                     </div>
                     <div class="col-md-12">
                         <label class="form-label text-white-50 small text-uppercase">Número de Série</label>
-                        <input type="text" asp-for="NewEquipment.SerialNumber" class="form-control bg-dark text-white border-light border-opacity-10" />
+                        <input type="text" asp-for="NewEquipment.SerialNumber" class="form-control bg-dark  border-light border-opacity-10" style="color: var(--bs-heading-color) !important;" />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Bloco</label>
-                        <select id="regBloco" class="form-select bg-dark text-white border-light border-opacity-10" required onchange="regFilterSalas()">
+                        <select id="regBloco" class="form-select" required onchange="regFilterSalas()">
                             <option value="">Selecione...</option>
                             @foreach(var b in Model.AvailableBlocos) {
                                 <option value="@b.Id">@b.Name</option>
@@ -485,7 +482,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-white-50 small text-uppercase">Sala</label>
-                        <select asp-for="NewEquipment.RoomId" id="regSala" class="form-select bg-dark text-white border-light border-opacity-10" required>
+                        <select asp-for="NewEquipment.RoomId" id="regSala" class="form-select" required>
                             <option value="">Selecione o bloco primeiro...</option>
                             @foreach(var s in Model.Rooms) {
                                 <option value="@s.Id" data-blc="@s.BlockId">@s.Name</option>
@@ -703,7 +700,7 @@
 
     // Filter select options by search input or selected article
     function filterSelect(input, selectId) {
-        var filterText = (input ? input.value : "").toLowerCase().trim();
+        var filterText = (input ? input.value :"").toLowerCase().trim();
         var select = document.getElementById(selectId);
         if (!select) return;
         
@@ -719,13 +716,13 @@
         }
 
         options.forEach(function(opt) {
-            if (opt.value === "") return;
+            if (opt.value ==="") return;
             var text = opt.textContent.toLowerCase();
-            var matchesSearch = filterText === "" || text.includes(filterText);
+            var matchesSearch = filterText ==="" || text.includes(filterText);
             
             var matchesArtigo = true;
-            if (currentArtigo && currentArtigo !== "") {
-                var targetArtigo = (opt.getAttribute('data-artigo') || opt.getAttribute('data-art') || "").toLowerCase().trim();
+            if (currentArtigo && currentArtigo !=="") {
+                var targetArtigo = (opt.getAttribute('data-artigo') || opt.getAttribute('data-art') ||"").toLowerCase().trim();
                 matchesArtigo = (targetArtigo === currentArtigo);
             }
 
@@ -735,14 +732,14 @@
 
     function updateFilterTypes() {
         const select = document.getElementById('filterTipo');
-        select.value = "";
+        select.value ="";
         filterSelect(null, 'filterTipo');
     }
 
     function updateSpecificTypes(prefix = 'reg') {
         const tipoSelect = document.getElementById(prefix + 'Tipo');
         if (!tipoSelect) return;
-        tipoSelect.value = "";
+        tipoSelect.value ="";
         
         // Trigger filterSelect to update display based on BOTH artigo AND any current search
         const wrapper = tipoSelect.closest('.select-search-wrapper');
@@ -784,10 +781,10 @@
         const blcId = document.getElementById('regBloco').value;
         const salaSelect = document.getElementById('regSala');
         Array.from(salaSelect.options).forEach(opt => {
-            if (opt.value === "") return;
+            if (opt.value ==="") return;
             opt.style.display = opt.getAttribute('data-blc') === blcId ? 'block' : 'none';
         });
-        salaSelect.value = "";
+        salaSelect.value ="";
     }
 
 
@@ -837,7 +834,7 @@
         if (matchedType) {
             tipoSelect.value = matchedType.value;
         } else {
-            tipoSelect.value = type || ""; 
+            tipoSelect.value = type ||""; 
         }
 
         document.getElementById('editSerial').value = serial;
@@ -852,19 +849,19 @@
         const salaSelect = document.getElementById('filterSala');
         const options = salaSelect.querySelectorAll('option');
 
-        if (resetValue) salaSelect.value = "";
+        if (resetValue) salaSelect.value ="";
         options.forEach(opt => {
-            if (opt.value === "") return;
-            opt.style.display = (blcId === "" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
+            if (opt.value ==="") return;
+            opt.style.display = (blcId ==="" || opt.getAttribute('data-blc') === blcId) ? 'block' : 'none';
         });
     }
 
     // Ensure filters are applied on load
     document.addEventListener('DOMContentLoaded', function() {
-        if (document.getElementById('filterBloco').value !== "") {
+        if (document.getElementById('filterBloco').value !=="") {
             filterSalas(false); 
         }
-        if (document.getElementById('filterArtigo').value !== "") {
+        if (document.getElementById('filterArtigo').value !=="") {
             updateFilterTypes();
         }
     });
@@ -876,3 +873,5 @@
 }
 
 @await Html.PartialAsync("_QrModal")
+
+

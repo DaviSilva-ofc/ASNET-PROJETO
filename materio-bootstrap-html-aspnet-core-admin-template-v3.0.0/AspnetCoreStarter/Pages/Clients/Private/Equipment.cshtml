@@ -1,8 +1,8 @@
-@page
+﻿@page
 @model AspnetCoreStarter.Pages.Clients.Private.PrivateEquipmentModel
 @{
-    Layout = "Layouts/_ContentNavbarLayout";
-    ViewData["Title"] = "Gestão de Equipamentos - " + (Model.Empresa?.Name ?? "Cliente Privado");
+    Layout ="Layouts/_ContentNavbarLayout";
+    ViewData["Title"] ="Gestão de Equipamentos -" + (Model.Empresa?.Name ??"Cliente Privado");
     ViewData["isNavbar"] = true;
     ViewData["contentNavbar"] = true;
 }
@@ -41,8 +41,8 @@
     <div class="card mb-4 border-primary shadow-sm overflow-hidden">
         <div class="card-header bg-primary py-2 d-flex justify-content-between align-items-center cursor-pointer" 
              data-bs-toggle="collapse" data-bs-target="#infraTreeCollapse">
-            <h6 class="mb-0 text-white fw-bold"><i class="bx bx-node me-2"></i>Estrutura da Empresa (Árvore)</h6>
-            <i class="bx bx-chevron-down text-white"></i>
+            <h6 class="mb-0  fw-bold" style="color: var(--bs-heading-color) !important;"><i class="bx bx-node me-2"></i>Estrutura da Empresa (Árvore)</h6>
+            <i class="bx bx-chevron-down" style="color: var(--bs-heading-color) !important;"></i>
         </div>
         <div id="infraTreeCollapse" class="collapse">
             <div class="card-body pt-3 pb-2">
@@ -50,7 +50,7 @@
                     @if (!Model.Departamentos.Any())
                     {
                         <div class="text-center py-3">
-                            <p class="text-muted small mb-0">Nenhuma unidade registada. Use o botão "Gerir Unidades" para começar.</p>
+                            <p class="text-muted small mb-0">Nenhuma unidade registada. Use o botão"Gerir Unidades" para começar.</p>
                         </div>
                     }
                     else
@@ -136,7 +136,7 @@
                         @if (!string.IsNullOrEmpty(Model.FilterStatus)) { <span class="badge bg-white text-info ms-1">Estado: @Model.FilterStatus</span> }
                         @if (Model.FilterRoomId.HasValue)
                         {
-                            var roomName = Model.UniqueRooms.FirstOrDefault(r => r.Id == Model.FilterRoomId)?.Name ?? "Selecionada";
+                            var roomName = Model.UniqueRooms.FirstOrDefault(r => r.Id == Model.FilterRoomId)?.Name ??"Selecionada";
                             <span class="badge bg-white text-info ms-1">Localização: @roomName</span>
                         }
                     </div>
@@ -210,9 +210,9 @@
                                         <tr>
                                             <td class="ps-3">
                                                 <div class="d-flex flex-column">
-                                                    <strong class="text-dark">@item.Name</strong>
+                                                    <strong style="color: var(--bs-heading-color);">@item.Name</strong>
                                                     <small class="text-muted" style="font-size: 0.75rem;">
-                                                        @(item.Brand ?? "Genérico") @(item.Model ?? "")
+                                                        @(item.Brand ??"Genérico") @(item.Model ??"")
                                                     </small>
                                                 </div>
                                             </td>
@@ -221,7 +221,7 @@
                                             <td>
                                                 @if (item.Room != null)
                                                 {
-                                                    <span>@item.Room.Name (@(item.Room.Setor?.Name ?? "N/A"))</span>
+                                                    <span>@item.Room.Name (@(item.Room.Setor?.Name ??"N/A"))</span>
                                                 }
                                                 else
                                                 {
@@ -229,15 +229,15 @@
                                                 }
                                             </td>
                                             <td>
-                                                @if (item.Status == "Avariado")
+                                                @if (item.Status =="Avariado")
                                                 {
                                                     <span class="badge bg-label-danger">Avariado</span>
                                                 }
-                                                else if (item.Status == "Em reparação")
+                                                else if (item.Status =="Em reparação")
                                                 {
                                                     <span class="badge bg-label-info">Em reparação</span>
                                                 }
-                                                else if (item.Status == "Associado")
+                                                else if (item.Status =="Associado")
                                                 {
                                                     <span class="badge bg-label-warning">Associado (Em Intervenção)</span>
                                                 }
@@ -255,7 +255,7 @@
                                                         </a>
                                                     }
                                                     <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@item.Id" style="display:inline-block;">
-                                                        @if (item.Status == "Avariado" || item.Status == "Danificado")
+                                                        @if (item.Status =="Avariado" || item.Status =="Danificado")
                                                         {
                                                             <button type="submit" class="border-0 bg-transparent p-1 lh-1" title="Marcar como Funcional">
                                                                 ✅
@@ -270,7 +270,7 @@
                                                     </form>
                                                     
                                                     <button type="button" class="border-0 bg-transparent p-1 lh-1" title="Código QR" 
-                                                            onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ?? "S/N N/A")')">
+                                                            onclick="showQRCode('@item.Id', 'Equipamento', '@item.Name', '@(item.SerialNumber ??"S/N N/A")')">
                                                         📱
                                                     </button>
 
@@ -329,7 +329,7 @@
                                             <td><span class="small text-muted">@ticket.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span></td>
                                             <td>
                                                 <div class="d-flex flex-column">
-                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE STOCK (CLIENTE):", "").Trim()</span>
+                                                    <span class="fw-bold">@ticket.Description.Split('\n').FirstOrDefault()?.Replace("PEDIDO DE STOCK (CLIENTE):","").Trim()</span>
                                                     @if (ticket.Equipamento != null)
                                                     {
                                                         <small class="text-muted">Ref: @ticket.Equipamento.SerialNumber</small>
@@ -338,10 +338,8 @@
                                             </td>
                                             <td>
                                                 @{
-                                                    var statusClass = ticket.Status switch {
-                                                        "Pendente" or "Pedido" => "badge bg-label-warning",
-                                                        "Concluído" => "badge bg-label-success",
-                                                        _ => "badge bg-label-info"
+                                                    var statusClass = ticket.Status switch {"Pendente" or"Pedido" =>"badge bg-label-warning","Concluído" =>"badge bg-label-success",
+                                                        _ =>"badge bg-label-info"
                                                     };
                                                 }
                                                 <span class="@statusClass text-uppercase" style="font-size: 0.7rem;">@ticket.Status</span>
@@ -385,7 +383,7 @@
                                     @foreach (var item in Model.BorrowedItems)
                                     {
                                         <tr>
-                                            <td class="ps-3"><strong class="text-dark">@item.Name</strong></td>
+                                            <td class="ps-3"><strong style="color: var(--bs-heading-color);">@item.Name</strong></td>
                                             <td>@item.Category</td>
                                             <td class="text-center"><span class="badge bg-label-info fw-bold">@item.Quantity un.</span></td>
                                             <td><span class="badge bg-label-warning">Em seu uso</span></td>
@@ -692,7 +690,7 @@
                         <label class="form-label fw-bold">Localização</label>
                         <select asp-for="FilterRoomId" class="form-select select2-modal">
                             <option value="">Todas</option>
-                            @foreach (var room in Model.UniqueRooms) { <option value="@room.Id">@room.Name (@(room.Setor?.Name ?? "N/A"))</option> }
+                            @foreach (var room in Model.UniqueRooms) { <option value="@room.Id">@room.Name (@(room.Setor?.Name ??"N/A"))</option> }
                         </select>
                     </div>
                 </div>
@@ -1040,11 +1038,11 @@
         const statusSelect = document.getElementById('editStatus');
         if (statusSelect) {
             let cleanStatus = (status || 'A funcionar').trim();
-            if (cleanStatus === "A funcionar") cleanStatus = "A funcionar";
+            if (cleanStatus ==="A funcionar") cleanStatus ="A funcionar";
             $(statusSelect).val(cleanStatus).trigger('change');
         }
         
-        document.getElementById('editDept').value = deptId || "";
+        document.getElementById('editDept').value = deptId ||"";
         cascadeSetores('edit', setorId);
         cascadeSalas('edit', roomId);
 
@@ -1056,3 +1054,5 @@
 }
 
 @await Html.PartialAsync("_QrModal")
+
+

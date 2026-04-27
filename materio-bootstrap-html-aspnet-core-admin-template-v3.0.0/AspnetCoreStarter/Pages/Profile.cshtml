@@ -1,4 +1,4 @@
-@page
+﻿@page
 @using System.Security.Claims
 @model AspnetCoreStarter.Pages.ProfileModel
 @{
@@ -27,7 +27,7 @@
         right: 15px;
         background: rgba(255, 255, 255, 0.2);
         backdrop-filter: blur(10px);
-        color: #fff;
+        color: var(--bs-heading-color);
         border: 1px solid rgba(255, 255, 255, 0.3);
         padding: 5px 12px;
         border-radius: 8px;
@@ -60,7 +60,7 @@
         bottom: 5px;
         right: 5px;
         background: #f89223;
-        color: #fff;
+        color: var(--bs-heading-color);
         border-radius: 50%;
         width: 32px;
         height: 32px;
@@ -71,7 +71,7 @@
         border: 2px solid #fff;
         transition: transform 0.2s;
     }
-    .btn-upload-avatar:hover { transform: scale(1.1); color: #fff; }
+    .btn-upload-avatar:hover { transform: scale(1.1); color: var(--bs-heading-color); }
 
     .nav-pills .nav-link.active {
         background-color: #f89223 !important;
@@ -193,3 +193,4 @@
         </div>
     </div>
 </div>
+

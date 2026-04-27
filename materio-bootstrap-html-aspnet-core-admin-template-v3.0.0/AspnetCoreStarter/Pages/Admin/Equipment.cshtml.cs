@@ -289,7 +289,7 @@ namespace AspnetCoreStarter.Pages.Admin
                     {
                         Type = "Manutenção Preventiva",
                         Level = "Média",
-                        Status = technicianId.HasValue ? "Aceite" : "Pedido",
+                        Status = technicianId.HasValue ? "Aceite" : "Pendente",
                         Description = $"Manutenção Preventiva Anual - {currentYear}",
                         SchoolId = schoolId,
                         AdminId = adminId,
@@ -362,7 +362,7 @@ namespace AspnetCoreStarter.Pages.Admin
                 {
                     Type = "Manutenção Preventiva",
                     Level = "Média",
-                    Status = "Pedido",
+                    Status = "Pendente",
                     Description = $"[Checklist: {artigo} em {locationName}] Observações: {notes}",
                     SchoolId = schoolId,
                     RequestedByUserId = currentUserId,

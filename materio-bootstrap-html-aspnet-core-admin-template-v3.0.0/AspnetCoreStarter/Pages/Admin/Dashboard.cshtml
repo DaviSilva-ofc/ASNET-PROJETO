@@ -27,7 +27,7 @@
     [data-bs-theme="dark"] .dash-title { color: #f5f5f9 !important; }
 
     /* ===== Stat mini-cards ===== */
-    .stat-card {
+    .stat-card { background: var(--tk-card-solid) !important;
         border: none;
         border-radius: 14px;
         overflow: hidden;
@@ -44,7 +44,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.4rem;
-        color: #fff;
+        color: var(--bs-heading-color);
     }
     .stat-number { font-size: 1.5rem; font-weight: 700; margin: 0; }
     .dark-style .stat-number,
@@ -54,7 +54,7 @@
     [data-bs-theme="dark"] .stat-label { color: #cbcbe2; }
 
     /* ===== Chart cards ===== */
-    .chart-card {
+    .chart-card { background: var(--tk-card-solid) !important;
         border: none;
         border-radius: 14px;
         box-shadow: 0 2px 12px rgba(30,33,48,.06);
@@ -67,7 +67,7 @@
     }
 
     /* ===== Tree view ===== */
-    .tree-card {
+    .tree-card { background: var(--tk-card-solid) !important;
         border: none;
         border-radius: 14px;
         box-shadow: 0 2px 12px rgba(30,33,48,.06);
@@ -82,13 +82,13 @@
     .dark-style .tree-tabs .nav-link,
     [data-bs-theme="dark"] .tree-tabs .nav-link { color: #cbcbe2; }
     .tree-tabs .nav-link.active {
-        background: var(--asnet-navy);
-        color: #fff;
+        background: #64748b; /* A nice distinct gray instead of black */
+        color: #fff !important; /* Ensure text is readable */
     }
     .dark-style .tree-tabs .nav-link.active,
     [data-bs-theme="dark"] .tree-tabs .nav-link.active {
         background: var(--asnet-orange);
-        color: #fff;
+        color: var(--bs-heading-color);
     }
 
     .tree-list {
@@ -126,7 +126,7 @@
     /* ===== Dark mode Specific Enhancements ===== */
     .dark-style .modal-content,
     [data-bs-theme="dark"] .modal-content {
-        background-color: #2b2c40 !important;
+        background-color: var(--tk-card-solid) !important;
         border: 1px solid rgba(255,255,255,0.1);
     }
     .dark-style .modal-header,
@@ -163,7 +163,7 @@
         border-radius: 8px;
         font-size: .7rem;
         font-weight: 700;
-        color: #fff;
+        color: var(--bs-heading-color);
         margin-right: .4rem;
     }
     .tree-badge-agrup { background: var(--asnet-blue); }
@@ -194,7 +194,7 @@
     .tree-toggle.open .tree-arrow { transform: rotate(90deg); }
 
     /* ===== Pending card ===== */
-    .pending-card {
+    .pending-card { background: var(--tk-card-solid) !important;
         border: none;
         border-radius: 14px;
         box-shadow: 0 2px 12px rgba(30,33,48,.06);
@@ -214,7 +214,7 @@
         width: 32px; height: 32px;
         border-radius: 50%;
         background: var(--asnet-navy-light);
-        color: #fff;
+        color: var(--bs-heading-color);
         display: flex; align-items: center; justify-content: center;
         font-size: .7rem;
         font-weight: 600;
@@ -223,14 +223,14 @@
     }
 
     /* ===== Pending Users Table ===== */
-    .pending-table-card {
+    .pending-table-card { background: var(--tk-card-solid) !important;
         border: none;
         border-radius: 14px;
         box-shadow: 0 2px 12px rgba(30,33,48,.06);
     }
     .pending-table-card .card-header {
         background: var(--asnet-navy);
-        color: #fff;
+        color: var(--bs-heading-color);
         border-radius: 14px 14px 0 0 !important;
         font-weight: 600;
     }
@@ -258,7 +258,7 @@
             <a href="/Admin/Calendar" class="btn btn-sm btn-primary">
                 <i class='bx bx-calendar me-1'></i> Calendário Global
             </a>
-            <a href="/Admin/Infrastructure" class="btn btn-sm" style="background:var(--asnet-orange);color:#fff;">
+            <a href="/Admin/Infrastructure" class="btn btn-sm" style="background:var(--asnet-orange);color: var(--bs-heading-color);">
                 <i class='bx bx-cog me-1'></i> Gerir Infraestrutura
             </a>
         </div>
@@ -487,7 +487,7 @@
                             </div>
                         }
                     </div>
-                    <a href="/Admin/Chat" class="btn w-100" style="background:#71dd37;color:#fff;">
+                    <a href="/Admin/Chat" class="btn w-100" style="background:#71dd37;color: var(--bs-heading-color);">
                         <i class='bx bx-reply me-1'></i> Responder
                     </a>
                 </div>
@@ -524,7 +524,7 @@
                             </div>
                         }
                     </div>
-                    <button class="btn w-100" style="background:var(--asnet-pink);color:#fff;" data-bs-toggle="modal" data-bs-target="#modalPending">
+                    <button class="btn w-100" style="background:var(--asnet-pink);color: var(--bs-heading-color);" data-bs-toggle="modal" data-bs-target="#modalPending">
                         <i class='bx bx-list-ul me-1'></i> Ver pedidos
                     </button>
                 </div>
@@ -612,12 +612,13 @@
                                                 <div class="d-flex flex-column">
                                                     @{
                                                         var statusClass = t.Status switch {
-                                                            "Pendente" or "Pedido" => "bg-label-warning",
-                                                            "Em Reparação" or "Em Resolução" or "Em andamento" => "bg-label-info",
+                                                            "Pendente" or "Pedido" or "Aberto" => "bg-label-warning",
+                                                            "Aceite" => "bg-label-primary",
+                                                            "Em reparação" or "Em Reparação" or "Em Resolução" or "Em andamento" => "bg-label-info",
                                                             "Concluído" => "bg-label-success",
                                                             _ => "bg-label-secondary"
                                                         };
-                                                        var statusText = (t.Status == "Pedido" || t.Status == "Pendente") ? "A aguardar" : t.Status;
+                                                        var statusText = (t.Status == "Pedido" || t.Status == "Pendente" || t.Status == "Aberto") ? "Pendente" : t.Status;
                                                     }
                                                     <span class="badge @statusClass mb-1" style="width:fit-content; font-size: 0.65rem;">@statusText</span>
                                                     <small class="text-muted">@t.CreatedAt.ToString("dd/MM/yyyy")</small>
@@ -794,7 +795,7 @@
                 <form method="post" id="adminFulfillForm">
                     <input type="hidden" name="requestId" id="adminFulfillRequestId" />
                     <div class="modal-header bg-primary py-3">
-                        <h5 class="modal-title text-white fw-bold"><i class='bx bx-package me-2'></i>Atendimento Global: <span id="adminFulfillItemDisplay"></span></h5>
+                        <h5 class="modal-title   fw-bold" style="color: var(--bs-heading-color) !important;"><i class='bx bx-package me-2'></i>Atendimento Global: <span id="adminFulfillItemDisplay"></span></h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
@@ -966,7 +967,7 @@
 <div class="modal fade" id="modalPending" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="border-radius:14px;overflow:hidden;">
-            <div class="modal-header" style="background:var(--asnet-navy);color:#fff;">
+            <div class="modal-header" style="background:var(--asnet-navy);color: var(--bs-heading-color);">
                 <h5 class="modal-title">Aprovações de Conta Pendentes</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -994,7 +995,7 @@
                                 <tr>
                                     <td><strong>@user.Username</strong></td>
                                     <td>@user.Email</td>
-                                    <td><span class="badge" style="background:var(--asnet-orange);color:#fff;">@user.AccountStatus</span></td>
+                                    <td><span class="badge" style="background:var(--asnet-orange);color: var(--bs-heading-color);">@user.AccountStatus</span></td>
                                     <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
                                     <td>
                                         <div class="d-flex flex-column gap-2">
@@ -1413,3 +1414,6 @@
     }
 </script>
 }
+
+
+
