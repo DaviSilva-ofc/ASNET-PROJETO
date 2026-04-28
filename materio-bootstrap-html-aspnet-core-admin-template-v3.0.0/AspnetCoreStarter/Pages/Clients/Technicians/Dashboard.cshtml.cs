@@ -39,6 +39,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         public List<TicketHistorico> TicketHistory { get; set; } = new();
         public List<Equipamento> AssociatedEquipment { get; set; } = new();
         public List<Equipamento> AvailableEquipment { get; set; } = new();
+        public List<Equipamento> SchoolEquipment { get; set; } = new();
         public int CountStock { get; set; }
 
         [BindProperty(SupportsGet = true)]
@@ -69,9 +70,9 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
             // Counts
             // Refined filtering to include ONLY breakdown/repair tickets
-            MyTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
-            PendingTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && (t.Status == "Pendente" || t.Status == "Aceite" || t.Status == "Em reparação") && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
-            AvailableTicketsCount = await _context.Tickets.CountAsync(t => (t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido") && t.TechnicianId == null && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
+            MyTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && t.Type != "Manutenção Preventiva" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
+            PendingTicketsCount = await _context.Tickets.CountAsync(t => t.TechnicianId == userId && (t.Status == "Pendente" || t.Status == "Aceite" || t.Status == "Em reparação") && t.Type != "Manutenção Preventiva" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
+            AvailableTicketsCount = await _context.Tickets.CountAsync(t => (t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido") && t.TechnicianId == null && t.Type != "Manutenção Preventiva" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")));
             
             MyStockAlertsCount = await _context.StockTecnico
                 .Where(s => s.TechnicianId == userId && !s.IsAvailable)
@@ -87,7 +88,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             RecentTickets = await _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Equipamento)
-                .Where(t => t.TechnicianId == userId && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
+                .Where(t => t.TechnicianId == userId && t.Type != "Manutenção Preventiva" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(3)
                 .ToListAsync();
@@ -102,7 +103,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
             ActiveTickets = await _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Equipamento)
-                .Where(t => t.TechnicianId == userId && t.Status != "Concluído" && t.Level != "Empréstimo" && t.Level != "Alteração de Estado" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
+                .Where(t => t.TechnicianId == userId && t.Status != "Concluído" && t.Type != "Manutenção Preventiva" && (t.Level == null || !t.Level.Contains("ltera")) && (t.Description == null || !t.Description.Contains("PEDIDO DE ALTERA")) && (t.Level == null || !t.Level.Contains("Estado")))
                 .ToListAsync();
 
             // Fetch all schools with addresses for the map
@@ -199,6 +200,43 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
                     CountStock = await stockQuery.CountAsync();
                     AvailableEquipment = await stockQuery.Take(20).ToListAsync();
+
+                    // Load all school/company equipment for Preventive Maintenance checklists (Resilient Hierarchy)
+                    if ((SelectedTicket.Type != null && SelectedTicket.Type.Contains("Preventiva")) || SelectedTicket.Type == "Manutenção Preventiva")
+                    {
+                        int? targetSchoolId = SelectedTicket.SchoolId;
+                        
+                        // Fallback: Try to get school from the main equipment if ticket SchoolId is null
+                        if (!targetSchoolId.HasValue && SelectedTicket.Equipamento?.Room?.Block != null)
+                        {
+                            targetSchoolId = SelectedTicket.Equipamento.Room.Block.SchoolId;
+                        }
+
+                        if (targetSchoolId.HasValue)
+                        {
+                            var schoolBlockIds = await _context.Blocos
+                                .Where(b => b.SchoolId == targetSchoolId.Value)
+                                .Select(b => b.Id)
+                                .ToListAsync();
+
+                            var roomIds = await _context.Salas
+                                .Where(r => r.BlockId.HasValue && schoolBlockIds.Contains(r.BlockId.Value))
+                                .Select(r => r.Id)
+                                .ToListAsync();
+
+                            SchoolEquipment = await _context.Equipamentos
+                                .Where(e => e.RoomId.HasValue && roomIds.Contains(e.RoomId.Value) && !e.IsDeleted)
+                                .OrderBy(e => e.Name)
+                                .ToListAsync();
+                        }
+                        else if (SelectedTicket.Equipamento?.EmpresaId != null)
+                        {
+                            SchoolEquipment = await _context.Equipamentos
+                                .Where(e => e.EmpresaId == SelectedTicket.Equipamento.EmpresaId && !e.IsDeleted)
+                                .OrderBy(e => e.Name)
+                                .ToListAsync();
+                        }
+                    }
                 }
             }
 
@@ -284,6 +322,76 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 await _context.SaveChangesAsync();
             }
 
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostCompleteRepairedAsync(int ticketId)
+        {
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
+            if (ticket != null)
+            {
+                ticket.Status = "Concluído";
+                ticket.CompletedAt = DateTime.UtcNow;
+                
+                if (ticket.Equipamento != null)
+                {
+                    ticket.Equipamento.Status = "A funcionar";
+                }
+
+                await LogHistory(ticketId, "Ticket Concluído: Equipamento Reparado", TipoAcaoHistorico.Status);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Ticket concluído com sucesso. Equipamento marcado como 'A funcionar'.";
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostCompleteUnrepairableAsync(int ticketId)
+        {
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
+            if (ticket != null)
+            {
+                ticket.Status = "Concluído";
+                ticket.CompletedAt = DateTime.UtcNow;
+                
+                if (ticket.Equipamento != null)
+                {
+                    ticket.Equipamento.Status = "Sem reparação";
+                }
+
+                await LogHistory(ticketId, "Ticket Concluído: Equipamento Sem Reparação", TipoAcaoHistorico.Status);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Ticket concluído. Equipamento marcado como 'Sem reparação'.";
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostSubmitBudgetAsync(int ticketId, string budgetDetails)
+        {
+            var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
+            if (ticket != null)
+            {
+                ticket.Status = "Concluído";
+                ticket.CompletedAt = DateTime.UtcNow;
+                
+                if (ticket.Equipamento != null)
+                {
+                    ticket.Equipamento.Status = "Sem reparação";
+                }
+
+                await LogHistory(ticketId, "Ticket Concluído: Orçamento solicitado. " + budgetDetails, TipoAcaoHistorico.Status);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Pedido de orçamento registado e ticket concluído.";
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId });
+        }
+
+        public async Task<IActionResult> OnPostAddAnomalyAsync(int ticketId, string comment)
+        {
+            if (!string.IsNullOrEmpty(comment))
+            {
+                await LogHistory(ticketId, "[AVARIA] " + comment, TipoAcaoHistorico.Comentario);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToPage(new { SelectedTicketId = ticketId });
         }
 

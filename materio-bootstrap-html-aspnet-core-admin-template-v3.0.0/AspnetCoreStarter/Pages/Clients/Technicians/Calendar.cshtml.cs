@@ -72,26 +72,46 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 .ToListAsync();
 
             var calendarEvents = new List<object>();
+
+            // 1. Group Scheduled Preventive Maintenances by date to show a single entry
+            var preventiveGrouped = allTickets
+                .Where(t => t.Type == "Manutenção Preventiva" && t.ScheduledDate.HasValue)
+                .GroupBy(t => t.ScheduledDate.Value.Date)
+                .ToList();
+
+            foreach (var group in preventiveGrouped)
+            {
+                var date = group.Key;
+                calendarEvents.Add(new {
+                    id = "preventive-" + date.ToString("yyyyMMdd"),
+                    title = "🛡️ Semana de Manutenções",
+                    start = date.ToString("yyyy-MM-dd"),
+                    end = date.AddDays(7).ToString("yyyy-MM-dd"), // Full week
+                    allDay = true,
+                    description = $"Semana dedicada a {group.Count()} manutenções preventivas.",
+                    className = "bg-label-warning fw-bold",
+                    extendedProps = new { isPreventiveSummary = true }
+                });
+            }
             foreach (var t in allTickets)
             {
                 var isPreventive = t.Type == "Manutenção Preventiva";
-                var isUnassigned = t.TechnicianId == null;
                 
-                string baseTitle = isPreventive ? $"🛡️ Preventiva: {t.School?.Name}" : $"#{(t.Id)} - {(t.Equipamento?.Name ?? "Equip.")}";
-                
-                // Determine the display date for the primary event
-                var displayDate = (isPreventive && t.ScheduledDate.HasValue) ? t.ScheduledDate.Value : t.CreatedAt;
+                // Skip individual entry for preventive (already handled by group)
+                if (isPreventive) continue;
 
-                // 1. Entry Event (Created or Scheduled)
+                var isUnassigned = t.TechnicianId == null;
+                string baseTitle = $"#{(t.Id)} - {(t.Equipamento?.Name ?? "Equip.")}";
+                
+                // 1. Entry Event (Created)
                 calendarEvents.Add(new {
                    id = t.Id,
                    title = (isUnassigned ? "🆓 " : "📥 ") + baseTitle,
-                   start = displayDate.ToString("yyyy-MM-ddTHH:mm:ss"),
-                   className = isUnassigned ? "bg-label-info" : (isPreventive ? "bg-label-warning" : "bg-label-primary"),
-                   description = isPreventive ? $"Manutenção Preventiva em {t.School?.Name}. Status: {t.Status}" : $"Equipamento: {t.Equipamento?.Name} na {t.School?.Name}. Criado em {t.CreatedAt:dd/MM HH:mm}.",
+                   start = t.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                   className = isUnassigned ? "bg-label-info" : "bg-label-primary",
+                   description = $"Equipamento: {t.Equipamento?.Name} na {t.School?.Name}. Criado em {t.CreatedAt:dd/MM HH:mm}.",
                    extendedProps = new {
                        ticketId = t.Id,
-                       isPreventive = isPreventive,
                        isUnassigned = isUnassigned,
                        status = t.Status
                    }

@@ -14,6 +14,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
 {
     public class DirectorDashboardModel : PageModel
     {
+        // Technician Dashboard Workflow Refinement - Force rebuild
         private readonly AppDbContext _context;
         private readonly IStockService _stockService;
 
@@ -22,6 +23,9 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
             _context = context;
             _stockService = stockService;
         }
+
+        public bool HasPreventiveMaintenanceToday { get; set; }
+        public List<Ticket> TodaysPreventiveMaintenances { get; set; } = new();
 
         public List<LowStockItemViewModel> StockAlerts { get; set; } = new();
         public int TotalProfessores { get; set; }
@@ -33,6 +37,7 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
         public int DamagedEquipmentCount { get; set; }
         public int TotalUnreadMessages { get; set; }
         public List<AspnetCoreStarter.Models.User>? RecentMessageSenders { get; set; }
+        
 
         public List<int>? LineChartMonthlyData { get; set; }
         public List<string>? LineChartLabels { get; set; }
@@ -214,6 +219,19 @@ namespace AspnetCoreStarter.Pages.Clients.Directors
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(3)
                 .ToListAsync();
+
+            // Check for today's preventive maintenance
+            var today = DateTime.Today;
+            TodaysPreventiveMaintenances = await _context.Tickets
+                .Include(t => t.School)
+                .Include(t => t.Technician)
+                .Where(t => t.Type == "Manutenção Preventiva" 
+                         && t.ScheduledDate.HasValue 
+                         && t.ScheduledDate.Value.Date == today
+                         && t.SchoolId != null && schoolIds.Contains(t.SchoolId.Value))
+                .ToListAsync();
+
+            HasPreventiveMaintenanceToday = TodaysPreventiveMaintenances.Any();
 
             return Page();
         }

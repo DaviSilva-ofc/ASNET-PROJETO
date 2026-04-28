@@ -135,7 +135,11 @@ namespace AspnetCoreStarter.Pages.Admin
             Agrupamentos = await _context.Agrupamentos.ToListAsync();
             AllSchools = await _context.Schools.Include(s => s.Agrupamento).ToListAsync();
             AllBlocos = await _context.Blocos.Include(b => b.School).ToListAsync();
-            AllSalas = await _context.Salas.Include(s => s.Block).ToListAsync();
+            AllSalas = await _context.Salas
+                .Include(s => s.Block)
+                    .ThenInclude(b => b.School)
+                        .ThenInclude(sch => sch.Agrupamento)
+                .ToListAsync();
             Empresas = await _context.Empresas.ToListAsync();
 
             // Per-school equipment counts
@@ -303,7 +307,7 @@ namespace AspnetCoreStarter.Pages.Admin
             return RedirectToPage();
         }
 
-        public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? blocoId, int? empresaId)
+        public async Task<IActionResult> OnPostProcessApprovalAsync(int id, string role, int? agrupamentoId, string[]? areaTecnica, string? areaTecnicaOutros, string? nivel, int? escolaId, int? salaId, int? empresaId)
         {
             if (string.IsNullOrEmpty(role))
             {
@@ -345,9 +349,17 @@ namespace AspnetCoreStarter.Pages.Admin
                         roleCreated = true;
                         break;
                     case "Professor":
-                        if (!blocoId.HasValue) break;
-                        var professor = new Professor { UserId = id, BlocoId = blocoId };
+                        if (!salaId.HasValue) break;
+                        var targetSala = await _context.Salas.FindAsync(salaId.Value);
+                        if (targetSala == null) break;
+                        
+                        var professor = new Professor { UserId = id, BlocoId = targetSala.BlockId };
                         _context.Professores.Add(professor);
+                        
+                        // Também associar o professor como responsável por esta sala
+                        targetSala.ResponsibleProfessorId = id;
+                        _context.Salas.Update(targetSala);
+                        
                         roleCreated = true;
                         break;
                     case "Cliente Individual":

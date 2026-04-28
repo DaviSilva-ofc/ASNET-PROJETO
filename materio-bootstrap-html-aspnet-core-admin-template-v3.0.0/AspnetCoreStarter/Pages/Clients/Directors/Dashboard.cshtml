@@ -1,6 +1,7 @@
-﻿@page
+@page
 @model AspnetCoreStarter.Pages.Clients.Directors.DirectorDashboardModel
 @using System.Linq
+@* Preventive maintenance notification system - Recompile *@
 @{
     Layout ="Layouts/_ContentNavbarLayout";
     ViewData["Title"] ="Dashboard Direção";
@@ -177,8 +178,52 @@
             <p class="text-muted mb-0">Agrupamento: <span class="fw-bold text-primary">@(Model.Agrupamento?.Name ??"N/A")</span></p>
         </div>
         <div class="d-flex gap-2">
+            @if (Model.HasPreventiveMaintenanceToday)
+            {
+                <span class="badge bg-danger rounded-pill p-2 animate-pulse" title="Manutenção Preventiva Hoje">
+                    <i class="ri-notification-3-line fs-5"></i>
+                </span>
+            }
         </div>
     </div>
+
+    @if (Model.HasPreventiveMaintenanceToday)
+    {
+        <div class="alert alert-warning d-flex align-items-center p-3 mb-4 border-0 shadow-sm" style="background: rgba(255, 171, 0, 0.1); border-left: 5px solid #ffab00 !important; border-radius: 12px;">
+            <div class="stat-icon me-3" style="background: #ffab00; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff;">
+                🛡️
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-0 fw-bold" style="color: #ffab00;">Hoje é Dia de Manutenção Preventiva!</h6>
+                <p class="mb-0 small text-muted">Existem @Model.TodaysPreventiveMaintenances.Count intervenções programadas para o seu agrupamento hoje.</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-warning fw-bold px-3 shadow-none" style="background: #ffab00; border: none; color: #fff;" data-bs-toggle="collapse" data-bs-target="#todaysMaintenances">
+                Ver Locais
+            </button>
+        </div>
+        
+        <div class="collapse mb-4" id="todaysMaintenances">
+            <div class="card card-body border-0 shadow-sm" style="background: var(--dash-card-bg) !important; border-radius: 12px; border: 1px solid var(--dash-border) !important;">
+                <div class="list-group list-group-flush">
+                    @foreach (var m in Model.TodaysPreventiveMaintenances)
+                    {
+                        <div class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center py-2 px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm me-3" style="width: 32px; height: 32px;">
+                                    <span class="avatar-initial rounded-circle bg-label-warning" style="font-size: 0.8rem;">🛡️</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold" style="color: var(--bs-heading-color); font-size: 0.9rem;">@m.School?.Name</h6>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Técnico: @(m.Technician?.Username ?? "Por atribuir")</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-label-warning text-uppercase" style="font-size: 0.6rem;">@m.Status</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- VISÃO GERAL (Imagem 1 style) -->
     <!-- ===== Stat mini-cards (Restored) ===== -->

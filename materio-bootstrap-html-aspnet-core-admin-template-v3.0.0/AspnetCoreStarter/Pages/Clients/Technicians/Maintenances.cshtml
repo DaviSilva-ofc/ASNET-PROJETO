@@ -1,0 +1,633 @@
+@page
+@model AspnetCoreStarter.Pages.Clients.Technicians.MaintenancesModel
+@using AspnetCoreStarter.Models
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Gestão de Manutenções Preventivas";
+}
+
+@section PageStyles {
+<style>
+    :root {
+        --asnet-orange: #f89223;
+        --asnet-blue: #696cff;
+        --asnet-dark: #2b2c40;
+    }
+
+    .dark-style .card, [data-bs-theme="dark"] .card {
+        background: var(--asnet-dark) !important;
+        border: none !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+    }
+
+    .banner-header {
+        background: var(--asnet-orange) !important;
+        color: white !important;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(248, 146, 35, 0.3);
+    }
+
+    .agrupamento-item {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+    }
+
+    .agrupamento-header {
+        background: rgba(248, 146, 35, 0.08);
+        padding: 1.2rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-left: 4px solid var(--asnet-orange);
+    }
+    .agrupamento-header:hover {
+        background: rgba(248, 146, 35, 0.12);
+    }
+
+    .school-container {
+        padding: 0.5rem 1.5rem 1rem 2.5rem;
+        border-left: 1px dashed rgba(105, 108, 255, 0.3);
+        margin-left: 1.8rem;
+    }
+
+    .school-header {
+        padding: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+    }
+    .school-header:hover {
+        background: rgba(105, 108, 255, 0.05);
+    }
+
+    .ticket-list-container {
+        padding: 0.5rem 0 0.5rem 2rem;
+        border-left: 1px dashed rgba(105, 108, 255, 0.2);
+        margin-left: 0.8rem;
+    }
+
+    .ticket-card-mini {
+        padding: 1rem;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        margin-bottom: 0.8rem;
+        transition: all 0.2s;
+    }
+    .ticket-card-mini:hover {
+        border-color: var(--asnet-blue);
+        background: rgba(105, 108, 255, 0.05);
+        transform: translateX(5px);
+    }
+
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        padding: 2px;
+        margin-right: 10px;
+    }
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background: var(--asnet-blue);
+        color: white;
+    }
+
+    .stat-card {
+        border-radius: 12px;
+    }
+
+    .btn-school-complete {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    .btn-school-complete:hover {
+        background-color: #71dd37;
+        color: white;
+        border-color: #71dd37;
+    }
+    /* Glassmorphism Panel Styles */
+    .tk-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+        z-index: 1080; display: none; opacity: 0; transition: opacity 0.3s ease;
+    }
+    .tk-overlay.active { display: block; opacity: 1; }
+
+    .tk-panel {
+        position: fixed; top: 0; right: -500px; width: 500px; height: 100vh;
+        background: rgba(23, 23, 33, 0.95); backdrop-filter: blur(15px);
+        border-left: 1px solid rgba(255,255,255,0.1);
+        z-index: 1090; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    }
+    .tk-panel.active { right: 0; }
+
+    .tk-ph { padding: 2rem; background: linear-gradient(135deg, rgba(248,146,35,0.1) 0%, rgba(23,23,33,0) 100%); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .tk-ph-top { display: flex; align-items: flex-start; gap: 1.5rem; position: relative; }
+    .tk-ph-icon { width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0; }
+    .tk-ph-info { flex-grow: 1; }
+    .tk-ph-badges { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .badge-tk { padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; border: 1px solid; }
+    .tk-ph-title { color: #fff; font-size: 1.25rem; font-weight: 700; margin: 0; line-height: 1.3; }
+    .tk-close { background: none; border: none; color: #6e6e8c; font-size: 1.5rem; cursor: pointer; padding: 5px; transition: 0.2s; }
+    .tk-close:hover { color: #fff; transform: rotate(90deg); }
+
+    .tk-tabs { display: flex; padding: 0 1rem; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); gap: 0.5rem; }
+    .tk-tab { padding: 1rem 0.75rem; color: #8686a2; font-size: 0.85rem; font-weight: 600; cursor: pointer; position: relative; transition: 0.3s; display: flex; align-items: center; gap: 0.5rem; }
+    .tk-tab:hover { color: #fff; }
+    .tk-tab.active { color: #f89223; }
+    .tk-tab.active::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: #f89223; border-radius: 3px 3px 0 0; }
+
+    .tk-body { flex-grow: 1; overflow-y: auto; padding: 1.5rem; }
+    .tk-tab-content.d-none { display: none !important; }
+
+    /* Timeline and components */
+    .tk-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .tk-info-item label { display: block; font-size: 0.7rem; color: #6e6e8c; text-transform: uppercase; font-weight: 700; margin-bottom: 0.4rem; letter-spacing: 0.5px; }
+    .tk-info-item span { color: #e1e1e3; font-size: 0.95rem; font-weight: 500; }
+    
+    .tk-stepper { padding: 1.5rem 2rem; display: flex; justify-content: space-between; position: relative; }
+    .tk-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
+    .tk-step-dot { width: 28px; height: 28px; border-radius: 50%; background: #2b2c40; border: 2px solid #3e3f59; color: #6e6e8c; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; transition: 0.3s; margin-bottom: 0.5rem; }
+    .tk-step-dot.active { border-color: #f89223; color: #f89223; box-shadow: 0 0 15px rgba(248,146,35,0.3); }
+    .tk-step-dot.done { background: #f89223; border-color: #f89223; color: #000; }
+    .tk-step-label { font-size: 0.65rem; font-weight: 600; color: #6e6e8c; text-transform: uppercase; text-align: center; }
+    .tk-step-label.active { color: #fff; }
+    .tk-step-line { position: absolute; top: 14px; left: 50%; width: 100%; height: 2px; background: #3e3f59; z-index: -1; }
+    .tk-step-line.done { background: #f89223; }
+
+    .tk-advance-row { padding: 1.25rem 1.5rem; background: rgba(248,146,35,0.05); border-top: 1px solid rgba(255,255,255,0.05); }
+    .tk-advance-btn { width: 100%; background: #f89223; color: #000; border: none; padding: 0.8rem; border-radius: 10px; font-weight: 700; font-size: 0.9rem; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; }
+    .tk-advance-btn:hover { background: #ffab00; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(248,146,35,0.4); }
+
+    .tk-footer { padding: 1.25rem 1.5rem; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 0.75rem; }
+    .tk-comment { flex-grow: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.6rem 1rem; color: #fff; font-size: 0.9rem; transition: 0.3s; }
+    .tk-comment:focus { outline: none; border-color: #f89223; background: rgba(255,255,255,0.08); }
+    .tk-send-btn { background: #f89223; color: #000; border: none; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; flex-shrink: 0; }
+    .tk-send-btn:hover { background: #ffab00; transform: scale(1.05); }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header Banner -->
+    <div class="banner-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="mb-1 text-white fw-bold">Manutenções Preventivas</h3>
+            <p class="mb-0 opacity-75">Gira as suas tarefas organizadas por Agrupamento e Escola.</p>
+        </div>
+        <div class="d-none d-md-block">
+            <i class="ri-node-tree fs-1 opacity-50"></i>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-primary"><i class="ri-list-check fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.TotalMaintenances</h4>
+                            <small class="text-muted">Total Atribuído</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-warning"><i class="ri-time-line fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.PendingMaintenances</h4>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-info"><i class="ri-refresh-line fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.InProgressMaintenances</h4>
+                            <small class="text-muted">Em Progresso</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-success"><i class="ri-checkbox-circle-line fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.CompletedMaintenances</h4>
+                            <small class="text-muted">Concluídas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs -->
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#navs-my-maintenances">
+                    <i class="ri-organization-chart me-1"></i> Minhas Preventivas
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-completed">
+                    <i class="ri-checkbox-circle-line me-1"></i> Concluídas
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content bg-transparent p-0 border-0 mt-4">
+            <!-- My Active Maintenances Tab -->
+            <div class="tab-pane fade show active" id="navs-my-maintenances" role="tabpanel">
+                @if (!Model.MyActiveMaintenances.Any())
+                {
+                    <div class="card p-5 text-center shadow-none border-0 bg-transparent">
+                        <div class="mb-3">
+                            <i class="ri-inbox-line fs-1 text-muted opacity-50"></i>
+                        </div>
+                        <h5 class="text-muted">Não tem manutenções preventivas pendentes.</h5>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var agrupamento in Model.MyActiveMaintenances)
+                    {
+                        var agId = agrupamento.Id ?? 0;
+                        <div class="agrupamento-item">
+                            <div class="agrupamento-header collapsed" data-bs-toggle="collapse" data-bs-target="#my-ag-@agId">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-arrow-right-s-line fs-5"></i>
+                                    <i class="ri-community-line me-2 fs-5 text-warning"></i>
+                                    <h5 class="mb-0 fw-bold">@agrupamento.Name</h5>
+                                </div>
+                                <span class="badge bg-label-primary rounded-pill">@agrupamento.Schools.Sum(s => s.Tickets.Count)</span>
+                            </div>
+
+                            <div id="my-ag-@agId" class="collapse">
+                                <div class="school-container">
+                                    @foreach (var school in agrupamento.Schools)
+                                    {
+                                        var sId = school.Id ?? 0;
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="school-header collapsed flex-grow-1" data-bs-toggle="collapse" data-bs-target="#my-school-@agId-@sId">
+                                                <i class="ri-arrow-right-s-line fs-6"></i>
+                                                <i class="ri-building-line me-2 text-info"></i>
+                                                <span class="fw-semibold">@school.Name</span>
+                                                <span class="badge bg-label-secondary ms-2 small">@school.Tickets.Count</span>
+                                            </div>
+                                            
+                                            <form method="post" asp-page-handler="CompleteSchool" asp-route-schoolId="@sId" class="ms-2">
+                                                <button type="submit" class="btn btn-sm btn-outline-success btn-school-complete" title="Marcar Visita como Concluída">
+                                                    <i class="ri-check-double-line me-1"></i> Finalizar Visita
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <div id="my-school-@agId-@sId" class="collapse">
+                                            <div class="ticket-list-container">
+                                                @foreach (var ticket in school.Tickets)
+                                                {
+                                                    <div class="ticket-card-mini d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <div class="d-flex align-items-center mb-1">
+                                                                <span class="badge bg-label-secondary me-2 small">#@ticket.Id.ToString("D4")</span>
+                                                                <h6 class="mb-0 fw-bold">@ticket.Description</h6>
+                                                            </div>
+                                                            <div class="small text-muted">
+                                                                @if(ticket.Equipamento != null) {
+                                                                    <span class="me-3"><i class="ri-computer-line me-1"></i> @ticket.Equipamento.Name</span>
+                                                                }
+                                                                <span><i class="ri-calendar-line me-1"></i> @ticket.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-center">
+                                                            @{
+                                                                var stLower = ticket.Status?.Trim().ToLower() ??"";
+                                                                var badgeClass = stLower switch {
+                                                                    "concluído" => "bg-label-success",
+                                                                    "em reparação" or "em resolução" or "em reparacao" or "em resolucao" or "pendente" => "bg-label-warning",
+                                                                    "aceite" => "bg-label-info",
+                                                                    _ => "bg-label-secondary"
+                                                                };
+                                                            }
+                                                            <span class="badge @badgeClass me-3">
+                                                                @ticket.Status
+                                                            </span>
+                                                            <a asp-page="/Clients/Technicians/Maintenances" asp-route-SelectedTicketId="@ticket.Id" class="btn btn-sm btn-icon btn-outline-primary">
+                                                                <i class="ri-tools-line"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+
+            <!-- Completed Tab -->
+            <div class="tab-pane fade" id="navs-completed" role="tabpanel">
+                @if (!Model.MyCompletedMaintenances.Any())
+                {
+                    <div class="card p-5 text-center shadow-none border-0 bg-transparent">
+                        <div class="mb-3">
+                            <i class="ri-checkbox-blank-circle-line fs-1 text-muted opacity-50"></i>
+                        </div>
+                        <h5 class="text-muted">Ainda não concluiu nenhuma manutenção preventiva.</h5>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var agrupamento in Model.MyCompletedMaintenances)
+                    {
+                        var agId = agrupamento.Id ?? 0;
+                        <div class="agrupamento-item">
+                            <div class="agrupamento-header collapsed" data-bs-toggle="collapse" data-bs-target="#comp-ag-@agId">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-arrow-right-s-line fs-5"></i>
+                                    <i class="ri-community-line me-2 fs-5 text-success"></i>
+                                    <h5 class="mb-0 fw-bold">@agrupamento.Name</h5>
+                                </div>
+                                <span class="badge bg-label-success rounded-pill">@agrupamento.Schools.Sum(s => s.Tickets.Count)</span>
+                            </div>
+
+                            <div id="comp-ag-@agId" class="collapse">
+                                <div class="school-container">
+                                    @foreach (var school in agrupamento.Schools)
+                                    {
+                                        var sId = school.Id ?? 0;
+                                        <div class="school-header collapsed" data-bs-toggle="collapse" data-bs-target="#comp-school-@agId-@sId">
+                                            <i class="ri-arrow-right-s-line fs-6"></i>
+                                            <i class="ri-building-line me-2 text-info"></i>
+                                            <span class="fw-semibold">@school.Name</span>
+                                            <span class="badge bg-label-success ms-2 small">Concluído</span>
+                                        </div>
+
+                                        <div id="comp-school-@agId-@sId" class="collapse">
+                                            <div class="ticket-list-container">
+                                                @foreach (var ticket in school.Tickets)
+                                                {
+                                                    <div class="ticket-card-mini d-flex justify-content-between align-items-center border-success bg-label-success opacity-75">
+                                                        <div>
+                                                            <div class="d-flex align-items-center mb-1">
+                                                                <span class="badge bg-label-secondary me-2 small">#@ticket.Id.ToString("D4")</span>
+                                                                <h6 class="mb-0 fw-bold">@ticket.Description</h6>
+                                                            </div>
+                                                            <div class="small text-muted">
+                                                                <span><i class="ri-checkbox-circle-line me-1 text-success"></i> Concluído em @(ticket.CompletedAt?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</span>
+                                                            </div>
+                                                        </div>
+                                                        <a asp-page="/Clients/Technicians/Tickets" asp-route-SelectedTicketId="@ticket.Id" class="btn btn-sm btn-icon btn-outline-success">
+                                                            <i class="ri-eye-line"></i>
+                                                        </a>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Panel Overlay & Slide-over Panel -->
+<div class="tk-overlay" id="tkOverlay" onclick="closePanel()"></div>
+
+<div class="tk-panel" id="tkPanel">
+    @if (Model.SelectedTicket != null)
+    {
+        var t = Model.SelectedTicket;
+        var mainEq = t.Equipamento ?? t.UtilizedEquipments?.FirstOrDefault() ?? Model.AssociatedEquipment.FirstOrDefault();
+        
+        <div class="tk-ph">
+            <div class="tk-ph-top">
+                <div class="tk-ph-icon" style="background: rgba(248, 146, 35, 0.1); color: #f89223; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                    @{
+                        var type = mainEq?.Type ??"";
+                        var name = mainEq?.Name ??"";
+                        var emoji = type.ToLower() switch {
+                            var s when s.Contains("monitor") => "🖥️",
+                            var s when s.Contains("computador") || s.Contains("laptop") || s.Contains("pc") || s.Contains("portátil") => "💻",
+                            var s when s.Contains("impressora") => "🖨️",
+                            var s when s.Contains("rede") || s.Contains("switch") || s.Contains("router") => "🌐",
+                            var s when s.Contains("projetor") => "📽️",
+                            _ => "🔧"
+                        };
+                    }
+                    @emoji
+                </div>
+                <div class="tk-ph-info">
+                    <div class="tk-ph-badges">
+                        <span class="badge-tk" style="color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.1);">#@t.Id.ToString("D4")</span>
+                        <span class="badge-tk" style="color: #f89223; border-color: #f89223; background: rgba(248, 146, 35, 0.1);">@t.Status</span>
+                    </div>
+                    <h2 class="tk-ph-title">@(mainEq?.Name ??"Visita Geral"): @(t.Description ?? "Preventiva")</h2>
+                </div>
+                <button class="tk-close" onclick="closePanel()">✕</button>
+            </div>
+        </div>
+
+        <div class="tk-stepper">
+            @{
+                var steps = new[] {"Pendente","Aceite","Em reparação","Concluído" };
+                int si = Array.IndexOf(steps, t.Status);
+                var nextLabel = si < 3 ? (si == 0 ?"Aceitar" : si == 1 ?"Em Progresso" :"Concluir") :"";
+            }
+            @for (int i = 0; i < steps.Length; i++)
+            {
+                bool done = i < si || t.Status =="Concluído";
+                bool active = i == si && t.Status !="Concluído";
+                <div class="tk-step">
+                    @if (i < steps.Length - 1) { <div class="tk-step-line @(i < si || t.Status =="Concluído" ?"done" :"")"></div> }
+                    <div class="tk-step-dot @(done ?"done" :"") @(active ?"active" :"")">@(done ?"✓" : (i + 1).ToString())</div>
+                    <div class="tk-step-label @(active ?"active" :"")">@steps[i]</div>
+                </div>
+            }
+        </div>
+
+        @if (t.Status !="Concluído" && si < 3)
+        {
+            <div class="tk-advance-row">
+                <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
+                    <button type="submit" class="tk-advance-btn">
+                        @if (si == 0) { <text><i class="ri-play-line"></i> Iniciar Manutenção</text> }
+                        else { <text><i class="ri-arrow-right-circle-line"></i> Avançar para @nextLabel</text> }
+                    </button>
+                </form>
+            </div>
+        }
+
+        <div class="tk-tabs">
+            <div class="tk-tab active" id="btn-tab-0" onclick="showTab('tab-0')"><i class="ri-information-line"></i> Detalhes</div>
+            <div class="tk-tab" id="btn-tab-3" onclick="showTab('tab-3')"><i class="ri-checkbox-multiple-line"></i> Checklist</div>
+            <div class="tk-tab" id="btn-tab-2" onclick="showTab('tab-2')"><i class="ri-history-line"></i> Histórico</div>
+        </div>
+
+        <div class="tk-body">
+            <!-- Tab: Detalhes -->
+            <div class="tk-tab-content" id="tab-0">
+                <div class="tk-info-grid mb-4">
+                    <div class="tk-info-item"><label>Local</label><span>@(t.School?.Name ??"—")</span></div>
+                    <div class="tk-info-item"><label>Agrupamento</label><span>@(t.School?.Agrupamento?.Name ??"—")</span></div>
+                    <div class="tk-info-item"><label>Data Agendada</label><span>@t.CreatedAt.ToString("dd MMM yyyy")</span></div>
+                    <div class="tk-info-item"><label>Técnico</label><span>@(t.Technician?.Username ??"Não atribuído")</span></div>
+                </div>
+                <div class="tk-info-item w-100"><label>Descrição do Pedido</label><span class="d-block p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">@t.Description</span></div>
+            </div>
+
+            <!-- Tab: Checklist (Dynamic) -->
+            <div class="tk-tab-content d-none" id="tab-3">
+                <div class="p-0">
+                    @{
+                        var allEqsChecklist = Model.SchoolEquipment.Any() ? Model.SchoolEquipment : (Model.AssociatedEquipment.Any() ? Model.AssociatedEquipment : new List<Equipamento> { mainEq }.Where(x => x != null).ToList());
+                        if (!allEqsChecklist.Any()) allEqsChecklist.Add(new Equipamento { Name = "Geral", Type = "Intervenção Geral" });
+                    }
+
+                    <div class="mb-4">
+                        <label class="form-label small text-uppercase fw-bold text-muted mb-2">Equipamento em Intervenção</label>
+                        <select class="form-select bg-dark text-white border-secondary" style="border-radius: 10px;" onchange="switchChecklist(this.value)">
+                            @foreach (var eq in allEqsChecklist)
+                            {
+                                <option value="@eq.Id">@eq.Name (@(eq.Type ?? "Equipamento"))</option>
+                            }
+                        </select>
+                    </div>
+
+                    @foreach (var eq in allEqsChecklist)
+                    {
+                        <div class="eq-checklist-container @(eq == allEqsChecklist.First() ? "" : "d-none")" id="checklist-@eq.Id">
+                            <div class="tk-checklist-list d-flex flex-column gap-2 mb-4">
+                                @{
+                                    string eType = (eq.Type ?? "").ToLower();
+                                    var items = new List<string> { "Limpeza física geral", "Verificação de cabos e conectores" };
+                                    if (eType.Contains("monitor") || eType.Contains("ecrã")) items.AddRange(new[] { "Teste de pixéis", "Ajuste de brilho", "Limpeza de ecrã" });
+                                    else if (eType.Contains("pc") || eType.Contains("computador")) items.AddRange(new[] { "Limpeza de ventoinhas", "Teste de disco", "Atualizações de software" });
+                                    else if (eType.Contains("impressora")) items.AddRange(new[] { "Limpeza de roletes", "Teste de impressão", "Verificação de toners" });
+                                    items.Add("Teste final de funcionamento");
+                                }
+                                @foreach (var item in items)
+                                {
+                                    <label class="d-flex align-items-center gap-3 p-2 border rounded cursor-pointer transition-all" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05) !important;">
+                                        <input type="checkbox" class="form-check-input" style="width:1.2rem; height:1.2rem;" />
+                                        <span class="small">@item</span>
+                                    </label>
+                                }
+                            </div>
+                            <form method="post" asp-page-handler="AddAnomaly" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
+                                <textarea name="comment" class="form-control mb-2 text-white border-secondary bg-transparent" rows="2" placeholder="Anomalia detetada em @eq.Name..."></textarea>
+                                <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold">Registar Anomalia</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Tab: Histórico -->
+            <div class="tk-tab-content d-none" id="tab-2">
+                <div class="tk-timeline d-flex flex-column gap-3">
+                    @foreach (var h in Model.TicketHistory)
+                    {
+                        <div class="small p-2 border-start border-warning ms-2 ps-3">
+                            <div class="fw-bold">@h.Acao</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">@h.Data.ToString("dd/MM HH:mm") por @h.Autor</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if(t.Status !="Concluído") {
+            <div class="tk-footer">
+                <form method="post" asp-page-handler="AddComment" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id" class="d-flex w-100 gap-2">
+                    <input type="text" name="comment" class="tk-comment" placeholder="Comentário..." required>
+                    <button type="submit" class="tk-send-btn">✈</button>
+                </form>
+            </div>
+        }
+    }
+</div>
+
+@section PageScripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('SelectedTicketId')) {
+            openPanel();
+        }
+    });
+
+    function openPanel() {
+        document.getElementById('tkOverlay').classList.add('active');
+        document.getElementById('tkPanel').classList.add('active');
+    }
+    function closePanel() {
+        document.getElementById('tkOverlay').classList.remove('active');
+        document.getElementById('tkPanel').classList.remove('active');
+        window.history.pushState({}, '', window.location.pathname);
+    }
+    function showTab(id) {
+        document.querySelectorAll('.tk-tab-content').forEach(c => c.classList.add('d-none'));
+        document.querySelectorAll('.tk-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.remove('d-none');
+        document.getElementById('btn-' + id).classList.add('active');
+    }
+    function switchChecklist(id) {
+        document.querySelectorAll('.eq-checklist-container').forEach(c => c.classList.add('d-none'));
+        const target = document.getElementById('checklist-' + id);
+        if (target) target.classList.remove('d-none');
+    }
+</script>
+}

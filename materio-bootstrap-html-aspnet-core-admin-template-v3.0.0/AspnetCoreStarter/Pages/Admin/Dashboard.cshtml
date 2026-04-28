@@ -1077,24 +1077,52 @@
                                                         </select>
                                                     </div>
                                                     
-                                                    <!-- Coordenador: Escola -->
+                                                    <!-- Coordenador: Agrupamento e Escola -->
                                                     <div class="field-Coordenador" style="display:none;">
-                                                        <select name="escolaId" class="form-select form-select-sm">
-                                                            <option value="">Selecionar Escola...</option>
-                                                            @foreach (var school in Model.AllSchools) {
-                                                                <option value="@school.Id">@school.Name</option>
-                                                            }
-                                                        </select>
+                                                        <div class="mb-2">
+                                                            <select class="form-select form-select-sm" id="coordAgrup_@user.Id" onchange="filterSchoolsForCoord(@user.Id)">
+                                                                <option value="">1. Selecionar Agrupamento...</option>
+                                                                @foreach (var agrup in Model.Agrupamentos) {
+                                                                    <option value="@agrup.Id">@agrup.Name</option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <select name="escolaId" class="form-select form-select-sm" id="coordEscola_@user.Id" disabled>
+                                                                <option value="">2. Selecionar Escola...</option>
+                                                                @foreach (var school in Model.AllSchools) {
+                                                                    <option value="@school.Id" data-agrup="@school.AgrupamentoId">@school.Name</option>
+                                                                }
+                                                            </select>
+                                                        </div>
                                                     </div>
                                                     
-                                                    <!-- Professor: Bloco -->
+                                                    <!-- Professor: Hierarquia de Localização -->
                                                     <div class="field-Professor" style="display:none;">
-                                                        <select name="blocoId" class="form-select form-select-sm">
-                                                            <option value="">Selecionar Bloco...</option>
-                                                            @foreach (var bloco in Model.AllBlocos) {
-                                                                <option value="@bloco.Id">@bloco.Name (@bloco.School?.Name)</option>
-                                                            }
-                                                        </select>
+                                                        <div class="mb-2">
+                                                            <select class="form-select form-select-sm" id="profAgrup_@user.Id" onchange="filterSchoolsForProf(@user.Id)">
+                                                                <option value="">1. Selecionar Agrupamento...</option>
+                                                                @foreach (var agrup in Model.Agrupamentos) {
+                                                                    <option value="@agrup.Id">@agrup.Name</option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <select class="form-select form-select-sm" id="profEscola_@user.Id" onchange="filterSalasForProf(@user.Id)" disabled>
+                                                                <option value="">2. Selecionar Escola...</option>
+                                                                @foreach (var school in Model.AllSchools) {
+                                                                    <option value="@school.Id" data-agrup="@school.AgrupamentoId">@school.Name</option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <select name="salaId" class="form-select form-select-sm" id="profSala_@user.Id" disabled>
+                                                                <option value="">3. Selecionar Sala...</option>
+                                                                @foreach (var sala in Model.AllSalas) {
+                                                                    <option value="@sala.Id" data-escola="@sala.Block?.SchoolId">@sala.Name</option>
+                                                                }
+                                                            </select>
+                                                        </div>
                                                     </div>
 
                                                     <!-- Cliente Individual: Empresa -->
@@ -1308,12 +1336,79 @@
             input.value = '';
         }
     }
+
+    function filterSchoolsForProf(userId) {
+        const agrupId = document.getElementById('profAgrup_' + userId).value;
+        const schoolSelect = document.getElementById('profEscola_' + userId);
+        const salaSelect = document.getElementById('profSala_' + userId);
+        
+        schoolSelect.value = "";
+        salaSelect.value = "";
+        salaSelect.disabled = true;
+        
+        if (!agrupId) {
+            schoolSelect.disabled = true;
+            return;
+        }
+        
+        schoolSelect.disabled = false;
+        Array.from(schoolSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            opt.style.display = opt.getAttribute('data-agrup') === agrupId ? 'block' : 'none';
+        });
+    }
+
+    function filterSalasForProf(userId) {
+        const escolaId = document.getElementById('profEscola_' + userId).value;
+        const salaSelect = document.getElementById('profSala_' + userId);
+        
+        salaSelect.value = "";
+        
+        if (!escolaId) {
+            salaSelect.disabled = true;
+            return;
+        }
+        
+        salaSelect.disabled = false;
+        Array.from(salaSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            opt.style.display = opt.getAttribute('data-escola') === escolaId ? 'block' : 'none';
+        });
+    }
+
+    function filterSchoolsForCoord(userId) {
+        const agrupId = document.getElementById('coordAgrup_' + userId).value;
+        const schoolSelect = document.getElementById('coordEscola_' + userId);
+        
+        schoolSelect.value = "";
+        
+        if (!agrupId) {
+            schoolSelect.disabled = true;
+            return;
+        }
+        
+        schoolSelect.disabled = false;
+        Array.from(schoolSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            opt.style.display = opt.getAttribute('data-agrup') === agrupId ? 'block' : 'none';
+        });
+    }
 </script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
+
+        // Check if we should open the pending modal automatically
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('openPending')) {
+            const modalElement = document.getElementById('modalPending');
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+        }
     });
 
     async function initMap() {

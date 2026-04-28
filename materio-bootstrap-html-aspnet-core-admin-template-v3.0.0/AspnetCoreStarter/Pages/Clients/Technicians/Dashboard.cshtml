@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model AspnetCoreStarter.Pages.Clients.Technicians.DashboardModel
 @{
     Layout ="Layouts/_ContentNavbarLayout";
@@ -101,6 +101,10 @@
     .fc-col-header-cell-cushion { color: rgba(255, 255, 255, 0.8) !important; font-weight: 500; font-size: 0.85rem; }
     .fc-daygrid-day-number { color: rgba(255, 255, 255, 0.6) !important; font-size: 0.85rem; }
     .fc-day-today { background: rgba(105, 108, 255, 0.05) !important; }
+
+    /* Fix for modal appearing behind the slide-over panel */
+    #modalOrcamento { z-index: 10010 !important; }
+    .modal-backdrop { z-index: 10005 !important; }
 </style>
 }
 
@@ -384,11 +388,15 @@
                     </div>
                     <div class="tk-right">
                         @{
-                            var stCol = t.Status switch {"Concluído" =>"var(--tk-green)","Em Reparação" or"Em Resolução" =>"var(--tk-primary)",
-                                _ =>"var(--tk-muted)"
+                            var statusVal = t.Status?.Trim().ToLower() ??"";
+                            var stCol = statusVal switch {
+                                "concluído" => "#71dd37", // Green
+                                "em reparação" or "em resolução" or "em reparacao" or "em resolucao" => "#ffab00", // Amber/Yellow
+                                "aceite" => "#696cff", // Blue
+                                _ => "#a1acb8" // Muted
                             };
                         }
-                        <span class="badge-tk" style="color: @stCol; border-color: @stCol; background: @(stCol)11;">
+                        <span class="badge-tk" style="color: @stCol; border-color: @stCol; background: @(stCol)22;">
                             @t.Status
                         </span>
                         <i class="ri-arrow-right-s-line text-muted"></i>
@@ -463,13 +471,21 @@
         history.replaceState(null, '', url.toString());
     }
 
-    function showTab(idx) {
-        document.querySelectorAll('.tk-tab').forEach((t, i) => {
-            t.classList.toggle('active', i === idx);
+    function showTab(id) {
+        document.querySelectorAll('.tk-tab-content').forEach(c => c.classList.add('d-none'));
+        const target = document.getElementById(id);
+        if (target) target.classList.remove('d-none');
+        
+        document.querySelectorAll('.tk-tab').forEach(t => {
+            t.classList.toggle('active', t.getAttribute('data-tab') === id);
         });
-        document.querySelectorAll('.tk-tab-content').forEach((c, i) => {
-            c.classList.toggle('d-none', i !== idx);
-        });
+    }
+
+    function switchChecklist(id) {
+        if (!id) return;
+        document.querySelectorAll('.eq-checklist-container').forEach(c => c.classList.add('d-none'));
+        const target = document.getElementById('checklist-' + id);
+        if (target) target.classList.remove('d-none');
     }
 
     function setStockScope(scope) {
@@ -493,7 +509,7 @@
             if (overlayEl) overlayEl.classList.add('open');
         }
         if (urlParams.has('StockSearch') || urlParams.has('StockScope')) {
-            showTab(1);
+            showTab('tab-1');
         }
 
         // Handle Charts
@@ -589,6 +605,10 @@
         // Fix for broken tiles
         setTimeout(() => { if(window.mapInstance) window.mapInstance.invalidateSize(); }, 500);
     });
+
+    function setOrcamentoTicketId(id) {
+        document.getElementById('orcamentoTicketId').value = id;
+    }
 
     async function initMap() {
         const mapDiv = document.getElementById('clientMap');
@@ -768,24 +788,45 @@
             @if (t.Status !="Concluído" && !string.IsNullOrEmpty(nextLabel))
             {
                 <div class="tk-advance-row">
-                    <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
-                        <button type="submit" class="tk-advance-btn">
-                            @if (si == 0) {
-                                <text>Aceitar Ticket (Para mim)</text>
-                            } else {
-                                <text>→ Avançar para"@nextLabel"</text>
-                            }
-                        </button>
-                    </form>
+                    @if (t.Status == "Em reparação" || t.Status == "Em Resolução" || t.Status == "Em Progresso" || t.Status == "Em andamento")
+                    {
+                        <div class="d-flex gap-2 w-100">
+                            <form method="post" asp-page-handler="CompleteRepaired" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id" class="flex-grow-1">
+                                <button type="submit" class="tk-advance-btn w-100" style="background: #28a745 !important; color: white !important;">
+                                    <i class="ri-checkbox-circle-line me-1"></i> Reparado
+                                </button>
+                            </form>
+                            <button type="button" class="tk-advance-btn flex-grow-1" style="background: #dc3545 !important; color: white !important;" 
+                                    data-bs-toggle="modal" data-bs-target="#modalOrcamento" onclick="setOrcamentoTicketId(@t.Id)">
+                                <i class="ri-close-circle-line me-1"></i> Sem Reparação
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <form method="post" asp-page-handler="AdvanceStatus" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
+                            <button type="submit" class="tk-advance-btn">
+                                @if (si == 0) {
+                                    <text>Aceitar Ticket (Para mim)</text>
+                                } else {
+                                    <text>→ Avançar para "@nextLabel"</text>
+                                }
+                            </button>
+                        </form>
+                    }
                 </div>
             }
         </div>
 
         <!-- Tabs -->
         <div class="tk-tabs">
-            <div class="tk-tab active" onclick="showTab(0)">📁 Detalhes</div>
-            <div class="tk-tab" onclick="showTab(1)">📦 Stock (@Model.CountStock)</div>
-            <div class="tk-tab" onclick="showTab(2)">🕒 Histórico</div>
+            <div class="tk-tab active" data-tab="tab-0" onclick="showTab('tab-0')">📁 Detalhes</div>
+            @if (t.Type == "Manutenção Preventiva")
+            {
+                <div class="tk-tab" data-tab="tab-3" onclick="showTab('tab-3')">✅ Checklist</div>
+            }
+            <div class="tk-tab" data-tab="tab-1" onclick="showTab('tab-1')">📦 Stock (@Model.CountStock)</div>
+            <div class="tk-tab" data-tab="tab-2" onclick="showTab('tab-2')">🕒 Histórico</div>
         </div>
 
         <!-- Body -->
@@ -869,6 +910,94 @@
                         }
                     </div>
                 }
+            </div>
+            
+            <!-- Tab: Checklist (Dynamic) -->
+            <div class="tk-tab-content d-none" id="tab-3">
+                <div class="p-4">
+                    <h5 class="fw-bold mb-4 d-flex align-items-center" style="color: var(--tk-primary);"><i class="ri-checkbox-multiple-line me-2"></i> Checklist de Manutenção</h5>
+                    
+                    @{
+                        var mainEq = t.Equipamento ?? t.UtilizedEquipments?.FirstOrDefault() ?? Model.AssociatedEquipment.FirstOrDefault();
+                        var allEqsChecklist = Model.SchoolEquipment.Any() ? Model.SchoolEquipment : (Model.AssociatedEquipment.Any() ? Model.AssociatedEquipment : new List<Equipamento> { mainEq }.Where(x => x != null).ToList());
+                        if (!allEqsChecklist.Any()) allEqsChecklist.Add(new Equipamento { Name = "Geral", Type = "Intervenção Geral" });
+                    }
+
+                    <div class="mb-4">
+                        <label class="form-label small text-uppercase fw-bold text-muted mb-2">Equipamento em Intervenção</label>
+                        <select class="form-select bg-dark text-white border-secondary" style="border-radius: 10px;" onchange="switchChecklist(this.value)">
+                            @foreach (var eq in allEqsChecklist)
+                            {
+                                <option value="@eq.Id">@eq.Name (@(eq.Type ?? "Equipamento"))</option>
+                            }
+                        </select>
+                    </div>
+
+                    @foreach (var eq in allEqsChecklist)
+                    {
+                        <div class="eq-checklist-container @(eq == allEqsChecklist.First() ? "" : "d-none")" id="checklist-@eq.Id">
+                            <div class="tk-checklist-list d-flex flex-column gap-2 mb-4">
+                                @{
+                                    var eqType = (eq.Type ?? "").ToLower();
+                                    var items = new List<string> { "Limpeza física geral", "Verificação de cabos e conectores" };
+                                    
+                                    if (eqType.Contains("computador") || eqType.Contains("laptop") || eqType.Contains("pc") || eqType.Contains("portátil"))
+                                    {
+                                        items.AddRange(new[] { "Verificação de temperaturas (Cooling)", "Diagnóstico de Disco (S.M.A.R.T)", "Atualização de Segurança / SO", "Otimização de arranque" });
+                                    }
+                                    else if (eqType.Contains("impressora"))
+                                    {
+                                        items.AddRange(new[] { "Limpeza de roletes e sensores", "Verificação/Limpeza de cabeças", "Alinhamento e teste de qualidade", "Verificação de níveis de consumíveis" });
+                                    }
+                                    else if (eqType.Contains("rede") || eqType.Contains("switch") || eqType.Contains("router"))
+                                    {
+                                        items.AddRange(new[] { "Verificação de portas ativas", "Atualização de Firmware", "Organização de cabos (Patching)", "Verificação de redundância" });
+                                    }
+                                    else if (eqType.Contains("projetor"))
+                                    {
+                                        items.AddRange(new[] { "Limpeza de filtros de ar", "Verificação de horas da lâmpada", "Ajuste de focagem e alinhamento", "Teste de entradas (HDMI/VGA)" });
+                                    }
+                                    else if (eqType.Contains("ups") || eqType.Contains("bateria"))
+                                    {
+                                        items.AddRange(new[] { "Teste de carga e autonomia", "Verificação de tensões", "Inspeção física (inchaço/corrosão)", "Teste de bypass" });
+                                    }
+                                    else if (eqType.Contains("servidor") || eqType.Contains("server"))
+                                    {
+                                        items.AddRange(new[] { "Verificação de Backups", "Análise de logs de erro", "Estado dos discos (RAID)", "Atualizações críticas do SO" });
+                                    }
+                                    else if (eqType.Contains("monitor") || eqType.Contains("ecrã") || eqType.Contains("screen"))
+                                    {
+                                        items.AddRange(new[] { "Teste de pixéis mortos", "Calibração de brilho e contraste", "Limpeza de ecrã com produto adequado", "Verificação de cabos de vídeo (HDMI/DP/VGA)" });
+                                    }
+                                    
+                                    items.Add("Teste final de funcionamento");
+                                }
+
+                                @foreach (var item in items)
+                                {
+                                    <label class="d-flex align-items-center gap-3 p-3 border rounded cursor-pointer preventive-check-item transition-all" 
+                                           style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1) !important; border-radius: 12px;">
+                                        <input type="checkbox" class="form-check-input mt-0" style="width:1.4rem; height:1.4rem; border-color: rgba(255,255,255,0.2);" />
+                                        <span style="font-size:0.95rem; font-weight: 500; color: #fff;">@item</span>
+                                    </label>
+                                }
+                            </div>
+
+                            <div class="p-3 rounded-3 border mt-5" style="background: rgba(255, 171, 0, 0.05); border-color: rgba(255, 171, 0, 0.2) !important;">
+                                <h6 class="fw-bold mb-3 text-warning d-flex align-items-center text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;"><i class="ri-error-warning-line me-2 fs-5"></i>Reportar Avaria Encontrada</h6>
+                                <p class="small text-muted mb-3">Descreva anomalias detetadas durante a manutenção deste equipamento:</p>
+                                
+                                <form method="post" asp-page-handler="AddAnomaly" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
+                                    <input type="hidden" name="eqName" value="@eq.Name" />
+                                    <textarea name="comment" class="form-control mb-3 text-white border-secondary" style="background: rgba(0,0,0,0.2) !important; border-radius: 8px;" rows="2" placeholder="Ex: @eq.Name apresenta ruído excessivo na ventoinha..."></textarea>
+                                    <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold">
+                                        <i class="ri-alert-line me-1"></i> Registar Anomalia em @eq.Name
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
 
             <!-- Tab: Stock -->
@@ -970,6 +1099,39 @@
     }
 </div>
 <partial name="Shared/_QrModal" />
+
+<!-- Modal Orçamento -->
+<div class="modal fade" id="modalOrcamento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" asp-page-handler="SubmitBudget" class="modal-content" style="background: rgba(30, 33, 48, 0.85); backdrop-filter: blur(12px); color: #fff; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+            <input type="hidden" name="ticketId" id="orcamentoTicketId" />
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold">Orçamento para Arranjo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <h4 class="fw-bold">Registar Orçamento</h4>
+                    <p class="text-muted small">Descreva os custos ou detalhes necessários para a reparação externa ou substituição deste equipamento.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label small text-uppercase fw-bold text-muted">Detalhes do Orçamento</label>
+                    <textarea name="budgetDetails" class="form-control" rows="4" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff;" 
+                              placeholder="Ex: Necessário substituição de motherboard. Custo estimado: 150€. Fornecedor: ASNET..." required></textarea>
+                </div>
+
+                <div class="alert alert-warning border-0 small">
+                    <i class="ri-information-line me-1"></i> Ao submeter, o ticket será concluído com o estado "Sem Reparação" e o orçamento ficará registado no histórico.
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-warning fw-bold px-4">Submeter Orçamento</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 
 

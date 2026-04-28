@@ -66,15 +66,36 @@ namespace AspnetCoreStarter.Pages.Admin
 
             var calendarEvents = new List<object>();
 
+            // Group Preventive Maintenances by date
+            var preventiveGrouped = tickets
+                .Where(t => t.Type == "Manutenção Preventiva" && t.ScheduledDate.HasValue)
+                .GroupBy(t => t.ScheduledDate.Value.Date)
+                .ToList();
+
+            foreach (var group in preventiveGrouped)
+            {
+                var date = group.Key;
+                calendarEvents.Add(new {
+                    id = "preventive-" + date.ToString("yyyyMMdd"),
+                    title = "🛡️ Semana de Manutenções",
+                    start = date.ToString("yyyy-MM-dd"),
+                    end = date.AddDays(7).ToString("yyyy-MM-dd"), // Extends for a full week (7 days)
+                    allDay = true,
+                    description = $"Semana dedicada a {group.Count()} manutenções preventivas.",
+                    className = "bg-label-warning fw-bold"
+                });
+            }
+
             foreach (var t in tickets)
             {
+                if (t.Type == "Manutenção Preventiva") continue;
+
                 var techName = t.Technician?.Username ?? "Não atribuído";
                 var isTask = t.Type == "Tarefa Administrativa";
-                var isPreventive = t.Type == "Manutenção Preventiva";
                 
                 var type = t.Equipamento?.Type ?? "";
                 var name = t.Equipamento?.Name ?? "";
-                var emoji = isTask ? "📋" : (isPreventive ? "🛡️" : type switch {
+                var emoji = isTask ? "📋" : type switch {
                     var s when s.Contains("Monitor") => "🖥️",
                     var s when s.Contains("Computador") || s.Contains("Desktop") || s.Contains("Portátil") || s.Contains("PC") => "💻",
                     var s when s.Contains("Impressora") => "🖨️",
@@ -87,34 +108,30 @@ namespace AspnetCoreStarter.Pages.Admin
                     var s when s.Contains("Som") || s.Contains("Coluna") || s.Contains("Speaker") => "🔊",
                     var s when s.Contains("Câmara") || s.Contains("Camera") => "📷",
                     _ => name.Contains("Monitor") ? "🖥️" : (name.Contains("Computador") ? "💻" : (name.Contains("Impressora") ? "🖨️" : "🔧"))
-                });
+                };
 
-                // Determine the display date: use ScheduledDate if it's a Preventive Maintenance, else CreatedAt
-                var displayDate = (isPreventive && t.ScheduledDate.HasValue) ? t.ScheduledDate.Value : t.CreatedAt;
-
-                // 1. Entry Date (Created or Scheduled)
+                // Entry Date
                 calendarEvents.Add(new {
                     id = t.Id,
-                    title = isTask ? $"{emoji} Tarefa: {t.Description}" : (isPreventive ? $"{emoji} Preventiva: {t.School?.Name}" : $"{emoji} Pendente: {t.Equipamento?.Name ?? "Avaria"}"),
-                    start = displayDate.ToString("yyyy-MM-ddTHH:mm:ss"),
-                    description = isTask ? t.Description : (isPreventive ? $"Manutenção Preventiva em {t.School?.Name}" : $"Ticket #{t.Id}: {t.Description} em {t.School?.Name ?? "Sede"}"),
-                    className = isTask ? "bg-label-info" : (isPreventive ? "bg-label-warning" : "bg-label-primary"),
+                    title = isTask ? $"{emoji} Tarefa: {t.Description}" : $"{emoji} Pendente: {t.Equipamento?.Name ?? "Avaria"}",
+                    start = t.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    description = isTask ? t.Description : $"Ticket #{t.Id}: {t.Description} em {t.School?.Name ?? "Sede"}",
+                    className = isTask ? "bg-label-info" : "bg-label-primary",
                     extendedProps = new {
                         ticketId = t.Id,
                         technicianId = t.TechnicianId,
                         technicianName = techName,
-                        isRepair = !isTask && !isPreventive,
-                        isPreventive = isPreventive,
+                        isRepair = !isTask,
                         status = t.Status
                     }
                 });
 
-                // 2. Completion Date
+                // Completion Date
                 if (t.CompletedAt.HasValue)
                 {
                     calendarEvents.Add(new {
-                        id = t.Id + 1000000, // Offset for uniqueness
-                        title = $"✅ {emoji} Concluído: {(isTask ? "Tarefa" : (isPreventive ? $"Preventiva: {t.School?.Name}" : t.Equipamento?.Name ?? "Avaria"))}",
+                        id = t.Id + 1000000,
+                        title = $"✅ {emoji} Concluído: {(isTask ? "Tarefa" : t.Equipamento?.Name ?? "Avaria")}",
                         start = t.CompletedAt.Value.ToString("yyyy-MM-ddTHH:mm:ss"),
                         description = $"{(isTask ? "Tarefa" : "Ticket")} #{t.Id} finalizado por {techName}.",
                         className = "bg-label-success",

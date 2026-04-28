@@ -1,0 +1,493 @@
+@page
+@model AspnetCoreStarter.Pages.Admin.MaintenancesModel
+@{
+    Layout = "Layouts/_ContentNavbarLayout";
+    ViewData["Title"] = "Monitorização de Manutenções Preventivas (Admin)";
+}
+
+@section PageStyles {
+<style>
+    :root {
+        --asnet-orange: #f89223;
+        --asnet-blue: #696cff;
+        --asnet-dark: #2b2c40;
+    }
+
+    .dark-style .card, [data-bs-theme="dark"] .card {
+        background: var(--asnet-dark) !important;
+        border: none !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+    }
+
+    .banner-header {
+        background: var(--asnet-orange) !important;
+        color: white !important;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(248, 146, 35, 0.3);
+    }
+
+    .agrupamento-item {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+    }
+
+    .agrupamento-header {
+        background: rgba(248, 146, 35, 0.08);
+        padding: 1.2rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-left: 4px solid var(--asnet-orange);
+    }
+    .agrupamento-header:hover {
+        background: rgba(248, 146, 35, 0.12);
+    }
+
+    .school-container {
+        padding: 0.5rem 1.5rem 1rem 2.5rem;
+        border-left: 1px dashed rgba(105, 108, 255, 0.3);
+        margin-left: 1.8rem;
+    }
+
+    .school-header {
+        padding: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+    }
+    .school-header:hover {
+        background: rgba(105, 108, 255, 0.05);
+    }
+
+    .ticket-list-container {
+        padding: 0.5rem 0 0.5rem 2rem;
+        border-left: 1px dashed rgba(105, 108, 255, 0.2);
+        margin-left: 0.8rem;
+    }
+
+    .ticket-card-mini {
+        padding: 1rem;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        margin-bottom: 0.8rem;
+        transition: all 0.2s;
+    }
+    .ticket-card-mini:hover {
+        border-color: var(--asnet-blue);
+        background: rgba(105, 108, 255, 0.05);
+        transform: translateX(5px);
+    }
+
+    [data-bs-toggle="collapse"] i.ri-arrow-right-s-line {
+        transition: transform 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        padding: 2px;
+        margin-right: 10px;
+    }
+    [data-bs-toggle="collapse"]:not(.collapsed) i.ri-arrow-right-s-line {
+        transform: rotate(90deg);
+        background: var(--asnet-blue);
+        color: white;
+    }
+
+    .stat-card {
+        border-radius: 12px;
+    }
+    
+    .btn-school-complete {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+    }
+
+    .agrupamento-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(0,0,0,0.2);
+        padding: 8px 15px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .form-select-sm-custom {
+        background-color: transparent;
+        color: white;
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        max-width: 150px;
+    }
+    .form-select-sm-custom option {
+        background: var(--asnet-dark);
+        color: white;
+    }
+</style>
+}
+
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Header Banner -->
+    <div class="banner-header d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="mb-1 text-white fw-bold">Gestão de Preventivas (Admin)</h3>
+            <p class="mb-0 opacity-75">Monitorização global e gestão direta de manutenções preventivas.</p>
+        </div>
+        <div class="d-none d-md-block">
+            <i class="ri-admin-line fs-1 opacity-50"></i>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-primary"><i class="ri-list-check fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.TotalMaintenancesCount</h4>
+                            <small class="text-muted">Total Sistema</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-warning">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-warning"><i class="ri-time-line fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.PendingMaintenancesCount</h4>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-info"><i class="ri-refresh-line fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.InProgressMaintenancesCount</h4>
+                            <small class="text-muted">Em Progresso</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card stat-card bg-label-success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar avatar-md me-3">
+                            <span class="avatar-initial rounded bg-success"><i class="ri-checkbox-circle-line fs-4"></i></span>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">@Model.CompletedMaintenancesCount</h4>
+                            <small class="text-muted">Concluídas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs -->
+    <div class="nav-align-top mb-4">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#navs-my-responsibilities">
+                    <i class="ri-user-star-line me-1"></i> Sob Minha Responsabilidade
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-global-active">
+                    <i class="ri-global-line me-1"></i> Monitorização Ativa
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-available">
+                    <i class="ri-error-warning-line me-1"></i> Por Atribuir
+                    @if(Model.AvailableMaintenances.Sum(a => a.Schools.Sum(s => s.Tickets.Count)) > 0) {
+                        <span class="badge rounded-pill bg-danger ms-1">@Model.AvailableMaintenances.Sum(a => a.Schools.Sum(s => s.Tickets.Count))</span>
+                    }
+                </button>
+            </li>
+            <li class="nav-item">
+                <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#navs-global-completed">
+                    <i class="ri-history-line me-1"></i> Histórico Global
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content bg-transparent p-0 border-0 mt-4">
+            
+            <!-- Tab 1: Admin's own responsibilities -->
+            <div class="tab-pane fade show active" id="navs-my-responsibilities" role="tabpanel">
+                @if (!Model.MyActiveMaintenances.Any())
+                {
+                    <div class="card p-5 text-center shadow-none border-0 bg-transparent">
+                        <div class="mb-3">
+                            <i class="ri-user-star-line fs-1 text-muted opacity-50"></i>
+                        </div>
+                        <h5 class="text-muted">Não assumiu a responsabilidade direta por nenhuma escola ainda.</h5>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var agrupamento in Model.MyActiveMaintenances)
+                    {
+                        var agId = agrupamento.Id ?? 0;
+                        <div class="agrupamento-item">
+                            <div class="agrupamento-header collapsed" data-bs-toggle="collapse" data-bs-target="#my-ag-@agId">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-arrow-right-s-line fs-5"></i>
+                                    <h5 class="mb-0 fw-bold">@agrupamento.Name</h5>
+                                </div>
+                                <span class="badge bg-label-primary rounded-pill">@agrupamento.Schools.Sum(s => s.Tickets.Count)</span>
+                            </div>
+
+                            <div id="my-ag-@agId" class="collapse">
+                                <div class="school-container">
+                                    @foreach (var school in agrupamento.Schools)
+                                    {
+                                        var sId = school.Id ?? 0;
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="school-header collapsed flex-grow-1" data-bs-toggle="collapse" data-bs-target="#my-school-@agId-@sId">
+                                                <i class="ri-arrow-right-s-line fs-6"></i>
+                                                <span class="fw-semibold">@school.Name</span>
+                                            </div>
+                                            <form method="post" asp-page-handler="CompleteSchool" asp-route-schoolId="@sId" class="ms-2">
+                                                <button type="submit" class="btn btn-sm btn-outline-success btn-school-complete">
+                                                    <i class="ri-check-double-line me-1"></i> Finalizar Minha Visita
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <div id="my-school-@agId-@sId" class="collapse">
+                                            <div class="ticket-list-container">
+                                                @foreach (var ticket in school.Tickets)
+                                                {
+                                                    <div class="ticket-card-mini d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1 fw-bold">@ticket.Description</h6>
+                                                            <div class="small text-muted">
+                                                                <span class="badge bg-label-secondary me-2">#@ticket.Id</span>
+                                                                <i class="ri-calendar-line me-1"></i> @ticket.CreatedAt.ToString("dd/MM/yyyy")
+                                                            </div>
+                                                        </div>
+                                                        <a asp-page="/Admin/Tickets" asp-route-SelectedTicketId="@ticket.Id" class="btn btn-sm btn-icon btn-outline-primary">
+                                                            <i class="ri-external-link-line"></i>
+                                                        </a>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Tab 2: Global Active monitoring -->
+            <div class="tab-pane fade" id="navs-global-active" role="tabpanel">
+                @foreach (var agrupamento in Model.GlobalActiveMaintenances)
+                {
+                    var agId = agrupamento.Id ?? 0;
+                    <div class="agrupamento-item">
+                        <div class="agrupamento-header collapsed" data-bs-toggle="collapse" data-bs-target="#global-ag-@agId">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-arrow-right-s-line fs-5"></i>
+                                <h5 class="mb-0 fw-bold">@agrupamento.Name</h5>
+                            </div>
+                            <span class="badge bg-label-info rounded-pill">@agrupamento.Schools.Sum(s => s.Tickets.Count) Ativas</span>
+                        </div>
+
+                        <div id="global-ag-@agId" class="collapse">
+                            <div class="school-container">
+                                @foreach (var school in agrupamento.Schools)
+                                {
+                                    var sId = school.Id ?? 0;
+                                    <div class="school-header collapsed" data-bs-toggle="collapse" data-bs-target="#global-school-@agId-@sId">
+                                        <i class="ri-arrow-right-s-line fs-6"></i>
+                                        <span class="fw-semibold">@school.Name</span>
+                                    </div>
+
+                                    <div id="global-school-@agId-@sId" class="collapse">
+                                        <div class="ticket-list-container">
+                                            @foreach (var ticket in school.Tickets)
+                                            {
+                                                <div class="ticket-card-mini d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1 fw-bold">@ticket.Description</h6>
+                                                        <div class="small text-muted">
+                                                            <span class="me-3"><i class="ri-user-settings-line me-1"></i> Técnico: <strong>@(ticket.Technician?.Username ?? "N/A")</strong></span>
+                                                            <span><i class="ri-time-line me-1"></i> @ticket.Status</span>
+                                                        </div>
+                                                    </div>
+                                                    <a asp-page="/Admin/Tickets" asp-route-SelectedTicketId="@ticket.Id" class="btn btn-sm btn-icon btn-outline-info">
+                                                        <i class="ri-eye-line"></i>
+                                                    </a>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Tab 3: Available (With Bulk Agrupamento Actions) -->
+            <div class="tab-pane fade" id="navs-available" role="tabpanel">
+                @foreach (var agrupamento in Model.AvailableMaintenances)
+                {
+                    var agId = agrupamento.Id ?? 0;
+                    <div class="agrupamento-item">
+                        <div class="agrupamento-header collapsed d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#avail-ag-@agId">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-arrow-right-s-line fs-5"></i>
+                                <h5 class="mb-0 fw-bold text-danger">@agrupamento.Name</h5>
+                            </div>
+                            
+                            <!-- Bulk Actions Header -->
+                            <div class="agrupamento-actions d-flex align-items-center" onclick="event.stopPropagation()">
+                                <form method="post" asp-page-handler="AssignAgrupamento" asp-route-agrupamentoId="@agId">
+                                    <button type="submit" class="btn btn-xs btn-primary rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
+                                        <i class="ri-user-star-line me-1"></i> Assumir Todo
+                                    </button>
+                                </form>
+                                
+                                <div class="vr mx-2 bg-white opacity-25" style="height: 20px;"></div>
+                                
+                                <form method="post" asp-page-handler="AssignAgrupamento" asp-route-agrupamentoId="@agId" class="d-flex align-items-center gap-2">
+                                    <select name="technicianId" class="form-select-sm-custom" required>
+                                        <option value="">Selecionar Técnico...</option>
+                                        @foreach(var tech in Model.AvailableTechnicians) {
+                                            <option value="@tech.Id">@tech.Username</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-xs btn-outline-info bg-label-info rounded-pill px-3 py-1 fw-bold" style="font-size: 11px; border-color: rgba(105, 108, 255, 0.4) !important;">
+                                        Atribuir Agrupamento
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div id="avail-ag-@agId" class="collapse">
+                            <div class="school-container">
+                                @foreach (var school in agrupamento.Schools)
+                                {
+                                    var sId = school.Id ?? 0;
+                                    <div class="school-header collapsed" data-bs-toggle="collapse" data-bs-target="#avail-school-@agId-@sId">
+                                        <i class="ri-arrow-right-s-line fs-6"></i>
+                                        <span class="fw-semibold">@school.Name</span>
+                                    </div>
+
+                                    <div id="avail-school-@agId-@sId" class="collapse">
+                                        <div class="ticket-list-container">
+                                            @foreach (var ticket in school.Tickets)
+                                            {
+                                                <div class="ticket-card-mini d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-1 fw-bold">@ticket.Description</h6>
+                                                        <div class="small text-muted">#@ticket.Id - Criado em @ticket.CreatedAt.ToString("dd/MM/yyyy")</div>
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        <form method="post" asp-page-handler="Accept" asp-route-id="@ticket.Id">
+                                                            <button type="submit" class="btn btn-sm btn-primary">Assumir Eu</button>
+                                                        </form>
+                                                        <a asp-page="/Admin/Tickets" asp-route-SelectedTicketId="@ticket.Id" class="btn btn-sm btn-outline-secondary">Atribuir Técnico</a>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Tab 4: Global History -->
+            <div class="tab-pane fade" id="navs-global-completed" role="tabpanel">
+                @foreach (var agrupamento in Model.GlobalCompletedMaintenances)
+                {
+                    var agId = agrupamento.Id ?? 0;
+                    <div class="agrupamento-item">
+                        <div class="agrupamento-header collapsed" data-bs-toggle="collapse" data-bs-target="#comp-ag-@agId">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-arrow-right-s-line fs-5"></i>
+                                <h5 class="mb-0 fw-bold text-success">@agrupamento.Name</h5>
+                            </div>
+                        </div>
+
+                        <div id="comp-ag-@agId" class="collapse">
+                            <div class="school-container">
+                                @foreach (var school in agrupamento.Schools)
+                                {
+                                    var sId = school.Id ?? 0;
+                                    <div class="school-header collapsed" data-bs-toggle="collapse" data-bs-target="#comp-school-@agId-@sId">
+                                        <i class="ri-arrow-right-s-line fs-6"></i>
+                                        <span class="fw-semibold">@school.Name</span>
+                                    </div>
+
+                                    <div id="comp-school-@agId-@sId" class="collapse">
+                                        <div class="ticket-list-container">
+                                            @foreach (var ticket in school.Tickets)
+                                            {
+                                                <div class="ticket-card-mini d-flex justify-content-between align-items-center border-success opacity-75">
+                                                    <div>
+                                                        <h6 class="mb-1 fw-bold">@ticket.Description</h6>
+                                                        <div class="small text-muted">
+                                                            Concluído por <strong>@(ticket.Technician?.Username ?? "Admin")</strong> em @(ticket.CompletedAt?.ToString("dd/MM/yyyy") ?? "N/A")
+                                                        </div>
+                                                    </div>
+                                                    <i class="ri-checkbox-circle-line text-success fs-4"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

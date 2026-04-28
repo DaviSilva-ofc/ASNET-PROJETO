@@ -28,6 +28,7 @@ namespace AspnetCoreStarter.Pages.Admin
         public List<Equipamento> AvailableEquipment { get; set; } = new();
         public List<User> AvailableTechnicians { get; set; } = new();
         public int CountStock { get; set; }
+        public int CurrentUserId { get; set; }
 
         // --- Stats ---
         public int CountPendente { get; set; }
@@ -57,19 +58,23 @@ namespace AspnetCoreStarter.Pages.Admin
         {
             if (!User.Identity.IsAuthenticated) return RedirectToPage("/Auth/Login");
 
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdStr, out int uid)) CurrentUserId = uid;
+
             // Base Query
             var query = _context.Tickets
                 .Include(t => t.School)
                 .Include(t => t.Equipamento)
                 .Include(t => t.Technician)
                 .Include(t => t.RequestedBy)
+                .Where(t => t.Type != "Manutenção Preventiva")
                 .AsQueryable();
 
-            // Calculate Stats (Unfiltered)
-            CountPendente = await _context.Tickets.CountAsync(t => t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido");
-            CountAceite = await _context.Tickets.CountAsync(t => t.Status == "Aceite");
-            CountEmReparacao = await _context.Tickets.CountAsync(t => t.Status == "Em reparação" || t.Status == "Em Progresso" || t.Status == "Em Reparação" || t.Status == "Em andamento");
-            CountConcluido = await _context.Tickets.CountAsync(t => t.Status == "Concluído");
+            // Calculate Stats (Unfiltered by status, but filtered by type)
+            CountPendente = await _context.Tickets.CountAsync(t => (t.Status == "Pendente" || t.Status == "Aberto" || t.Status == "Pedido") && t.Type != "Manutenção Preventiva");
+            CountAceite = await _context.Tickets.CountAsync(t => t.Status == "Aceite" && t.Type != "Manutenção Preventiva");
+            CountEmReparacao = await _context.Tickets.CountAsync(t => (t.Status == "Em reparação" || t.Status == "Em Progresso" || t.Status == "Em Reparação" || t.Status == "Em andamento") && t.Type != "Manutenção Preventiva");
+            CountConcluido = await _context.Tickets.CountAsync(t => t.Status == "Concluído" && t.Type != "Manutenção Preventiva");
 
             // Apply Filters
             if (!string.IsNullOrEmpty(FilterStatus))
@@ -142,15 +147,28 @@ namespace AspnetCoreStarter.Pages.Admin
             return Page();
         }
 
+        private bool CanAdminEdit(Ticket t)
+        {
+            var userIdStr = HttpContext.Session.GetString("UserId") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(userIdStr, out int currentUserId);
+
+            return t.TechnicianId == null || 
+                   t.Status == "Pendente" || 
+                   t.Status == "Aberto" || 
+                   t.Status == "Pedido" || 
+                   t.TechnicianId == currentUserId || 
+                   t.Type == "Manutenção Preventiva";
+        }
+
         // --- Actions ---
 
         public async Task<IActionResult> OnPostAdvanceStatusAsync(int ticketId)
         {
             var ticket = await _context.Tickets.Include(t => t.Equipamento).FirstOrDefaultAsync(t => t.Id == ticketId);
             if (ticket == null) return NotFound();
-            if (ticket.TechnicianId != null && ticket.Status != "Pendente" && ticket.Status != "Aberto")
+            if (!CanAdminEdit(ticket))
             {
-                TempData["ErrorMessage"] = "Este ticket já foi aceite por um técnico e não pode ser alterado pelo Administrador.";
+                TempData["ErrorMessage"] = "Este ticket já foi aceite por outro técnico e não pode ser alterado.";
                 return RedirectToPage(new { SelectedTicketId = ticketId });
             }
 
@@ -232,9 +250,9 @@ namespace AspnetCoreStarter.Pages.Admin
 
             if (ticket != null && equipment != null && equipment.Status == "Armazenado")
             {
-                if (ticket.TechnicianId != null && ticket.Status != "Pendente" && ticket.Status != "Aberto")
+                if (!CanAdminEdit(ticket))
                 {
-                    TempData["ErrorMessage"] = "Não é possível associar equipamentos a um ticket já aceite por um técnico.";
+                    TempData["ErrorMessage"] = "Não é possível associar equipamentos a um ticket gerido por outro técnico.";
                     return RedirectToPage(new { SelectedTicketId = ticketId });
                 }
                 equipment.TicketId = ticketId;
@@ -254,9 +272,9 @@ namespace AspnetCoreStarter.Pages.Admin
             var ticket = await _context.Tickets.FindAsync(ticketId);
             if (equipment != null && equipment.TicketId == ticketId)
             {
-                if (ticket != null && ticket.TechnicianId != null && ticket.Status != "Pendente" && ticket.Status != "Aberto")
+                if (ticket != null && !CanAdminEdit(ticket))
                 {
-                    TempData["ErrorMessage"] = "Não é possível remover equipamentos de um ticket já aceite por um técnico.";
+                    TempData["ErrorMessage"] = "Não é possível remover equipamentos de um ticket gerido por outro técnico.";
                     return RedirectToPage(new { SelectedTicketId = ticketId });
                 }
                 equipment.TicketId = null;
@@ -269,11 +287,32 @@ namespace AspnetCoreStarter.Pages.Admin
             return RedirectToPage(new { SelectedTicketId = ticketId, FilterStatus, SearchQuery, FilterType, FilterPriority });
         }
 
+        public async Task<IActionResult> OnPostAddAnomalyAsync(int ticketId, string comment)
+        {
+            if (!string.IsNullOrEmpty(comment))
+            {
+                await LogHistory(ticketId, "[AVARIA] " + comment, TipoAcaoHistorico.Comentario);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId, FilterStatus, SearchQuery, FilterType, FilterPriority });
+        }
+
         public async Task<IActionResult> OnPostAddCommentAsync(int ticketId, string comment)
         {
             if (!string.IsNullOrEmpty(comment))
             {
                 await LogHistory(ticketId, comment, TipoAcaoHistorico.Comentario);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToPage(new { SelectedTicketId = ticketId, FilterStatus, SearchQuery, FilterType, FilterPriority });
+        }
+
+        public async Task<IActionResult> OnPostDeleteCommentAsync(int ticketId, int historyId)
+        {
+            var history = await _context.TicketHistorico.FindAsync(historyId);
+            if (history != null && history.TicketId == ticketId && history.TipoAcao == TipoAcaoHistorico.Comentario)
+            {
+                _context.TicketHistorico.Remove(history);
                 await _context.SaveChangesAsync();
             }
             return RedirectToPage(new { SelectedTicketId = ticketId, FilterStatus, SearchQuery, FilterType, FilterPriority });

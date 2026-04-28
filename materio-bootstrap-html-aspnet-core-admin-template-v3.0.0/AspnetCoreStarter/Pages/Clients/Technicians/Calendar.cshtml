@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model AspnetCoreStarter.Pages.Clients.Technicians.CalendarModel
 @{
     Layout ="Layouts/_ContentNavbarLayout";
@@ -107,6 +107,20 @@
 
     .fc-list-event-title { color: var(--fc-text-title) !important; }
     .fc-list-day-text, .fc-list-day-side-text { color: #f89223 !important; font-weight: 600; }
+
+    /* Clean calendar view - Match other days to background */
+    .fc-theme-standard td, .fc-theme-standard th { 
+        border-color: rgba(255, 255, 255, 0.05) !important; 
+    }
+
+    .fc-day-other {
+        background-color: var(--tk-card-solid) !important;
+        opacity: 0.1;
+    }
+    
+    .fc-daygrid-day.fc-day-other {
+        background: none !important;
+    }
 </style>
 }
 
@@ -230,6 +244,8 @@
             themeSystem: 'standard',
             dayMaxEvents: true,
             navLinks: true,
+            showNonCurrentDates: false,
+            fixedWeekCount: true,
         });
         calendar.render();
     });

@@ -103,6 +103,12 @@
             <div>Calendário</div>
           </a>
         </li>
+        <li class='menu-item@(currentPage == "/Clients/Technicians/Maintenances" ? " active" : "")'>
+          <a asp-page="/Clients/Technicians/Maintenances" class="menu-link">
+            <i class="menu-icon icon-base ri-tools-line"></i>
+            <div>Manutenções</div>
+          </a>
+        </li>
 
         <li class='menu-item@(currentPage == "/Clients/Technicians/Tickets" ? " active" : "")'>
           <a asp-page="/Clients/Technicians/Tickets" class="menu-link">
@@ -237,6 +243,12 @@
           <a asp-page="/Admin/Tickets" class="menu-link">
             <i class="menu-icon icon-base ri-ticket-line"></i>
             <div>Tickets</div>
+          </a>
+        </li>
+        <li class='menu-item@(currentPage == "/Admin/Maintenances" ? " active" : "")'>
+          <a asp-page="/Admin/Maintenances" class="menu-link">
+            <i class="menu-icon icon-base ri-tools-line"></i>
+            <div>Manutenções</div>
           </a>
         </li>
         <li class='menu-item@(currentPage == "/Admin/Relatorio" ? " active" : "")'>

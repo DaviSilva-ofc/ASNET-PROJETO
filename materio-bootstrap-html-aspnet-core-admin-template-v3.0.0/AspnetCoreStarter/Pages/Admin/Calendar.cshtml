@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model AspnetCoreStarter.Pages.Admin.CalendarModel
 @{
     Layout = "Layouts/_ContentNavbarLayout";
@@ -105,8 +105,20 @@
         box-shadow: none !important;
     }
 
-    .fc-list-event-title { color: var(--fc-text-title) !important; }
-    .fc-list-day-text, .fc-list-day-side-text { color: #f89223 !important; font-weight: 600; }
+    /* Clean calendar view */
+    .fc-theme-standard td, .fc-theme-standard th { 
+        border-color: rgba(255, 255, 255, 0.05) !important; 
+    }
+
+    /* Make other month days blend in perfectly */
+    .fc-day-other {
+        background-color: var(--tk-card-solid) !important;
+        opacity: 0.1; /* Very subtle so you know they are not active but the grid stays */
+    }
+    
+    .fc-daygrid-day.fc-day-other {
+        background: none !important;
+    }
 </style>
 }
 
@@ -267,6 +279,8 @@
             themeSystem: 'standard',
             dayMaxEvents: true,
             navLinks: true,
+            showNonCurrentDates: false,
+            fixedWeekCount: true,
         });
         calendar.render();
     });
