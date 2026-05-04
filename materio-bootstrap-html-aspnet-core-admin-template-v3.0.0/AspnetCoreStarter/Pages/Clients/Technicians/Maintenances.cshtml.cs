@@ -42,6 +42,8 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
         public string StockSearch { get; set; } = "";
         [BindProperty(SupportsGet = true)]
         public string StockScope { get; set; } = "Escola";
+        [BindProperty(SupportsGet = true)]
+        public string Tab { get; set; } = "details";
 
         public class AgrupamentoGroup
         {
@@ -92,6 +94,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                     .Include(t => t.School).ThenInclude(s => s.Agrupamento)
                     .Include(t => t.RequestedBy)
                     .Include(t => t.Technician)
+                    .Include(t => t.Equipamento).ThenInclude(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
                     .Include(t => t.UtilizedEquipments).ThenInclude(e => e.Room).ThenInclude(r => r.Block).ThenInclude(b => b.School)
                     .FirstOrDefaultAsync(t => t.Id == SelectedTicketId.Value);
 
@@ -113,13 +116,26 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
                         if (targetSchoolId.HasValue)
                         {
-                            var schoolBlockIds = await _context.Blocos.Where(b => b.SchoolId == targetSchoolId.Value).Select(b => b.Id).ToListAsync();
-                            var roomIds = await _context.Salas.Where(r => r.BlockId.HasValue && schoolBlockIds.Contains(r.BlockId.Value)).Select(r => r.Id).ToListAsync();
-                            SchoolEquipment = await _context.Equipamentos.Where(e => e.RoomId.HasValue && roomIds.Contains(e.RoomId.Value) && !e.IsDeleted).OrderBy(e => e.Name).ToListAsync();
+                            SchoolEquipment = await _context.Equipamentos
+                                .Include(e => e.Room).ThenInclude(r => r.Block)
+                                .Where(e => e.Room.Block.SchoolId == targetSchoolId.Value && !e.IsDeleted)
+                                .OrderBy(e => e.Name)
+                                .ToListAsync();
                         }
                         else if (SelectedTicket.Equipamento?.EmpresaId != null)
                         {
                             SchoolEquipment = await _context.Equipamentos.Where(e => e.EmpresaId == SelectedTicket.Equipamento.EmpresaId && !e.IsDeleted).OrderBy(e => e.Name).ToListAsync();
+                        }
+
+                        // Prioritize the ticket's primary equipment at the top
+                        if (SelectedTicket.EquipamentoId.HasValue)
+                        {
+                            var primary = SchoolEquipment.FirstOrDefault(e => e.Id == SelectedTicket.EquipamentoId.Value);
+                            if (primary != null)
+                            {
+                                SchoolEquipment.Remove(primary);
+                                SchoolEquipment.Insert(0, primary);
+                            }
                         }
                     }
 
@@ -231,9 +247,14 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
 
                 await LogHistory(ticketId, $"Status alterado para {newStatus}", TipoAcaoHistorico.Status);
                 await _context.SaveChangesAsync();
+                
+                if (newStatus == "Em reparação")
+                {
+                    return RedirectToPage("/Clients/Technicians/Maintenances", new { SelectedTicketId = ticketId, tab = "checklist" });
+                }
             }
 
-            return RedirectToPage(new { SelectedTicketId = ticketId });
+            return RedirectToPage("/Clients/Technicians/Maintenances", new { SelectedTicketId = ticketId });
         }
 
         public async Task<IActionResult> OnPostAddAnomalyAsync(int ticketId, string comment)
@@ -243,7 +264,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 await LogHistory(ticketId, "[AVARIA] " + comment, TipoAcaoHistorico.Comentario);
                 await _context.SaveChangesAsync();
             }
-            return RedirectToPage(new { SelectedTicketId = ticketId });
+            return RedirectToPage("/Clients/Technicians/Maintenances", new { SelectedTicketId = ticketId });
         }
 
         public async Task<IActionResult> OnPostAddCommentAsync(int ticketId, string comment)
@@ -253,7 +274,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 await LogHistory(ticketId, comment, TipoAcaoHistorico.Comentario);
                 await _context.SaveChangesAsync();
             }
-            return RedirectToPage(new { SelectedTicketId = ticketId });
+            return RedirectToPage("/Clients/Technicians/Maintenances", new { SelectedTicketId = ticketId });
         }
 
         public async Task<IActionResult> OnPostAssociateEquipmentAsync(int ticketId, int equipmentId)
@@ -268,7 +289,7 @@ namespace AspnetCoreStarter.Pages.Clients.Technicians
                 await LogHistory(ticketId, $"Equipamento associado: {equipment.Name}", TipoAcaoHistorico.Equipamento);
                 await _context.SaveChangesAsync();
             }
-            return RedirectToPage(new { SelectedTicketId = ticketId });
+            return RedirectToPage("/Clients/Technicians/Maintenances", new { SelectedTicketId = ticketId });
         }
 
         public async Task<IActionResult> OnPostRemoveEquipmentAsync(int ticketId, int equipmentId)

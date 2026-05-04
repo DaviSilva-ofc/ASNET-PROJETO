@@ -348,7 +348,12 @@
         {
             @foreach (var t in Model.RecentTickets)
             {
-                <div class="tk-row" onclick="openPanel(@t.Id)">
+                var isPreventive = t.Type == "Manutenção Preventiva";
+                var clickAction = isPreventive 
+                    ? $"window.location.href='/Clients/Technicians/Maintenances?SelectedTicketId={t.Id}'"
+                    : $"openPanel({t.Id})";
+
+                <div class="tk-row" onclick="@clickAction">
                     <div class="tk-icon" style="background: rgba(255, 171, 0, 0.1); color: var(--tk-primary); font-size: 1.2rem;">
                         @{
                             var type = t.Equipamento?.Type ??"";

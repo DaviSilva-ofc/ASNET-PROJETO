@@ -178,7 +178,42 @@
     .tk-comment:focus { outline: none; border-color: #f89223; background: rgba(255,255,255,0.08); }
     .tk-send-btn { background: #f89223; color: #000; border: none; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; flex-shrink: 0; }
     .tk-send-btn:hover { background: #ffab00; transform: scale(1.05); }
+    /* Checklist specific */
+    .preventive-check-item {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08) !important;
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.2s ease;
+    }
+    .preventive-check-item:hover {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(248, 146, 35, 0.3) !important;
+    }
+    .preventive-check-item input:checked + span {
+        color: #f89223;
+        font-weight: 600;
+    }
+    
+    .anomaly-section {
+        background: rgba(239, 68, 68, 0.05);
+        border: 1px solid rgba(239, 68, 68, 0.1) !important;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-top: 2rem;
+    }
+
+    /* Fixed Selector Styles */
+    .eq-selector-wrapper {
+        background: rgba(248, 146, 35, 0.05);
+        border: 2px solid var(--asnet-orange);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(248, 146, 35, 0.1);
+    }
 </style>
+<link rel="stylesheet" href="~/vendor/libs/select2/select2.css" />
 }
 
 <div class="container-xxl flex-grow-1 container-p-y">
@@ -532,44 +567,86 @@
             <div class="tk-tab-content d-none" id="tab-3">
                 <div class="p-0">
                     @{
-                        var allEqsChecklist = Model.SchoolEquipment.Any() ? Model.SchoolEquipment : (Model.AssociatedEquipment.Any() ? Model.AssociatedEquipment : new List<Equipamento> { mainEq }.Where(x => x != null).ToList());
-                        if (!allEqsChecklist.Any()) allEqsChecklist.Add(new Equipamento { Name = "Geral", Type = "Intervenção Geral" });
+                        // Combine primary equipment and school equipment, ensuring no duplicates
+                        var list = new List<Equipamento>();
+                        if (mainEq != null) list.Add(mainEq);
+                        if (Model.SchoolEquipment != null) list.AddRange(Model.SchoolEquipment);
+                        if (Model.AssociatedEquipment != null) list.AddRange(Model.AssociatedEquipment);
+                        
+                        var allEqsChecklist = list.Where(x => x != null).GroupBy(e => e.Id).Select(g => g.First()).ToList();
+                        
+                        if (!allEqsChecklist.Any()) {
+                            allEqsChecklist.Add(new Equipamento { Id = 0, Name = "Geral", Type = "Intervenção Geral" });
+                        }
+                        
+                        // Default to ticket's equipment if it matches one in the list
+                        var defaultEqId = t.EquipamentoId ?? allEqsChecklist.First().Id;
                     }
 
-                    <div class="mb-4">
-                        <label class="form-label small text-uppercase fw-bold text-muted mb-2">Equipamento em Intervenção</label>
-                        <select class="form-select bg-dark text-white border-secondary" style="border-radius: 10px;" onchange="switchChecklist(this.value)">
-                            @foreach (var eq in allEqsChecklist)
-                            {
-                                <option value="@eq.Id">@eq.Name (@(eq.Type ?? "Equipamento"))</option>
-                            }
-                        </select>
+                    <div class="eq-selector-wrapper">
+                        <div id="interventionHeader" class="mb-3 d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="fw-bold text-warning mb-1"><i class="ri-settings-3-line me-2"></i>Configuração da Intervenção</h6>
+                                <p class="small text-white mb-0 opacity-75">A intervir em: <span id="lblActiveEquipment" class="text-warning fw-bold fs-5">Carregando...</span></p>
+                            </div>
+                            <span class="badge bg-warning text-dark fw-bold">@allEqsChecklist.Count OPÇÕES</span>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label small text-uppercase fw-bold text-muted mb-2"><i class="ri-computer-line me-1"></i> Equipamento Selecionado</label>
+                            <select id="eqSelector" class="form-select border-warning bg-dark text-white fw-bold" style="border-radius: 10px; height: 52px; border-width: 2px !important; font-size: 1.1rem;" onchange="switchChecklist(this.value)">
+                                @foreach (var eq in allEqsChecklist)
+                                {
+                                    <option value="@eq.Id" selected="@(eq.Id == defaultEqId ? "selected" : null)" data-type="@(eq.Type ?? "")">@eq.Name (@(eq.Type ?? "Equipamento"))</option>
+                                }
+                            </select>
+                        </div>
                     </div>
 
                     @foreach (var eq in allEqsChecklist)
                     {
-                        <div class="eq-checklist-container @(eq == allEqsChecklist.First() ? "" : "d-none")" id="checklist-@eq.Id">
-                            <div class="tk-checklist-list d-flex flex-column gap-2 mb-4">
+                        <div class="eq-checklist-container @(eq.Id == defaultEqId ? "" : "d-none")" id="checklist-@eq.Id">
+                            <div class="tk-checklist-list d-flex flex-column gap-3 mb-4">
                                 @{
                                     string eType = (eq.Type ?? "").ToLower();
-                                    var items = new List<string> { "Limpeza física geral", "Verificação de cabos e conectores" };
-                                    if (eType.Contains("monitor") || eType.Contains("ecrã")) items.AddRange(new[] { "Teste de pixéis", "Ajuste de brilho", "Limpeza de ecrã" });
-                                    else if (eType.Contains("pc") || eType.Contains("computador")) items.AddRange(new[] { "Limpeza de ventoinhas", "Teste de disco", "Atualizações de software" });
-                                    else if (eType.Contains("impressora")) items.AddRange(new[] { "Limpeza de roletes", "Teste de impressão", "Verificação de toners" });
+                                    var items = new List<string> { "Limpeza física geral", "Verificação de ligações e cabos" };
+                                    
+                                    if (eType.Contains("monitor") || eType.Contains("ecrã")) 
+                                        items.AddRange(new[] { "Teste de pixéis e manchas", "Calibração de brilho e contraste", "Limpeza de ecrã com produto próprio" });
+                                    else if (eType.Contains("pc") || eType.Contains("computador") || eType.Contains("laptop") || eType.Contains("portátil")) 
+                                        items.AddRange(new[] { "Limpeza de ventoinhas e dissipadores", "Verificação de temperaturas", "Diagnóstico de disco (SMART)", "Atualizações de segurança pendentes" });
+                                    else if (eType.Contains("impressora")) 
+                                        items.AddRange(new[] { "Limpeza de roletes e sensores", "Verificação de níveis de toner/tinteiro", "Impressão de página de teste e alinhamento" });
+                                    else if (eType.Contains("rede") || eType.Contains("switch") || eType.Contains("router"))
+                                        items.AddRange(new[] { "Verificação de portas ativas", "Atualização de Firmware", "Organização de cabos (Patching)" });
+                                    else if (eType.Contains("projetor"))
+                                        items.AddRange(new[] { "Limpeza de filtros de ar", "Verificação de horas da lâmpada", "Ajuste de focagem" });
+                                        
                                     items.Add("Teste final de funcionamento");
                                 }
                                 @foreach (var item in items)
                                 {
-                                    <label class="d-flex align-items-center gap-3 p-2 border rounded cursor-pointer transition-all" style="background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.05) !important;">
-                                        <input type="checkbox" class="form-check-input" style="width:1.2rem; height:1.2rem;" />
-                                        <span class="small">@item</span>
+                                    <label class="d-flex align-items-center gap-3 preventive-check-item cursor-pointer">
+                                        <input type="checkbox" class="form-check-input" style="width:1.4rem; height:1.4rem;" />
+                                        <span>@item</span>
                                     </label>
                                 }
                             </div>
-                            <form method="post" asp-page-handler="AddAnomaly" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
-                                <textarea name="comment" class="form-control mb-2 text-white border-secondary bg-transparent" rows="2" placeholder="Anomalia detetada em @eq.Name..."></textarea>
-                                <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold">Registar Anomalia</button>
-                            </form>
+
+                            <div class="anomaly-section">
+                                <h6 class="fw-bold mb-3 text-danger d-flex align-items-center text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">
+                                    <i class="ri-error-warning-line me-2 fs-5"></i>Reportar Anomalia / Avaria
+                                </h6>
+                                <p class="small text-muted mb-3">Se detetar algo que necessite de reparação adicional, descreva abaixo:</p>
+                                
+                                <form method="post" asp-page-handler="AddAnomaly" asp-route-ticketId="@t.Id" asp-route-SelectedTicketId="@t.Id">
+                                    <input type="hidden" name="eqName" value="@eq.Name" />
+                                    <textarea name="comment" class="form-control mb-3 text-white border-secondary bg-transparent" rows="3" placeholder="Ex: Bateria inchada, teclado com teclas presas, etc..."></textarea>
+                                    <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold">
+                                        Registar Avaria Detetada
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     }
                 </div>
@@ -607,6 +684,10 @@
         if (urlParams.has('SelectedTicketId')) {
             openPanel();
         }
+        
+        @if (Model.Tab == "checklist") {
+            <text>showTab('tab-3');</text>
+        }
     });
 
     function openPanel() {
@@ -627,7 +708,22 @@
     function switchChecklist(id) {
         document.querySelectorAll('.eq-checklist-container').forEach(c => c.classList.add('d-none'));
         const target = document.getElementById('checklist-' + id);
-        if (target) target.classList.remove('d-none');
+        if (target) {
+            target.classList.remove('d-none');
+            
+            // Update label
+            const select = document.getElementById('eqSelector');
+            const opt = select.options[select.selectedIndex];
+            document.getElementById('lblActiveEquipment').innerText = opt.text;
+        }
     }
+
+    $(document).ready(function() {
+        // Initialize label
+        const select = document.getElementById('eqSelector');
+        if (select && select.selectedIndex >= 0) {
+            document.getElementById('lblActiveEquipment').innerText = select.options[select.selectedIndex].text;
+        }
+    });
 </script>
 }
